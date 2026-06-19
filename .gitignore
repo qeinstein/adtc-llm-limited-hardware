@@ -1,0 +1,22 @@
+# Model Weights (do NOT commit large binary weights)
+model/
+*.gguf
+
+# Python Virtual Environments
+venv/
+.venv/
+env/
+
+# Python caching
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE configurations
+.vscode/
+.idea/
+.DS_Store
+
+# Local benchmark logs & profile outputs
+*.json
+!metadata.json

@@ -1,0 +1,37 @@
+{
+  "team_id": "adtc-team-custom-serving",
+  "domain": "healthcare_medical",
+  "language_scope": ["en", "sw"],
+  "african_alpha_claim": true,
+  "budget_laptop_claim": true,
+  "submitter": {
+    "name": "Toheeb Ogunade",
+    "email": "toheeb.ogunade@domain.com",
+    "github_handle": "qeinstein"
+  },
+  "cross_disciplinary_pairing": {
+    "discipline": "medicine",
+    "load_bearing": true,
+    "description": "Offline healthcare symptom assistant supporting local languages (Swahili) on low-end hardware."
+  },
+  "test_prompts": [
+    {
+      "prompt_id": "tp_001",
+      "prompt": "Joto la mwili la nyuzi 39 Celsius na kikohozi kikavu kwa mtoto wa miaka miwili. Nifanye nini?"
+    },
+    {
+      "prompt_id": "tp_002",
+      "prompt": "What are the common symptoms of Malaria and how can it be diagnosed in a rural clinic?"
+    }
+  ],
+  "model": {
+    "name": "Qwen2.5-14B-Instruct-Q4_0-TurboQuant",
+    "runtime": "ctypes-llama-cpp",
+    "quantization": "Q4_0 weights + Custom 2-bit/4-bit TurboQuant KV cache + Sparse FFN Swapping",
+    "parameters_estimate": "14.7B",
+    "packaging": "python_ctypes_bundle"
+  },
+  "_runtime": {
+    "model_path": "model/Qwen2.5-14B-Instruct-Q4_0.gguf"
+  }
+}
