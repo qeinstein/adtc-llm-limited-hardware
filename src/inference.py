@@ -13,17 +13,20 @@ class SparseQuantModel:
         self.hidden_dim = self.layer_manager.hidden_dim
         
         # Determine num_heads dynamically based on typical head dimension of 128
-        if self.hidden_dim >= 128:
-            self.head_dim = 128
-            self.num_heads = self.hidden_dim // 128
-        else:
-            self.num_heads = 1
-            self.head_dim = self.hidden_dim
+        self.head_dim = 128
+        self.num_heads = self.hidden_dim // self.head_dim  # Q heads (e.g. 40)
         
-        # Initialize TurboQuant Key-Value caches for each head in each layer
+        # Detect GQA: K/V may have fewer heads than Q
+        k_shape = self.layer_manager.loader.get_tensor_shape("blk.0.attn_k.weight")
+        self.kv_dim = k_shape[0]  # K output dimension (e.g. 1024)
+        self.num_kv_heads = self.kv_dim // self.head_dim  # KV heads (e.g. 8)
+        self.num_groups = self.num_heads // self.num_kv_heads  # heads per KV group (e.g. 5)
+        print(f"GQA Config: {self.num_heads} Q-heads, {self.num_kv_heads} KV-heads, group_size={self.num_groups}")
+        
+        # Initialize TurboQuant Key-Value caches — one per KV head (not Q head)
         self.kv_caches = [
             [TurboQuantKVCache(d=self.head_dim, key_bits=4, val_bits=2, layer_idx=L, head_idx=H)
-             for H in range(self.num_heads)]
+             for H in range(self.num_kv_heads)]
             for L in range(self.num_layers)
         ]
         
@@ -60,23 +63,26 @@ class SparseQuantModel:
             k_proj = gemv_q4_0(norm_x, k_packed, k_scales)
             v_proj = gemv_q4_0(norm_x, v_packed, v_scales)
             
-            # Reshape to heads: (num_heads, head_dim)
-            q_heads = q_proj.reshape(self.num_heads, self.head_dim)
-            k_heads = k_proj.reshape(self.num_heads, self.head_dim)
-            v_heads = v_proj.reshape(self.num_heads, self.head_dim)
+            # Reshape to heads — Q has more heads than K/V in GQA
+            q_heads = q_proj.reshape(self.num_heads, self.head_dim)       # (40, 128)
+            k_heads = k_proj.reshape(self.num_kv_heads, self.head_dim)    # (8, 128)
+            v_heads = v_proj.reshape(self.num_kv_heads, self.head_dim)    # (8, 128)
             
-            # Apply rotary embeddings
-            q_rot, k_rot = apply_rope_jit(q_heads, k_heads, cos, sin)
+            # Apply rotary embeddings (RoPE applies per-head independently)
+            q_rot = apply_rope_jit(q_heads, q_heads, cos, sin)[0]  # Only need rotated Q
+            k_rot = apply_rope_jit(k_heads, k_heads, cos, sin)[0]  # Only need rotated K
             
-            # Attention scores and outputs per head
+            # Append K/V to caches (one cache per KV head)
+            for kv_h in range(self.num_kv_heads):
+                self.kv_caches[L][kv_h].append(k_rot[kv_h], v_heads[kv_h])
+            
+            # Attention scores and outputs per Q head (GQA: multiple Q heads share one KV head)
             attn_heads = np.empty((self.num_heads, self.head_dim), dtype=np.float32)
             for H in range(self.num_heads):
-                cache = self.kv_caches[L][H]
+                kv_h = H // self.num_groups  # Which KV head this Q head reads from
+                cache = self.kv_caches[L][kv_h]
                 
-                # Append current Key and Value to our custom TurboQuant cache
-                cache.append(k_rot[H], v_heads[H])
-                
-                # Calculate estimated attention scores
+                # Calculate attention scores using this Q head against the shared KV cache
                 scores = cache.attn_scores(q_rot[H])
                 weights = np.exp(scores - np.max(scores))
                 weights /= np.sum(weights)

@@ -7,33 +7,27 @@ def copy_metadata_field(writer, field):
     name = field.name
     types = field.types
     parts = field.parts
+    data_indices = field.data
+    
+    def get_py_val(idx, val_type):
+        x = parts[idx]
+        if val_type == GGUFValueType.STRING:
+            return bytes(x).decode('utf-8', errors='ignore')
+        elif val_type in [GGUFValueType.FLOAT32, GGUFValueType.FLOAT64]:
+            return float(x.item() if hasattr(x, 'item') else x[0] if hasattr(x, '__getitem__') else x)
+        elif val_type == GGUFValueType.BOOL:
+            return bool(x.item() if hasattr(x, 'item') else x[0] if hasattr(x, '__getitem__') else x)
+        else:
+            return int(x.item() if hasattr(x, 'item') else x[0] if hasattr(x, '__getitem__') else x)
+
+    vtype = types[0]
     
     if len(types) == 1:
-        vtype = types[0]
-        val = parts[0]
-        if vtype == GGUFValueType.STRING:
-            py_val = bytes(val).decode('utf-8', errors='ignore')
-        elif vtype in [GGUFValueType.FLOAT32, GGUFValueType.FLOAT64]:
-            py_val = float(val.item() if hasattr(val, 'item') else val[0] if hasattr(val, '__getitem__') else val)
-        elif vtype == GGUFValueType.BOOL:
-            py_val = bool(val.item() if hasattr(val, 'item') else val[0] if hasattr(val, '__getitem__') else val)
-        else:
-            py_val = int(val.item() if hasattr(val, 'item') else val[0] if hasattr(val, '__getitem__') else val)
-            
+        py_val = get_py_val(data_indices[0], vtype)
         writer.add_key_value(name, py_val, vtype)
     else:
-        vtype = types[0]
         sub_type = types[1]
-        
-        if sub_type == GGUFValueType.STRING:
-            py_val = [bytes(x) for x in parts]
-        elif sub_type in [GGUFValueType.FLOAT32, GGUFValueType.FLOAT64]:
-            py_val = [float(x.item() if hasattr(x, 'item') else x) for x in parts]
-        elif sub_type == GGUFValueType.BOOL:
-            py_val = [bool(x.item() if hasattr(x, 'item') else x) for x in parts]
-        else:
-            py_val = [int(x.item() if hasattr(x, 'item') else x) for x in parts]
-            
+        py_val = [get_py_val(idx, sub_type) for idx in data_indices]
         writer.add_key_value(name, py_val, vtype, sub_type)
 
 def ggml_to_numpy_type(tensor_type) -> np.dtype:
@@ -46,58 +40,49 @@ def ggml_to_numpy_type(tensor_type) -> np.dtype:
         return np.dtype('uint8')
 
 def dequantize_q4_0(packed: np.ndarray, scales: np.ndarray, out_features: int, in_features: int) -> np.ndarray:
-    """Dequantizes a Q4_0 tensor back to a float32 NumPy array."""
-    # packed shape: (out_features, (in_features // 32) * 16)
-    # scales shape: (out_features, in_features // 32)
-    num_blocks = in_features // 32
-    unpacked = np.zeros((out_features, in_features), dtype=np.float32)
-    
-    for i in range(out_features):
-        for b in range(num_blocks):
-            scale = scales[i, b]
-            block_offset = b * 16
-            for j in range(16):
-                byte_val = packed[i, block_offset + j]
-                q_low = np.float32(byte_val & 15) - 8.0
-                q_high = np.float32(byte_val >> 4) - 8.0
-                
-                # GGML Q4_0 layout:
-                # low nibble corresponds to weight at index b * 32 + j
-                # high nibble corresponds to weight at index b * 32 + j + 16
-                unpacked[i, b * 32 + j] = q_low * scale
-                unpacked[i, b * 32 + j + 16] = q_high * scale
-                
-    return unpacked
+    """Dequantizes a Q4_0 tensor back to a float32 NumPy array (vectorized)."""
+    num_blocks_per_row = in_features // 32
+    # Reshape packed bytes to (out_features, num_blocks_per_row, 16)
+    p = packed.reshape(out_features, num_blocks_per_row, 16)
+    # Extract low and high nibbles
+    low = (p & 0xF).astype(np.float32) - 8.0    # positions 0..15
+    high = (p >> 4).astype(np.float32) - 8.0     # positions 16..31
+    # Interleave: [low(16), high(16)] per block → 32 values
+    dequant = np.concatenate([low, high], axis=2)  # (out, blocks, 32)
+    # Scale each block
+    dequant *= scales[:, :, np.newaxis]
+    return dequant.reshape(out_features, in_features)
+
+def dequantize_q4_1(packed: np.ndarray, scales: np.ndarray, biases: np.ndarray, out_features: int, in_features: int) -> np.ndarray:
+    """Dequantizes a Q4_1 tensor back to a float32 NumPy array (vectorized)."""
+    num_blocks_per_row = in_features // 32
+    p = packed.reshape(out_features, num_blocks_per_row, 16)
+    low = (p & 0xF).astype(np.float32)
+    high = (p >> 4).astype(np.float32)
+    dequant = np.concatenate([low, high], axis=2)
+    dequant = dequant * scales[:, :, np.newaxis] + biases[:, :, np.newaxis]
+    return dequant.reshape(out_features, in_features)
 
 def quantize_q4_0(weight: np.ndarray) -> bytes:
-    """Quantizes a float32 matrix back into Q4_0 byte format."""
+    """Quantizes a float32 matrix back into Q4_0 byte format (vectorized)."""
     out_features, in_features = weight.shape
     assert in_features % 32 == 0
-    
-    num_blocks = (out_features * in_features) // 32
-    flat_weight = weight.flatten()
-    blocks_data = bytearray()
-    
-    for b in range(num_blocks):
-        block = flat_weight[b*32 : (b+1)*32]
-        max_val = np.max(np.abs(block))
-        scale = max_val / 8.0 if max_val > 1e-6 else 0.0
-        
-        blocks_data.extend(np.float16(scale).tobytes())
-        
-        packed_bytes = bytearray(16)
-        for j in range(16):
-            val_low = block[j]
-            val_high = block[j + 16]
-            
-            q_low = int(np.clip(np.round(val_low / scale) + 8.0, 0, 15)) if scale > 0 else 8
-            q_high = int(np.clip(np.round(val_high / scale) + 8.0, 0, 15)) if scale > 0 else 8
-            
-            packed_bytes[j] = (q_high << 4) | q_low
-            
-        blocks_data.extend(packed_bytes)
-        
-    return bytes(blocks_data)
+    # Reshape into blocks of 32
+    blocks = weight.reshape(-1, 32)  # (num_blocks, 32)
+    # Compute scale per block: max_abs / 8
+    max_vals = np.max(np.abs(blocks), axis=1)  # (num_blocks,)
+    scales = max_vals / 8.0
+    scales = np.where(scales < 1e-6, 1e-6, scales)
+    # Quantize all values: round(val / scale) + 8, clip to [0, 15]
+    quantized = np.clip(np.round(blocks / scales[:, np.newaxis]) + 8.0, 0, 15).astype(np.uint8)
+    # Pack nibbles: low = block[j], high = block[j+16] for j in 0..15
+    low = quantized[:, :16]
+    high = quantized[:, 16:]
+    packed = (high << 4) | low  # (num_blocks, 16)
+    # Build output: [scale_f16(2 bytes), packed(16 bytes)] per block = 18 bytes
+    scale_bytes = scales.astype(np.float16).view(np.uint8).reshape(-1, 2)
+    block_data = np.concatenate([scale_bytes, packed], axis=1)  # (num_blocks, 18)
+    return block_data.tobytes()
 
 def prune_gguf(src_path: str, dst_path: str, prune_ratio: float = 0.5):
     """Reads a source Q4_0 GGUF file, prunes the FFN intermediate dimension, and saves it."""
@@ -196,7 +181,10 @@ def prune_gguf(src_path: str, dst_path: str, prune_ratio: float = 0.5):
                 cols, rows = gguf_shape[0], gguf_shape[1]
                 is_quantized = int(tensor.tensor_type) not in [0, 1]
                 if is_quantized:
-                    bytes_per_row = (cols // 32) * 18
+                    from gguf.quants import GGML_QUANT_SIZES
+                    qtype = GGMLQuantizationType(int(tensor.tensor_type))
+                    block_size, type_size = GGML_QUANT_SIZES.get(qtype, (32, 18))
+                    bytes_per_row = (cols // block_size) * type_size
                     shape_to_pass = [rows, bytes_per_row]
                     dtype_to_pass = np.dtype('uint8')
                 else:
@@ -249,16 +237,25 @@ def prune_gguf(src_path: str, dst_path: str, prune_ratio: float = 0.5):
             # Dequantize, slice, quantize
             # Original GGUF shape: (intermediate_dim, hidden_dim)
             # Python shape: (hidden_dim, intermediate_dim)
+            # ffn_down can be Q4_0 (18 bytes/block) or Q4_1 (20 bytes/block) depending on the layer
             num_blocks = (hidden_dim * intermediate_dim) // 32
-            blocks = np.frombuffer(data, dtype=np.uint8).reshape(num_blocks, 18)
-            scales = blocks[:, :2].copy().view(np.float16).reshape(hidden_dim, intermediate_dim // 32)
-            packed = blocks[:, 2:].copy().reshape(hidden_dim, (intermediate_dim // 32) * 16)
+            ttype = int(tensor.tensor_type)
             
-            # Dequantize full
-            w_float32 = dequantize_q4_0(packed, scales, hidden_dim, intermediate_dim)
+            if ttype == 3:  # Q4_1: 20 bytes per block (2 scale + 2 bias + 16 packed)
+                blocks = np.frombuffer(data, dtype=np.uint8).reshape(num_blocks, 20)
+                scales = blocks[:, :2].copy().view(np.float16).astype(np.float32).reshape(hidden_dim, intermediate_dim // 32)
+                biases = blocks[:, 2:4].copy().view(np.float16).astype(np.float32).reshape(hidden_dim, intermediate_dim // 32)
+                packed = blocks[:, 4:].copy().reshape(hidden_dim, (intermediate_dim // 32) * 16)
+                w_float32 = dequantize_q4_1(packed, scales, biases, hidden_dim, intermediate_dim)
+            else:  # Q4_0: 18 bytes per block (2 scale + 16 packed)
+                blocks = np.frombuffer(data, dtype=np.uint8).reshape(num_blocks, 18)
+                scales = blocks[:, :2].copy().view(np.float16).astype(np.float32).reshape(hidden_dim, intermediate_dim // 32)
+                packed = blocks[:, 2:].copy().reshape(hidden_dim, (intermediate_dim // 32) * 16)
+                w_float32 = dequantize_q4_0(packed, scales, hidden_dim, intermediate_dim)
+            
             # Slice column-wise in python (intermediate dimension)
             w_sliced = w_float32[:, :new_intermediate_dim]
-            # Quantize
+            # Quantize to Q4_0 (which fits the serving engine)
             w_packed_bytes = quantize_q4_0(w_sliced)
             writer.write_tensor_data(np.frombuffer(w_packed_bytes, dtype=np.uint8))
             
