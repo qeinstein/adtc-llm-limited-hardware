@@ -1,0 +1,228 @@
+[
+  {
+    "query": "Kijijini kuna watu kadhaa wanaharisha kinyesi kama maji ya mchele na wanadhoofika haraka. This looks like an outbreak. Nifanye nini?",
+    "gold_keywords": [
+      "kipindupindu",
+      "cholera",
+      "ors",
+      "ringer",
+      "rufaa",
+      "maji safi",
+      "report"
+    ],
+    "description": "Rice-water stools with rapid dehydration in a cluster; tests recognition of cholera, ORS/IV rehydration, referral, and notification."
+  },
+  {
+    "query": "Mtoto wa miezi minane ana kikohozi na anapumua haraka. How many breaths mean fast breathing kwa umri huu?",
+    "gold_keywords": [
+      "50",
+      "fast breathing",
+      "kupumua haraka",
+      "nimonia",
+      "amoxicillin",
+      "kifua kubonyea"
+    ],
+    "description": "IMCI fast-breathing threshold for infant 2-11 months (50/min) and pneumonia vs severe pneumonia."
+  },
+  {
+    "query": "Mtu ana malaria, sasa amepoteza fahamu na anapata degedege. Hii ni hali gani na nifanye nini?",
+    "gold_keywords": [
+      "malaria kali",
+      "severe malaria",
+      "degedege",
+      "referral",
+      "rufaa",
+      "artesunate"
+    ],
+    "description": "Convulsions and unconsciousness in malaria; tests recognition of severe malaria and urgent referral / artesunate."
+  },
+  {
+    "query": "Mkulima ameumwa na nyoka mguuni. First aid gani ni sahihi na nini nisifanye?",
+    "gold_keywords": [
+      "snakebite",
+      "immobilise",
+      "usisogeze",
+      "antivenom",
+      "rufaa",
+      "usikate",
+      "usifyonze"
+    ],
+    "description": "Snakebite first aid; tests immobilisation, urgent referral for antivenom, and avoidance of harmful practices (cutting/sucking/tourniquet)."
+  },
+  {
+    "query": "Napima MUAC ya mtoto na kipimo ni 11.0 cm. Hii inamaanisha nini na nifanye nini?",
+    "gold_keywords": [
+      "sam",
+      "utapiamlo mkali",
+      "muac",
+      "rutf",
+      "referral",
+      "appetite"
+    ],
+    "description": "MUAC below 11.5 cm indicates SAM; tests classification and RUTF/appetite-test/referral pathway."
+  },
+  {
+    "query": "Mama amejifungua na sasa anatokwa damu nyingi. How do I prevent na kudhibiti bleeding hii?",
+    "gold_keywords": [
+      "pph",
+      "oxytocin",
+      "uterine massage",
+      "kanda tumbo",
+      "rufaa",
+      "misoprostol"
+    ],
+    "description": "Postpartum haemorrhage; tests active management (oxytocin), uterine massage, uterotonics, and urgent referral."
+  },
+  {
+    "query": "Mtoto mchanga wa siku kumi hanyonyi vizuri na mwili ni baridi. Je, hii ni hatari?",
+    "gold_keywords": [
+      "neonatal",
+      "danger sign",
+      "dalili za hatari",
+      "kushindwa kunyonya",
+      "referral",
+      "joto",
+      "rufaa"
+    ],
+    "description": "Newborn poor feeding and hypothermia; tests recognition of neonatal danger signs, warmth, and urgent referral."
+  },
+  {
+    "query": "Mtoto wa miaka miwili anaharisha. Mbali na ORS, ni dawa gani nyingine ninapaswa kumpa na kwa siku ngapi?",
+    "gold_keywords": [
+      "zinc",
+      "zinki",
+      "20mg",
+      "10-14",
+      "ors",
+      "kunyonyesha"
+    ],
+    "description": "Diarrhoea management beyond ORS; tests zinc 20 mg for 10-14 days and continued feeding."
+  },
+  {
+    "query": "Mtoto ameumwa na mbwa asiyejulikana. Nini hatua za kwanza kabla ya kwenda kliniki?",
+    "gold_keywords": [
+      "rabies",
+      "kichaa cha mbwa",
+      "osha",
+      "sabuni",
+      "15",
+      "pep",
+      "chanjo"
+    ],
+    "description": "Dog bite; tests immediate 15-minute soap-and-water washing and rabies PEP referral."
+  },
+  {
+    "query": "Mjamzito wa wiki 30 ana maumivu makali ya kichwa, anaona ukungu na uso umevimba. Nifikirie nini?",
+    "gold_keywords": [
+      "preeclampsia",
+      "kifafa cha mimba",
+      "presha",
+      "magnesium",
+      "rufaa",
+      "referral"
+    ],
+    "description": "Severe headache, blurred vision, oedema in pregnancy; tests pre-eclampsia recognition and MgSO4/urgent referral."
+  },
+  {
+    "query": "Mtu ana kikohozi cha zaidi ya wiki tatu, jasho la usiku na amepungua uzito. Kipimo gani anahitaji?",
+    "gold_keywords": [
+      "tb",
+      "kifua kikuu",
+      "genexpert",
+      "sputum",
+      "makohozi",
+      "dots",
+      "hiv"
+    ],
+    "description": "Chronic cough with weight loss and night sweats; tests TB suspicion and sputum/GeneXpert testing plus HIV offer."
+  },
+  {
+    "query": "Mtoto amemwagikiwa maji ya moto mkononi. What first aid na nini nisipake?",
+    "gold_keywords": [
+      "burn",
+      "kuungua",
+      "maji baridi",
+      "cool water",
+      "20",
+      "usipake",
+      "referral"
+    ],
+    "description": "Scald burn; tests cooling with running water for 20 minutes and avoiding toothpaste/oil/herbs."
+  },
+  {
+    "query": "Mtoto ana homa kali, shingo ngumu na utosi umevimba. Hii ni dalili za nini?",
+    "gold_keywords": [
+      "meningitis",
+      "uti wa mgongo",
+      "shingo ngumu",
+      "utosi",
+      "rufaa",
+      "antibiotic"
+    ],
+    "description": "Fever, stiff neck, bulging fontanelle; tests meningitis recognition and urgent referral / pre-referral antibiotic."
+  },
+  {
+    "query": "Mjamzito ana viganja weupe na anachoka haraka. Kinga na tiba ni ipi?",
+    "gold_keywords": [
+      "anaemia",
+      "upungufu wa damu",
+      "iron",
+      "madini ya chuma",
+      "folic acid",
+      "chandarua",
+      "referral"
+    ],
+    "description": "Pallor and fatigue in pregnancy; tests iron-folic acid, malaria prevention, and referral for severe anaemia."
+  },
+  {
+    "query": "Mwanaume ana kutokwa na usaha kwenye uume. Nimtibu vipi na nini kingine muhimu?",
+    "gold_keywords": [
+      "sti",
+      "magonjwa ya zinaa",
+      "urethral discharge",
+      "usaha",
+      "tibu mwenzi",
+      "condom",
+      "hiv"
+    ],
+    "description": "Urethral discharge; tests syndromic STI management, partner treatment, condoms, and HIV testing."
+  },
+  {
+    "query": "Ni dalili gani kuu zinazoonyesha mtoto mgonjwa anahitaji rufaa ya haraka bila kuchelewa?",
+    "gold_keywords": [
+      "general danger signs",
+      "dalili za hatari",
+      "kushindwa kunywa",
+      "kutapika kila kitu",
+      "degedege",
+      "kupoteza fahamu",
+      "referral"
+    ],
+    "description": "IMCI general danger signs; tests recall of the four core danger signs and urgent referral."
+  },
+  {
+    "query": "Watoto shuleni wanapewa dawa ya minyoo. Ni dawa gani na kila baada ya muda gani?",
+    "gold_keywords": [
+      "deworming",
+      "minyoo",
+      "albendazole",
+      "400mg",
+      "mebendazole",
+      "6",
+      "usafi"
+    ],
+    "description": "Deworming; tests albendazole/mebendazole dosing, 6-monthly interval, and hygiene messaging."
+  },
+  {
+    "query": "Mtu mzima ana kiu kikubwa, anakojoa mara kwa mara na amepungua uzito. Nifikirie ugonjwa gani?",
+    "gold_keywords": [
+      "kisukari",
+      "diabetes",
+      "blood glucose",
+      "sukari",
+      "referral",
+      "metformin"
+    ],
+    "description": "Polydipsia, polyuria, weight loss; tests diabetes suspicion and glucose testing/referral."
+  }
+]
