@@ -1,37 +1,40 @@
 {
-  "team_id": "adtc-team-custom-serving",
+  "team_id": "jamii-afya",
   "domain": "healthcare_medical",
-  "language_scope": ["en", "sw"],
+  "language_scope": [
+    "en",
+    "sw"
+  ],
   "african_alpha_claim": true,
   "budget_laptop_claim": true,
   "submitter": {
     "name": "Toheeb Ogunade",
-    "email": "toheeb.ogunade@domain.com",
+    "email": "ogunadetoheeb4@gmail.com",
     "github_handle": "qeinstein"
   },
   "cross_disciplinary_pairing": {
     "discipline": "medicine",
     "load_bearing": true,
-    "description": "Offline healthcare symptom assistant supporting local languages (Swahili) on low-end hardware."
+    "description": "Jamii Afya is an offline clinical decision-support advisor for community health workers in rural African clinics. Its design is driven by primary-care clinical workflows (WHO/IMCI triage, danger-sign escalation, essential-medicines dosing) and by bilingual English/Kiswahili patient communication, so the medical discipline is load-bearing on both the knowledge base and the safety behaviour."
   },
   "test_prompts": [
     {
       "prompt_id": "tp_001",
-      "prompt": "Joto la mwili la nyuzi 39 Celsius na kikohozi kikavu kwa mtoto wa miaka miwili. Nifanye nini?"
+      "prompt": "Mtoto wa miaka miwili ana joto la nyuzi 39 Celsius na kikohozi kikavu, na anapumua haraka. Kama mhudumu wa afya kijijini, nifanye tathmini na hatua gani za kwanza?"
     },
     {
       "prompt_id": "tp_002",
-      "prompt": "What are the common symptoms of Malaria and how can it be diagnosed in a rural clinic?"
+      "prompt": "A pregnant woman at 30 weeks presents with severe headache, blurred vision, and swelling of the face. What danger signs should I check for and what should I do in a rural clinic without a doctor on site?"
     }
   ],
   "model": {
-    "name": "Qwen2.5-14B-Instruct-Q4_0-TurboQuant",
-    "runtime": "ctypes-llama-cpp",
-    "quantization": "Q4_0 weights + Custom 2-bit/4-bit TurboQuant KV cache + Sparse FFN Swapping",
-    "parameters_estimate": "14.7B",
-    "packaging": "python_ctypes_bundle"
+    "name": "JamiiAfya-Qwen3-1.7B-Medical",
+    "runtime": "llama.cpp",
+    "quantization": "GGUF Q4_K_M (EN+SW medical imatrix calibration)",
+    "parameters_estimate": "1.7B",
+    "packaging": "binary_bundle"
   },
   "_runtime": {
-    "model_path": "model/Qwen2.5-14B-Instruct-Q4_0.gguf"
+    "model_path": "model/Qwen3-1.7B-Q4_K_M.gguf"
   }
 }

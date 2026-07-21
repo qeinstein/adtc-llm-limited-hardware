@@ -1,22 +1,37 @@
-# Model Weights (do NOT commit large binary weights)
-model/
+# --- Model weights: never commit large binary weights (judges download via download_model.sh) ---
 *.gguf
+*.bin
+*.safetensors
+*.pt
+*.pth
+model/*
+!model/.gitkeep
 
-# Python Virtual Environments
+# --- Fine-tuning / quantization intermediates ---
+output/
+*.lora
+imatrix.dat
+calibration*.txt
+
+# --- Profiler / benchmark run outputs (regenerated; not source) ---
+/submission.json
+/audit.json
+/verdict.json
+/accuracy_report.json
+
+# --- Python ---
 venv/
 .venv/
 env/
-
-# Python caching
 __pycache__/
 *.py[cod]
 *$py.class
+.pytest_cache/
+.ruff_cache/
 
-# IDE configurations
+# --- IDE / OS ---
 .vscode/
 .idea/
 .DS_Store
 
-# Local benchmark logs & profile outputs
-*.json
-!metadata.json
+# NOTE: data/*.json (RAG corpus, eval sets, LoRA dataset) IS tracked on purpose — do not ignore it.

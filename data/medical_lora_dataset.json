@@ -1,0 +1,402 @@
+[
+  {
+    "instruction": "Multiple choice. A 3-year-old has watery diarrhoea. Besides ORS, which is the correct additional treatment? A) Antibiotics for all cases B) Zinc 20 mg daily for 10-14 days C) Anti-motility drugs like loperamide D) Withhold all food. Answer:",
+    "input": "",
+    "output": "B. Zinc 20 mg daily for 10-14 days shortens the illness and reduces future episodes; routine antibiotics and anti-motility drugs are not recommended, and feeding should continue. Refer if danger signs appear. This is decision support, not a diagnosis."
+  },
+  {
+    "instruction": "Chagua jibu sahihi. Mtoto wa miezi 8 anapumua pumzi 52 kwa dakika. Kwa mujibu wa IMCI hii ni: A) Kupumua kwa kawaida B) Kupumua haraka (fast breathing) C) Nimonia kali yenye kifua kubonyea D) Pumu. Answer:",
+    "input": "",
+    "output": "B. Kwa mtoto wa miezi 2-11, pumzi 50 au zaidi kwa dakika ni kupumua haraka (fast breathing), inayotibiwa kama nimonia kwa amoxicillin ya kunywa. Kama kuna kifua kubonyea ndani au dalili za hatari, hiyo ni nimonia kali inayohitaji rufaa. Hii ni msaada wa maamuzi, si utambuzi kamili."
+  },
+  {
+    "instruction": "Multiple choice. Before treating a patient for uncomplicated malaria in a rural clinic, what should you do first? A) Start ACT immediately on clinical suspicion B) Confirm with an mRDT or blood smear C) Give antibiotics D) Give quinine only. Answer:",
+    "input": "",
+    "output": "B. Always confirm malaria with a rapid diagnostic test (mRDT) or microscopy before treating; do not treat on suspicion alone. Confirmed uncomplicated falciparum malaria is treated with an ACT such as artemether-lumefantrine by weight band. Refer any danger sign. This is decision support, not a diagnosis."
+  },
+  {
+    "instruction": "Chagua jibu sahihi. Ni ipi kati ya hizi ni dalili ya malaria kali (severe malaria)? A) Homa ya siku moja pekee B) Degedege na kupoteza fahamu C) Maumivu kidogo ya kichwa D) Kikohozi. Answer:",
+    "input": "",
+    "output": "B. Degedege (convulsions) na kupoteza fahamu ni dalili za malaria kali - dharura inayohitaji rufaa ya haraka na artesunate. Dalili nyingine za hatari ni kushindwa kunywa, kutapika kila kitu, na udhaifu mkubwa. Toa artesunate ya njia ya haja kubwa kabla ya rufaa kwa watoto wadogo ikiwa sindano haipatikani. Hii ni msaada wa maamuzi, si utambuzi."
+  },
+  {
+    "instruction": "Multiple choice. A child's MUAC measures 11.0 cm with no oedema. This indicates: A) Normal nutrition B) Moderate acute malnutrition C) Severe acute malnutrition D) Overweight. Answer:",
+    "input": "",
+    "output": "C. A MUAC below 11.5 cm indicates severe acute malnutrition (SAM), as does any bilateral pitting oedema. Do an appetite test and check for complications: uncomplicated SAM is managed with RUTF as an outpatient, while SAM with complications needs inpatient referral. This is decision support, not a diagnosis."
+  },
+  {
+    "instruction": "Chagua jibu sahihi. Mtu anaharisha kinyesi kama maji ya mchele na amedhoofika sana. Nini kifanyike kwanza? A) Kumpa dawa za kuzuia kuharisha B) Kuanza ORS, na kwa upungufu mkubwa toa maji ya njia ya mshipa (IV) na rufaa C) Kumpa chai D) Kusubiri vipimo. Answer:",
+    "input": "",
+    "output": "B. Dalili hizi zinaashiria kipindupindu (cholera). Anza ORS mara moja; kwa upungufu mkubwa wa maji toa maji ya njia ya mshipa (Ringer's lactate) haraka na peleka rufaa. Antibiotiki inaweza kutolewa kwa kesi kali chini ya mwongozo. Ripoti kwa mamlaka za afya. Hii ni msaada wa maamuzi, si utambuzi."
+  },
+  {
+    "instruction": "Multiple choice. To prevent postpartum haemorrhage during active management of the third stage of labour, which drug is given? A) Paracetamol B) Oxytocin 10 IU IM within one minute of birth C) Amoxicillin D) Magnesium sulfate. Answer:",
+    "input": "",
+    "output": "B. Oxytocin 10 IU intramuscularly within one minute of birth is the key step in active management of the third stage, with controlled cord traction and uterine massage. If bleeding continues, use additional uterotonics (misoprostol if oxytocin is unavailable), IV fluids, and urgent referral. Magnesium sulfate is for eclampsia, not PPH. This is decision support."
+  },
+  {
+    "instruction": "Chagua jibu sahihi. Baada ya kuumwa na mbwa, hatua ya kwanza muhimu zaidi ni: A) Kufunga jeraha kwa bendeji kali B) Kuosha jeraha kwa maji na sabuni kwa angalau dakika 15 C) Kupaka mafuta D) Kusubiri kuona kama litapona. Answer:",
+    "input": "",
+    "output": "B. Osha jeraha kwa maji tiririka na sabuni kwa angalau dakika 15 ili kupunguza virusi vya kichaa cha mbwa (rabies), kisha paka dawa ya kuua vijidudu. Peleka mgonjwa apate chanjo ya PEP, na kwa jeraha kubwa apate immunoglobulin. Angalia hali ya chanjo ya pepopunda. Hii ni msaada wa maamuzi, si utambuzi."
+  },
+  {
+    "instruction": "Multiple choice. Which combination most suggests meningitis in a child? A) Fever and mild cough B) Fever, stiff neck, and drowsiness C) Itchy skin and sneezing D) Mild diarrhoea. Answer:",
+    "input": "",
+    "output": "B. Fever with a stiff neck and drowsiness or confusion strongly suggests meningitis; in infants also look for a bulging fontanelle and poor feeding. This is an emergency: give a pre-referral antibiotic if trained and refer urgently. A non-blanching purple rash suggests meningococcal disease. This is decision support, not a diagnosis."
+  },
+  {
+    "instruction": "Chagua jibu sahihi. Dawa ya kawaida ya minyoo kwa watoto na kipimo chake ni: A) Albendazole 400 mg dozi moja (200 mg kwa miezi 12-23) B) Paracetamol C) ORS D) Amoxicillin kwa wiki mbili. Answer:",
+    "input": "",
+    "output": "A. Albendazole 400 mg kama dozi moja (200 mg kwa watoto wa miezi 12-23) au mebendazole 500 mg hutolewa, na kurudiwa kila baada ya miezi 6 katika maeneo yenye minyoo mingi. Ambatanisha na usafi: kunawa mikono, kuvaa viatu, na kutumia vyoo. Hii ni msaada wa maamuzi, si utambuzi."
+  },
+  {
+    "instruction": "Multiple choice. A woman at 32 weeks has BP 165/115, severe headache, and blurred vision. The priority drug to prevent convulsions is: A) Paracetamol B) Magnesium sulfate C) Oxytocin D) Iron tablets. Answer:",
+    "input": "",
+    "output": "B. These are severe pre-eclampsia features; magnesium sulfate is the anticonvulsant of choice to prevent and treat eclamptic convulsions, started per protocol by trained staff. Refer urgently for blood pressure control and delivery. Protect the airway if a convulsion occurs. This is decision support, not a diagnosis."
+  },
+  {
+    "instruction": "Chagua jibu sahihi. Mtoto ana surua (measles). Nyongeza gani muhimu inapaswa kutolewa? A) Vitamin A B) Chuma pekee C) Antibiotiki kwa wote D) Hakuna. Answer:",
+    "input": "",
+    "output": "A. Mtoto mwenye surua apewe nyongeza ya vitamin A (dozi mbili kulingana na umri kama WHO inavyoelekeza) ili kupunguza matatizo. Toa pia tiba ya kuunga mkono, maji, na tibu matatizo kama nimonia au kuharisha. Peleka rufaa kwa dalili za hatari kama kupumua kwa shida au macho kuwa na ukungu. Hii ni msaada wa maamuzi, si utambuzi."
+  },
+  {
+    "instruction": "Multiple choice. Which patient should be evaluated for tuberculosis? A) Cough for 2 days with a runny nose B) Cough for 3 weeks with night sweats and weight loss C) One episode of vomiting D) A single fever. Answer:",
+    "input": "",
+    "output": "B. A cough lasting 2 weeks or more with night sweats and weight loss is a classic presumptive TB presentation; refer for sputum GeneXpert or smear microscopy to confirm before starting the 6-month DOTS regimen. Offer HIV testing and screen household contacts. This is decision support, not a diagnosis."
+  },
+  {
+    "instruction": "Chagua jibu sahihi. Ni ipi NI dalili kuu ya hatari (IMCI) inayohitaji rufaa ya haraka kwa mtoto? A) Kutokwa na kamasi B) Kutapika kila kitu C) Homa kidogo D) Kikohozi kikavu. Answer:",
+    "input": "",
+    "output": "B. Kutapika kila kitu ni mojawapo ya dalili kuu za hatari za IMCI, pamoja na kushindwa kunywa au kunyonya, degedege, na kulala tu au kupoteza fahamu. Mtoto mwenye dalili yoyote kati ya hizi anahitaji tiba ya awali na rufaa ya haraka. Hii ni msaada wa maamuzi, si utambuzi."
+  },
+  {
+    "instruction": "Multiple choice. Correct first aid for a fresh scald burn is to: A) Apply toothpaste or oil B) Cool with clean running water for about 20 minutes C) Apply ice directly D) Rub with herbs. Answer:",
+    "input": "",
+    "output": "B. Cool the burn with clean cool running water for about 20 minutes; do not use ice, toothpaste, oil, or herbs. Remove clothing and jewellery unless stuck, cover loosely with a clean cloth, give paracetamol for pain, and refer large, deep, or facial/hand/genital burns. Check tetanus status. This is decision support, not a diagnosis."
+  },
+  {
+    "instruction": "Eleza kwa mgonjwa kwa Kiswahili rahisi jinsi ya kutengeneza na kutumia ORS nyumbani.",
+    "input": "",
+    "output": "Chukua pakiti moja ya ORS na uikoroge katika lita moja ya maji safi yaliyochemshwa na kupoa. Kama huna pakiti, unaweza kutumia maji safi lita moja, vijiko sita vidogo vya sukari na nusu kijiko kidogo cha chumvi. Mpe mgonjwa anywe kidogo kidogo mara kwa mara, hasa baada ya kila haja kubwa. Endelea kunyonyesha au kula. Kama mgonjwa anazidi kudhoofika, macho yamedidimia, au hawezi kunywa, mpeleke kituo cha afya haraka. Huu ni ushauri wa msaada, thibitisha na mtaalamu wa afya."
+  },
+  {
+    "instruction": "Mueleze mama kwa Kiswahili rahisi umuhimu wa kunyonyesha maziwa ya mama pekee kwa miezi sita ya kwanza.",
+    "input": "",
+    "output": "Mpe mtoto maziwa ya mama pekee kwa miezi sita ya kwanza, bila maji, chai, au vyakula vingine. Maziwa ya mama yana kila kitu mtoto anachohitaji na yanamkinga dhidi ya magonjwa kama kuharisha na nimonia. Mnyonyeshe mara kwa mara, mchana na usiku, kila anapotaka. Baada ya miezi sita, anza vyakula vya nyongeza huku ukiendelea kunyonyesha hadi miaka miwili au zaidi. Kama mtoto hanyonyi vizuri au anadhoofika, nenda kituo cha afya. Huu ni ushauri wa msaada, thibitisha na mtaalamu wa afya."
+  },
+  {
+    "instruction": "Eleza kwa Kiswahili rahisi kwa mgonjwa mwenye shinikizo la damu (presha) jinsi ya kutunza afya yake.",
+    "input": "",
+    "output": "Presha ya juu mara nyingi haina dalili lakini inaweza kuleta kiharusi au matatizo ya moyo na figo. Tumia dawa zako kila siku kama ulivyoelekezwa, hata ukijisikia vizuri, na usiache ghafla. Punguza chumvi katika chakula, kula matunda na mboga, fanya mazoezi, punguza uzito ukiwa mnene, acha sigara na punguza pombe. Hudhuria kliniki kupima presha mara kwa mara. Ukipata maumivu makali ya kichwa, maumivu ya kifua, kushindwa kupumua, au udhaifu upande mmoja, nenda hospitali haraka. Huu ni ushauri wa msaada, thibitisha na mtaalamu wa afya."
+  },
+  {
+    "instruction": "Mueleze mgonjwa wa kisukari kwa Kiswahili rahisi jinsi ya kutunza miguu yake.",
+    "input": "",
+    "output": "Kisukari kinaweza kuharibu hisia za miguu, hivyo vidonda vinaweza kutokea bila kuhisi. Angalia miguu yako kila siku kuona michubuko, malengelenge, au vidonda. Osha miguu kwa maji na sabuni, kausha vizuri hasa katikati ya vidole, na paka mafuta laini. Vaa viatu vinavyotosha na usitembee peku. Kata kucha kwa uangalifu. Ukiona kidonda kisichopona, uvimbe, au rangi kubadilika, nenda kituo cha afya haraka. Dhibiti sukari yako, kula vizuri na tumia dawa kama ulivyoelekezwa. Huu ni ushauri wa msaada, thibitisha na mtaalamu wa afya."
+  },
+  {
+    "instruction": "Eleza kwa Kiswahili rahisi kwa familia dalili za hatari za mtoto mchanga zinazohitaji kwenda hospitali haraka.",
+    "input": "",
+    "output": "Mtoto mchanga anaweza kuugua haraka sana. Nenda kituo cha afya haraka kama mtoto: hanyonyi vizuri au amekataa kunyonya, ana degedege, anapumua haraka sana au kwa shida, mwili una moto sana au ni baridi sana, hajishughulishi au analala tu, ana manjano machoni au ngozini, au kitovu kimevimba na kutoa usaha. Wakati wa kusafiri, mfunike vizuri na umbebe kifuani kumpa joto, na endelea kunyonyesha ikiwezekana. Usichelewe. Huu ni ushauri wa msaada, thibitisha na mtaalamu wa afya."
+  },
+  {
+    "instruction": "Mueleze mjamzito kwa Kiswahili rahisi umuhimu wa kutumia vidonge vya madini ya chuma na folic acid.",
+    "input": "",
+    "output": "Wakati wa ujauzito, mwili unahitaji damu zaidi, na upungufu wa damu unaweza kuleta hatari wakati wa kujifungua. Meza kidonge cha madini ya chuma na folic acid kila siku kama ulivyopewa kliniki, ili kuzuia upungufu wa damu na kumsaidia mtoto kukua vizuri. Vinaweza kufanya kinyesi kiwe cheusi au tumbo kujaa - hii ni kawaida. Kula pia vyakula vyenye chuma kama mboga za majani na nyama. Lala ndani ya chandarua kuzuia malaria. Hudhuria kliniki ya wajawazito mara kwa mara. Huu ni ushauri wa msaada, thibitisha na mtaalamu wa afya."
+  },
+  {
+    "instruction": "Eleza kwa Kiswahili rahisi kwa mgonjwa jinsi ya kuzuia malaria nyumbani.",
+    "input": "",
+    "output": "Malaria huenezwa na mbu wanaouma usiku. Lala ndani ya chandarua chenye dawa kila usiku, wewe na watoto na wajawazito hasa. Ondoa maji yaliyotuama karibu na nyumba ambapo mbu huzaliana, funika mapipa ya maji, na safisha mazingira. Weka nyavu kwenye madirisha ikiwezekana. Ukipata homa, baridi, au maumivu ya kichwa, nenda kituo cha afya upimwe kwa kipimo cha haraka (mRDT) kabla ya kutumia dawa yoyote. Usinunue dawa za malaria bila kipimo. Huu ni ushauri wa msaada, thibitisha na mtaalamu wa afya."
+  },
+  {
+    "instruction": "Mueleze mgonjwa wa TB kwa Kiswahili rahisi kwa nini ni muhimu kumaliza dawa zote.",
+    "input": "",
+    "output": "Kifua kikuu (TB) kinatibika kabisa ukimaliza dawa zote kwa muda wote uliopangwa, kwa kawaida miezi sita. Meza dawa kila siku kama ulivyoelekezwa, hata ukianza kujisikia vizuri. Ukiacha dawa mapema, ugonjwa unaweza kurudi na kuwa mgumu kutibika (usugu wa dawa). Nenda kliniki kwa ufuatiliaji na kumeza dawa chini ya usimamizi (DOTS). Funika mdomo unapokohoa na hakikisha chumba kina hewa ya kutosha ili kuwakinga wengine. Wahimize wanaoishi nawe wapimwe. Huu ni ushauri wa msaada, thibitisha na mtaalamu wa afya."
+  },
+  {
+    "instruction": "Eleza kwa Kiswahili rahisi kwa mgonjwa jinsi ya kutunza jeraha dogo nyumbani.",
+    "input": "",
+    "output": "Kwanza nawa mikono yako, kisha zuia damu kwa kubonyeza jeraha kwa kitambaa safi. Safisha jeraha kwa maji safi na uondoe uchafu unaoonekana. Funika kwa bendeji safi na ibadilishe ikiloa au kuchafuka. Usipake kinyesi cha wanyama, mitishamba, au vitu vichafu kwenye jeraha. Nenda kituo cha afya kama jeraha ni kubwa, lina kina, linavuja damu nyingi, limetokana na kuumwa na mnyama, au unaona dalili za maambukizi kama maumivu yanayoongezeka, uvimbe, usaha, au homa. Angalia kama unahitaji chanjo ya pepopunda. Huu ni ushauri wa msaada, thibitisha na mtaalamu wa afya."
+  },
+  {
+    "instruction": "Mueleze mzazi kwa Kiswahili rahisi jinsi ya kupunguza homa ya mtoto nyumbani kabla ya kufika kliniki.",
+    "input": "",
+    "output": "Mvue mtoto nguo nzito na umfute mwili kwa kitambaa kilicholowa maji ya uvuguvugu (si maji baridi sana). Mpe maji au maziwa ya kutosha ili asipoteze maji mwilini. Unaweza kumpa paracetamol kulingana na uzito wake kama ulivyoelekezwa. Usimfunike sana. Ukiwa kwenye eneo la malaria, mpeleke apimwe kwa mRDT. Nenda kituo cha afya haraka kama ana degedege, anashindwa kunywa, anapumua kwa shida, ana shingo ngumu, au homa haipungui. Huu ni ushauri wa msaada, thibitisha na mtaalamu wa afya."
+  },
+  {
+    "instruction": "List the IMCI general danger signs in a sick child that require urgent referral.",
+    "input": "",
+    "output": "The IMCI general danger signs in a child aged 2 months to 5 years are: (1) unable to drink or breastfeed, (2) vomits everything, (3) convulsions during this illness or convulsing now, and (4) lethargic or unconscious. A child with any one of these is severely ill regardless of the specific disease: give appropriate pre-referral treatment and refer urgently to hospital. Always check for these first. This is decision support, not a diagnosis; confirm and act with a clinician."
+  },
+  {
+    "instruction": "Orodhesha dalili za hatari za malaria kali zinazohitaji rufaa ya haraka.",
+    "input": "",
+    "output": "Dalili za hatari za malaria kali (severe malaria) ni: kushindwa kunywa au kunyonya, kutapika kila kitu, degedege, udhaifu mkubwa au kulala tu, kupoteza fahamu, kupumua haraka au kwa shida, viganja vyeupe sana (upungufu mkubwa wa damu), mkojo mweusi au mchache, na manjano. Kwa watoto, angalia pia kushindwa kukaa au kusimama. Hii ni dharura: toa artesunate ya njia ya haja kubwa kabla ya rufaa kwa watoto wadogo ikiwa sindano haipatikani, na peleka rufaa ya haraka. Hii ni msaada wa maamuzi, si utambuzi."
+  },
+  {
+    "instruction": "Orodhesha dalili za hatari za ujauzito ambazo mama anapaswa kwenda hospitali mara moja.",
+    "input": "",
+    "output": "Dalili za hatari za ujauzito ni: kutokwa damu ukeni, maumivu makali ya kichwa yasiyopoa pamoja na kuona ukungu, degedege, homa kali, maumivu makali ya tumbo, kuvimba uso na mikono ghafla, mtoto kutosogea tumboni, na maji ya uzazi kuvunjika kabla ya uchungu au uchafu wenye harufu mbaya. Dalili yoyote kati ya hizi inahitaji rufaa ya haraka kwenye kituo chenye huduma za dharura za uzazi. Himiza kuhudhuria kliniki ya wajawazito na kujifungua kwa mkunga hodari. Hii ni msaada wa maamuzi, si utambuzi."
+  },
+  {
+    "instruction": "When should a child with diarrhoea be referred urgently rather than managed at home?",
+    "input": "",
+    "output": "Refer a child with diarrhoea urgently if there are signs of severe dehydration (lethargy or unconsciousness, sunken eyes, a very slow skin pinch, unable to drink), any IMCI general danger sign, blood in the stool, high fever, persistent vomiting, diarrhoea lasting more than 14 days, or a suspected cholera outbreak with rapid deterioration. Otherwise, treat some or no dehydration at home with ORS and zinc, continued feeding, and review. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "instruction": "List the danger signs of severe pneumonia in a child that require urgent referral.",
+    "input": "",
+    "output": "Refer a child urgently for severe pneumonia if there is chest indrawing (lower chest wall drawing in), stridor in a calm child, grunting, cyanosis (bluish lips), inability to drink or breastfeed, or any IMCI general danger sign. Fast breathing alone without these is treated as pneumonia with oral amoxicillin. Give the first dose of a pre-referral antibiotic if trained, keep the child warm, and transfer quickly. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "instruction": "Orodhesha dalili zinazoonyesha upungufu mkubwa wa maji mwilini (severe dehydration) unaohitaji rufaa.",
+    "input": "",
+    "output": "Dalili za upungufu mkubwa wa maji mwilini ni: kulala tu au kupoteza fahamu, macho yaliyodidimia sana, kushindwa kunywa au kunywa kwa shida, ngozi ikibanwa inarudi polepole sana (zaidi ya sekunde mbili), mapigo ya moyo ya haraka na dhaifu, na mkojo mchache. Hii ni dharura: anzisha maji ya njia ya mshipa (Ringer's lactate) ikiwa umefunzwa, endelea na ORS ikiwezekana, na peleka rufaa ya haraka. Kwa upungufu kidogo, tibu kwa ORS na ufuatilie. Hii ni msaada wa maamuzi, si utambuzi."
+  },
+  {
+    "instruction": "When should a person with a snakebite be referred, and what should you avoid doing?",
+    "input": "",
+    "output": "Refer every snakebite urgently to a facility with antivenom, especially if there is difficulty breathing, drooping eyelids, drowsiness, bleeding from the gums or wound, spreading swelling, or signs of shock. Keep the person calm and still, immobilise the bitten limb, and remove tight items. Do NOT cut the wound, suck the venom, apply a tight tourniquet, apply herbs, or give alcohol. Antivenom is given only under supervision at a facility. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "instruction": "Orodhesha dalili za hatari za surua (measles) zinazohitaji rufaa ya haraka.",
+    "input": "",
+    "output": "Dalili za hatari za surua zinazohitaji rufaa ya haraka ni: kupumua kwa shida au haraka (nimonia), vidonda vya kina mdomoni, macho kuwa na ukungu au weupe kwenye konea, degedege, kulala sana au kupoteza fahamu, na upungufu mkubwa wa maji kutokana na kuharisha. Mpe mtoto vitamin A, tiba ya kuunga mkono, na tibu matatizo. Mtenge mtoto ili kuzuia kuenea, na kagua hali ya chanjo katika jamii. Hii ni msaada wa maamuzi, si utambuzi."
+  },
+  {
+    "instruction": "List the warning signs of severe pre-eclampsia and eclampsia that require emergency referral.",
+    "input": "",
+    "output": "Warning signs of severe pre-eclampsia include blood pressure of 160/110 mmHg or higher, a severe persistent headache, blurred vision or seeing spots, epigastric or right upper abdominal pain, and sudden marked swelling. Eclampsia is when convulsions occur and is a life-threatening emergency. Give magnesium sulfate per protocol, protect the airway during a fit, and refer urgently for blood pressure control and delivery. Do not delay transport. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "instruction": "Orodhesha dalili za hatari za mtoto mchanga (chini ya miezi miwili) zinazohitaji rufaa ya haraka.",
+    "input": "",
+    "output": "Dalili za hatari za mtoto mchanga ni: kushindwa kunyonya au kukataa kunyonya, degedege, kupumua pumzi 60 au zaidi kwa dakika, kifua kubonyea ndani sana, homa (nyuzi 37.5 au zaidi) au mwili baridi (chini ya nyuzi 35.5), kujishughulisha tu anapochokozwa au kutosonga kabisa, manjano ngozini au machoni, na kitovu chekundu, kilichovimba au kinachotoa usaha. Mpe joto kwa kumbeba kifuani, saidia kunyonya, na peleka rufaa ya haraka. Hii ni msaada wa maamuzi, si utambuzi."
+  },
+  {
+    "instruction": "How should HIV testing be offered to a patient in a primary care clinic?",
+    "input": "",
+    "output": "Offer HIV testing services routinely, voluntarily, and confidentially, with the patient's informed consent and brief pre- and post-test information. Prioritise pregnant women, TB patients, people with STIs, and anyone who requests it. Use the national rapid test algorithm and confirm a reactive result before giving a positive diagnosis. Link everyone confirmed positive to antiretroviral therapy under test-and-treat, and support adherence and disclosure without stigma. Offer prevention advice and condoms to those testing negative. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "instruction": "Mama mjamzito ana VVU (HIV). Ni hatua gani muhimu za kuzuia maambukizi kwa mtoto (PMTCT)?",
+    "input": "",
+    "output": "Hatua za PMTCT (kuzuia maambukizi kutoka kwa mama kwenda kwa mtoto): (1) Mama aanze na aendelee na dawa za ARV (antiretroviral therapy) wakati wote wa ujauzito na kunyonyesha. (2) Mtoto apewe kinga ya dawa (infant prophylaxis, mfano nevirapine) baada ya kuzaliwa kama ilivyoelekezwa. (3) Mtoto apimwe mapema (early infant diagnosis). (4) Himiza kujifungua kituoni na ufuatiliaji wa kliniki. Support adherence to ARVs is key. Hii ni msaada wa maamuzi, si utambuzi; thibitisha na mtaalamu wa afya."
+  },
+  {
+    "instruction": "How is typhoid fever managed at the primary care level?",
+    "input": "",
+    "output": "Suspect typhoid in a patient with a prolonged, gradually rising fever, headache, abdominal pain, and poor appetite, often with a history of unsafe water or food. Confirm with laboratory testing where available. Treat with an appropriate antibiotic such as ciprofloxacin or azithromycin under clinical guidance, and give fluids, rest, and paracetamol for fever. Watch for danger signs of intestinal perforation or bleeding - severe abdominal pain, distension, or dark stools - and refer urgently. Advise safe water, handwashing, and sanitation to prevent spread. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "instruction": "Ni njia zipi za kuzuia kipindupindu (cholera) katika jamii?",
+    "input": "",
+    "output": "Njia za kuzuia kipindupindu: kunywa maji safi na salama (yaliyochemshwa au kutibiwa), kunawa mikono kwa sabuni baada ya choo na kabla ya kula au kupika, kutumia vyoo safi na kutupa kinyesi kwa usalama, kuosha na kupika chakula vizuri, na kuweka mazingira safi. Wakati wa mlipuko, anza ORS mara moja kwa mtu anayeharisha na peleka rufaa kwa upungufu mkubwa wa maji. Ripoti visa vinavyoshukiwa kwa mamlaka za afya kwa sababu kipindupindu ni ugonjwa wa kuarifiwa. Hii ni msaada wa maamuzi, si utambuzi; thibitisha na mtaalamu wa afya."
+  },
+  {
+    "instruction": "Give an overview of family planning methods a health worker can counsel on.",
+    "input": "",
+    "output": "Counsel on the full range of methods so the client can make an informed choice: barrier methods (male and female condoms, which also protect against HIV and STIs), combined and progestogen-only pills, injectables such as DMPA, implants, intrauterine devices (IUDs), permanent methods (tubal ligation, vasectomy), and the lactational amenorrhoea method for eligible breastfeeding mothers. Discuss effectiveness, benefits, possible side effects, and return of fertility, and promote dual protection with condoms where STI or HIV risk exists. Refer for methods not offered at your level and provide emergency contraception when indicated. This is decision support; confirm suitability with a clinician."
+  },
+  {
+    "instruction": "Mwanamke anataka kupanga uzazi baada ya kujifungua. Nimshauri nini?",
+    "input": "",
+    "output": "Baada ya kujifungua, njia salama ni pamoja na: kondomu, vidonge vya progestogen pekee (progestogen-only pills) ambavyo ni salama wakati wa kunyonyesha, sindano (injectables kama DMPA), vipandikizi (implants), na kitanzi (IUD) kinachoweza kuwekwa muda maalum baada ya kujifungua. Njia ya LAM (lactational amenorrhoea method) inaweza kutumika kwa muda mfupi kwa mama anayenyonyesha pekee mtoto chini ya miezi 6 na ambaye hajaanza hedhi. Discuss her preference and refer for methods not available. Hii ni msaada wa maamuzi; thibitisha ufaafu na mtaalamu wa afya."
+  },
+  {
+    "instruction": "How is urethral discharge in a man managed using the syndromic approach?",
+    "input": "",
+    "output": "Treat urethral discharge syndromically, covering the common causes (gonorrhoea and chlamydia) per the national STI protocol, since laboratory testing is often unavailable. Treat the sexual partner(s) too, advise abstaining from sex until both partners complete treatment, and provide and demonstrate condoms. Offer HIV testing and counselling and screen for other STIs. Advise completing the full treatment and returning if symptoms persist, which may indicate resistance or another cause needing referral. This is decision support, not a diagnosis; confirm treatment with a clinician following your national guidelines."
+  },
+  {
+    "instruction": "Mwanamke ana kutokwa na uchafu usio wa kawaida ukeni. Nimhudumie vipi kwa njia ya kisindromu?",
+    "input": "",
+    "output": "Kwa njia ya kisindromu, tibu kutokwa uchafu ukeni kwa kufuata mwongozo wa taifa wa magonjwa ya zinaa, ukizingatia sababu za kawaida. Muulize kuhusu maumivu ya chini ya tumbo au homa ambayo yanaweza kuashiria maambukizi ya nyonga (PID) yanayohitaji tiba zaidi. Tibu mwenzi wake pia, toa kondomu, na washauri kuacha kujamiiana hadi wote wamalize tiba. Toa upimaji na ushauri wa VVU. Peleka rufaa kwa mjamzito, tiba kushindwa, au matatizo. Hii ni msaada wa maamuzi, si utambuzi; thibitisha na mtaalamu wa afya."
+  },
+  {
+    "instruction": "How is scabies treated in a household?",
+    "input": "",
+    "output": "Scabies causes intense itching, worse at night, with a rash and burrows typically between the fingers, on the wrists, waist, and genitals. Treat the affected person and all close household contacts at the same time, even if they have no symptoms, with a topical scabicide such as permethrin 5 percent cream or benzyl benzoate lotion applied over the whole body as directed and left on for the recommended time. Wash and sun-dry clothing and bedding. Treat any secondary skin infection from scratching. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "instruction": "Mtoto mchanga ana utando mweupe mdomoni ambao haufutiki kwa urahisi. Ni nini na nimtibu vipi?",
+    "input": "",
+    "output": "Huu ni uwezekano wa candidiasis ya mdomoni (oral thrush), maambukizi ya fangasi yanayoonekana kama madoa meupe kwenye ulimi na ndani ya mashavu na yanaweza kumfanya mtoto ashindwe kunyonya vizuri. Tibu kwa dawa ya fangasi ya kupaka mdomoni kama nystatin kama ilivyoelekezwa, na safisha matiti ya mama na vyombo vya kulishia ili kuzuia kuambukizana tena. Kama thrush inarudi mara kwa mara, ni kali, au inafika kooni, fikiria VVU na peleka rufaa kwa upimaji. Hii ni msaada wa maamuzi, si utambuzi; thibitisha na mtaalamu wa afya."
+  },
+  {
+    "instruction": "Summarise the routine childhood immunisation schedule used in the EPI programme.",
+    "input": "",
+    "output": "A typical Expanded Programme on Immunization (EPI) schedule gives BCG and oral polio (OPV-0) at birth; pentavalent (DPT-HepB-Hib), OPV, pneumococcal conjugate (PCV), and rotavirus vaccines at 6, 10, and 14 weeks; measles-rubella at 9 months with a second dose around 18 months; plus vitamin A and deworming at set intervals. Follow your country's exact national schedule, which may differ slightly. Check the child's immunisation card at every contact and give any missed doses as catch-up. Maintain the cold chain. This is decision support; follow your national schedule and confirm with a clinician."
+  },
+  {
+    "instruction": "Mtoto amekosa baadhi ya chanjo kutokana na kuugua. Nifanye nini?",
+    "input": "",
+    "output": "Chanjo iliyokoswa haihitaji kuanza upya - endelea kutoka pale ilipoishia (catch-up), ukifuata ratiba ya taifa. Kagua kadi ya chanjo ya mtoto kila anapokuja, na mpe dozi zote zilizokosekana katika ziara hiyo ikiwezekana. Mweleze mzazi umuhimu wa kukamilisha chanjo zote kwa wakati ili kumkinga mtoto dhidi ya magonjwa hatari. Homa kidogo au maumivu mahali pa sindano ni ya kawaida; peleka rufaa kwa madhara makali. Hifadhi chanjo kwenye ubaridi sahihi (cold chain). Hii ni msaada wa maamuzi; fuata ratiba ya taifa na thibitisha na mtaalamu."
+  },
+  {
+    "instruction": "How is anaemia in pregnancy prevented and managed in primary care?",
+    "input": "",
+    "output": "Suspect anaemia when a pregnant woman has pale palms, inner eyelids, or tongue, tiredness, breathlessness, or dizziness; check haemoglobin where possible. Prevent and treat with daily iron and folic acid supplements throughout pregnancy, deworming after the first trimester, and malaria prevention using an insecticide-treated net (and intermittent preventive treatment where recommended). Encourage iron-rich foods. Refer severe anaemia - marked pallor, breathlessness at rest, or heart signs - especially near term, as transfusion may be needed. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "instruction": "Nifanyeje kupima MUAC ya mtoto na kutafsiri matokeo?",
+    "input": "",
+    "output": "Pima MUAC (mzunguko wa katikati ya mkono wa juu) kwa mtoto wa miezi 6 hadi 59. Weka utepe kwenye katikati ya mkono wa kushoto uliolegea, si kubana wala kulegea kupita kiasi, kisha soma rangi au sentimita. Chini ya sentimita 11.5 (nyekundu) ni utapiamlo mkali (SAM); 11.5 hadi chini ya 12.5 (njano) ni utapiamlo wa wastani (MAM); 12.5 au zaidi (kijani) ni kawaida. Angalia pia uvimbe wa miguu miwili (bilateral oedema) unaoashiria SAM. Fanya kipimo cha hamu ya kula na peleka rufaa inavyostahili. Hii ni msaada wa maamuzi, si utambuzi; thibitisha na mtaalamu."
+  },
+  {
+    "instruction": "How is uncomplicated severe acute malnutrition managed as an outpatient?",
+    "input": "",
+    "output": "A child with severe acute malnutrition (MUAC below 11.5 cm or bilateral pitting oedema) who passes the appetite test and has no medical complications or danger signs can be managed as an outpatient with ready-to-use therapeutic food (RUTF), routine medicines per protocol, and regular follow-up. Continue breastfeeding and counsel the caregiver on feeding and hygiene. Refer to inpatient care any child with a failed appetite test, oedema with complications, or any danger sign. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "instruction": "Mtoto anaharisha. Zinki (zinc) ninampa kiasi gani na kwa muda gani?",
+    "input": "",
+    "output": "Mpe mtoto zinki pamoja na ORS. Kipimo cha kawaida ni miligramu 20 kwa siku kwa watoto wa miezi 6 na zaidi, na miligramu 10 kwa siku kwa watoto chini ya miezi 6, kwa siku 10 hadi 14 mfululizo, hata kama kuharisha kunaisha mapema. Zinki hupunguza muda wa kuharisha na uwezekano wa kurudi. Endelea kunyonyesha na kulisha, na tumia ORS kurejesha maji. Peleka rufaa kwa dalili za hatari au damu kwenye kinyesi. Hii ni msaada wa maamuzi, si utambuzi; thibitisha na mtaalamu."
+  },
+  {
+    "instruction": "How is confirmed uncomplicated falciparum malaria treated, and how is artemether-lumefantrine dosed by weight?",
+    "input": "",
+    "output": "Treat confirmed uncomplicated Plasmodium falciparum malaria with an artemisinin-based combination therapy (ACT / tiba mseto), most commonly artemether-lumefantrine (AL / Coartem) given twice daily for 3 days. Standard weight bands for the 20/120 mg tablet are: 5-14 kg one tablet per dose, 15-24 kg two tablets, 25-34 kg three tablets, and 35 kg or more four tablets per dose. Give with fatty food or milk to aid absorption and add paracetamol for fever. Refer any danger sign (dalili ya hatari) as possible severe malaria. This is decision support, not a diagnosis; confirm dosing with a clinician."
+  },
+  {
+    "instruction": "Mjamzito anawezaje kujikinga na malaria wakati wa ujauzito?",
+    "input": "",
+    "output": "Malaria ni hatari zaidi wakati wa ujauzito. Kinga ni pamoja na kulala ndani ya chandarua chenye dawa kila usiku, na kupata tiba ya kinga ya mara kwa mara (intermittent preventive treatment, IPTp) kwenye kliniki ya wajawazito pale inaposhauriwa na mpango wa taifa. Ukipata homa au dalili za malaria, nenda upimwe kwa mRDT kabla ya matibabu. Malaria isiyotibiwa inaweza kusababisha upungufu wa damu na uzito mdogo wa mtoto. Hudhuria kliniki ya wajawazito mara kwa mara. Hii ni msaada wa maamuzi, si utambuzi; thibitisha na mtaalamu wa afya."
+  },
+  {
+    "instruction": "How should a health worker approach a patient with suspected diabetes?",
+    "input": "",
+    "output": "Suspect diabetes in a patient with excessive thirst, frequent urination, unexplained weight loss, tiredness, blurred vision, or slow-healing wounds. Check blood glucose with a glucometer and refer to confirm the diagnosis and start treatment. Advise healthy eating, physical activity, weight control, and, when prescribed, medicines such as metformin or insulin, with support for daily adherence and foot care. Teach recognition of very high sugar (drowsiness, deep breathing) and very low sugar (sweating, shaking, confusion), and give sugar if the person can swallow. Screen for high blood pressure. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "instruction": "Ni mabadiliko gani ya maisha yanaweza kusaidia mtu mwenye shinikizo la damu (presha)?",
+    "input": "",
+    "output": "Mabadiliko ya maisha yanayosaidia kudhibiti presha: punguza chumvi katika chakula, kula matunda na mboga nyingi, fanya mazoezi ya mwili mara kwa mara, punguza uzito ukiwa mnene, acha kuvuta sigara, na punguza pombe. Tumia dawa kila siku kama ulivyoelekezwa hata ukijisikia vizuri, na usiache ghafla. Hudhuria kliniki kupima presha mara kwa mara. Nenda hospitali haraka ukipata maumivu makali ya kichwa, maumivu ya kifua, kushindwa kupumua, au udhaifu upande mmoja. Hii ni msaada wa maamuzi, si utambuzi; thibitisha na mtaalamu."
+  },
+  {
+    "instruction": "What should be considered about tetanus when caring for a wound?",
+    "input": "",
+    "output": "For any wound, clean it thoroughly, control bleeding, and assess tetanus risk. Dirty, deep, or puncture wounds, bites, and burns carry higher tetanus risk. Check the patient's tetanus immunisation status: if it is incomplete or unknown, refer for tetanus vaccination and, for high-risk wounds, tetanus immunoglobulin as per protocol. Do not apply dung, herbs, or unclean materials, which increase infection and tetanus risk. Advise on wound care and signs of infection. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "instruction": "Mtoto ameungua. Ni vitu gani NISIPAKE kwenye kidonda cha kuungua?",
+    "input": "",
+    "output": "USIPAKE dawa ya meno, mafuta ya kula, siagi, asali, majivu, au mitishamba kwenye kidonda cha kuungua - vinaongeza maambukizi na kuvuruga uponaji. Badala yake, pooza eneo kwa maji safi baridi yanayotiririka kwa dakika 20 (si barafu), ondoa nguo na vito visivyogandama, funika kwa kitambaa safi kisichonata, na mpe paracetamol kwa maumivu. Peleka rufaa haraka kuungua kukubwa au kwa kina, au kunakogusa uso, mikono, miguu, sehemu za siri, au viungo. Angalia hali ya chanjo ya pepopunda. Hii ni msaada wa maamuzi, si utambuzi; thibitisha na mtaalamu."
+  },
+  {
+    "instruction": "What pre-referral steps should be taken for a patient with suspected meningitis?",
+    "input": "",
+    "output": "Suspected meningitis (fever with a stiff neck, severe headache, photophobia, drowsiness or confusion, or convulsions; in infants a bulging fontanelle and poor feeding) is a medical emergency. Refer urgently and, if trained and antibiotics are available, give the first dose of an appropriate pre-referral antibiotic without delay, as early treatment saves lives. Protect the airway and treat convulsions. A non-blanching purple rash suggests meningococcal disease and possible outbreak - report it. This is decision support, not a diagnosis; confirm and act with a clinician."
+  },
+  {
+    "instruction": "What is the correct field first aid for a snakebite before reaching a clinic?",
+    "input": "",
+    "output": "Keep the person calm and still to slow venom spread. Immobilise the bitten limb like a fracture and keep it at or below heart level. Remove rings, watches, and tight clothing before swelling develops. Transport urgently to a facility that stocks antivenom. Do NOT cut the wound, suck out venom, apply a tight tourniquet, use herbs, or give alcohol. Watch for breathing difficulty, drooping eyelids, drowsiness, or bleeding, and note the snake's appearance only if it is safe. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "instruction": "Baada ya kuumwa na mbwa, ni lini na kwa nini chanjo ya kichaa cha mbwa (rabies PEP) inahitajika?",
+    "input": "",
+    "output": "Baada ya kuumwa au kukwaruzwa na mbwa au mnyama, chukulia kuna hatari ya kichaa cha mbwa (rabies). Osha jeraha kwa maji na sabuni dakika 15, kisha peleka mgonjwa apate chanjo ya kinga baada ya kuumwa (post-exposure prophylaxis, PEP) - mfululizo wa dozi za chanjo. Kwa jeraha kubwa au la kina (category III), aongezewe rabies immunoglobulin karibu na jeraha. Kichaa cha mbwa kina hatari ya kifo kikianza kuonyesha dalili, hivyo usichelewe. Angalia pia chanjo ya pepopunda. Hii ni msaada wa maamuzi, si utambuzi; thibitisha na mtaalamu."
+  },
+  {
+    "instruction": "How can a health worker distinguish suspected cholera from ordinary diarrhoea?",
+    "input": "",
+    "output": "Suspect cholera when there is sudden, profuse, watery diarrhoea often described as rice-water stools, sometimes with vomiting, causing rapid and severe dehydration in older children and adults, and especially when several cases cluster in a community (possible outbreak). Ordinary diarrhoea is usually less voluminous and more common in young children. Regardless, start ORS immediately, give IV Ringer's lactate and refer for severe dehydration, and report suspected cholera to health authorities as a notifiable disease. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "instruction": "Mtu amegundulika kuwa na kifua kikuu (TB). Nifanye nini kuhusu wanaoishi naye?",
+    "input": "",
+    "output": "Wahimize watu wote wanaoishi na mgonjwa wa TB, hasa watoto wadogo na watu wenye VVU, wapimwe kama wana dalili za TB (kikohozi cha muda mrefu, kupungua uzito, jasho la usiku). Watoto wadogo na watu wenye VVU walio karibu wanaweza kuhitaji tiba ya kinga (TB preventive therapy) baada ya kuondoa TB inayoendelea, kama mwongozo unavyoelekeza. Mshauri mgonjwa kufunika mdomo anapokohoa na kuweka chumba na hewa ya kutosha. Mgonjwa amalize dawa zote (DOTS). Hii ni msaada wa maamuzi, si utambuzi; thibitisha na mtaalamu wa afya."
+  },
+  {
+    "instruction": "Why is early initiation of breastfeeding within the first hour important?",
+    "input": "",
+    "output": "Starting breastfeeding within the first hour after birth gives the baby colostrum, the first thick yellow milk rich in antibodies that protect against infection, and helps establish milk supply and bonding. Early suckling also stimulates the uterus to contract, reducing the mother's risk of bleeding. Support skin-to-skin contact, keep the baby warm, and encourage exclusive breastfeeding for the first six months. Refer if the baby cannot suckle or shows any danger sign. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "instruction": "Ni kanuni gani za usafi wakati wa kujifungua salama nyumbani au kituoni?",
+    "input": "",
+    "output": "Kanuni za kujifungua salama zinasisitiza usafi: mikono safi iliyonawa, sehemu safi ya kujifungulia, wembe au kifaa safi (sterile) cha kukatia kitovu, kitambaa safi, na kufunga kitovu kwa uzi safi bila kupaka mitishamba au vitu vichafu. Himiza kujifungua kwa mkunga hodari kituoni. Baada ya kuzaliwa, mkaushe na mfunike mtoto ampe joto, anza kunyonyesha ndani ya saa moja, na fanya usimamizi wa hatua ya tatu ya uchungu kuzuia kutokwa damu. Peleka rufaa matatizo yoyote haraka. Hii ni msaada wa maamuzi, si utambuzi; thibitisha na mtaalamu."
+  },
+  {
+    "instruction": "How should prolonged or obstructed labour be recognised and handled at a lower-level facility?",
+    "input": "",
+    "output": "Monitor labour with a partograph, recording contractions, cervical dilatation, fetal heart rate, and the mother's condition. Labour that crosses the action line, fails to progress, or shows signs of obstruction (such as a poorly progressing cervix, a moulded fetal head, or maternal exhaustion) needs urgent referral to a facility with emergency obstetric and caesarean capacity. Watch for fetal distress and maternal danger signs. Keep the mother hydrated and do not give drugs to speed labour without proper assessment. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "instruction": "Mtoto amezaliwa na uzito mdogo. Nimsaidieje kupata joto?",
+    "input": "",
+    "output": "Mtoto mwenye uzito mdogo hupoteza joto haraka. Tumia njia ya kangaroo (kangaroo mother care): mweke mtoto kifuani mwa mama ngozi kwa ngozi, akiwa amefunikwa vizuri, kwa muda mrefu iwezekanavyo. Hii humpa joto, husaidia kunyonya, na kupunguza maambukizi. Hakikisha chumba kina joto, mfunike kichwa kwa kofia, na uendelee kunyonyesha mara kwa mara. Angalia dalili za hatari kama kushindwa kunyonya, kupumua kwa shida, au mwili baridi, na peleka rufaa haraka. Hii ni msaada wa maamuzi, si utambuzi; thibitisha na mtaalamu wa afya."
+  },
+  {
+    "instruction": "What is essential newborn cord care?",
+    "input": "",
+    "output": "Cut the cord with a clean, sterile blade and tie it with a clean tie. Keep the cord stump clean and dry, and leave it uncovered or loosely covered so it can dry and fall off naturally. Do not apply dung, ash, herbs, oil, or other traditional substances, which cause infection and tetanus. Where recommended by the national programme, apply chlorhexidine to the stump. Watch for redness, swelling, pus, or a foul smell around the umbilicus, which are danger signs needing urgent referral. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "instruction": "Wajawazito wanapewa dawa ya minyoo lini wakati wa ujauzito?",
+    "input": "",
+    "output": "Dawa ya minyoo (kwa mfano albendazole 400 mg au mebendazole 500 mg kama dozi moja) hutolewa kwa wajawazito baada ya miezi mitatu ya kwanza ya ujauzito (baada ya trimester ya kwanza), si kabla, kwa sababu ya usalama wa mtoto anayekua. Deworming husaidia kupunguza upungufu wa damu unaosababishwa na minyoo. Ambatanisha na madini ya chuma na folic acid, kinga ya malaria kwa chandarua, na usafi. Hii ni msaada wa maamuzi, si utambuzi; thibitisha na mtaalamu wa afya."
+  },
+  {
+    "instruction": "A child has fever but the malaria rapid test is negative. What should the health worker do next?",
+    "input": "",
+    "output": "A negative mRDT means malaria is unlikely, so do not give antimalarials; instead look for another cause of the fever. Assess for pneumonia (count breaths, look for chest indrawing), ear infection, sore throat, urinary symptoms, a measles rash, a stiff neck (meningitis), skin infection, and dehydration, and check for IMCI general danger signs. Treat the identified cause, give paracetamol and fluids, and advise on danger signs and when to return. Refer any danger sign or a severe or persistent fever. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "instruction": "Ninajuaje kama mtoto anayeharisha ana upungufu wa maji mwilini? Nitafute dalili gani?",
+    "input": "",
+    "output": "Angalia dalili hizi za upungufu wa maji (dehydration): mtoto kutokuwa mtulivu au kukereka, macho yaliyodidimia (sunken eyes), kiu kikubwa na kunywa kwa pupa, na ngozi ikibanwa kurudi polepole. Upungufu mkubwa (severe) ni pale mtoto amelala tu au hana fahamu, hawezi kunywa, na ngozi inarudi polepole sana - hii ni dharura inayohitaji maji ya njia ya mshipa (IV) na rufaa. Look for these danger signs early. Kwa upungufu kidogo, mpe ORS na zinki na ufuatilie. Hii ni msaada wa maamuzi, si utambuzi; thibitisha na mtaalamu."
+  },
+  {
+    "instruction": "When is ORS alone not enough, and when are IV fluids needed for dehydration?",
+    "input": "",
+    "output": "ORS is enough for no dehydration or some dehydration in a patient who can drink. Intravenous fluids such as Ringer's lactate are needed for severe dehydration - lethargy or unconsciousness, inability to drink, a very slow skin pinch, a weak fast pulse - or when the patient cannot keep fluids down due to persistent vomiting. Start IV fluids if trained, continue ORS when the patient can drink, and refer urgently. Reassess frequently and treat the underlying cause. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "instruction": "Kwa nini ni muhimu kuhudhuria kliniki ya wajawazito (ANC) mara kwa mara?",
+    "input": "",
+    "output": "Kuhudhuria kliniki ya wajawazito mara kwa mara husaidia kugundua na kutibu mapema matatizo kama upungufu wa damu, presha ya juu (preeclampsia), maambukizi, na malaria. Kwenye ANC utapata vipimo, madini ya chuma na folic acid, chandarua, chanjo ya pepopunda, upimaji wa VVU na PMTCT, na ushauri wa lishe na kujiandaa kujifungua. Pia utajifunza dalili za hatari za kwenda hospitali haraka. Himiza kujifungua kwa mkunga hodari kituoni. Hii ni msaada wa maamuzi, si utambuzi; thibitisha na mtaalamu wa afya."
+  },
+  {
+    "instruction": "Explain how to assess a child's level of dehydration using the IMCI approach.",
+    "input": "",
+    "output": "Using IMCI, assess dehydration by checking four things: the child's general condition (well and alert, restless and irritable, or lethargic/unconscious), the eyes (normal or sunken), whether the child drinks eagerly (thirsty) or is unable to drink, and the skin pinch (returns immediately, slowly, or very slowly). Two or more signs including lethargy, sunken eyes, inability to drink, or a very slow skin pinch indicate severe dehydration needing IV fluids and referral; two or more milder signs indicate some dehydration treated with ORS. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "instruction": "Mtoto ana surua (measles). Nifanye nini nyumbani na ni lini nimtenge?",
+    "input": "",
+    "output": "Mpe mtoto vitamin A kama ilivyoelekezwa, maji ya kutosha, chakula laini, na paracetamol kwa homa. Safisha macho na mdomo kwa upole, na tibu matatizo kama vidonda vya mdomo au maambukizi ya macho. Mtenge mtoto (isolate) mbali na watoto wengine, hasa wale ambao hawajapata chanjo, kwa muda anaoumwa ili kuzuia kuenea. Give vitamin A and refer danger signs urgently - kupumua kwa shida, degedege, au macho kuwa na ukungu. Kagua chanjo ya surua kwa watoto wengine. Hii ni msaada wa maamuzi, si utambuzi; thibitisha na mtaalamu."
+  },
+  {
+    "instruction": "What counselling should accompany oral amoxicillin for a child with fast-breathing pneumonia?",
+    "input": "",
+    "output": "When treating fast-breathing pneumonia with oral amoxicillin per IMCI, counsel the caregiver to give every dose for the full course even if the child improves, and show how to give it. Advise continued feeding and fluids and clearing the nose if blocked. Teach the danger signs to return immediately: breathing that becomes faster or harder, chest indrawing, inability to drink or breastfeed, or the child becoming more unwell. Arrange follow-up in a few days. Refer if the child worsens or develops any danger sign. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "instruction": "Mtu mwenye kisukari anapaswa kula vipi?",
+    "input": "",
+    "output": "Mtu mwenye kisukari anaweza kula chakula cha kawaida chenye afya kwa uwiano: punguza sukari na vinywaji vitamu, punguza vyakula vya wanga uliokobolewa na kula nafaka zisizokobolewa, kula mboga nyingi na matunda kwa kiasi, na chagua protini nzuri kama maharage na samaki. Kula milo ya kiasi kwa nyakati za kawaida, punguza mafuta mengi na chumvi, na kunywa maji ya kutosha. Ambatanisha na mazoezi na kutumia dawa kama ulivyoelekezwa. Hudhuria kliniki kupima sukari mara kwa mara. Hii ni msaada wa maamuzi, si utambuzi; thibitisha na mtaalamu wa afya."
+  },
+  {
+    "instruction": "What danger signs after childbirth should prompt a mother to seek care urgently?",
+    "input": "",
+    "output": "After childbirth, a mother should seek care urgently for heavy vaginal bleeding (soaking pads quickly) or passing large clots, fever, foul-smelling vaginal discharge, a severe headache with blurred vision or convulsions, severe lower abdominal pain, painful swollen or red breasts with fever, difficulty breathing or chest pain, or a painful swollen leg. These may signal postpartum haemorrhage, infection, pre-eclampsia, or clots. Advise rest, nutrition, and postnatal check-ups. This is decision support, not a diagnosis; confirm and refer with a clinician."
+  },
+  {
+    "instruction": "Mwanamke amejifungua na anataka kupumzika kabla ya kupata mtoto mwingine. Nimshauri nini kuhusu nafasi kati ya kuzaa?",
+    "input": "",
+    "output": "Ni vyema kupanga nafasi ya angalau miaka miwili kati ya kujifungua na kupata ujauzito mwingine, kwani husaidia afya ya mama na mtoto na kupunguza hatari. Mshauri njia salama za uzazi wa mpango zinazofaa baada ya kujifungua kama kondomu, vidonge vya progestogen pekee (salama wakati wa kunyonyesha), sindano, vipandikizi, au kitanzi. Mueleze faida, madhara yanayoweza kutokea, na kurudi kwa uwezo wa kushika mimba. Heshimu uamuzi wake, na peleka rufaa kwa njia zisizopatikana. Hii ni msaada wa maamuzi; thibitisha ufaafu na mtaalamu wa afya."
+  },
+  {
+    "instruction": "A pregnant woman tests HIV positive at her first antenatal visit. Outline the immediate steps.",
+    "input": "",
+    "output": "Confirm the result per the national algorithm and give supportive, confidential counselling. Start lifelong antiretroviral therapy (ART) as soon as possible under test-and-treat and support adherence. Plan prevention of mother-to-child transmission: continue ART through pregnancy and breastfeeding, arrange infant antiretroviral prophylaxis and early infant diagnosis after birth, and counsel on safe infant feeding. Screen for TB and other infections, encourage facility delivery, and offer partner testing and disclosure support. This is decision support, not a diagnosis; confirm and manage with a clinician following national guidelines."
+  },
+  {
+    "instruction": "Nimwambie nini mzazi kuhusu huduma ya nyumbani na ni lini arudi kliniki baada ya kumtibu mtoto?",
+    "input": "",
+    "output": "Mwambie mzazi aendelee kumpa mtoto maji na chakula au kunyonyesha, kumaliza dawa zote kama ilivyoelekezwa, na kumpumzisha mtoto. Mfundishe dalili za hatari za kurudi mara moja: mtoto kushindwa kunywa au kunyonya, kutapika kila kitu, degedege, kulala tu au kupoteza fahamu, kupumua kwa shida, homa kuongezeka, au hali kuzidi kuwa mbaya. Panga siku ya kurudi kwa ufuatiliaji (kwa kawaida siku 2-3) ili kuangalia maendeleo. Kama mtoto hajaimarika au hali imezidi, arudi haraka au apelekwe rufaa. Hii ni msaada wa maamuzi, si utambuzi; thibitisha na mtaalamu wa afya."
+  }
+]

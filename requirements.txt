@@ -1,0 +1,10 @@
+# Runtime dependencies for the Jamii Afya submission (Python 3.11, Ubuntu 22.04).
+# The RAG stack (retriever, compressor, evaluator, config, manifest, score) is
+# PURE STDLIB and needs none of these — these are only for live model serving and
+# benchmarking. Install with: pip install -r requirements.txt
+
+llama-cpp-python>=0.3.2   # CPU GGUF inference for the interactive advisor
+psutil>=5.9.0             # RSS sampling in the benchmark harness
+
+# Dev/test tooling is in requirements-dev.txt.
+# Fine-tuning (GPU) and accuracy (lm-eval) deps are also in requirements-dev.txt.

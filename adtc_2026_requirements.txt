@@ -1,0 +1,144 @@
+================================================================================
+AFRICA DEEP TECH CHALLENGE 2026 (ADTC 2026) - REQUIREMENTS & SPECIFICATIONS
+================================================================================
+Source URL: https://adtc-2026.devpost.com/
+Official Title: Africa Deep Tech Challenge 2026: The Laptop LLM Challenge
+Tagline: Build On-Device AI for the Hardware Africa Actually Has
+
+--------------------------------------------------------------------------------
+1. OVERVIEW & COMPETITION OBJECTIVE
+--------------------------------------------------------------------------------
+The Africa Deep Tech Challenge 2026 (inspired by the Africa AI XPrize) is an 
+engineering-first competition focused on developing practical, working, end-to-end 
+on-device Language Models (LLMs) and applications that run completely offline 
+without cloud dependencies on commodity consumer laptops (specifically 8 GB RAM 
+computers with integrated graphics).
+
+Key Engineering Focus Areas:
+- Model selection and fine-tuning
+- Quantization and compilation
+- Memory and KV cache management
+- Retrieval-Augmented Generation (RAG) over local corpora
+- Responsive application UX and low-latency inference
+
+--------------------------------------------------------------------------------
+2. ELIGIBILITY & TEAM STRUCTURE
+--------------------------------------------------------------------------------
+- Team Size: 1 to 3 participants per team.
+- Eligibility: Open to participants from eligible African nations (including 
+  Algeria, Angola, Benin, Botswana, Burkina Faso, Burundi, Cameroon, Cape Verde, 
+  Central African Republic, Chad, Comoros, Congo, DRC, Cote d'Ivoire, Djibouti, 
+  Egypt, Equatorial Guinea, Eritrea, Ethiopia, Gabon, Gambia, Ghana, Guinea, 
+  Guinea-Bissau, Kenya, Lesotho, Liberia, Libya, Madagascar, Malawi, Mali, 
+  Mauritania, Mauritius, Morocco, Mozambique, Namibia, Niger, Nigeria, Rwanda, 
+  Sao Tome & Principe, Senegal, Seychelles, Sierra Leone, Somalia, South Africa, 
+  Eswatini, Tanzania, Togo, Tunisia, Uganda, Zambia, Zimbabwe, etc.).
+
+--------------------------------------------------------------------------------
+3. STANDARD HARDWARE TARGET SPECIFICATION (ADTC Standard Laptop)
+--------------------------------------------------------------------------------
+All submissions are evaluated, benchmarked, and audited against the single 
+published reference hardware profile below:
+
+Component            ADTC Standard Laptop Profile
+--------------------------------------------------------------------------------
+CPU                  Intel Core i5 (10th-12th gen) OR AMD Ryzen 5 (3000-5000) (x86-64)
+RAM                  8 GB DDR4 (Scoring budget allocation: 7 GB max)
+Graphics             Integrated Graphics ONLY (Intel UHD / Iris Xe or AMD Radeon integrated). 
+                     No discrete GPU allowed for final evaluation runtime.
+Storage              256 GB SSD
+Operating System     Ubuntu 22.04 LTS (Reference OS)
+Representative Price $400-$500 new / $150-$250 refurbished
+
+--------------------------------------------------------------------------------
+4. PROBLEM DOMAINS (Pick 1 Primary Domain)
+--------------------------------------------------------------------------------
+Each team must select one primary standardized domain:
+
+1. Math & Scientific Reasoning: Problem solving, proof assistance, scientific 
+   question-answering, and quantitative reasoning tasks.
+2. Healthcare & Medical: Clinical information, medical Q&A, triage support, and 
+   patient education.
+3. Agriculture: Crop, livestock, weather, and market advisory for farmers and 
+   extension officers.
+4. Creative Writing: Story generation, editing assistance, poetry, and narrative 
+   support across languages.
+5. Coding Assistants: Code generation, debugging help, and programming tutoring 
+   across common languages.
+6. Corporate / Enterprise: Knowledge-work productivity, summarization, drafting, 
+   and analysis for SMEs.
+7. Autonomous AI Agents: Local orchestration, task automation, privacy-focused 
+   workflow management using decentralized tools and messaging interfaces.
+
+--------------------------------------------------------------------------------
+5. SUBMISSION REQUIREMENTS (What Must Be Submitted)
+--------------------------------------------------------------------------------
+- Open Source GitHub Repository:
+  * Must leverage the approved ADTC 2026 Submission Template:
+    https://github.com/Africa-Deep-Tech-Foundation/adtc-2026-submission-template
+  * Code and model format must be compatible with ADTC model profiler:
+    https://github.com/Africa-Deep-Tech-Foundation/adtc-profiler
+- Comprehensive Project Report (e.g. REPORT.md) including:
+  1. Problem definition and context
+  2. Identified constraints (power, data, compute, connectivity)
+  3. Documentation of design alternatives and final decisions
+  4. Tools used and rationale for choices
+  5. Performance tests and benchmarks (latency, throughput, memory, thermal)
+  6. Screenshots or short videos of the build in action
+- Video Submission:
+  * Short video (max 2 minutes) explaining the solution and development journey.
+- Final / Semi-Final Rounds:
+  * Updated repo, documentation, and video if advancing to semi-final or final rounds.
+
+--------------------------------------------------------------------------------
+6. LEADERBOARD SCORING & FORMULA
+--------------------------------------------------------------------------------
+Formula:
+  Stotal = (0.50 * Sacc) + (0.30 * Sperf) + (0.20 * Seff) - Pthermal + Bonus
+
+Breakdown of Scoring Components:
+1. Sacc (50% Weight) - Model Accuracy & Quality:
+   - Combination of automated benchmark scores and qualitative prompt/documentation 
+     assessment by judges (0 to 100).
+2. Sperf (30% Weight) - Model Throughput Performance:
+   - Formula: 100 * (TPS_actual / TPS_max)
+   - Reference TPS (provisional): TPS_REFERENCE = 15.0 tokens/second.
+3. Seff (20% Weight) - Model Efficiency:
+   - Formula: Seff = 100 * ((7 GB - Peak RAM) / 7 GB)
+   - Maximum memory budget: 7.0 GB. Rewards lower RAM utilization profiles.
+4. Pthermal (Penalty):
+   - Deducts 10 points if CPU core/package temperature exceeds 85°C or if 
+     thermal throttling is detected (-10 penalty). Else 0.
+5. African Use Case Bonus:
+   - Up to +10 extra points awarded for applicability and relevance to real 
+     African use cases.
+6. Disqualification Triggers:
+   - Out-Of-Memory (OOM) error or sandbox execution crash results in instant 
+     disqualification.
+
+--------------------------------------------------------------------------------
+7. KEY RESOURCES & LINKS
+--------------------------------------------------------------------------------
+- Main Devpost Page: https://adtc-2026.devpost.com/
+- Devpost Rules Page: https://adtc-2026.devpost.com/rules
+- ADTC Submission Template: https://github.com/Africa-Deep-Tech-Foundation/adtc-2026-submission-template
+- ADTC Local Model Profiler: https://github.com/Africa-Deep-Tech-Foundation/adtc-profiler
+- Udutech GPU Credits (up to 5 hours): https://aghcloud.ai/p/3850810a-8f62-474c-b448-e204d026b189
+- Organizer Contact Email: africadeeptechcommunity@gmail.com
+
+--------------------------------------------------------------------------------
+8. PRIZE STRUCTURE ($16,500+ Total Pool)
+--------------------------------------------------------------------------------
+- Grand Prize (1st Place): $8,000 in cash (1 winner)
+- Second Place: $4,000 in cash (1 winner)
+- Third Place: $3,000 in cash (1 winner)
+- Best African Use Case: $1,500 in cash (1 winner)
+- Finalist Stipends: $250 in GPU credits (up to 10 winners)
+- Semifinalist Stipends: $50 in GPU credits (up to 20 winners)
+
+--------------------------------------------------------------------------------
+9. IMPORTANT TIMELINE & DATES
+--------------------------------------------------------------------------------
+- Hackathon Launch: June 17, 2026 (02:45 EDT)
+- Submission Deadline: August 25, 2026 (02:45 EDT / 06:45 UTC)
+================================================================================

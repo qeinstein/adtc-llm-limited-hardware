@@ -1,0 +1,162 @@
+[
+  {
+    "id": "med_001",
+    "title": "Uncomplicated Malaria: Diagnose then Treat (Malaria isiyo kali)",
+    "text": "Uncomplicated malaria (malaria isiyo kali) is caused by Plasmodium parasites spread by female Anopheles mosquitoes (mbu). Typical symptoms are fever (homa), chills and shivering (baridi na kutetemeka), headache (maumivu ya kichwa), body aches, and vomiting (kutapika). Always confirm with a malaria rapid diagnostic test (mRDT / kipimo cha haraka cha malaria) or blood smear microscopy before treating; do not treat on clinical suspicion alone. First-line treatment for confirmed uncomplicated P. falciparum is an artemisinin-based combination therapy (ACT), usually artemether-lumefantrine (AL / Coartem) dosed by weight band, twice daily for 3 days. Give paracetamol for fever. Refer urgently if any danger sign appears. This is decision support, not a diagnosis; confirm management with a clinician."
+  },
+  {
+    "id": "med_002",
+    "title": "Severe Malaria: Danger Signs and Pre-referral Care (Malaria kali)",
+    "text": "Severe or complicated malaria (malaria kali) is a medical emergency. Danger signs (dalili za hatari) include inability to drink or breastfeed, repeated vomiting (kutapika kila kitu), convulsions (degedege / kifafa), extreme weakness or lethargy, unconsciousness (kupoteza fahamu), fast or difficult breathing, very pale palms (severe anaemia / upungufu mkubwa wa damu), dark or reduced urine, and jaundice (manjano). In children also watch for prostration. Before referral, give pre-referral rectal artesunate to children under 6 years if injectable is unavailable, keep the airway clear, protect against low blood sugar, and treat convulsions. Refer urgently (rufaa ya haraka) to a facility that can give injectable artesunate and supportive care. Do not delay. This is decision support; a clinician must confirm and manage."
+  },
+  {
+    "id": "med_003",
+    "title": "Childhood Pneumonia / ARI: IMCI Fast-Breathing (Nimonia kwa watoto)",
+    "text": "Cough or difficult breathing (kikohozi au kupumua kwa shida) in a child under 5 may be pneumonia (nimonia). Count the breaths in one full minute while the child is calm. Fast breathing means 50 or more breaths per minute for infants 2-11 months, and 40 or more for children 12 months to 5 years; for young infants under 2 months the threshold is 60 or more. Fast breathing without chest indrawing is treated as pneumonia with oral amoxicillin per IMCI. Chest indrawing (kifua kubonyea ndani), stridor, grunting, or any general danger sign means severe pneumonia (nimonia kali) needing urgent referral and a pre-referral antibiotic dose. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "id": "med_004",
+    "title": "Acute Diarrhoea, Dehydration, ORS and Zinc (Kuharisha na upungufu wa maji)",
+    "text": "Acute watery diarrhoea (kuharisha maji) causes fluid loss and dehydration (upungufu wa maji mwilini). Assess hydration: some dehydration shows restlessness, sunken eyes (macho yaliyodidimia), thirst, and a slow skin pinch; severe dehydration shows lethargy or unconsciousness, inability to drink, a very slow skin pinch, and needs urgent IV fluids and referral. Treat with oral rehydration salts (ORS / maji ya ORS) made with clean boiled water, given frequently in small amounts, plus zinc (zinki) 20 mg daily for 10-14 days for children 6 months and older, and 10 mg for infants under 6 months. Continue breastfeeding and feeding. Refer if blood in stool, danger signs, or no improvement. Decision support only; confirm with a clinician."
+  },
+  {
+    "id": "med_005",
+    "title": "Cholera: Rice-water Stools and Rapid Rehydration (Kipindupindu)",
+    "text": "Cholera (kipindupindu) causes sudden, profuse, painless watery diarrhoea often described as rice-water stools (kinyesi kama maji ya mchele), sometimes with vomiting, leading to rapid and life-threatening dehydration in adults and children. Suspect an outbreak when several people have acute watery diarrhoea. Start oral rehydration salts (ORS) immediately; for severe dehydration give intravenous Ringer's lactate fast and refer urgently. In confirmed severe cases, an appropriate antibiotic (for example a single dose of doxycycline for adults) can shorten illness under clinical guidance. Emphasise safe water (maji safi), handwashing (kunawa mikono), and safe sanitation. Cholera is a notifiable disease; report suspected cases to health authorities. This is decision support; confirm and coordinate with a clinician."
+  },
+  {
+    "id": "med_006",
+    "title": "Typhoid Fever: Recognition and Referral (Homa ya matumbo)",
+    "text": "Typhoid fever (homa ya matumbo) is a systemic infection caused by Salmonella Typhi, spread through contaminated food and water (chakula na maji machafu). Signs include a gradually rising, prolonged fever (homa inayopanda hatua kwa hatua), headache, abdominal pain (maumivu ya tumbo), poor appetite, and either constipation or diarrhoea. Dangerous complications include intestinal bleeding or perforation, shown by severe abdominal pain and distension, needing urgent referral (rufaa ya haraka). Confirm with laboratory testing where possible; treat with an appropriate antibiotic such as ciprofloxacin or azithromycin under clinical guidance, plus fluids and fever control. Prevent with safe water, handwashing, and sanitation. This is decision support, not a diagnosis; confirm management with a clinician."
+  },
+  {
+    "id": "med_007",
+    "title": "Tuberculosis: Presumptive Signs and DOTS (Kifua kikuu / TB)",
+    "text": "Tuberculosis (kifua kikuu / TB) is an airborne infection caused by Mycobacterium tuberculosis. Suspect TB in anyone with a cough lasting 2 weeks or more (kikohozi cha zaidi ya wiki mbili), especially with night sweats (jasho la usiku), unexplained weight loss (kupungua uzito), fever, or coughing blood (kukohoa damu). Refer for sputum testing with GeneXpert or smear microscopy to confirm before treatment. Treatment is a standard multi-drug regimen over about 6 months using directly observed therapy (DOTS / tiba inayosimamiwa); good adherence prevents drug resistance. Screen household contacts and offer HIV testing, since HIV raises TB risk. Advise cough hygiene and ventilation. This is decision support; confirm diagnosis and treatment with a clinician."
+  },
+  {
+    "id": "med_008",
+    "title": "HIV Testing and PMTCT Basics (Upimaji wa VVU na PMTCT)",
+    "text": "HIV testing services (upimaji wa VVU / HIV) should be offered routinely and confidentially, with consent, to patients including pregnant women, TB patients, and people with STIs. A reactive rapid test needs confirmation per the national algorithm. Under test-and-treat, everyone confirmed HIV-positive starts antiretroviral therapy (ART / dawa za kufubaza VVU / ARV) promptly and continues for life. For prevention of mother-to-child transmission (PMTCT / kuzuia maambukizi kutoka kwa mama kwenda kwa mtoto), the mother takes ART during pregnancy and breastfeeding, the baby receives infant antiretroviral prophylaxis (nevirapine), and early infant diagnosis testing is done. Refer for confirmatory testing or ART initiation where these are not available at your level. Support adherence, disclosure, and stigma-free care. This is decision support, not a diagnosis; confirm testing and treatment with a clinician."
+  },
+  {
+    "id": "med_009",
+    "title": "Measles: Rash, Vitamin A and Complications (Surua)",
+    "text": "Measles (surua) is a highly contagious viral illness. Suspect it with fever (homa) plus a generalised rash (upele/vipele mwilini) and any of cough, runny nose (mafua), or red watery eyes (macho mekundu). Tiny white Koplik spots may appear inside the cheeks early. Give vitamin A supplementation (per WHO, two age-appropriate doses), supportive care, fluids, and fever control, and treat complications such as pneumonia, diarrhoea, mouth ulcers, or eye infection. Danger signs needing urgent referral include difficulty breathing, deep mouth ulcers, clouding of the cornea, convulsions, or drowsiness. Isolate the child and check the community's measles immunisation (chanjo ya surua) coverage. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "id": "med_010",
+    "title": "Meningitis: Emergency Danger Signs (Homa ya uti wa mgongo)",
+    "text": "Meningitis (homa ya uti wa mgongo) is a life-threatening infection of the membranes around the brain and spinal cord. Danger signs include high fever (homa kali) with a stiff neck (shingo ngumu), severe headache, dislike of light (kuchukia mwanga), confusion or drowsiness, and convulsions (degedege). In infants watch for a bulging soft spot on the head (utosi kuvimba), poor feeding, a high-pitched cry, and floppiness or irritability. A non-blanching purple rash suggests meningococcal disease. This is an emergency: refer urgently (rufaa ya dharura) and give a pre-referral antibiotic if trained and available; do not wait. Early treatment saves lives and reduces disability. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "id": "med_011",
+    "title": "Neonatal / Young Infant Danger Signs (Dalili za hatari za mtoto mchanga)",
+    "text": "Young infants under 2 months (mtoto mchanga chini ya miezi 2) can become very sick quickly, so any danger sign means urgent referral (rufaa ya haraka). Warning signs (dalili za hatari) include not feeding well or refusing to breastfeed (kushindwa kunyonya), convulsions (degedege), fast breathing of 60 or more per minute, severe chest indrawing, fever (37.5C or higher) or low body temperature (below 35.5C), movement only when stimulated or no movement, yellowness of skin or eyes (manjano), and a red, swollen or pus-draining umbilical cord (kitovu kilichovimba). Keep the baby warm with skin-to-skin care, support feeding, and transport quickly. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "id": "med_012",
+    "title": "Maternal Danger Signs in Pregnancy (Dalili za hatari za ujauzito)",
+    "text": "Every pregnant woman and her family should know the danger signs (dalili za hatari za ujauzito) that need immediate care. These include vaginal bleeding (kutokwa damu ukeni), severe headache with blurred vision (maumivu makali ya kichwa na kuona ukungu), convulsions (degedege), high fever, severe abdominal pain (maumivu makali ya tumbo), swelling of the face and hands (kuvimba uso na mikono), reduced or absent fetal movements, and breaking of the waters without labour or foul-smelling discharge. Any of these needs urgent referral (rufaa ya haraka) to a facility with emergency obstetric care. Encourage antenatal care (kliniki ya wajawazito / ANC), a birth plan, and skilled delivery. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "id": "med_013",
+    "title": "Pre-eclampsia and Eclampsia (Kifafa cha mimba / presha ya ujauzito)",
+    "text": "Pre-eclampsia (kifafa cha mimba / presha ya ujauzito) is high blood pressure after 20 weeks of pregnancy, often with protein in the urine. Blood pressure of 140/90 or higher needs attention; severe features include 160/110 or higher, severe headache (maumivu makali ya kichwa), blurred vision (kuona ukungu), epigastric or right upper abdominal pain, and sudden swelling (kuvimba). Eclampsia is when convulsions (degedege) occur and is a life-threatening emergency. Give magnesium sulfate as the anticonvulsant of choice (started per protocol by trained staff), protect the airway during a fit, and refer urgently (rufaa ya dharura) for delivery and blood pressure control. Do not delay. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "id": "med_014",
+    "title": "Postpartum Haemorrhage (Kutokwa damu nyingi baada ya kujifungua / PPH)",
+    "text": "Postpartum haemorrhage (kutokwa damu nyingi baada ya kujifungua / PPH) is a leading cause of maternal death and is usually blood loss over 500 ml after birth or any bleeding that makes the mother weak, dizzy, or shocked. Prevent it with active management of the third stage: give oxytocin 10 IU intramuscularly within one minute of birth, deliver the placenta with controlled cord traction, and massage the uterus (kanda tumbo la uzazi). If bleeding continues, rub up the uterus, empty the bladder, apply bimanual compression, give uterotonics (oxytocin, or misoprostol if oxytocin is unavailable), start IV fluids, and refer urgently (rufaa ya dharura). Look for tears and retained placenta. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "id": "med_015",
+    "title": "Clean and Safe Delivery Basics (Kujifungua salama)",
+    "text": "Clean and safe delivery (kujifungua salama) reduces infection and death for mother and baby. Follow the principles of cleanliness: clean hands (mikono safi), a clean surface, a clean cord cut and tie with a sterile blade, clean cloths, and no harmful traditional cord applications. Encourage delivery by a skilled birth attendant at a facility (kujifungua kituoni). Use a partograph to monitor labour and act on prolonged or obstructed labour. Immediately after birth, dry and keep the baby warm, start skin-to-skin care, begin breastfeeding within the first hour (kunyonyesha ndani ya saa moja), and give the newborn essential care. Practise active management of the third stage to prevent bleeding. Refer any complication urgently. This is decision support; confirm with a clinician."
+  },
+  {
+    "id": "med_016",
+    "title": "Acute Malnutrition: MUAC, SAM and MAM (Utapiamlo)",
+    "text": "Assess acute malnutrition (utapiamlo) in children 6-59 months using mid-upper arm circumference (MUAC / kipimo cha mkono) and by checking for bilateral pitting oedema (kuvimba miguu miwili). A MUAC below 11.5 cm (red) or any bilateral oedema means severe acute malnutrition (SAM / utapiamlo mkali); MUAC 11.5 to under 12.5 cm (yellow) means moderate acute malnutrition (MAM); 12.5 cm or more (green) is normal. Do an appetite test and check for danger signs. Uncomplicated SAM with appetite is managed as outpatient with ready-to-use therapeutic food (RUTF / plumpy nut); SAM with poor appetite, oedema, or medical complications needs urgent inpatient referral. Continue breastfeeding. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "id": "med_017",
+    "title": "Routine Childhood Immunisation / EPI (Chanjo za watoto)",
+    "text": "Routine childhood immunisation (chanjo za watoto / EPI) protects against deadly diseases. A typical schedule gives BCG (kifua kikuu) and oral polio (OPV-0) at birth; pentavalent (DPT-HepB-Hib), OPV, pneumococcal (PCV), and rotavirus at 6, 10, and 14 weeks; measles-rubella at 9 months and a second dose around 18 months; and vitamin A and deworming at intervals (the exact schedule follows the national programme). Check every child's card (kadi ya chanjo) at each visit and give any missed doses as catch-up. Advise that mild fever or soreness can occur and is normal; refer severe reactions. Keep the cold chain intact. This is decision support; follow your national immunisation schedule and confirm with a clinician."
+  },
+  {
+    "id": "med_018",
+    "title": "Snakebite First Aid (Kuumwa na nyoka)",
+    "text": "Snakebite (kuumwa na nyoka) can be life-threatening. Keep the person calm and still, and immobilise the bitten limb like a fracture at or below heart level (usisogeze kiungo). Remove rings, watches, and tight clothing before swelling starts. Refer and transport urgently (rufaa - safirisha haraka) to a facility that has antivenom. Do NOT cut the wound, suck the venom, apply a tight tourniquet, use herbs, or give alcohol (usikate, usifyonze, usifunge kwa nguvu). Watch for danger signs: difficulty breathing, drooping eyelids, drowsiness, bleeding from gums, or worsening swelling. Antivenom is given only at a facility under supervision. Note the snake's appearance only if safe, but never chase it. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "id": "med_019",
+    "title": "Rabies / Dog-bite Post-exposure Prophylaxis (Kichaa cha mbwa - PEP)",
+    "text": "After a dog or animal bite or scratch (kuumwa na mbwa au mnyama), assume rabies risk. Immediately wash the wound thoroughly with running water and soap for at least 15 minutes (osha jeraha kwa maji na sabuni dakika 15), then apply an antiseptic like iodine. Do not close the wound tightly. Refer for rabies post-exposure prophylaxis (PEP / chanjo ya kichaa cha mbwa): a course of rabies vaccine, and for severe or category III wounds also rabies immunoglobulin infiltrated around the wound. Check and update tetanus status. Rabies is almost always fatal once symptoms start, so do not delay PEP. Observe or report the animal if possible. This is decision support; confirm with a clinician."
+  },
+  {
+    "id": "med_020",
+    "title": "Basic Wound Care (Kutunza jeraha)",
+    "text": "For a wound (jeraha), first stop bleeding by pressing firmly with a clean cloth (bonyeza kwa kitambaa safi) and raising the part. Wash your hands, then clean the wound with clean water or saline and remove visible dirt. Apply a clean dressing (bandeji safi) and change it if wet or dirty. Assess tetanus immunisation status and refer for tetanus prophylaxis if needed, especially for dirty or deep wounds. Do not apply dung, herbs, or unclean materials. Refer wounds that are deep, gaping and need stitches, heavily contaminated, from bites, or over joints. Watch for infection: increasing pain, redness, swelling, pus, or fever (homa) - return if these appear. This is decision support; confirm with a clinician."
+  },
+  {
+    "id": "med_021",
+    "title": "Burns First Aid (Kuungua)",
+    "text": "For a burn (kuungua), stop the burning and cool the area with clean cool running water for about 20 minutes (pooza kwa maji safi baridi dakika 20); do not use ice. Remove clothing and jewellery near the burn unless stuck to the skin. Do NOT apply toothpaste, oil, butter, or herbs (usipake dawa za asili au mafuta). Cover loosely with a clean, non-stick cloth. Give pain relief such as paracetamol and encourage fluids. Refer urgently burns that are large or deep, or involve the face, hands, feet, genitals, or joints, burns that go around a limb, electrical or chemical burns, and any burn with breathing difficulty from smoke. Check tetanus status. This is decision support; confirm with a clinician."
+  },
+  {
+    "id": "med_022",
+    "title": "Hypertension in Primary Care (Shinikizo la damu / presha ya juu)",
+    "text": "High blood pressure (shinikizo la damu / presha ya juu) often has no symptoms but raises the risk of stroke and heart and kidney disease. Diagnose using repeated readings; 140/90 mmHg or higher on more than one occasion suggests hypertension - refer to confirm and start management. Advise lifestyle changes: reduce salt (punguza chumvi), eat more fruit and vegetables, be physically active, lose excess weight, stop smoking, and limit alcohol. Medicines are taken daily and long-term; support adherence. Danger signs of a hypertensive emergency include severe headache, chest pain, breathlessness, weakness on one side, or confusion, needing urgent referral (rufaa ya haraka). Check blood pressure in pregnancy. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "id": "med_023",
+    "title": "Diabetes Basics (Kisukari)",
+    "text": "Diabetes (kisukari) is high blood sugar. Suspect it with excessive thirst (kiu kikubwa), frequent urination (kukojoa mara kwa mara), unexplained weight loss, tiredness, blurred vision, and slow-healing wounds. Check blood glucose with a glucometer; refer to confirm the diagnosis and start treatment. Management includes healthy eating, physical activity, weight control, and medicines such as metformin or insulin as prescribed. Teach foot care (kutunza miguu) to prevent ulcers, and support daily adherence. Danger signs needing urgent referral include very high sugar with drowsiness, deep breathing, and dehydration, or very low sugar (sweating, shaking, confusion) - give sugar if the person can swallow. Screen for high blood pressure. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "id": "med_024",
+    "title": "Anaemia in Pregnancy (Upungufu wa damu kwa mjamzito)",
+    "text": "Anaemia in pregnancy (upungufu wa damu kwa mjamzito) is common and dangerous, raising the risk of bleeding and poor outcomes. Suspect it with pale palms, inner eyelids, and tongue (weupe wa viganja na ndani ya jicho), tiredness, breathlessness, and dizziness. Check haemoglobin where possible. Prevent and treat with daily iron and folic acid supplements (madini ya chuma na folic acid) throughout pregnancy, deworming after the first trimester, and malaria prevention with an insecticide-treated net (chandarua). Encourage iron-rich foods. Refer severe anaemia (very pale, breathless at rest, or heart signs), especially near delivery, as it may need transfusion. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "id": "med_025",
+    "title": "Family Planning Overview (Uzazi wa mpango)",
+    "text": "Family planning (uzazi wa mpango) helps space and limit pregnancies, improving the health of mothers and children. Counsel on available methods (njia za uzazi wa mpango): male and female condoms (which also prevent HIV and STIs), combined and progestogen-only pills, injectables such as DMPA, implants, intrauterine devices (IUD), and permanent methods, plus the lactational amenorrhoea method for some breastfeeding mothers. Discuss effectiveness, benefits, side effects, and return of fertility, and respect the woman's informed choice. Emphasise dual protection with condoms where STI or HIV risk exists. Refer for methods not available at your level. Provide emergency contraception where indicated. This is decision support, not a diagnosis; confirm suitability with a clinician."
+  },
+  {
+    "id": "med_026",
+    "title": "Common STIs: Syndromic Management (Magonjwa ya zinaa / STI)",
+    "text": "Sexually transmitted infections (magonjwa ya zinaa / STI) are managed syndromically where lab tests are limited: treat by the group of symptoms. Common syndromes include urethral discharge in men (kutokwa na usaha), abnormal vaginal discharge (kutokwa uchafu ukeni), genital ulcers (vidonda sehemu za siri), and lower abdominal pain in women suggesting pelvic inflammatory disease. Treat per the national syndromic protocol, treat the sexual partner(s) too (tibu mwenzi), offer condoms, and provide HIV testing and counselling. Advise completing treatment and abstaining until both partners are treated. Refer complications, pregnancy, or treatment failure. Genital ulcers raise HIV risk. This is decision support, not a diagnosis; confirm treatment with a clinician."
+  },
+  {
+    "id": "med_027",
+    "title": "Dehydration in Adults (Upungufu wa maji mwilini kwa watu wazima)",
+    "text": "Dehydration in adults (upungufu wa maji mwilini kwa watu wazima) can follow diarrhoea, vomiting, cholera, high fever, or heat. Signs of some dehydration include thirst, a dry mouth (kinywa kikavu), reduced or dark urine, and tiredness; severe dehydration shows sunken eyes, a slow skin pinch, a fast weak pulse, low blood pressure, confusion, or fainting and is an emergency. Treat with oral rehydration salts (ORS / maji ya ORS) in frequent sips using clean water; for severe dehydration or a patient who cannot drink, give intravenous fluids such as Ringer's lactate and refer urgently (rufaa ya haraka). Treat the underlying cause. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "id": "med_028",
+    "title": "Fever Triage in Under-Fives (Homa kwa mtoto chini ya miaka 5)",
+    "text": "Fever in a child under 5 (homa kwa mtoto chini ya miaka 5) needs a careful check for the cause and for danger signs. Measure the temperature; 37.5C or higher is fever. Always look for general danger signs and test for malaria with an mRDT in malaria areas. Assess breathing for pneumonia (count breaths, look for chest indrawing), check for a stiff neck (meningitis), a rash (measles), ear problems, and dehydration. Lower fever with paracetamol 10-15 mg/kg per dose and offer fluids; do not overwrap the child. Refer urgently any child with a general danger sign, fast or difficult breathing, a stiff neck, or a very high or persistent fever. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "id": "med_029",
+    "title": "IMCI General Danger Signs: Urgent Referral (Dalili kuu za hatari)",
+    "text": "The IMCI general danger signs (dalili kuu za hatari) tell a health worker that a sick child needs urgent referral (rufaa ya haraka), whatever the illness. In a child aged 2 months to 5 years these are: the child is unable to drink or breastfeed (kushindwa kunywa au kunyonya), vomits everything (kutapika kila kitu), has had convulsions during this illness or is convulsing now (degedege), or is lethargic or unconscious (amelala / hana fahamu). A child with any of these needs pre-referral treatment as trained and immediate transfer to hospital. Always check for these first, before other symptoms. Do not delay. This is decision support, not a diagnosis; confirm and act with a clinician."
+  },
+  {
+    "id": "med_030",
+    "title": "Oral Thrush / Candidiasis (Utando mweupe mdomoni)",
+    "text": "Oral thrush (utando mweupe mdomoni / candidiasis) is a fungal infection showing as white patches on the tongue, gums, and inner cheeks that do not wipe off easily and may cause pain or poor feeding in babies. It is common in infants, after antibiotics, and in people with weakened immunity. Treat with an oral antifungal such as nystatin drops or gel applied to the mouth, and treat the mother's breasts if breastfeeding to prevent re-infection. Keep feeding utensils clean. Recurrent, severe, or extensive thrush, or thrush reaching the throat with difficulty swallowing, may signal HIV or another problem - offer HIV testing and refer. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "id": "med_031",
+    "title": "Scabies (Upele / kigaga)",
+    "text": "Scabies (upele / kigaga) is a very itchy skin condition caused by a tiny mite, with itching that is worse at night (kuwashwa hasa usiku) and a rash of small bumps and burrow lines, often between the fingers, on the wrists, waist, and genitals. It spreads by close skin contact, so it commonly affects whole households. Treat the affected person and all close contacts at the same time with a topical scabicide such as permethrin 5 percent cream or benzyl benzoate lotion applied over the whole body as directed. Wash and sun-dry clothes and bedding (fua na anika nguo na shuka). Refer severe, crusted, or complicated cases and any spreading skin infection. Watch for skin infection from scratching. This is decision support, not a diagnosis; confirm with a clinician."
+  },
+  {
+    "id": "med_032",
+    "title": "Intestinal Worms and Deworming (Minyoo na dawa ya minyoo)",
+    "text": "Intestinal worms (minyoo) such as roundworm, hookworm, and whipworm are common where sanitation is poor and can cause abdominal pain, poor appetite, anaemia, and poor growth in children. Routine deworming (dawa ya minyoo) is given to children and to pregnant women after the first trimester, usually albendazole 400 mg as a single dose (200 mg for children 12-23 months) or mebendazole 500 mg, repeated every 6 months in high-burden areas. Combine with hygiene: handwashing (kunawa mikono), wearing shoes, using latrines, and safe water. Refer heavy infection with severe symptoms or signs of obstruction. This is decision support, not a diagnosis; confirm with a clinician."
+  }
+]
