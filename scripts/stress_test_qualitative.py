@@ -21,6 +21,14 @@ from __future__ import annotations
 import argparse
 import sys
 
+# Duplicated (not imported) from src/webapp.py deliberately: this script must
+# run standalone without fastapi/pydantic/uvicorn installed.
+CAREFUL_MODE_SUFFIX = (
+    "\n\nFor this question, reason through the clinical assessment step by step "
+    "first (danger signs, likely causes, what to check), THEN give your final "
+    "clear recommendation."
+)
+
 # Each case: (label, turns) where turns is a list of user messages sent in
 # sequence (later turns test real multi-turn memory + follow-up reasoning).
 CASES = [
@@ -101,7 +109,6 @@ def main() -> int:
 
     from src.engine import MedicalLLMEngine
     from src.rag import RAGPipeline
-    from src.webapp import CAREFUL_MODE_SUFFIX
 
     rag = RAGPipeline()
     engine = MedicalLLMEngine()
