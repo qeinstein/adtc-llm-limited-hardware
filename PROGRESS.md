@@ -21,6 +21,19 @@ So the win is a **small Qwen3 model**, fine-tuned on **two complementary data tr
 
 Full rationale + sources are in the agent memory files and REPORT.md.
 
+**Our stated goal: maximize the score the official profiler tool would give us — stretch target >95%.** The scoring formula mixes accuracy + speed + memory efficiency, so pushing all three to the max simultaneously is a real balancing act, not a single number to grind up — but the profiler-driven testing loop below is how we actually track whether we're getting close, instead of guessing.
+
+**Official grading tool (confirmed live):** https://github.com/Africa-Deep-Tech-Foundation/adtc-profiler — this is not just documentation, it's the literal code the organizers run to grade every submission (loads the model, times generation speed, measures RAM, checks thermal throttling, runs the quiz accuracy test, emits a JSON score report). **This becomes the central validation loop for picking our final model** — not vendor benchmarks, not our own approximations:
+1. Build a copy of their crippled test CPU setup locally (`scripts/build_llamacpp_scalar.sh`).
+2. Install and run their actual profiler tool (`scripts/run_profiler.sh`) against each candidate model — the real grading code, not a guess.
+3. Get real numbers: speed, memory, quiz accuracy.
+4. Plug into `src/score.py` (mirrors their exact formula) and compare candidates head-to-head.
+5. Only then commit to a final model size before the full fine-tune run.
+
+**Independent cross-check on the size-vs-speed risk (2026-08 web research, non-vendor sources):** going from CPU fast-path instructions to the crippled "scalar" mode the grading machine uses typically costs **4–8x speed**, not a minor slowdown. Applying that range to our own measured numbers (Apple Silicon, fast path): 0.6B (~150 tok/s) → an estimated ~19–38 tok/s on the crippled grading machine; 1.7B (~60 tok/s) → an estimated **~8–15 tok/s — right at or below the 15 tok/s cutoff.** This is a rough estimate, not the real number — it's exactly why step 1–2 above (test on an actual matching setup) is non-negotiable before locking the model size. Confirmed official accuracy gap between sizes (Qwen3 Technical Report, arXiv 2505.09388, Base models): MMLU 0.6B=52.8 / 1.7B=62.6 / 4B=73.0 — each size step is a genuine ~10-point accuracy jump, so this is a real trade-off to measure carefully, not obviously won by either side.
+
+**On "just pick the biggest model that fits" — deliberately rejected, with numbers:** a 14B model, compressed as small as reasonably possible, still needs roughly ~8.5GB just to load — already over the 7GB scoring budget and risking the full 8GB physical limit. Going over triggers a crash, which is an **automatic zero / instant disqualification** — not a small point loss. Compressing it further to fit collapses its speed on the crippled CPU (extreme low-bit formats are known to fall apart without fast CPU instructions). So oversizing loses on two independent failure paths (crash-to-zero, or crawl-to-zero-speed), while a well-chosen small/mid model has no such cliff. The likely sweet spot is 1.7B–4B, to be confirmed empirically via the profiler loop above — not assumed.
+
 ---
 
 ## DONE (committed)
