@@ -100,25 +100,33 @@ class UnifiedDataset:
         p = Path(path)
         if not p.exists():
             return
+        n_bad = 0
         for line in p.read_text(encoding="utf-8").splitlines():
             if not line.strip():
                 continue
-            r = json.loads(line)
-            ctx_ids = self._encode(r["context"])
-            choice_ids, choice_charlens = [], []
-            for c in r["choices"]:
-                ids = self._encode(" " + c)
-                if len(ctx_ids) + len(ids) > self.max_len:
-                    ids = ids[: max(1, self.max_len - len(ctx_ids))]
-                choice_ids.append(ids)
-                choice_charlens.append(max(1, len(c)))
-            self.items.append({
-                "kind": "mcqa",
-                "ctx_ids": ctx_ids,
-                "choice_ids": choice_ids,
-                "choice_charlens": choice_charlens,
-                "gold": r["gold"],
-            })
+            try:
+                r = json.loads(line)
+                ctx_ids = self._encode(r["context"])
+                choice_ids, choice_charlens = [], []
+                for c in r["choices"]:
+                    ids = self._encode(" " + c)
+                    if len(ctx_ids) + len(ids) > self.max_len:
+                        ids = ids[: max(1, self.max_len - len(ctx_ids))]
+                    choice_ids.append(ids)
+                    choice_charlens.append(max(1, len(c)))
+                self.items.append({
+                    "kind": "mcqa",
+                    "ctx_ids": ctx_ids,
+                    "choice_ids": choice_ids,
+                    "choice_charlens": choice_charlens,
+                    "gold": r["gold"],
+                })
+            except (json.JSONDecodeError, KeyError, TypeError, IndexError) as e:
+                n_bad += 1
+                if n_bad <= 3:  # show the first few so real corruption is still visible
+                    print(f"  [warn] skipping malformed MCQA row in {path}: {type(e).__name__}: {e}")
+        if n_bad:
+            print(f"  [warn] skipped {n_bad} malformed row(s) in {path} (out of otherwise-loaded data)")
 
     def _load_clinical(self, path: str, repeat: int) -> None:
         p = Path(path)
@@ -154,10 +162,17 @@ class UnifiedDataset:
         p = Path(path)
         if not p.exists():
             return
+        n_bad = 0
         for line in p.read_text(encoding="utf-8").splitlines():
             if not line.strip():
                 continue
-            r = json.loads(line)
+            try:
+                r = json.loads(line)
+            except json.JSONDecodeError as e:
+                n_bad += 1
+                if n_bad <= 3:
+                    print(f"  [warn] skipping malformed corpus row in {path}: {e}")
+                continue
             text = r.get("text", "").strip()
             if not text:
                 continue
@@ -173,6 +188,8 @@ class UnifiedDataset:
                 "choice_charlens": [max(1, len(text))],
                 "gold": 0,
             })
+        if n_bad:
+            print(f"  [warn] skipped {n_bad} malformed row(s) in {path} (out of otherwise-loaded data)")
 
     def __len__(self) -> int:
         return len(self.items)
