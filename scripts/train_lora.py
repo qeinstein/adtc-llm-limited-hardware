@@ -92,6 +92,13 @@ def parse_args() -> argparse.Namespace:
                    help="Upsample the (small) clinical set so it isn't drowned by MCQA")
     p.add_argument("--aux_nll_weight", type=float, default=0.2,
                    help="Weight of the plain gold-NLL term mixed with the ranking loss")
+    p.add_argument("--resume_adapter", default=None,
+                   help="Path to an existing LoRA adapter dir (e.g. output/jamii-lora) to "
+                        "CONTINUE training from, instead of initializing a fresh adapter. "
+                        "For a short, targeted follow-up pass (e.g. more Swahili data) "
+                        "without repeating the full multi-hour run. Use a low --lr "
+                        "(e.g. 2e-5) to avoid catastrophically overwriting what the "
+                        "first run already learned.")
     return p.parse_args()
 
 
@@ -232,7 +239,7 @@ def main() -> int:
 
     import torch
     import torch.nn.functional as F
-    from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+    from peft import LoraConfig, PeftModel, get_peft_model, prepare_model_for_kbit_training
     from transformers import (
         AutoModelForCausalLM,
         AutoTokenizer,
@@ -273,12 +280,16 @@ def main() -> int:
         model, use_gradient_checkpointing=args.gradient_checkpointing
     )
 
-    peft_config = LoraConfig(
-        r=args.lora_r, lora_alpha=args.lora_alpha, lora_dropout=0.05, bias="none",
-        task_type="CAUSAL_LM",
-        target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
-    )
-    model = get_peft_model(model, peft_config)
+    if args.resume_adapter:
+        print(f"Continuing training from existing adapter: {args.resume_adapter}")
+        model = PeftModel.from_pretrained(model, args.resume_adapter, is_trainable=True)
+    else:
+        peft_config = LoraConfig(
+            r=args.lora_r, lora_alpha=args.lora_alpha, lora_dropout=0.05, bias="none",
+            task_type="CAUSAL_LM",
+            target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+        )
+        model = get_peft_model(model, peft_config)
 
     device = next(model.parameters()).device
     pad_id = tokenizer.pad_token_id
