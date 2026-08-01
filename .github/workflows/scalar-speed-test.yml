@@ -1,0 +1,106 @@
+name: Scalar (x86, no-AVX) speed & memory test
+
+# Why this exists: the ADTC 2026 grading machine is x86 (Intel/AMD) and the
+# official profiler builds llama.cpp with ALL CPU speed instructions (AVX/AVX2/
+# AVX512/FMA/F16C/BLAS) disabled — see scripts/build_llamacpp_scalar.sh. Our dev
+# machine is Apple Silicon (ARM), which has no equivalent instructions to disable,
+# so local speed numbers are NOT representative of the real grading environment.
+# GitHub-hosted runners are real x86_64 Linux machines, so this workflow builds the
+# same crippled binary and benchmarks each candidate model on it — giving us the
+# closest free, automated approximation of the real grading speed available
+# without renting our own x86 box.
+#
+# NOTE: GitHub's shared runners are virtualized and may not exactly match the
+# ADTC reference laptop's raw clock speed — treat results as directionally
+# authoritative (correct architecture, correct crippled build) rather than the
+# literal final number. The official adtc-profiler audit is still the ground truth.
+#
+# Trigger manually: repo -> Actions tab -> "Scalar (x86, no-AVX) speed & memory
+# test" -> Run workflow. Results appear in the run's Summary tab.
+
+on:
+  workflow_dispatch:
+    inputs:
+      models:
+        description: "Space-separated model keys to test"
+        required: false
+        default: "0.6b 1.7b 4b"
+
+jobs:
+  scalar-bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Report runner hardware (for context on results)
+        run: |
+          echo "### Runner hardware" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          nproc --all >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
+          grep -m1 "model name" /proc/cpuinfo >> "$GITHUB_STEP_SUMMARY" || true
+          free -h >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Install build tools
+        run: sudo apt-get update -y && sudo apt-get install -y cmake build-essential
+
+      - name: Build SCALAR llama.cpp (matches the audit Dockerfile exactly)
+        run: bash scripts/build_llamacpp_scalar.sh
+
+      - name: Confirm the build is truly scalar (no AVX in system-info)
+        run: |
+          ./llama.cpp/build-scalar/bin/llama-bench --version 2>&1 | tee /tmp/sysinfo.txt || true
+          ./llama.cpp/build-scalar/bin/llama-cli --version 2>&1 | tee -a /tmp/sysinfo.txt || true
+          if grep -qiE "AVX = 1|AVX2 = 1|FMA = 1" /tmp/sysinfo.txt; then
+            echo "::error::Build is NOT scalar — AVX/FMA still enabled. Aborting."
+            exit 1
+          fi
+          echo "Confirmed: no AVX/AVX2/FMA in this build."
+
+      - name: Download candidate models (public, no auth)
+        run: |
+          mkdir -p models
+          dl() {
+            echo "Downloading $2 ..."
+            curl -sL --fail -o "models/$2" "$1"
+          }
+          for m in ${{ github.event.inputs.models }}; do
+            case "$m" in
+              0.6b) dl "https://huggingface.co/bartowski/Qwen_Qwen3-0.6B-GGUF/resolve/main/Qwen_Qwen3-0.6B-Q4_K_M.gguf" "qwen3-0.6b-q4km.gguf" ;;
+              1.7b) dl "https://huggingface.co/bartowski/Qwen_Qwen3-1.7B-GGUF/resolve/main/Qwen_Qwen3-1.7B-Q4_K_M.gguf" "qwen3-1.7b-q4km.gguf" ;;
+              4b)   dl "https://huggingface.co/bartowski/Qwen_Qwen3-4B-GGUF/resolve/main/Qwen_Qwen3-4B-Q4_K_M.gguf" "qwen3-4b-q4km.gguf" ;;
+              *) echo "Unknown model key: $m (skipping)" ;;
+            esac
+          done
+          ls -la models/
+
+      - name: Run profiler-matching speed test (-p 512 -n 128) + peak memory
+        run: |
+          BIN=./llama.cpp/build-scalar/bin/llama-bench
+          echo "## Scalar (x86, no-AVX) results" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| model | file size | prefill (pp512) tok/s | decode (tg128) tok/s | peak RSS (MB) |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          for f in models/*.gguf; do
+            [ -f "$f" ] || continue
+            name=$(basename "$f")
+            size=$(du -h "$f" | cut -f1)
+            # /usr/bin/time -v captures real peak RSS on this real x86 machine
+            out=$(/usr/bin/time -v "$BIN" -m "$f" -p 512 -n 128 -ngl 0 --output json 2>/tmp/time.log)
+            pp=$(echo "$out" | grep -o '"avg_ts"[^,]*' | sed -n '1p' | grep -o '[0-9.]*')
+            tg=$(echo "$out" | grep -o '"avg_ts"[^,]*' | sed -n '2p' | grep -o '[0-9.]*')
+            peak_kb=$(grep "Maximum resident set size" /tmp/time.log | grep -o '[0-9]*')
+            peak_mb=$(( ${peak_kb:-0} / 1024 ))
+            echo "| $name | $size | ${pp:-?} | ${tg:-?} | $peak_mb |" >> "$GITHUB_STEP_SUMMARY"
+            echo "$name: pp512=$pp tg128=$tg peak_rss_mb=$peak_mb"
+          done
+
+      - name: Upload raw logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scalar-bench-logs
+          path: /tmp/*.log
+          if-no-files-found: ignore
