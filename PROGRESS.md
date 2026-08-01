@@ -60,6 +60,26 @@ _Domain: healthcare_medical (offline clinical advisor, English + Kiswahili). Bra
 
 ---
 
+## RunPod training — status (in progress)
+
+- 2 full epochs, listwise ranking + Track A/B, batch_size 4 / grad_accum 8 (effective 32), max_len 256, gradient checkpointing on — the config that survived two rounds of OOM debugging (see "Known limitations" and commit history for the full saga).
+- Loss trend (real, logged): ~1.37 → 1.34 → 1.28 → 1.21 → 1.18 → 1.13 → crossed epoch 1.0 around loss 0.98 → currently plateaued in the ~0.90–1.03 band through epoch ~1.5, no further downward drift. This is the expected shape for epoch 2 of a short LoRA run (most learning happens in epoch 1; epoch 2 consolidates) — gradients stayed bounded throughout, no instability or divergence observed at any point.
+- ETA from most recent log: ~7561/10014 steps (76%, epoch 1.51) at ~2.98s/it → roughly 2h remaining, ~8h09m total run time.
+- **Next once training finishes:** export/quantize (`QUANT=Q4_0 bash scripts/export_gguf.sh`), re-run `mcq_eval.py` against the pre-training baseline (51–57% arc_easy) to confirm real improvement, host the final GGUF (need a hosting decision — Hugging Face repo is the default plan, not yet resolved), update `download_model.sh` / `metadata.json` to point at it, run `bash scripts/run_profiler.sh` (Gate-1 self-check), fill in `REPORT.md` with real final numbers, record the demo video.
+
+---
+
+## Web UI — built and shipped (judge/demo experience, not the scored path)
+
+Two-page offline web app (`src/webapp.py`, FastAPI + vanilla JS, zero CDN/external assets):
+
+- **`/`** — Anthropic-style landing page (`src/static/index.html`): problem statement, our approach, and an honest "what we learned" section (the scalar-CPU discovery, the model-size course-correction, the scoring-bug catch, the OOM debugging, the vectorization win), with a CTA into `/chat`.
+- **`/chat`** (`src/static/chat.html`) — the real interactive advisor: RAG-grounded replies with source attribution, telemetry (tok/s, elapsed time), a "careful mode" toggle (prompt-based step-by-step reasoning hint — see thinking-mode note below), and genuine multi-turn conversation memory via a new `MedicalLLMEngine.chat()`/`stream_chat()` path that takes the full message history instead of one-shot prompts. Verified end-to-end with a real two-turn test (pronoun correctly resolved from prior turn).
+- **Real bug found and fixed along the way:** `prompt_lookup_decoding` (speculative decoding) crashes with a broadcast-shape error specifically on long, chat-formatted prompts (system + few-shot + RAG context) — not on short test prompts, which is why an initial smoke test missed it. Now defaults to `False` in `MedicalLLMEngine.__init__`.
+- Committed and pushed to both `main` and `jamii-afya-rebuild`.
+
+---
+
 ## Is the training data enough? (assessed, and acted on)
 
 - **Track A (public benchmark MCQA): solid.** ~93k rows across ARC/OpenBookQA/HeadQA (full train splits, they're small) + capped 20k each from MMLU-aux/MedMCQA/MedQA/PubMedQA (each has 10k-270k available). Diverse, real, no changes needed.
