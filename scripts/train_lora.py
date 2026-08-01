@@ -60,18 +60,24 @@ def parse_args() -> argparse.Namespace:
                    help="Optional Track-B free-text corpus from build_healthcare_corpus.py")
     p.add_argument("--output_dir", default=str(ROOT / "output" / "jamii-lora"))
     p.add_argument("--epochs", type=float, default=2.0)
-    p.add_argument("--batch_size", type=int, default=16,
+    p.add_argument("--batch_size", type=int, default=8,
                    help="Number of ITEMS per step, all fused into ONE forward pass "
                         "(each item unrolls to its own choice count as extra rows). "
-                        "Sized for a 16GB+ GPU on a 0.6B model; lower if you hit OOM.")
-    p.add_argument("--grad_accum", type=int, default=2)
+                        "Qwen3's ~152k vocab makes the raw (rows x length x vocab) "
+                        "output tensor itself expensive regardless of the loss-computation "
+                        "fix — keep this modest. Lower if you still hit OOM.")
+    p.add_argument("--grad_accum", type=int, default=4)
     p.add_argument("--gradient_checkpointing", action="store_true",
                    help="Trade ~20-40%% speed for lower VRAM. OFF by default — a 0.6B model "
                         "doesn't need it on a 16GB+ GPU; enable only if you hit an OOM error.")
     p.add_argument("--lr", type=float, default=1e-4)
     p.add_argument("--lora_r", type=int, default=32)
     p.add_argument("--lora_alpha", type=int, default=64)
-    p.add_argument("--max_len", type=int, default=768)
+    p.add_argument("--max_len", type=int, default=384,
+                   help="Every row in a fused micro-batch pads to the LONGEST row in "
+                        "it, and that full (rows x length x ~152k vocab) tensor is "
+                        "materialized by the model's forward pass regardless of the "
+                        "loss-computation fix — keep this modest to avoid OOM.")
     p.add_argument("--clinical_repeat", type=int, default=3,
                    help="Upsample the (small) clinical set so it isn't drowned by MCQA")
     p.add_argument("--aux_nll_weight", type=float, default=0.2,
@@ -292,18 +298,27 @@ def main() -> int:
                 attn_mask[i, : len(s)] = 1
 
             out = model(input_ids=input_ids, attention_mask=attn_mask)
-            logprobs = F.log_softmax(out.logits.float(), dim=-1)  # (N_total_rows, L, V)
+            raw_logits = out.logits  # (N_total_rows, L, V) — V=151936 for Qwen3.
+            # CRITICAL: do NOT run log_softmax/float() over this whole tensor — with a
+            # ~152k vocab, (rows x length x vocab) blows past 24GB instantly (this is
+            # what actually OOM'd). We only ever need a handful of positions per row
+            # (the choice tokens), so slice those out FIRST and normalize only that
+            # tiny slice — cuts this computation's memory by orders of magnitude.
 
             item_losses = []
             for (row_start, row_end, ctx_len), item in zip(bounds, inputs):
                 pos_start = ctx_len - 1
                 per_choice_sum, per_choice_ntok = [], []
                 for row, c_ids in zip(range(row_start, row_end), item["choice_ids"]):
+                    n = len(c_ids)
+                    # (n, V) slice only — not (N, L, V)
+                    local_logits = raw_logits[row, pos_start : pos_start + n, :].float()
+                    local_logprobs = F.log_softmax(local_logits, dim=-1)
                     total = torch.zeros((), device=device, dtype=torch.float32)
                     for j, tok in enumerate(c_ids):
-                        total = total + logprobs[row, pos_start + j, tok]
+                        total = total + local_logprobs[j, tok]
                     per_choice_sum.append(total)
-                    per_choice_ntok.append(len(c_ids))
+                    per_choice_ntok.append(n)
                 per_choice_norm = [
                     s / cl for s, cl in zip(per_choice_sum, item["choice_charlens"])
                 ]  # char-length norm == acc_norm
