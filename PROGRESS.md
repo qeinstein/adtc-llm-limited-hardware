@@ -112,6 +112,14 @@ Reads: **0.6B decodes ~2.5× faster than 1.7B**; Q4_0 prefill ~30% faster (favor
 
 ---
 
+## Dev hardware note (user's machine: M4 Pro Mac, 16GB RAM)
+
+16GB vs the 7GB target budget is fine — we measure absolute RAM usage, not relative to total. The Mac's GPU is irrelevant either way since the graded run is CPU-only.
+
+**The real gap: chip architecture mismatch.** The Mac is ARM (Apple Silicon); the grading laptop is x86 (Intel/AMD). The profiler's "scalar" crippled-speed build disables x86-only speed instructions (AVX/AVX2/FMA) — these don't exist on ARM in the same form, so a "scalar" build on the Mac does **not** reproduce the real slowdown. All Mac speed numbers so far (0.6B ~150 tok/s, 1.7B ~60 tok/s) are optimistic proxies, not the real answer. **Action needed:** run the actual scalar-speed test on a real x86 CPU machine — a free/cheap option is GitHub Actions' free x86_64 Linux runners (no GPU needed, it's a CPU-only test), or any cheap generic x86 cloud VM. This is the only way to get a trustworthy tokens/sec number before locking the model size.
+
+---
+
 ## How to resume (local environment)
 
 - Repo venv (tests, stdlib code): `./venv` (Python 3.14; `pytest`, `numpy`). `make test` works.
