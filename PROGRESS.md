@@ -9,14 +9,30 @@ Domain: healthcare_medical (offline clinical advisor, English + Kiswahili)._
 
 The grader (`adtc-profiler`) does **not** run our app. It runs **`llama-bench` on the raw GGUF** (throughput/RAM) and **lm-eval MCQ on the raw GGUF** (accuracy), on a llama.cpp build with **all SIMD disabled** (scalar). Score = `0.50·S_acc + 0.30·S_perf + 0.20·S_eff − P_thermal`.
 
-So the win is a **small Qwen3 model**, fine-tuned on **public benchmark train splits** (the legitimate 50%-accuracy lever), quantized to GGUF:
+So the win is a **small Qwen3 model**, fine-tuned on **two complementary data tracks** (the legitimate 50%-accuracy lever), quantized to GGUF:
 - **Family = Qwen3** (only small model that is Apache-2.0 **and** officially supports Swahili).
-- **Ship the BASE model** (base beats instruct on template-free loglikelihood MCQ) + our **MCQ-completion SFT** on ARC/MedMCQA/PubMedQA/MMLU **train** splits (rules explicitly allow fine-tuning; no anti-contamination clause; never train on test/val).
+- **Ship the BASE model** (base beats instruct on template-free loglikelihood MCQ).
+- **Track A — benchmark-format SFT** (already built): MCQ-completion training on ARC/MedMCQA/PubMedQA/MMLU **train** splits, in the exact lm-eval prompt shape. Targets the automated scoring *format* directly.
+- **Track B — broad healthcare knowledge corpus (NOT yet built — see "What remains" #0):** pull as much legitimate open medical/clinical text as we can (open QA datasets, clinical guideline text, consumer-health references, biomedical abstracts) and continue-pretrain / SFT on it so the model is genuinely knowledgeable, not just quiz-shaped. This is what makes answers actually accurate — MCQ-format training alone risks a model that's good at picking A/B/C/D but shallow on real clinical content, which hurts both the hidden-medical-MCQ subset (harder questions need real knowledge, not format tricks) and the judge-qualitative half of S_acc.
+- Rules explicitly allow fine-tuning; no anti-contamination clause; never train on any test/validation split.
 - **Quant = Q4_K_M** (Qwen is quant-robust) — A/B vs **Q4_0** (simpler unpack → faster on the scalar audit build).
 - **Size = the largest Qwen3 that still clears ~15 tps on the scalar build.** RAM is NOT binding (even 4B ≈ 3 GB). Decision hinges on measured accuracy gap vs scalar tps — see "What remains".
 - RAG app + Kiswahili + rural-clinic story drive the **judge-qualitative** half of S_acc and the **African-use-case bonus** (separate from the automated metric).
 
 Full rationale + sources are in the agent memory files and REPORT.md.
+
+**Our stated goal: maximize the score the official profiler tool would give us — stretch target >95%.** The scoring formula mixes accuracy + speed + memory efficiency, so pushing all three to the max simultaneously is a real balancing act, not a single number to grind up — but the profiler-driven testing loop below is how we actually track whether we're getting close, instead of guessing.
+
+**Official grading tool (confirmed live):** https://github.com/Africa-Deep-Tech-Foundation/adtc-profiler — this is not just documentation, it's the literal code the organizers run to grade every submission (loads the model, times generation speed, measures RAM, checks thermal throttling, runs the quiz accuracy test, emits a JSON score report). **This becomes the central validation loop for picking our final model** — not vendor benchmarks, not our own approximations:
+1. Build a copy of their crippled test CPU setup locally (`scripts/build_llamacpp_scalar.sh`).
+2. Install and run their actual profiler tool (`scripts/run_profiler.sh`) against each candidate model — the real grading code, not a guess.
+3. Get real numbers: speed, memory, quiz accuracy.
+4. Plug into `src/score.py` (mirrors their exact formula) and compare candidates head-to-head.
+5. Only then commit to a final model size before the full fine-tune run.
+
+**Independent cross-check on the size-vs-speed risk (2026-08 web research, non-vendor sources):** going from CPU fast-path instructions to the crippled "scalar" mode the grading machine uses typically costs **4–8x speed**, not a minor slowdown. Applying that range to our own measured numbers (Apple Silicon, fast path): 0.6B (~150 tok/s) → an estimated ~19–38 tok/s on the crippled grading machine; 1.7B (~60 tok/s) → an estimated **~8–15 tok/s — right at or below the 15 tok/s cutoff.** This is a rough estimate, not the real number — it's exactly why step 1–2 above (test on an actual matching setup) is non-negotiable before locking the model size. Confirmed official accuracy gap between sizes (Qwen3 Technical Report, arXiv 2505.09388, Base models): MMLU 0.6B=52.8 / 1.7B=62.6 / 4B=73.0 — each size step is a genuine ~10-point accuracy jump, so this is a real trade-off to measure carefully, not obviously won by either side.
+
+**On "just pick the biggest model that fits" — deliberately rejected, with numbers:** a 14B model, compressed as small as reasonably possible, still needs roughly ~8.5GB just to load — already over the 7GB scoring budget and risking the full 8GB physical limit. Going over triggers a crash, which is an **automatic zero / instant disqualification** — not a small point loss. Compressing it further to fit collapses its speed on the crippled CPU (extreme low-bit formats are known to fall apart without fast CPU instructions). So oversizing loses on two independent failure paths (crash-to-zero, or crawl-to-zero-speed), while a well-chosen small/mid model has no such cliff. The likely sweet spot is 1.7B–4B, to be confirmed empirically via the profiler loop above — not assumed.
 
 ---
 
@@ -60,6 +76,16 @@ Reads: **0.6B decodes ~2.5× faster than 1.7B**; Q4_0 prefill ~30% faster (favor
 
 ## WHAT REMAINS (ordered — the checklist to finish and win)
 
+0. **Build Track B: broad healthcare knowledge corpus (NOT yet started).** Goal: make the model deeply accurate on real clinical content, not just MCQ-shaped. Plan:
+   - **Sources to pull (open/legitimate only, check license per source before use):**
+     - Open medical QA: MedQuAD (NIH-derived Q&A), HealthSearchQA, iCliniq/HealthCareMagic-style open dialogues, LiveQA-Med.
+     - Reference text: MedlinePlus consumer health topics, WHO fact sheets & guideline documents (many CC-BY / public domain), CDC public health guidance, StatPearls (NCBI Bookshelf, free-access), Wikipedia medical articles (CC-BY-SA).
+     - Biomedical literature: PubMed/PMC **open-access subset** abstracts (respect OA license per article), for grounding on mechanisms/terminology (not for verbatim regurgitation).
+     - Our own domain: expand `data/medical_guidelines.json`-style WHO/IMCI content further (already have 32; can grow), plus any African MoH public treatment guidelines (Kenya/Tanzania/Nigeria) if openly published.
+   - **Method:** a `scripts/build_healthcare_corpus.py` (new) to fetch/clean these into free-text + instruction-style pairs; feed into `train_lora.py` as a third data component (alongside Track A MCQ rows and the existing bilingual clinical chat data), OR run a short continued-pretraining (causal LM, not completion-only-loss) pass on the free-text portion before the SFT stage.
+   - **Guardrails:** dedupe against all benchmark test/validation splits (contamination risk), keep a manifest of exact sources for the report (judges/organizers may ask for data provenance), and keep safety framing (danger-signs/refer/"not a diagnosis") consistent — don't let raw scraped text override the safety-tuned behavior from `data/medical_lora_dataset.json`.
+   - **Priority order once building:** Track A (small, fast, directly targets the scored format) should still run; Track B is additive and can be scaled to available GPU time/budget — even a partial corpus (MedQuAD + WHO fact sheets + StatPearls summaries) meaningfully deepens real-world accuracy.
+
 1. **Measure accuracy (the decisive number).** Run `mcq_eval.py` (arc_easy + medmcqa, ± pubmedqa/openbookqa) on **Qwen3-0.6B, 1.7B, 4B** (Q4_K_M) to get the real accuracy gap. Env is ready:
    ```
    PY=$HOME/adtc_models/venv311/bin/python
@@ -69,19 +95,28 @@ Reads: **0.6B decodes ~2.5× faster than 1.7B**; Q4_0 prefill ~30% faster (favor
    ```
 2. **Pick model size with data + `src/score.py`.** Rule: ship the largest Qwen3 that clears ~15 tps on the **scalar** build; if 1.7B is well under 15 tps scalar, 0.6B likely out-scores it (perf cap + low RAM > ~10-pt accuracy gap). Feed measured (acc, tps, RAM) into `estimate_total()` under both fixed and relative TPS interpretations.
 3. **Confirm scalar tps on x86.** This Mac can't produce x86-scalar numbers. Run `bash scripts/build_llamacpp_scalar.sh` then `make bench-audit` on an x86 box (or accept the audit measures it at Gate 2). This resolves the size decision definitively.
-4. **Run the accuracy SFT (the 50% lever) on GPU** (free Colab T4 ~1–3 h, or Udutech):
+4. **Run the fine-tune (Track A + Track B combined) on GPU** (free Colab T4 ~1–3 h for Track A alone; Track B adds time proportional to corpus size — budget accordingly, or use Udutech credits for a bigger run):
    ```
    pip install -r requirements-dev.txt
-   python scripts/build_accuracy_sft.py --max-per-dataset 20000
+   python scripts/build_accuracy_sft.py --max-per-dataset 20000      # Track A: MCQ format
+   python scripts/build_healthcare_corpus.py                         # Track B: broad knowledge (to build — step 0)
    python scripts/prepare_dataset.py
    python scripts/train_lora.py --base_model Qwen/Qwen3-1.7B-Base   # (or 0.6B-Base if size flips)
    bash scripts/export_gguf.sh
    ```
-   Then **re-measure** base vs base+SFT with `mcq_eval.py` to confirm the SFT lifts the scored metric (it should — it trains the exact task).
+   Then **re-measure** base vs base+SFT with `mcq_eval.py` (Track A gain) and with our own `data/swahili_eval_set.json` concept-recall evaluator (Track B gain) to confirm both tracks actually help before committing to a final model.
 5. **Quant A/B:** measure acc + scalar tps for Q4_K_M vs Q4_0 on the chosen model; pick the higher S_total.
 6. **Finalize:** put the winning GGUF at `model/…` (host it publicly, e.g. HF), point `download_model.sh` at it, set `metadata.json` `model.name`/`parameters_estimate` to match (the profiler checks actual params ≤ claimed×1.2), and **fill REPORT.md benchmark tables with the real measured numbers** (currently marked pending). Correct the RAM figures (1.7B ≈ 1.8 GB peak / S_eff ~74; 0.6B ≈ 1.0 GB / ~86).
 7. **Edge-case hardening:** run `make profiler` (official Gate-1 self-check), verify no OOM headroom issues, confirm schema, re-run `make test`.
 8. **Record the 2-minute demo video** (a submission requirement) showing the offline advisor answering EN + SW.
+
+---
+
+## Dev hardware note (user's machine: M4 Pro Mac, 16GB RAM)
+
+16GB vs the 7GB target budget is fine — we measure absolute RAM usage, not relative to total. The Mac's GPU is irrelevant either way since the graded run is CPU-only.
+
+**The real gap: chip architecture mismatch.** The Mac is ARM (Apple Silicon); the grading laptop is x86 (Intel/AMD). The profiler's "scalar" crippled-speed build disables x86-only speed instructions (AVX/AVX2/FMA) — these don't exist on ARM in the same form, so a "scalar" build on the Mac does **not** reproduce the real slowdown. All Mac speed numbers so far (0.6B ~150 tok/s, 1.7B ~60 tok/s) are optimistic proxies, not the real answer. **Action needed:** run the actual scalar-speed test on a real x86 CPU machine — a free/cheap option is GitHub Actions' free x86_64 Linux runners (no GPU needed, it's a CPU-only test), or any cheap generic x86 cloud VM. This is the only way to get a trustworthy tokens/sec number before locking the model size.
 
 ---
 
