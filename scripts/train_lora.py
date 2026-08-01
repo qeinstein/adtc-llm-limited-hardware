@@ -314,21 +314,44 @@ def main() -> int:
             # what actually OOM'd). We only ever need a handful of positions per row
             # (the choice tokens), so slice those out FIRST and normalize only that
             # tiny slice — cuts this computation's memory by orders of magnitude.
+            #
+            # SPEED: gather every (row, position, target-token) triple needed across the
+            # WHOLE micro-batch into flat lists, then do ONE slice + ONE log_softmax +
+            # ONE gather for all of them at once, instead of a Python loop summing one
+            # token at a time. This matters a lot for long targets (Track-B corpus rows
+            # can be ~150+ tokens) — was previously ~150 individual GPU ops in a Python
+            # loop per such row. Total elements processed is identical (no memory
+            # regression), verified bit-identical to the loop version with a synthetic
+            # test before landing this.
+            flat_rows, flat_positions, flat_targets = [], [], []
+            choice_spans = []  # (item_idx, flat_start, flat_end) in item/choice order
+            for item_idx, ((row_start, row_end, ctx_len), item) in enumerate(zip(bounds, inputs)):
+                pos_start = ctx_len - 1
+                for row, c_ids in zip(range(row_start, row_end), item["choice_ids"]):
+                    fs = len(flat_rows)
+                    for j, tok in enumerate(c_ids):
+                        flat_rows.append(row)
+                        flat_positions.append(pos_start + j)
+                        flat_targets.append(tok)
+                    choice_spans.append((item_idx, fs, len(flat_rows)))
+
+            row_idx = torch.tensor(flat_rows, device=device)
+            pos_idx = torch.tensor(flat_positions, device=device)
+            tgt_idx = torch.tensor(flat_targets, device=device)
+            needed_logits = raw_logits[row_idx, pos_idx, :].float()  # (T, V) — T is small
+            needed_logprobs = F.log_softmax(needed_logits, dim=-1)
+            token_logprobs = needed_logprobs.gather(1, tgt_idx.unsqueeze(1)).squeeze(1)  # (T,)
+
+            per_item_sums: list[list[torch.Tensor]] = [[] for _ in inputs]
+            per_item_ntok: list[list[int]] = [[] for _ in inputs]
+            for item_idx, fs, fe in choice_spans:
+                per_item_sums[item_idx].append(token_logprobs[fs:fe].sum())
+                per_item_ntok[item_idx].append(fe - fs)
 
             item_losses = []
-            for (row_start, row_end, ctx_len), item in zip(bounds, inputs):
-                pos_start = ctx_len - 1
-                per_choice_sum, per_choice_ntok = [], []
-                for row, c_ids in zip(range(row_start, row_end), item["choice_ids"]):
-                    n = len(c_ids)
-                    # (n, V) slice only — not (N, L, V)
-                    local_logits = raw_logits[row, pos_start : pos_start + n, :].float()
-                    local_logprobs = F.log_softmax(local_logits, dim=-1)
-                    total = torch.zeros((), device=device, dtype=torch.float32)
-                    for j, tok in enumerate(c_ids):
-                        total = total + local_logprobs[j, tok]
-                    per_choice_sum.append(total)
-                    per_choice_ntok.append(n)
+            for item_idx, item in enumerate(inputs):
+                per_choice_sum = per_item_sums[item_idx]
+                per_choice_ntok = per_item_ntok[item_idx]
                 per_choice_norm = [
                     s / cl for s, cl in zip(per_choice_sum, item["choice_charlens"])
                 ]  # char-length norm == acc_norm
