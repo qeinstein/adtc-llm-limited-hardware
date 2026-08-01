@@ -76,19 +76,35 @@ def load_task(task, limit):
 
 
 def loglik(llm, ctx, cont):
-    """Sum of continuation token logprobs given context (echo + logprobs)."""
-    full = ctx + cont
-    out = llm.create_completion(prompt=full, max_tokens=1, logprobs=1, echo=True, temperature=0.0)
-    lp = out["choices"][0]["logprobs"]
-    offs, tlps = lp["text_offset"], lp["token_logprobs"]
-    total, n = 0.0, 0
-    for off, tl in zip(offs, tlps):
-        if tl is None:
-            continue
-        if len(ctx) <= off < len(full):  # continuation prompt tokens only
-            total += tl
-            n += 1
-    return total, n
+    """Sum of continuation-token logprobs given context, read from raw logits.
+
+    IMPORTANT: do NOT use llama-cpp-python's `create_completion(echo=True,
+    logprobs=N)` for this. Its echoed `token_logprobs` are misaligned and return
+    nonsense — verified locally: it scored " banana" ABOVE " Paris" for "The
+    capital of France is". (The ADTC profiler hit the same bug and rewrote its
+    accuracy module to read logits in-process for exactly this reason.)
+
+    Here we tokenize, run a single forward pass, and log-softmax the logits row
+    that predicts each continuation token — matching lm-eval's semantics.
+    """
+    import numpy as np
+
+    ctx_ids = llm.tokenize(ctx.encode("utf-8"), add_bos=True, special=False)
+    full_ids = llm.tokenize((ctx + cont).encode("utf-8"), add_bos=True, special=False)
+    cont_ids = full_ids[len(ctx_ids):]
+    if not cont_ids:
+        return 0.0, 0
+
+    llm.reset()
+    llm.eval(full_ids)
+
+    total = 0.0
+    for i, tok in enumerate(cont_ids):
+        # logits at position p predict the token at p+1
+        row = np.asarray(llm.scores[len(ctx_ids) + i - 1], dtype=np.float64)
+        row -= row.max()  # stabilize before softmax
+        total += float(row[tok] - np.log(np.exp(row).sum()))
+    return total, len(cont_ids)
 
 
 def main() -> int:
