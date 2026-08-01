@@ -74,19 +74,33 @@ def from_medical_meadow_wikidoc(max_chars: int = 2000):
             yield {"text": f"{instr}\n{out}"[:max_chars]}
 
 
+def from_pubmedqa_abstracts(max_chars: int = 1500):
+    """Raw PubMedQA abstracts as plain text (distinct from Track A's Q&A use of
+    this same dataset) — 273k available, pure biomedical prose for depth."""
+    from datasets import load_dataset
+
+    ds = load_dataset("qiaojin/PubMedQA", "pqa_artificial", split="train")
+    for r in ds:
+        ctx = " ".join(r["context"]["contexts"]).strip()
+        if len(ctx) > 200:
+            yield {"text": ctx[:max_chars]}
+
+
 SOURCES = {
     "medquad": from_medquad,
     "guidelines": from_guidelines,
     "flashcards": from_medical_meadow_flashcards,
     "wikidoc": from_medical_meadow_wikidoc,
+    "pubmed_abstracts": from_pubmedqa_abstracts,
 }
-DEFAULT = ["medquad", "guidelines", "flashcards", "wikidoc"]
+DEFAULT = ["medquad", "guidelines", "flashcards", "wikidoc", "pubmed_abstracts"]
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="Build the Track-B broad healthcare corpus")
     ap.add_argument("--datasets", nargs="+", default=DEFAULT, choices=list(SOURCES))
-    ap.add_argument("--max-per-dataset", type=int, default=5000)
+    ap.add_argument("--max-per-dataset", type=int, default=15000,
+                    help="Each source has 10k-270k rows available; 5k was too thin (see PROGRESS.md)")
     ap.add_argument("--out", default=str(OUT / "healthcare_corpus.jsonl"))
     args = ap.parse_args()
 

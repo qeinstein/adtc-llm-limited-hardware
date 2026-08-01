@@ -50,6 +50,17 @@ _Domain: healthcare_medical (offline clinical advisor, English + Kiswahili). Bra
 
 ---
 
+## Is the training data enough? (assessed, and acted on)
+
+- **Track A (public benchmark MCQA): solid.** ~93k rows across ARC/OpenBookQA/HeadQA (full train splits, they're small) + capped 20k each from MMLU-aux/MedMCQA/MedQA/PubMedQA (each has 10k-270k available). Diverse, real, no changes needed.
+- **Track B (broad healthcare corpus): was thin, now fixed.** Default was only 5,000 chunks against 10k-270k available per source — bumped to 15,000, and added a 5th source (raw PubMedQA abstracts, 273k available) for more depth (`scripts/build_healthcare_corpus.py`).
+- **The real gap: almost ALL of our data is English-only.** No public Swahili medical MCQA dataset exists, and none of the Track-B sources are multilingual. Since Swahili competence claims a real scoring bonus, this was worth closing.
+- **The fix (novel, built today): `scripts/generate_synthetic_data.py`.** Uses a strong "teacher" model to expand our own 32 hand-verified clinical guidelines into many bilingual (EN + Kiswahili) examples — chat Q&A, MCQ (auto-merges into Track A's format), and free text (auto-merges into Track B's format). Grounded strictly in our own already-reviewed source text (the teacher is told to only elaborate on given facts, not invent new clinical claims), which is what makes this safe for a medical tool instead of just hallucination bait. This is genuine knowledge distillation — the same technique research identified as one of the highest-leverage ways for a small model to punch above its size.
+- **This needs an API key you'll supply** (OpenAI or any OpenAI-compatible provider) — that's the one external dependency in the whole pipeline I can't get around. If you don't have one, tell me and we'll figure out an alternative (e.g. a different provider, or skip this step — Tracks A+B alone are still solid).
+- **Also fixed while looking at this:** the training script originally ran one slow forward-pass per answer choice; it now batches all choices of a question into a single forward pass (~4x fewer forward passes on the MCQA rows, which are most of the data) — verified correct against the original with a synthetic-tensor test. This matters directly for "is the data enough": more data only helps if training actually finishes in reasonable time/cost on a rented GPU.
+
+---
+
 ## RUNPOD — the exact command sequence, ready to paste
 
 **Pod:** RTX 4090 or A5000 (24 GB VRAM) on Community Cloud, PyTorch template, ~60–100 GB volume disk. Don't pay for A100/H100 — total overkill for a 0.6B QLoRA run. Estimated cost: a few dollars total.
@@ -63,12 +74,22 @@ pip install -r requirements-dev.txt
 python scripts/build_accuracy_sft.py --max-per-dataset 20000
 
 # Track B: broad healthcare knowledge corpus
-python scripts/build_healthcare_corpus.py --max-per-dataset 5000
+python scripts/build_healthcare_corpus.py --max-per-dataset 15000
+
+# OPTIONAL but recommended: bilingual EN/SW distillation from our own verified
+# guidelines (needs OPENAI_API_KEY — skip this block if you don't have one yet)
+export OPENAI_API_KEY=sk-...
+python scripts/generate_synthetic_data.py --model gpt-4o-mini --per-guideline 6
+cat output/synthetic_mcqa.jsonl >> output/accuracy_sft.jsonl
+cat output/synthetic_corpus.jsonl >> output/healthcare_corpus.jsonl
+python -c "import json; a=json.load(open('data/medical_lora_dataset.json')); b=json.load(open('output/synthetic_clinical_chat.json')); json.dump(a+b, open('output/clinical_combined.json','w'), ensure_ascii=False, indent=2)"
 
 # Clinical chat splits + imatrix calibration corpus
 python scripts/prepare_dataset.py
 
 # Train (listwise ranking + clinical SFT + healthcare corpus, one QLoRA run)
+# Use --clinical_file output/clinical_combined.json instead if you ran the
+# synthetic-data step above.
 python scripts/train_lora.py --base_model Qwen/Qwen3-0.6B-Base
 
 # Merge -> convert -> domain imatrix -> quantize
