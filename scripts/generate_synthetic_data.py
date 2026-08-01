@@ -26,13 +26,16 @@ so they can be concatenated straight in:
   - output/synthetic_corpus.jsonl         (free-text chunks, same shape as
     build_healthcare_corpus.py's output — `cat` onto output/healthcare_corpus.jsonl)
 
-REQUIRES an OpenAI-compatible API key (OpenAI, or any compatible provider via
---base-url). This is the one external dependency in the whole pipeline that needs
-a human to supply credentials — there is no way around that for teacher-model
-distillation.
+REQUIRES an API key — OpenRouter (auto-detected via OPENROUTER_API_KEY, default
+model google/gemini-2.0-flash-001), plain OpenAI (OPENAI_API_KEY), or any other
+OpenAI-compatible provider via --base-url. This is the one external dependency
+in the whole pipeline that needs a human to supply credentials — there is no
+way around that for teacher-model distillation.
 
-    export OPENAI_API_KEY=sk-...
-    python scripts/generate_synthetic_data.py --model gpt-4o-mini --per-guideline 6
+    export OPENROUTER_API_KEY=sk-or-...
+    python scripts/generate_synthetic_data.py --per-guideline 6
+    # or pick a specific OpenRouter model:
+    python scripts/generate_synthetic_data.py --model anthropic/claude-3.5-sonnet
 """
 
 from __future__ import annotations
@@ -97,21 +100,57 @@ def call_teacher(client, model: str, title: str, text: str, n: int) -> dict:
     return _extract_json(resp.choices[0].message.content)
 
 
+def _build_client(base_url: str | None, model: str):
+    """Auto-detect OpenRouter vs plain OpenAI from whichever env var is set, so
+    the same script works with either without extra flags. OpenRouter is fully
+    OpenAI-API-compatible — same client, just a different base_url/key/model
+    naming convention (e.g. "anthropic/claude-3.5-haiku", "google/gemini-2.0-flash-001")."""
+    import os
+
+    from openai import OpenAI
+
+    if base_url:
+        return OpenAI(base_url=base_url), model
+
+    openrouter_key = os.environ.get("OPENROUTER_API_KEY")
+    if openrouter_key:
+        client = OpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=openrouter_key,
+            default_headers={
+                "HTTP-Referer": "https://github.com/qeinstein/adtc-llm-limited-hardware",
+                "X-Title": "Jamii Afya synthetic data generation",
+            },
+        )
+        # If the user left the OpenAI-style default model name, swap in a sane
+        # OpenRouter-style one (provider/model) unless they explicitly overrode it.
+        if model == "gpt-4o-mini":
+            model = "google/gemini-2.0-flash-001"
+        return client, model
+
+    return OpenAI(), model  # falls back to OPENAI_API_KEY env var
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Distill bilingual training data from our verified guidelines")
-    ap.add_argument("--model", default="gpt-4o-mini", help="Teacher model name")
-    ap.add_argument("--base-url", default=None, help="Override for OpenAI-compatible endpoints")
+    ap.add_argument("--model", default="gpt-4o-mini",
+                    help="Teacher model. With OPENROUTER_API_KEY set, use OpenRouter's "
+                         "provider/model naming, e.g. anthropic/claude-3.5-haiku, "
+                         "google/gemini-2.0-flash-001, openai/gpt-4o-mini")
+    ap.add_argument("--base-url", default=None,
+                    help="Override endpoint. Auto-set to OpenRouter's if OPENROUTER_API_KEY is set.")
     ap.add_argument("--per-guideline", type=int, default=6, help="Items per language per category, per guideline")
     ap.add_argument("--guidelines-file", default=str(DATA / "medical_guidelines.json"))
     args = ap.parse_args()
 
     try:
-        from openai import OpenAI
+        import openai  # noqa: F401
     except ImportError:
         print("ERROR: pip install openai")
         return 1
 
-    client = OpenAI(base_url=args.base_url) if args.base_url else OpenAI()
+    client, model = _build_client(args.base_url, args.model)
+    args.model = model
 
     guidelines = json.loads(Path(args.guidelines_file).read_text(encoding="utf-8"))
     print(f"Distilling from {len(guidelines)} guidelines x {args.per_guideline} items/category/language "

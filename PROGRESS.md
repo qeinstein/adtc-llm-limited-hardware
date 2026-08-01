@@ -77,9 +77,11 @@ python scripts/build_accuracy_sft.py --max-per-dataset 20000
 python scripts/build_healthcare_corpus.py --max-per-dataset 15000
 
 # OPTIONAL but recommended: bilingual EN/SW distillation from our own verified
-# guidelines (needs OPENAI_API_KEY — skip this block if you don't have one yet)
-export OPENAI_API_KEY=sk-...
-python scripts/generate_synthetic_data.py --model gpt-4o-mini --per-guideline 6
+# guidelines. Uses OpenRouter (auto-detected from this env var; script defaults
+# to google/gemini-2.0-flash-001, good multilingual quality + cheap for ~32 calls
+# — override with --model, e.g. anthropic/claude-3.5-sonnet for higher quality)
+export OPENROUTER_API_KEY=sk-or-...
+python scripts/generate_synthetic_data.py --per-guideline 6
 cat output/synthetic_mcqa.jsonl >> output/accuracy_sft.jsonl
 cat output/synthetic_corpus.jsonl >> output/healthcare_corpus.jsonl
 python -c "import json; a=json.load(open('data/medical_lora_dataset.json')); b=json.load(open('output/synthetic_clinical_chat.json')); json.dump(a+b, open('output/clinical_combined.json','w'), ensure_ascii=False, indent=2)"
