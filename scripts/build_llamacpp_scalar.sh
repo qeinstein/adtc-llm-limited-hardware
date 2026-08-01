@@ -31,7 +31,23 @@ cmake -B "$LLAMA_DIR/build-scalar" -S "$LLAMA_DIR" \
     -DGGML_FMA=OFF -DGGML_F16C=OFF \
     -DGGML_BLAS=OFF -DGGML_CUDA=OFF -DGGML_METAL=OFF
 
-cmake --build "$LLAMA_DIR/build-scalar" --config Release -j --target llama-bench llama-cli
+# Detect core count portably (Linux: nproc, macOS: sysctl), then CAP it.
+# llama.cpp is now a large multi-file codebase; an unbounded `-j` (no number) tells
+# the compiler to launch unlimited parallel jobs, which reliably OOM-kills the build
+# on small/shared CI runners (this is exactly what happened the first time this
+# workflow ran: `gmake: *** Terminated`, exit 143 = killed for memory pressure).
+if command -v nproc >/dev/null 2>&1; then
+    NPROC=$(nproc)
+elif command -v sysctl >/dev/null 2>&1; then
+    NPROC=$(sysctl -n hw.ncpu)
+else
+    NPROC=4
+fi
+JOBS=$(( NPROC > 4 ? 4 : NPROC ))
+[ "$JOBS" -lt 1 ] && JOBS=1
+echo "[scalar-build] Building with -j$JOBS (capped, to avoid OOM on small runners)..."
+
+cmake --build "$LLAMA_DIR/build-scalar" --config Release -j"$JOBS" --target llama-bench llama-cli
 
 echo ""
 echo "[scalar-build] Done."
