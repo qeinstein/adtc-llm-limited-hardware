@@ -60,9 +60,14 @@ def parse_args() -> argparse.Namespace:
                    help="Optional Track-B free-text corpus from build_healthcare_corpus.py")
     p.add_argument("--output_dir", default=str(ROOT / "output" / "jamii-lora"))
     p.add_argument("--epochs", type=float, default=2.0)
-    p.add_argument("--batch_size", type=int, default=4,
-                   help="Number of ITEMS per step (each MCQA item unrolls to its own choice count)")
-    p.add_argument("--grad_accum", type=int, default=8)
+    p.add_argument("--batch_size", type=int, default=16,
+                   help="Number of ITEMS per step, all fused into ONE forward pass "
+                        "(each item unrolls to its own choice count as extra rows). "
+                        "Sized for a 16GB+ GPU on a 0.6B model; lower if you hit OOM.")
+    p.add_argument("--grad_accum", type=int, default=2)
+    p.add_argument("--gradient_checkpointing", action="store_true",
+                   help="Trade ~20-40%% speed for lower VRAM. OFF by default — a 0.6B model "
+                        "doesn't need it on a 16GB+ GPU; enable only if you hit an OOM error.")
     p.add_argument("--lr", type=float, default=1e-4)
     p.add_argument("--lora_r", type=int, default=32)
     p.add_argument("--lora_alpha", type=int, default=64)
@@ -245,7 +250,12 @@ def main() -> int:
         trust_remote_code=True, torch_dtype=torch.bfloat16,
     )
     model.config.use_cache = False
-    model = prepare_model_for_kbit_training(model)
+    # NOTE: this helper defaults to use_gradient_checkpointing=True internally,
+    # independent of the TrainingArguments flag below — must be passed explicitly
+    # or it silently re-enables checkpointing regardless of --gradient_checkpointing.
+    model = prepare_model_for_kbit_training(
+        model, use_gradient_checkpointing=args.gradient_checkpointing
+    )
 
     peft_config = LoraConfig(
         r=args.lora_r, lora_alpha=args.lora_alpha, lora_dropout=0.05, bias="none",
@@ -257,40 +267,43 @@ def main() -> int:
     device = next(model.parameters()).device
     pad_id = tokenizer.pad_token_id
 
-    def choice_logprobs(ctx_ids: list[int], choices: list[list[int]]):
-        """One BATCHED forward pass for all K choices of an item (right-padded to
-        the batch's max length), instead of K separate forward calls — roughly a
-        Kx reduction in forward passes for MCQA rows, which are most of the data.
-        Returns (summed_logprob, n_tokens) per choice."""
-        import torch as _torch
-
-        seqs = [ctx_ids + c for c in choices]
-        max_len = max(len(s) for s in seqs)
-        input_ids = _torch.full((len(seqs), max_len), pad_id, dtype=_torch.long, device=device)
-        attn_mask = _torch.zeros((len(seqs), max_len), dtype=_torch.long, device=device)
-        for i, s in enumerate(seqs):
-            input_ids[i, : len(s)] = _torch.tensor(s, device=device)
-            attn_mask[i, : len(s)] = 1
-
-        out = model(input_ids=input_ids, attention_mask=attn_mask)
-        logprobs = F.log_softmax(out.logits.float(), dim=-1)  # (K, L, V)
-
-        start = len(ctx_ids) - 1  # same context for every choice in this item
-        results = []
-        for i, c_ids in enumerate(choices):
-            total = _torch.zeros((), device=device, dtype=_torch.float32)
-            for j, tok in enumerate(c_ids):
-                total = total + logprobs[i, start + j, tok]
-            results.append((total, len(c_ids)))
-        return results
-
     class RankingTrainer(Trainer):
         def compute_loss(self, model, inputs, return_outputs=False, **kwargs):
-            item_losses = []
+            # BRUTAL OPTIMIZATION: flatten every item's every choice in this whole
+            # micro-batch into ONE padded tensor and do a SINGLE forward pass, instead
+            # of one forward call per item (which was still one call per item even
+            # after the earlier per-item choice-batching fix). For a tiny 0.6B model,
+            # Python/kernel-launch overhead per call dominates over raw FLOPs, so
+            # cutting N calls -> 1 call per step is where the real wall-clock win is.
+            all_seqs: list[list[int]] = []
+            bounds: list[tuple[int, int, int]] = []  # (row_start, row_end, ctx_len) per item
             for item in inputs:
-                results = choice_logprobs(item["ctx_ids"], item["choice_ids"])
-                per_choice_sum = [r[0] for r in results]
-                per_choice_ntok = [r[1] for r in results]
+                ctx_ids = item["ctx_ids"]
+                start = len(all_seqs)
+                for c_ids in item["choice_ids"]:
+                    all_seqs.append(ctx_ids + c_ids)
+                bounds.append((start, len(all_seqs), len(ctx_ids)))
+
+            max_len = max(len(s) for s in all_seqs)
+            input_ids = torch.full((len(all_seqs), max_len), pad_id, dtype=torch.long, device=device)
+            attn_mask = torch.zeros((len(all_seqs), max_len), dtype=torch.long, device=device)
+            for i, s in enumerate(all_seqs):
+                input_ids[i, : len(s)] = torch.tensor(s, device=device)
+                attn_mask[i, : len(s)] = 1
+
+            out = model(input_ids=input_ids, attention_mask=attn_mask)
+            logprobs = F.log_softmax(out.logits.float(), dim=-1)  # (N_total_rows, L, V)
+
+            item_losses = []
+            for (row_start, row_end, ctx_len), item in zip(bounds, inputs):
+                pos_start = ctx_len - 1
+                per_choice_sum, per_choice_ntok = [], []
+                for row, c_ids in zip(range(row_start, row_end), item["choice_ids"]):
+                    total = torch.zeros((), device=device, dtype=torch.float32)
+                    for j, tok in enumerate(c_ids):
+                        total = total + logprobs[row, pos_start + j, tok]
+                    per_choice_sum.append(total)
+                    per_choice_ntok.append(len(c_ids))
                 per_choice_norm = [
                     s / cl for s, cl in zip(per_choice_sum, item["choice_charlens"])
                 ]  # char-length norm == acc_norm
@@ -321,7 +334,7 @@ def main() -> int:
         logging_steps=20,
         save_strategy="epoch",
         bf16=True,
-        gradient_checkpointing=True,
+        gradient_checkpointing=args.gradient_checkpointing,
         report_to="none",
         remove_unused_columns=False,
     )
