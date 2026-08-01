@@ -110,13 +110,15 @@ def main() -> int:
                           "to test whether repetition loops are a sampling issue.")
     ap.add_argument("--only", type=str, default=None,
                      help="Comma-separated case labels to run (default: all).")
+    ap.add_argument("--model", type=str, default=None,
+                     help="Override GGUF path (default: resolve_model_path() from metadata.json)")
     args = ap.parse_args()
 
     from src.engine import MedicalLLMEngine
     from src.rag import RAGPipeline
 
     rag = RAGPipeline()
-    engine = MedicalLLMEngine()
+    engine = MedicalLLMEngine(model_path=args.model)
     system_prompt = rag.system_prompt + (CAREFUL_MODE_SUFFIX if args.careful else "")
     chat_overrides = {}
     if args.repeat_penalty is not None:
