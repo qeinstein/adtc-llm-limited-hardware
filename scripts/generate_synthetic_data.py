@@ -27,7 +27,7 @@ so they can be concatenated straight in:
     build_healthcare_corpus.py's output — `cat` onto output/healthcare_corpus.jsonl)
 
 REQUIRES an API key — OpenRouter (auto-detected via OPENROUTER_API_KEY, default
-model google/gemini-2.0-flash-001), plain OpenAI (OPENAI_API_KEY), or any other
+model google/gemini-2.5-flash), plain OpenAI (OPENAI_API_KEY), or any other
 OpenAI-compatible provider via --base-url. This is the one external dependency
 in the whole pipeline that needs a human to supply credentials — there is no
 way around that for teacher-model distillation.
@@ -104,7 +104,7 @@ def _build_client(base_url: str | None, model: str):
     """Auto-detect OpenRouter vs plain OpenAI from whichever env var is set, so
     the same script works with either without extra flags. OpenRouter is fully
     OpenAI-API-compatible — same client, just a different base_url/key/model
-    naming convention (e.g. "anthropic/claude-3.5-haiku", "google/gemini-2.0-flash-001")."""
+    naming convention (e.g. "anthropic/claude-3.5-haiku", "google/gemini-2.5-flash")."""
     import os
 
     from openai import OpenAI
@@ -125,7 +125,7 @@ def _build_client(base_url: str | None, model: str):
         # If the user left the OpenAI-style default model name, swap in a sane
         # OpenRouter-style one (provider/model) unless they explicitly overrode it.
         if model == "gpt-4o-mini":
-            model = "google/gemini-2.0-flash-001"
+            model = "google/gemini-2.5-flash"
         return client, model
 
     return OpenAI(), model  # falls back to OPENAI_API_KEY env var
@@ -136,7 +136,7 @@ def main() -> int:
     ap.add_argument("--model", default="gpt-4o-mini",
                     help="Teacher model. With OPENROUTER_API_KEY set, use OpenRouter's "
                          "provider/model naming, e.g. anthropic/claude-3.5-haiku, "
-                         "google/gemini-2.0-flash-001, openai/gpt-4o-mini")
+                         "google/gemini-2.5-flash, openai/gpt-4o-mini")
     ap.add_argument("--base-url", default=None,
                     help="Override endpoint. Auto-set to OpenRouter's if OPENROUTER_API_KEY is set.")
     ap.add_argument("--per-guideline", type=int, default=6, help="Items per language per category, per guideline")
