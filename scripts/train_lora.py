@@ -63,6 +63,9 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--batch_size", type=int, default=4,
                    help="Number of ITEMS per step (each MCQA item unrolls to its own choice count)")
     p.add_argument("--grad_accum", type=int, default=8)
+    p.add_argument("--gradient_checkpointing", action="store_true",
+                   help="Trade ~20-40%% speed for lower VRAM. OFF by default — a 0.6B model "
+                        "doesn't need it on a 16GB+ GPU; enable only if you hit an OOM error.")
     p.add_argument("--lr", type=float, default=1e-4)
     p.add_argument("--lora_r", type=int, default=32)
     p.add_argument("--lora_alpha", type=int, default=64)
@@ -245,7 +248,12 @@ def main() -> int:
         trust_remote_code=True, torch_dtype=torch.bfloat16,
     )
     model.config.use_cache = False
-    model = prepare_model_for_kbit_training(model)
+    # NOTE: this helper defaults to use_gradient_checkpointing=True internally,
+    # independent of the TrainingArguments flag below — must be passed explicitly
+    # or it silently re-enables checkpointing regardless of --gradient_checkpointing.
+    model = prepare_model_for_kbit_training(
+        model, use_gradient_checkpointing=args.gradient_checkpointing
+    )
 
     peft_config = LoraConfig(
         r=args.lora_r, lora_alpha=args.lora_alpha, lora_dropout=0.05, bias="none",
@@ -321,7 +329,7 @@ def main() -> int:
         logging_steps=20,
         save_strategy="epoch",
         bf16=True,
-        gradient_checkpointing=True,
+        gradient_checkpointing=args.gradient_checkpointing,
         report_to="none",
         remove_unused_columns=False,
     )
