@@ -5,9 +5,13 @@
 # The imatrix is calibrated on our EN+SW medical corpus (output/calibration_corpus.txt
 # from scripts/prepare_dataset.py), so precision is biased toward our use case.
 #
-# QUANT defaults to Q4_K_M but should be set from .github/workflows/quant-sweep.yml's
-# result (it may pick Q5_K_M/Q8_0 instead — 0.6B is unusually quant-sensitive, see
-# PROGRESS.md): QUANT=Q8_0 bash scripts/export_gguf.sh
+# QUANT defaults to Q4_0 — chosen by the real sweep in
+# .github/workflows/quant-sweep.yml: it's the only quant that cleared the 15 tok/s
+# scoring threshold with real margin (19.1 tok/s measured; Q4_K_M/Q5_K_M/Q6_K/Q8_0
+# all measured BELOW 15 tok/s on the same run). Accuracy differences between quants
+# were within noise (~2-6 pts on a 200-question sample); the speed margin is the
+# real, high-confidence signal given run-to-run hardware variance. See PROGRESS.md.
+# Override if needed: QUANT=Q8_0 bash scripts/export_gguf.sh
 # ---------------------------------------------------------------------------
 set -euo pipefail
 
@@ -15,7 +19,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
 
 BASE_MODEL="${BASE_MODEL:-Qwen/Qwen3-0.6B-Base}"
-QUANT="${QUANT:-Q4_K_M}"
+QUANT="${QUANT:-Q4_0}"
 LORA_DIR="${1:-$ROOT/output/jamii-lora}"
 MERGED_DIR="$ROOT/output/jamii-merged"
 GGUF_F16="$ROOT/output/jamii-0.6b-f16.gguf"

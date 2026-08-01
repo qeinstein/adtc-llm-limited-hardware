@@ -30,11 +30,11 @@
   "model": {
     "name": "JamiiAfya-Qwen3-0.6B-Medical",
     "runtime": "llama.cpp",
-    "quantization": "GGUF Q4_K_M (EN+SW medical imatrix calibration; may move to Q5_K_M/Q8_0 pending scripts/quant-sweep results)",
+    "quantization": "GGUF Q4_0 (EN+SW medical imatrix calibration; picked by scripts/quant-sweep.yml — only quant clearing 15 tok/s with real margin)",
     "parameters_estimate": "0.6B",
     "packaging": "binary_bundle"
   },
   "_runtime": {
-    "model_path": "model/Qwen3-0.6B-Q4_K_M.gguf"
+    "model_path": "model/Qwen3-0.6B-Q4_0.gguf"
   }
 }

@@ -5,18 +5,23 @@
 # The adtc-profiler runs this script, then loads the resulting GGUF directly via
 # llama.cpp (llama-bench / lm-eval). No credentials, 100% public URL, idempotent.
 #
-# CURRENT (baseline): Qwen3-0.6B, Q4_K_M, from the public bartowski GGUF repo.
-#   Apache-2.0 licensed. ~460 MB. This makes the repo runnable today. Locked in
+# CURRENT (baseline): Qwen3-0.6B, Q4_0, from the public bartowski GGUF repo.
+#   Apache-2.0 licensed. ~450 MB. This makes the repo runnable today. Locked in
 #   over 1.7B/4B/8B based on measured scalar-CPU speed + RAM scores (see
 #   PROGRESS.md) — 0.6B already banks ~48/50 of the speed+efficiency score before
 #   any fine-tuning.
 #
+# Quant = Q4_0, decided by the real sweep in .github/workflows/quant-sweep.yml: it
+#   was the only quant that cleared the 15 tok/s scoring threshold with real margin
+#   (19.1 tok/s measured; Q4_K_M/Q5_K_M/Q6_K/Q8_0 all measured BELOW 15 tok/s on the
+#   same run). Accuracy differences between quants were within noise on a 200-item
+#   sample; the speed margin is the high-confidence signal given real run-to-run
+#   hardware variance we've observed. See PROGRESS.md.
+#
 # FINAL (after fine-tune + quant): swap MODEL_URL to our published GGUF
 #   (JamiiAfya-Qwen3-0.6B-Medical, produced by scripts/train_lora.py +
-#   scripts/export_gguf.sh with an EN+SW medical imatrix). Final quant (Q4_K_M vs
-#   Q5_K_M vs Q8_0) is decided by .github/workflows/quant-sweep.yml. The local
-#   filename and metadata.json _runtime.model_path stay the same, so nothing
-#   else changes.
+#   scripts/export_gguf.sh with an EN+SW medical imatrix). The local filename and
+#   metadata.json _runtime.model_path stay the same, so nothing else changes.
 # ---------------------------------------------------------------------------
 
 set -euo pipefail
@@ -24,12 +29,12 @@ set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MODEL_DIR="$HERE/model"
 # Must match _runtime.model_path in metadata.json:
-MODEL_FILE="$MODEL_DIR/Qwen3-0.6B-Q4_K_M.gguf"
+MODEL_FILE="$MODEL_DIR/Qwen3-0.6B-Q4_0.gguf"
 
 # Public, credential-free source (override with env MODEL_URL to ship our final model).
-MODEL_URL="${MODEL_URL:-https://huggingface.co/bartowski/Qwen_Qwen3-0.6B-GGUF/resolve/main/Qwen_Qwen3-0.6B-Q4_K_M.gguf}"
+MODEL_URL="${MODEL_URL:-https://huggingface.co/bartowski/Qwen_Qwen3-0.6B-GGUF/resolve/main/Qwen_Qwen3-0.6B-Q4_0.gguf}"
 
-# Lower-bound size sanity check (Q4_K_M for 0.6B is ~460 MB). Guards truncated files.
+# Lower-bound size sanity check (Q4_0 for 0.6B is ~450 MB). Guards truncated files.
 MIN_SIZE="${MIN_SIZE:-400000000}"
 
 mkdir -p "$MODEL_DIR"

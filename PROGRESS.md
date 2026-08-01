@@ -18,7 +18,17 @@ _Domain: healthcare_medical (offline clinical advisor, English + Kiswahili). Bra
 
    For 1.7B to beat 0.6B it would need to be ~39 accuracy points better — the real gap is ~10. Not close. **0.6B is correct.** Caveat: our speed margin over the 15.0 tok/s cutoff is only ~4% — thin, watch it.
 3. **Ship the BASE checkpoint** (`Qwen/Qwen3-0.6B-Base`), not Instruct. The grader scores multiple-choice by ranking answer options via raw loglikelihood, **no chat template** — base models score higher than instruct in that regime (measured in the literature: base ARC 60.5 vs instruct 51.7 on a comparable model).
-4. **Quantization: NOT yet locked — decided empirically by `.github/workflows/quant-sweep.yml`.** Research finding: compression damage is inverted against small models — Qwen3-14B loses ~1% accuracy at 4-bit, **Qwen3-0.6B loses ~10-12%** (measured 4-bit ARC-Challenge ≈ random chance). 8-bit is ~lossless. At 0.6B the RAM cost of Q8_0 vs Q4_K_M is <1 point of score, so this is a run-it-and-see decision, not a convention to follow. Default until the sweep runs: Q4_K_M.
+4. **Quantization: LOCKED to Q4_0**, decided empirically by `.github/workflows/quant-sweep.yml` (real run, AMD EPYC 9V74, x86 scalar, arc_easy n=200):
+
+   | quant | size | decode tok/s | peak RAM | acc_norm | clears 15 tok/s? | est S_total |
+   |---|---|---|---|---|---|---|
+   | **Q4_0** | 448 MB | **19.1** | 584 MB | 52.5 | **✓ yes, +27% margin** | 74.6 |
+   | Q4_K_M | 462 MB | 14.3 | 598 MB | 56.0 | ✗ no | 74.8 |
+   | Q5_K_M | 526 MB | 13.2 | 662 MB | 56.5 | ✗ no | 72.8 |
+   | Q6_K | 594 MB | 12.9 (slowest) | 730 MB | 59.0 (best acc) | ✗ no | 73.4 |
+   | Q8_0 | 768 MB | 14.2 | 904 MB | 58.0 | ✗ no | 74.9 |
+
+   All 5 land within ~2 points of each other on estimated total score — the accuracy differences (52.5–59.0 acc_norm on a 200-question sample) are within noise. **Q4_0 is the only one that clears the 15 tok/s scoring cutoff with real margin**; every other quant measured BELOW 15 tok/s on this run. We've now measured this same model at meaningfully different absolute speeds across two different test runs (14.3–19.1 tok/s for nominally similar setups) — real hardware variance exists, and the actual grading laptop is an unknown wildcard in that range. Shipping anything sitting at/below the cutoff risks losing a large chunk of the speed score to bad luck; Q4_0's margin protects against that. Chosen over the marginally-higher-accuracy options because that accuracy edge is noise-level while the speed risk is real and asymmetric (losing the 15-tok/s cap costs far more than the ~2-6 accuracy points at stake).
 5. **Training objective: listwise ranking, not plain gold-only SFT.** A 2026 study benchmarking Qwen3-0.6B/1.7B/4B/8B specifically found gold-only fine-tuning ("make the right answer more likely") is the *worst* of the objectives tested at sub-3B scale, and that training the model to **rank the correct choice above the distractors** (length-normalized to match the grader's `acc_norm` metric exactly) is measurably better. Implemented in `scripts/train_lora.py`.
 6. **Two accuracy tracks, trained together:**
    - **Track A** (`scripts/build_accuracy_sft.py`): public MCQA **train** splits (ARC, MMLU-aux, MedMCQA, MedQA, PubMedQA, OpenBookQA, HeadQA) in the exact grader prompt shape, with **balanced answer-letter permutation** on letter-format items (MedMCQA/MedQA/MMLU) — small models carry a real measured bias toward certain letters; this trains it away. Never touches any test/validation split (rules explicitly allow fine-tuning; no anti-contamination clause exists, but training on eval data would be real contamination).
@@ -44,9 +54,9 @@ _Domain: healthcare_medical (offline clinical advisor, English + Kiswahili). Bra
 
 ---
 
-## WHAT'S LEFT BEFORE THE RUNPOD FINE-TUNE — one action needed from you
+## Quant sweep — DONE, decision locked (Q4_0)
 
-**Trigger `.github/workflows/quant-sweep.yml`** (repo → Actions tab → "Quant sweep — accuracy vs speed vs RAM" → Run workflow → defaults are fine). Takes roughly 1–2 hours unattended (builds the scalar engine, downloads 5 quantized copies of the model, benchmarks each). This is the one remaining unlocked decision (quant level) and needs a GitHub click I can't do myself. Everything else is ready to go without waiting on it — the default (Q4_K_M) is a safe placeholder if you want to start the fine-tune before the sweep finishes; the final `export_gguf.sh` quant is a one-line env var change either way.
+`.github/workflows/quant-sweep.yml` ran to completion; results and reasoning are in the quant decision above. `export_gguf.sh` and `download_model.sh` both default to Q4_0 now. RunPod training is in progress on the Qwen3-0.6B-Base + listwise ranking + Track A/B pipeline described below.
 
 ---
 
@@ -95,8 +105,8 @@ python scripts/prepare_dataset.py
 python scripts/train_lora.py --base_model Qwen/Qwen3-0.6B-Base
 
 # Merge -> convert -> domain imatrix -> quantize
-# (use whatever quant scripts/quant-sweep.yml recommended; Q4_K_M is the default)
-QUANT=Q4_K_M bash scripts/export_gguf.sh
+# (Q4_0 — chosen by the real sweep results, see above)
+QUANT=Q4_0 bash scripts/export_gguf.sh
 ```
 
 Output lands at `model/Qwen3-0.6B-<QUANT>.gguf` — that's the final artifact. Copy it out of the pod, then:
