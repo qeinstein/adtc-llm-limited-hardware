@@ -35,8 +35,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
+
+# Must be set before torch is imported/initializes CUDA. Reduces OOM risk from
+# allocator fragmentation on long training runs (PyTorch's own suggestion in the
+# OOM error message).
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -60,20 +66,24 @@ def parse_args() -> argparse.Namespace:
                    help="Optional Track-B free-text corpus from build_healthcare_corpus.py")
     p.add_argument("--output_dir", default=str(ROOT / "output" / "jamii-lora"))
     p.add_argument("--epochs", type=float, default=2.0)
-    p.add_argument("--batch_size", type=int, default=8,
+    p.add_argument("--batch_size", type=int, default=4,
                    help="Number of ITEMS per step, all fused into ONE forward pass "
                         "(each item unrolls to its own choice count as extra rows). "
-                        "Qwen3's ~152k vocab makes the raw (rows x length x vocab) "
-                        "output tensor itself expensive regardless of the loss-computation "
-                        "fix — keep this modest. Lower if you still hit OOM.")
-    p.add_argument("--grad_accum", type=int, default=4)
-    p.add_argument("--gradient_checkpointing", action="store_true",
-                   help="Trade ~20-40%% speed for lower VRAM. OFF by default — a 0.6B model "
-                        "doesn't need it on a 16GB+ GPU; enable only if you hit an OOM error.")
+                        "Kept conservative after a real OOM at batch_size=8 — this isn't "
+                        "just about the loss computation, the model's own internal "
+                        "per-layer activations (MLP intermediate states, LoRA adapter "
+                        "matmuls, etc.) scale with total rows too. Lower if you still hit OOM.")
+    p.add_argument("--grad_accum", type=int, default=8)
+    p.add_argument("--gradient_checkpointing", action="store_true", default=True,
+                   help="Trade ~20-40%% speed for much lower VRAM. ON by default after "
+                        "real OOMs at batch_size=8/16 without it — a fused multi-row "
+                        "batch needs this, unlike a single-sequence forward pass. Pass "
+                        "--no-gradient_checkpointing to disable if you have VRAM to spare.")
+    p.add_argument("--no-gradient_checkpointing", dest="gradient_checkpointing", action="store_false")
     p.add_argument("--lr", type=float, default=1e-4)
     p.add_argument("--lora_r", type=int, default=32)
     p.add_argument("--lora_alpha", type=int, default=64)
-    p.add_argument("--max_len", type=int, default=384,
+    p.add_argument("--max_len", type=int, default=256,
                    help="Every row in a fused micro-batch pads to the LONGEST row in "
                         "it, and that full (rows x length x ~152k vocab) tensor is "
                         "materialized by the model's forward pass regardless of the "
