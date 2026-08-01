@@ -105,6 +105,11 @@ def main() -> int:
     ap.add_argument("--careful", action="store_true",
                      help="Enable the 'careful mode' step-by-step reasoning prompt hint.")
     ap.add_argument("--max-tokens", type=int, default=400)
+    ap.add_argument("--repeat-penalty", type=float, default=None,
+                     help="Override GenerationConfig.repeat_penalty (default 1.1) "
+                          "to test whether repetition loops are a sampling issue.")
+    ap.add_argument("--only", type=str, default=None,
+                     help="Comma-separated case labels to run (default: all).")
     args = ap.parse_args()
 
     from src.engine import MedicalLLMEngine
@@ -113,8 +118,16 @@ def main() -> int:
     rag = RAGPipeline()
     engine = MedicalLLMEngine()
     system_prompt = rag.system_prompt + (CAREFUL_MODE_SUFFIX if args.careful else "")
+    chat_overrides = {}
+    if args.repeat_penalty is not None:
+        chat_overrides["repeat_penalty"] = args.repeat_penalty
 
-    for label, turns in CASES:
+    cases = CASES
+    if args.only:
+        wanted = set(args.only.split(","))
+        cases = [c for c in CASES if c[0] in wanted]
+
+    for label, turns in cases:
         print(f"\n{'=' * 78}\nCASE: {label}\n{'=' * 78}")
         messages = [{"role": "system", "content": system_prompt}]
         for i, user_msg in enumerate(turns):
@@ -124,7 +137,7 @@ def main() -> int:
             print(f"\n--- turn {i + 1} ---")
             print(f"Q: {user_msg}")
             print(f"[retrieved: {sources or 'none'}]")
-            out = engine.chat(messages, max_tokens=args.max_tokens)
+            out = engine.chat(messages, max_tokens=args.max_tokens, **chat_overrides)
             print(f"A: {out['text']}")
             print(f"[{out['telemetry']['throughput_tps']} tok/s, "
                   f"{out['telemetry']['peak_rss_mb']} MB peak]")
