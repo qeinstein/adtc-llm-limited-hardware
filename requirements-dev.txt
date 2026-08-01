@@ -8,13 +8,16 @@ ruff>=0.5.0
 # --- Accuracy prediction (mirrors adtc-profiler's lm-eval; needs a GGUF) ---
 lm-eval>=0.4.4
 
-# --- Fine-tuning the Qwen3-1.7B LoRA (GPU, e.g. Udutech). Heavy; install on the
+# --- Fine-tuning the Qwen3-0.6B LoRA (GPU, e.g. RunPod). Heavy; install on the
 #     training box only. Qwen3 requires a recent transformers. ---
 torch>=2.3.0
 transformers>=4.51.0
 datasets>=2.19.0
 peft>=0.11.0
-trl>=0.9.0
 accelerate>=0.30.0
 bitsandbytes>=0.43.0
 sentencepiece>=0.2.0
+
+# --- Optional: scripts/generate_synthetic_data.py (bilingual EN/SW distillation).
+#     Needs an OpenAI-compatible API key — not required for the rest of the pipeline. ---
+openai>=1.0.0

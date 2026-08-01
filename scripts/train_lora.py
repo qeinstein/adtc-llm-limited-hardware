@@ -51,7 +51,11 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="QLoRA fine-tune (listwise MCQ ranking + clinical chat)")
     p.add_argument("--base_model", default="Qwen/Qwen3-0.6B-Base")
     p.add_argument("--accuracy_file", default=str(ROOT / "output" / "accuracy_sft.jsonl"))
-    p.add_argument("--clinical_file", default=str(ROOT / "data" / "medical_lora_dataset.json"))
+    p.add_argument("--clinical_file", nargs="+",
+                   default=[str(ROOT / "data" / "medical_lora_dataset.json")],
+                   help="One or more Alpaca-style JSON files (e.g. add "
+                        "output/synthetic_clinical_chat.json after running "
+                        "generate_synthetic_data.py)")
     p.add_argument("--healthcare_corpus_file", default=str(ROOT / "output" / "healthcare_corpus.jsonl"),
                    help="Optional Track-B free-text corpus from build_healthcare_corpus.py")
     p.add_argument("--output_dir", default=str(ROOT / "output" / "jamii-lora"))
@@ -74,14 +78,15 @@ def parse_args() -> argparse.Namespace:
 # Dataset: unifies MCQA choice-list rows and clinical chat rows into one schema
 # --------------------------------------------------------------------------- #
 class UnifiedDataset:
-    def __init__(self, tokenizer, accuracy_file: str, clinical_file: str,
+    def __init__(self, tokenizer, accuracy_file: str, clinical_files: list[str],
                  healthcare_corpus_file: str, clinical_repeat: int, max_len: int):
         self.tok = tokenizer
         self.max_len = max_len
         self.items: list[dict] = []
         self._load_mcqa(accuracy_file)
         n_mcqa = len(self.items)
-        self._load_clinical(clinical_file, clinical_repeat)
+        for cf in clinical_files:
+            self._load_clinical(cf, clinical_repeat)
         n_clinical = len(self.items) - n_mcqa
         self._load_healthcare_corpus(healthcare_corpus_file)
         n_corpus = len(self.items) - n_mcqa - n_clinical
@@ -233,37 +238,45 @@ def main() -> int:
     model = get_peft_model(model, peft_config)
 
     device = next(model.parameters()).device
+    pad_id = tokenizer.pad_token_id
 
-    def sequence_logprob(ctx_ids: list[int], choice_ids: list[int]):
-        """Forward pass one (context+choice) sequence; return summed logprob of the
-        choice tokens and how many there are. One forward call per choice keeps
-        the implementation simple and correct at the cost of some GPU efficiency
-        — acceptable at 0.6B."""
+    def choice_logprobs(ctx_ids: list[int], choices: list[list[int]]):
+        """One BATCHED forward pass for all K choices of an item (right-padded to
+        the batch's max length), instead of K separate forward calls — roughly a
+        Kx reduction in forward passes for MCQA rows, which are most of the data.
+        Returns (summed_logprob, n_tokens) per choice."""
         import torch as _torch
 
-        full = ctx_ids + choice_ids
-        input_ids = _torch.tensor([full], device=device)
-        out = model(input_ids=input_ids)
-        logits = out.logits[0]  # (L, V)
-        logprobs = F.log_softmax(logits.float(), dim=-1)
-        # position p predicts token p+1; choice tokens start at index len(ctx_ids)
-        start = len(ctx_ids) - 1
-        total = _torch.zeros((), device=device, dtype=_torch.float32)
-        for i, tok in enumerate(choice_ids):
-            total = total + logprobs[start + i, tok]
-        return total, len(choice_ids)
+        seqs = [ctx_ids + c for c in choices]
+        max_len = max(len(s) for s in seqs)
+        input_ids = _torch.full((len(seqs), max_len), pad_id, dtype=_torch.long, device=device)
+        attn_mask = _torch.zeros((len(seqs), max_len), dtype=_torch.long, device=device)
+        for i, s in enumerate(seqs):
+            input_ids[i, : len(s)] = _torch.tensor(s, device=device)
+            attn_mask[i, : len(s)] = 1
+
+        out = model(input_ids=input_ids, attention_mask=attn_mask)
+        logprobs = F.log_softmax(out.logits.float(), dim=-1)  # (K, L, V)
+
+        start = len(ctx_ids) - 1  # same context for every choice in this item
+        results = []
+        for i, c_ids in enumerate(choices):
+            total = _torch.zeros((), device=device, dtype=_torch.float32)
+            for j, tok in enumerate(c_ids):
+                total = total + logprobs[i, start + j, tok]
+            results.append((total, len(c_ids)))
+        return results
 
     class RankingTrainer(Trainer):
         def compute_loss(self, model, inputs, return_outputs=False, **kwargs):
             item_losses = []
             for item in inputs:
-                ctx_ids = item["ctx_ids"]
-                per_choice_sum, per_choice_norm, per_choice_ntok = [], [], []
-                for c_ids, c_charlen in zip(item["choice_ids"], item["choice_charlens"]):
-                    total, ntok = sequence_logprob(ctx_ids, c_ids)
-                    per_choice_sum.append(total)
-                    per_choice_norm.append(total / c_charlen)  # char-length norm == acc_norm
-                    per_choice_ntok.append(ntok)
+                results = choice_logprobs(item["ctx_ids"], item["choice_ids"])
+                per_choice_sum = [r[0] for r in results]
+                per_choice_ntok = [r[1] for r in results]
+                per_choice_norm = [
+                    s / cl for s, cl in zip(per_choice_sum, item["choice_charlens"])
+                ]  # char-length norm == acc_norm
 
                 gold = item["gold"]
                 aux_nll = -(per_choice_sum[gold] / max(1, per_choice_ntok[gold]))
