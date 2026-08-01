@@ -41,7 +41,7 @@ class RSSSampler(threading.Thread):
         self.pid = pid
         self.interval = interval
         self.peak_mb = 0.0
-        self._stop = threading.Event()
+        self._stop_event = threading.Event()
 
     def run(self) -> None:
         try:
@@ -52,17 +52,17 @@ class RSSSampler(threading.Thread):
             root = psutil.Process(self.pid)
         except Exception:
             return
-        while not self._stop.is_set():
+        while not self._stop_event.is_set():
             try:
                 family = [root] + root.children(recursive=True)
                 total = sum(p.memory_info().rss for p in family if p.is_running())
                 self.peak_mb = max(self.peak_mb, total / (1024 * 1024))
             except Exception:
                 pass
-            self._stop.wait(self.interval)
+            self._stop_event.wait(self.interval)
 
     def stop(self) -> float:
-        self._stop.set()
+        self._stop_event.set()
         self.join(timeout=1.0)
         return self.peak_mb
 
