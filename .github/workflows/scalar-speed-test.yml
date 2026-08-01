@@ -24,12 +24,12 @@ on:
       models:
         description: "Space-separated model keys to test"
         required: false
-        default: "0.6b 1.7b 4b"
+        default: "0.6b 1.7b 4b 8b"
 
 jobs:
   scalar-bench:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -71,6 +71,7 @@ jobs:
               0.6b) dl "https://huggingface.co/bartowski/Qwen_Qwen3-0.6B-GGUF/resolve/main/Qwen_Qwen3-0.6B-Q4_K_M.gguf" "qwen3-0.6b-q4km.gguf" ;;
               1.7b) dl "https://huggingface.co/bartowski/Qwen_Qwen3-1.7B-GGUF/resolve/main/Qwen_Qwen3-1.7B-Q4_K_M.gguf" "qwen3-1.7b-q4km.gguf" ;;
               4b)   dl "https://huggingface.co/bartowski/Qwen_Qwen3-4B-GGUF/resolve/main/Qwen_Qwen3-4B-Q4_K_M.gguf" "qwen3-4b-q4km.gguf" ;;
+              8b)   dl "https://huggingface.co/bartowski/Qwen_Qwen3-8B-GGUF/resolve/main/Qwen_Qwen3-8B-Q4_K_M.gguf" "qwen3-8b-q4km.gguf" ;;
               *) echo "Unknown model key: $m (skipping)" ;;
             esac
           done
