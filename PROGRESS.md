@@ -131,6 +131,14 @@ Output lands at `model/Qwen3-0.6B-<QUANT>.gguf` — that's the final artifact. C
 
 ---
 
+## FUTURE ENHANCEMENT (not urgent, legitimate, queued): real "thinking mode"
+
+Right now our fine-tuned model has no genuine step-by-step reasoning mode — we started from the plain (non-chat-trained) checkpoint specifically to maximize the automated quiz score, and every training example we used was direct question-then-answer, never a reasoning trace. So there's no real capability to switch on, only a fake instruction-based approximation (the web UI's "careful mode" checkbox, which just asks the model to reason via a prompt hint — works a bit, but isn't the same as a model actually trained for it).
+
+**This can be added later, legitimately, with no rules conflict:** it doesn't touch the automated score at all (that's scored on raw answer-ranking regardless of reasoning style), and for the judge-facing side it's a pure upside (a transparency/trust feature, not a violation of anything). The real way to add it: a follow-up fine-tuning round that includes actual reasoning-trace examples as training targets (e.g., teacher-model-generated step-by-step clinical reasoning, same distillation technique already used for the bilingual data) so the model genuinely learns to produce useful `<think>` content when asked, rather than just being told to. This is a real, non-trivial second training iteration — not a quick toggle — so it's queued as a future enhancement after the current model is shipped and validated, not something to interrupt the current pipeline for.
+
+---
+
 ## Non-code action items for the user (unchanged, still open)
 
 - **Eligibility:** confirm the entry qualifies (reside in an eligible African nation; early-stage/PoC venture <12 months, <$25k raised).

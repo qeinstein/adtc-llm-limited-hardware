@@ -9,8 +9,13 @@ techniques that help on CPU:
 - Quantized KV cache (+ flash-attention) to keep RAM low.
 - Prompt/KV prefix caching so the fixed system+few-shot prefix is not re-processed
   on every query (prefill/TTFT dominates CPU latency).
-- Optional prompt-lookup (n-gram) speculative decoding — free extra RAM, and it
-  helps exactly on RAG-grounded output that copies spans from retrieved text.
+- Optional prompt-lookup (n-gram) speculative decoding — OFF by default. Found by
+  testing (not documented anywhere) that this llama-cpp-python version crashes with
+  "could not broadcast input array from shape (N,) into shape (0,)" specifically on
+  longer, real chat-formatted prompts (system + few-shot + RAG context) — it only
+  appears to work on short single-line completions, which is exactly the case a
+  smoke test would use and miss. Real end-to-end testing with the actual RAG prompt
+  is what caught this. Safe to try enabling for short, non-chat completions only.
 
 ``llama_cpp`` is imported lazily so this module (and the RAG stack) import cleanly
 in tests and when no model weights are present.
@@ -79,7 +84,7 @@ class MedicalLLMEngine:
         self,
         model_path: Optional[str] = None,
         runtime: Optional[RuntimeConfig] = None,
-        prompt_lookup_decoding: bool = True,
+        prompt_lookup_decoding: bool = False,
         prompt_cache: bool = True,
         verbose: bool = False,
     ):
@@ -122,7 +127,12 @@ class MedicalLLMEngine:
             verbose=verbose,
         )
 
-        if prompt_cache:
+        # Real root cause of the crash (see module docstring): the speculative
+        # draft_model breaks specifically on longer chat-formatted prompts, not on
+        # any interaction with this cache. prompt_lookup_decoding now defaults to
+        # False, so this branch runs normally; the `draft_model is None` guard is
+        # kept as defense-in-depth in case someone re-enables it manually anyway.
+        if prompt_cache and draft_model is None:
             try:
                 # Reuses KV for a shared prompt prefix across calls (big CPU win).
                 self.llm.set_cache(llama_cpp.LlamaRAMCache(capacity_bytes=256 * 1024 * 1024))
@@ -181,6 +191,65 @@ class MedicalLLMEngine:
         gen = generation or get_generation_config()
         for chunk in self.llm.create_chat_completion(
             messages=self._messages(prompt, system_prompt),
+            max_tokens=overrides.get("max_tokens", gen.max_tokens),
+            temperature=overrides.get("temperature", gen.temperature),
+            top_p=overrides.get("top_p", gen.top_p),
+            top_k=overrides.get("top_k", gen.top_k),
+            repeat_penalty=overrides.get("repeat_penalty", gen.repeat_penalty),
+            stream=True,
+        ):
+            delta = chunk.get("choices", [{}])[0].get("delta", {})
+            piece = delta.get("content")
+            if piece:
+                yield piece
+
+    # -- multi-turn chat (full message history, for the web UI) ---------------
+    def chat(
+        self,
+        messages: list[dict[str, str]],
+        generation: Optional[GenerationConfig] = None,
+        **overrides: Any,
+    ) -> dict[str, Any]:
+        """Like `generate`, but takes a full [{"role", "content"}, ...] history
+        (system + alternating user/assistant turns + the new user message) so the
+        model has real conversational memory across turns, not just the latest
+        question."""
+        gen = generation or get_generation_config()
+        start = time.time()
+        peak = _rss_mb()
+        resp = self.llm.create_chat_completion(
+            messages=messages,
+            max_tokens=overrides.get("max_tokens", gen.max_tokens),
+            temperature=overrides.get("temperature", gen.temperature),
+            top_p=overrides.get("top_p", gen.top_p),
+            top_k=overrides.get("top_k", gen.top_k),
+            repeat_penalty=overrides.get("repeat_penalty", gen.repeat_penalty),
+        )
+        elapsed = max(time.time() - start, 1e-3)
+        peak = max(peak, _rss_mb())
+
+        choices = resp.get("choices", [])
+        text = choices[0]["message"]["content"] if choices else ""
+        usage = resp.get("usage", {})
+        completion_tokens = int(usage.get("completion_tokens", 0))
+        telemetry = Telemetry(
+            elapsed_sec=elapsed,
+            prompt_tokens=int(usage.get("prompt_tokens", 0)),
+            completion_tokens=completion_tokens,
+            throughput_tps=completion_tokens / elapsed,
+            peak_rss_mb=peak,
+        )
+        return {"text": text.strip(), "telemetry": telemetry.as_dict()}
+
+    def stream_chat(
+        self,
+        messages: list[dict[str, str]],
+        generation: Optional[GenerationConfig] = None,
+        **overrides: Any,
+    ) -> Iterator[str]:
+        gen = generation or get_generation_config()
+        for chunk in self.llm.create_chat_completion(
+            messages=messages,
             max_tokens=overrides.get("max_tokens", gen.max_tokens),
             temperature=overrides.get("temperature", gen.temperature),
             top_p=overrides.get("top_p", gen.top_p),

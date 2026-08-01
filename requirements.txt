@@ -5,6 +5,9 @@
 
 llama-cpp-python>=0.3.2   # CPU GGUF inference for the interactive advisor
 psutil>=5.9.0             # RSS sampling in the benchmark harness
+fastapi>=0.110.0          # web UI backend (src/webapp.py) — offline, no CDN assets
+uvicorn>=0.29.0           # ASGI server for the web UI
+pydantic>=2.0.0           # request/response models for the web UI
 
 # Dev/test tooling is in requirements-dev.txt.
 # Fine-tuning (GPU) and accuracy (lm-eval) deps are also in requirements-dev.txt.
