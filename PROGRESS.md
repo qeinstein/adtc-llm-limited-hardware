@@ -1,137 +1,105 @@
 # Jamii Afya — Build Progress & Handoff
 
-_Snapshot of where this ADTC 2026 submission stands and exactly what remains to win.
-Domain: healthcare_medical (offline clinical advisor, English + Kiswahili)._
+_Domain: healthcare_medical (offline clinical advisor, English + Kiswahili). Branch: `jamii-afya-rebuild`._
 
 ---
 
-## TL;DR — the winning strategy (evidence-based, replaces the inherited 14B plan)
+## DECISIONS — LOCKED (backed by measurement + research, not guesses)
 
-The grader (`adtc-profiler`) does **not** run our app. It runs **`llama-bench` on the raw GGUF** (throughput/RAM) and **lm-eval MCQ on the raw GGUF** (accuracy), on a llama.cpp build with **all SIMD disabled** (scalar). Score = `0.50·S_acc + 0.30·S_perf + 0.20·S_eff − P_thermal`.
+1. **Model family: Qwen3.** Only small model family that is Apache-2.0 (commercial-safe) **and** officially supports Swahili.
+2. **Model size: Qwen3-0.6B.** The grader runs `llama-bench` on a CPU build with all speed instructions disabled ("scalar"). Measured on real x86 hardware (GitHub Actions, AMD EPYC 7763, true scalar build):
 
-So the win is a **small Qwen3 model**, fine-tuned on **two complementary data tracks** (the legitimate 50%-accuracy lever), quantized to GGUF:
-- **Family = Qwen3** (only small model that is Apache-2.0 **and** officially supports Swahili).
-- **Ship the BASE model** (base beats instruct on template-free loglikelihood MCQ).
-- **Track A — benchmark-format SFT** (already built): MCQ-completion training on ARC/MedMCQA/PubMedQA/MMLU **train** splits, in the exact lm-eval prompt shape. Targets the automated scoring *format* directly.
-- **Track B — broad healthcare knowledge corpus (NOT yet built — see "What remains" #0):** pull as much legitimate open medical/clinical text as we can (open QA datasets, clinical guideline text, consumer-health references, biomedical abstracts) and continue-pretrain / SFT on it so the model is genuinely knowledgeable, not just quiz-shaped. This is what makes answers actually accurate — MCQ-format training alone risks a model that's good at picking A/B/C/D but shallow on real clinical content, which hurts both the hidden-medical-MCQ subset (harder questions need real knowledge, not format tricks) and the judge-qualitative half of S_acc.
-- Rules explicitly allow fine-tuning; no anti-contamination clause; never train on any test/validation split.
-- **Quant = Q4_K_M** (Qwen is quant-robust) — A/B vs **Q4_0** (simpler unpack → faster on the scalar audit build).
-- **Size = the largest Qwen3 that still clears ~15 tps on the scalar build.** RAM is NOT binding (even 4B ≈ 3 GB). Decision hinges on measured accuracy gap vs scalar tps — see "What remains".
-- RAG app + Kiswahili + rural-clinic story drive the **judge-qualitative** half of S_acc and the **African-use-case bonus** (separate from the automated metric).
+   | Model | decode tok/s | peak RAM | Speed score (of 30) | RAM score (of 20) | **Banked before any fine-tuning** |
+   |---|---|---|---|---|---|
+   | **0.6B** | 15.6 | 598 MB | **30.0** | **18.3** | **48.3 / 50** |
+   | 1.7B | 6.3 | 1395 MB | 12.7 | 16.0 | 28.7 / 50 |
+   | 4B | 2.8 | 2600 MB | 5.6 | 12.6 | 18.2 / 50 |
+   | 8B | 1.5 | 5034 MB | 3.1 | 5.6 | 8.7 / 50 |
 
-Full rationale + sources are in the agent memory files and REPORT.md.
-
-**Our stated goal: maximize the score the official profiler tool would give us — stretch target >95%.** The scoring formula mixes accuracy + speed + memory efficiency, so pushing all three to the max simultaneously is a real balancing act, not a single number to grind up — but the profiler-driven testing loop below is how we actually track whether we're getting close, instead of guessing.
-
-**Official grading tool (confirmed live):** https://github.com/Africa-Deep-Tech-Foundation/adtc-profiler — this is not just documentation, it's the literal code the organizers run to grade every submission (loads the model, times generation speed, measures RAM, checks thermal throttling, runs the quiz accuracy test, emits a JSON score report). **This becomes the central validation loop for picking our final model** — not vendor benchmarks, not our own approximations:
-1. Build a copy of their crippled test CPU setup locally (`scripts/build_llamacpp_scalar.sh`).
-2. Install and run their actual profiler tool (`scripts/run_profiler.sh`) against each candidate model — the real grading code, not a guess.
-3. Get real numbers: speed, memory, quiz accuracy.
-4. Plug into `src/score.py` (mirrors their exact formula) and compare candidates head-to-head.
-5. Only then commit to a final model size before the full fine-tune run.
-
-**Independent cross-check on the size-vs-speed risk (2026-08 web research, non-vendor sources):** going from CPU fast-path instructions to the crippled "scalar" mode the grading machine uses typically costs **4–8x speed**, not a minor slowdown. Applying that range to our own measured numbers (Apple Silicon, fast path): 0.6B (~150 tok/s) → an estimated ~19–38 tok/s on the crippled grading machine; 1.7B (~60 tok/s) → an estimated **~8–15 tok/s — right at or below the 15 tok/s cutoff.** This is a rough estimate, not the real number — it's exactly why step 1–2 above (test on an actual matching setup) is non-negotiable before locking the model size. Confirmed official accuracy gap between sizes (Qwen3 Technical Report, arXiv 2505.09388, Base models): MMLU 0.6B=52.8 / 1.7B=62.6 / 4B=73.0 — each size step is a genuine ~10-point accuracy jump, so this is a real trade-off to measure carefully, not obviously won by either side.
-
-**On "just pick the biggest model that fits" — deliberately rejected, with numbers:** a 14B model, compressed as small as reasonably possible, still needs roughly ~8.5GB just to load — already over the 7GB scoring budget and risking the full 8GB physical limit. Going over triggers a crash, which is an **automatic zero / instant disqualification** — not a small point loss. Compressing it further to fit collapses its speed on the crippled CPU (extreme low-bit formats are known to fall apart without fast CPU instructions). So oversizing loses on two independent failure paths (crash-to-zero, or crawl-to-zero-speed), while a well-chosen small/mid model has no such cliff. The likely sweet spot is 1.7B–4B, to be confirmed empirically via the profiler loop above — not assumed.
+   For 1.7B to beat 0.6B it would need to be ~39 accuracy points better — the real gap is ~10. Not close. **0.6B is correct.** Caveat: our speed margin over the 15.0 tok/s cutoff is only ~4% — thin, watch it.
+3. **Ship the BASE checkpoint** (`Qwen/Qwen3-0.6B-Base`), not Instruct. The grader scores multiple-choice by ranking answer options via raw loglikelihood, **no chat template** — base models score higher than instruct in that regime (measured in the literature: base ARC 60.5 vs instruct 51.7 on a comparable model).
+4. **Quantization: NOT yet locked — decided empirically by `.github/workflows/quant-sweep.yml`.** Research finding: compression damage is inverted against small models — Qwen3-14B loses ~1% accuracy at 4-bit, **Qwen3-0.6B loses ~10-12%** (measured 4-bit ARC-Challenge ≈ random chance). 8-bit is ~lossless. At 0.6B the RAM cost of Q8_0 vs Q4_K_M is <1 point of score, so this is a run-it-and-see decision, not a convention to follow. Default until the sweep runs: Q4_K_M.
+5. **Training objective: listwise ranking, not plain gold-only SFT.** A 2026 study benchmarking Qwen3-0.6B/1.7B/4B/8B specifically found gold-only fine-tuning ("make the right answer more likely") is the *worst* of the objectives tested at sub-3B scale, and that training the model to **rank the correct choice above the distractors** (length-normalized to match the grader's `acc_norm` metric exactly) is measurably better. Implemented in `scripts/train_lora.py`.
+6. **Two accuracy tracks, trained together:**
+   - **Track A** (`scripts/build_accuracy_sft.py`): public MCQA **train** splits (ARC, MMLU-aux, MedMCQA, MedQA, PubMedQA, OpenBookQA, HeadQA) in the exact grader prompt shape, with **balanced answer-letter permutation** on letter-format items (MedMCQA/MedQA/MMLU) — small models carry a real measured bias toward certain letters; this trains it away. Never touches any test/validation split (rules explicitly allow fine-tuning; no anti-contamination clause exists, but training on eval data would be real contamination).
+   - **Track B** (`scripts/build_healthcare_corpus.py`): broad open healthcare knowledge (MedQuAD, EPFL clinical guidelines, medical flashcards, WikiDoc) as plain continued-pretraining text. Matters because **judges download the raw GGUF and run it standalone in LM Studio/Ollama — our RAG app is not in that loop.** The model's own knowledge is what gets read.
+7. **The shipped GGUF's chat template must have "thinking" disabled.** Qwen3 is a hybrid-reasoning model; a judge opening it in LM Studio and getting a wall of `<think>` rambling would score us down. Baked into training via `enable_thinking=False` on all clinical-chat rows — don't rely on a flag a judge will never type.
+8. **The accuracy score (S_acc, 50% of total) is largely judge-owned, not purely automated** — official sources conflict, but two of four describe it as a qualitative panel score based on "cross-disciplinary integration, software UX, and live defense," with the automated quiz as one input among several. Also: **Swahili competence claims a ×1.15 multiplier on the panel score** (a separate bonus from the general "African use case" +10 points). Net effect: Track B + product quality + documentation likely matter as much or more than squeezing the last few quiz points.
 
 ---
 
-## DONE (committed)
+## BUILT & VALIDATED TODAY
 
-- **Repo fully rebuilt & de-risked.** Deleted the inherited **fake** stack (`inference.py`, `attention.py`, `turboquant_numpy.py`, `memory_manager.py`, `gguf_loader.py`, `pruning.py`, `benchmark_compare.py`, `legacy/`, `plan.md`) and all **fabricated** benchmark numbers.
-- **Fixed submission-breaking `.gitignore`** (`*.json` was excluding the RAG corpus/eval/dataset from the repo judges clone).
-- **Clean, tested codebase (32 passing tests, ruff-clean, runs without model weights):**
-  - `src/config.py`, `src/retriever.py` (stdlib BM25 + **bilingual stopword removal** — fixed a real Swahili mis-retrieval), `src/compressor.py`, `src/rag.py` — the offline RAG stack.
-  - `src/engine.py` — llama-cpp-python CPU serving (KV prefix cache, prompt-lookup speculative decoding) for the interactive product/demo.
-  - `src/main.py` — bilingual CLI advisor (runs in "RAG-preview" mode even without weights).
-  - `src/evaluator.py`, `src/accuracy.py`, `src/score.py`, `src/manifest.py` — eval + score-estimation + schema self-check.
-  - `src/benchmark.py` — honest bench with a **profiler-parity** mode (scalar `llama-bench` + RSS sampling that matches the audit, so Gate-1 numbers won't fail the ±25%/±15% Gate-2 variance check).
-- **Turnkey model pipeline (`scripts/`)** — runs on free Colab (T4, ~1–3 h) or Udutech GPU:
-  - `build_accuracy_sft.py` — builds the MCQ SFT set from public **train** splits in the exact lm-eval prompt shapes. **Validated live** (produces correct `{prompt, completion}` rows).
-  - `prepare_dataset.py` — clinical chat splits + imatrix calibration corpus.
-  - `train_lora.py` — QLoRA on **Qwen3-1.7B-Base**, completion-only loss, MCQ + clinical mix.
-  - `export_gguf.sh` — merge → convert → **domain (EN+SW) imatrix** → Q4_K_M.
-  - `build_llamacpp_scalar.sh` — no-SIMD llama.cpp matching the audit; `run_profiler.sh` — official Gate-1 self-check.
-  - `mcq_eval.py`, `local_perf_sweep.sh`, `local_accuracy_sweep.sh` — local measurement tools.
-- **Rich, medically-QC'd data:** `data/medical_guidelines.json` (32 bilingual WHO/IMCI guidelines), `swahili_eval_set.json` (18 cases), `medical_lora_dataset.json` (80 items).
-- **Honest docs:** `README.md`, `REPORT.md` (official template, benchmarks marked *pending measurement*), `LICENSE` (MIT), `Makefile`, `requirements*.txt`, correct `metadata.json` (schema-valid; email set to ogunadetoheeb4@gmail.com).
+- **Model/quant/size finalized** across `metadata.json`, `download_model.sh`, `scripts/train_lora.py`, `scripts/export_gguf.sh`, `README.md`, `REPORT.md` — all now reference Qwen3-0.6B with real measured numbers (598 MB peak RAM, S_eff ≈ 91.7), no stale 1.7B references left.
+- **`scripts/build_accuracy_sft.py` rewritten** to emit choice-list rows `{context, choices, gold, format}` (not flat prompt/completion) with balanced letter-permutation augmentation. **Validated live** against real HF datasets (ARC, MedMCQA) — produces correct, well-formed, appropriately-balanced output.
+- **`scripts/train_lora.py` rewritten** with a custom `Trainer` implementing the listwise char-length-normalized ranking loss (+ small auxiliary NLL term for calibration), unified with completion-only clinical chat SFT and optional Track-B causal-LM loss, all through one QLoRA run. Core scoring math (logits → log-softmax → per-choice-token gather) is the **same algorithm already proven correct** in `scripts/mcq_eval.py` (verified end-to-end earlier: correctly ranks "Paris" above "banana" for "capital of France," and produced a sane 51–57% arc_easy accuracy on real questions — well above the 25% chance floor a scoring bug would produce).
+- **`scripts/build_healthcare_corpus.py` (new, Track B)** — pulls MedQuAD/EPFL-guidelines/medical-flashcards/WikiDoc, skip-on-failure per source. Smoke-tested live (MedQuAD sample pulled correctly).
+- **Two real bugs found and fixed by testing against ground truth, not by inspection:**
+  1. `scripts/mcq_eval.py` originally used `llama-cpp-python`'s `create_completion(echo=True, logprobs=N)`, which returns **misaligned, wrong logprobs** (verified: it ranked "banana" above "Paris" as the capital of France). Rewritten to read raw logits directly. This is the same bug class the ADTC profiler's own authors hit and rewrote around — confirms it's a real, known trap, not a one-off mistake.
+  2. `scripts/build_llamacpp_scalar.sh` and `scripts/export_gguf.sh` both had a bare `-j` (unlimited parallel compile jobs) in the cmake build step — this OOM-killed our first real CI run (`gmake: *** Terminated`, exit 143). Both now cap parallelism to a safe bounded value.
+- **Two GitHub Actions workflows, run on real x86 hardware (no local laptop needed):**
+  - `.github/workflows/scalar-speed-test.yml` — speed + memory across model sizes (already run successfully; produced the numbers in the decision table above).
+  - `.github/workflows/quant-sweep.yml` — speed + memory + **accuracy** + estimated total score across Q4_0/Q4_K_M/Q5_K_M/Q6_K/Q8_0 for Qwen3-0.6B. **Built, pushed, not yet triggered.**
+- Full local suite still green: `make test` (32 passing), ruff clean across `src/`, `scripts/`, `tests/`, metadata schema-valid.
 
 ---
 
-## Measured so far (real, this machine — Apple Silicon, CPU `-ngl 0`, ARM-NEON proxy)
+## WHAT'S LEFT BEFORE THE RUNPOD FINE-TUNE — one action needed from you
 
-`llama-bench -p 512 -n 128`:
-
-| Model | decode tg128 | prefill pp512 |
-|---|---|---|
-| Qwen3-0.6B Q4_0 | 151.0 t/s | 769 |
-| Qwen3-0.6B Q4_K_M | 149.9 t/s | 590 |
-| Qwen3-1.7B Q4_K_M | 59.6 t/s | 204 |
-
-Reads: **0.6B decodes ~2.5× faster than 1.7B**; Q4_0 prefill ~30% faster (favors Q4_0 on the compute-bound scalar build). **These are NEON numbers — x86 scalar will be ~5–8× lower**, so 1.7B likely lands near/below 15 tps and 0.6B above. Ordering transfers; absolute scalar tps must be confirmed on x86.
-
-**Accuracy: NOT yet measured** (was the very next step). Local env is fully ready to measure it (see below).
+**Trigger `.github/workflows/quant-sweep.yml`** (repo → Actions tab → "Quant sweep — accuracy vs speed vs RAM" → Run workflow → defaults are fine). Takes roughly 1–2 hours unattended (builds the scalar engine, downloads 5 quantized copies of the model, benchmarks each). This is the one remaining unlocked decision (quant level) and needs a GitHub click I can't do myself. Everything else is ready to go without waiting on it — the default (Q4_K_M) is a safe placeholder if you want to start the fine-tune before the sweep finishes; the final `export_gguf.sh` quant is a one-line env var change either way.
 
 ---
 
-## WHAT REMAINS (ordered — the checklist to finish and win)
+## RUNPOD — the exact command sequence, ready to paste
 
-0. **Build Track B: broad healthcare knowledge corpus (NOT yet started).** Goal: make the model deeply accurate on real clinical content, not just MCQ-shaped. Plan:
-   - **Sources to pull (open/legitimate only, check license per source before use):**
-     - Open medical QA: MedQuAD (NIH-derived Q&A), HealthSearchQA, iCliniq/HealthCareMagic-style open dialogues, LiveQA-Med.
-     - Reference text: MedlinePlus consumer health topics, WHO fact sheets & guideline documents (many CC-BY / public domain), CDC public health guidance, StatPearls (NCBI Bookshelf, free-access), Wikipedia medical articles (CC-BY-SA).
-     - Biomedical literature: PubMed/PMC **open-access subset** abstracts (respect OA license per article), for grounding on mechanisms/terminology (not for verbatim regurgitation).
-     - Our own domain: expand `data/medical_guidelines.json`-style WHO/IMCI content further (already have 32; can grow), plus any African MoH public treatment guidelines (Kenya/Tanzania/Nigeria) if openly published.
-   - **Method:** a `scripts/build_healthcare_corpus.py` (new) to fetch/clean these into free-text + instruction-style pairs; feed into `train_lora.py` as a third data component (alongside Track A MCQ rows and the existing bilingual clinical chat data), OR run a short continued-pretraining (causal LM, not completion-only-loss) pass on the free-text portion before the SFT stage.
-   - **Guardrails:** dedupe against all benchmark test/validation splits (contamination risk), keep a manifest of exact sources for the report (judges/organizers may ask for data provenance), and keep safety framing (danger-signs/refer/"not a diagnosis") consistent — don't let raw scraped text override the safety-tuned behavior from `data/medical_lora_dataset.json`.
-   - **Priority order once building:** Track A (small, fast, directly targets the scored format) should still run; Track B is additive and can be scaled to available GPU time/budget — even a partial corpus (MedQuAD + WHO fact sheets + StatPearls summaries) meaningfully deepens real-world accuracy.
+**Pod:** RTX 4090 or A5000 (24 GB VRAM) on Community Cloud, PyTorch template, ~60–100 GB volume disk. Don't pay for A100/H100 — total overkill for a 0.6B QLoRA run. Estimated cost: a few dollars total.
 
-1. **Measure accuracy (the decisive number).** Run `mcq_eval.py` (arc_easy + medmcqa, ± pubmedqa/openbookqa) on **Qwen3-0.6B, 1.7B, 4B** (Q4_K_M) to get the real accuracy gap. Env is ready:
-   ```
-   PY=$HOME/adtc_models/venv311/bin/python
-   $PY scripts/mcq_eval.py --model $HOME/adtc_models/gguf/qwen3-0.6b-q4km.gguf --task arc_easy --limit 100
-   $PY scripts/mcq_eval.py --model $HOME/adtc_models/gguf/qwen3-1.7b-q4km.gguf --task arc_easy --limit 100
-   # repeat for --task medmcqa, and for 4B once downloaded
-   ```
-2. **Pick model size with data + `src/score.py`.** Rule: ship the largest Qwen3 that clears ~15 tps on the **scalar** build; if 1.7B is well under 15 tps scalar, 0.6B likely out-scores it (perf cap + low RAM > ~10-pt accuracy gap). Feed measured (acc, tps, RAM) into `estimate_total()` under both fixed and relative TPS interpretations.
-3. **Confirm scalar tps on x86.** This Mac can't produce x86-scalar numbers. Run `bash scripts/build_llamacpp_scalar.sh` then `make bench-audit` on an x86 box (or accept the audit measures it at Gate 2). This resolves the size decision definitively.
-4. **Run the fine-tune (Track A + Track B combined) on GPU** (free Colab T4 ~1–3 h for Track A alone; Track B adds time proportional to corpus size — budget accordingly, or use Udutech credits for a bigger run):
-   ```
-   pip install -r requirements-dev.txt
-   python scripts/build_accuracy_sft.py --max-per-dataset 20000      # Track A: MCQ format
-   python scripts/build_healthcare_corpus.py                         # Track B: broad knowledge (to build — step 0)
-   python scripts/prepare_dataset.py
-   python scripts/train_lora.py --base_model Qwen/Qwen3-1.7B-Base   # (or 0.6B-Base if size flips)
-   bash scripts/export_gguf.sh
-   ```
-   Then **re-measure** base vs base+SFT with `mcq_eval.py` (Track A gain) and with our own `data/swahili_eval_set.json` concept-recall evaluator (Track B gain) to confirm both tracks actually help before committing to a final model.
-5. **Quant A/B:** measure acc + scalar tps for Q4_K_M vs Q4_0 on the chosen model; pick the higher S_total.
-6. **Finalize:** put the winning GGUF at `model/…` (host it publicly, e.g. HF), point `download_model.sh` at it, set `metadata.json` `model.name`/`parameters_estimate` to match (the profiler checks actual params ≤ claimed×1.2), and **fill REPORT.md benchmark tables with the real measured numbers** (currently marked pending). Correct the RAM figures (1.7B ≈ 1.8 GB peak / S_eff ~74; 0.6B ≈ 1.0 GB / ~86).
-7. **Edge-case hardening:** run `make profiler` (official Gate-1 self-check), verify no OOM headroom issues, confirm schema, re-run `make test`.
-8. **Record the 2-minute demo video** (a submission requirement) showing the offline advisor answering EN + SW.
+```bash
+git clone -b jamii-afya-rebuild <your-repo-url>
+cd adtc-llm-limited-hardware
+pip install -r requirements-dev.txt
 
----
+# Track A: quiz-format training data (public train splits only)
+python scripts/build_accuracy_sft.py --max-per-dataset 20000
 
-## Dev hardware note (user's machine: M4 Pro Mac, 16GB RAM)
+# Track B: broad healthcare knowledge corpus
+python scripts/build_healthcare_corpus.py --max-per-dataset 5000
 
-16GB vs the 7GB target budget is fine — we measure absolute RAM usage, not relative to total. The Mac's GPU is irrelevant either way since the graded run is CPU-only.
+# Clinical chat splits + imatrix calibration corpus
+python scripts/prepare_dataset.py
 
-**The real gap: chip architecture mismatch.** The Mac is ARM (Apple Silicon); the grading laptop is x86 (Intel/AMD). The profiler's "scalar" crippled-speed build disables x86-only speed instructions (AVX/AVX2/FMA) — these don't exist on ARM in the same form, so a "scalar" build on the Mac does **not** reproduce the real slowdown. All Mac speed numbers so far (0.6B ~150 tok/s, 1.7B ~60 tok/s) are optimistic proxies, not the real answer. **Action needed:** run the actual scalar-speed test on a real x86 CPU machine — a free/cheap option is GitHub Actions' free x86_64 Linux runners (no GPU needed, it's a CPU-only test), or any cheap generic x86 cloud VM. This is the only way to get a trustworthy tokens/sec number before locking the model size.
+# Train (listwise ranking + clinical SFT + healthcare corpus, one QLoRA run)
+python scripts/train_lora.py --base_model Qwen/Qwen3-0.6B-Base
+
+# Merge -> convert -> domain imatrix -> quantize
+# (use whatever quant scripts/quant-sweep.yml recommended; Q4_K_M is the default)
+QUANT=Q4_K_M bash scripts/export_gguf.sh
+```
+
+Output lands at `model/Qwen3-0.6B-<QUANT>.gguf` — that's the final artifact. Copy it out of the pod, then:
+
+1. Host it somewhere public (e.g. a Hugging Face repo you control).
+2. Point `download_model.sh`'s `MODEL_URL` at it.
+3. Update `metadata.json` → `model.quantization` / `parameters_estimate` to match exactly (the profiler checks actual params ≤ claimed × 1.20 — don't understate size).
+4. Re-run `mcq_eval.py` on the new GGUF (arc_easy + medmcqa) to confirm the fine-tune actually improved on the pre-fine-tune baseline — if it didn't, something's wrong and don't ship it blind.
+5. Run `bash scripts/local_perf_sweep.sh` / the quant-sweep workflow one more time on the FINAL file to get real numbers for `REPORT.md`.
+6. `bash scripts/run_profiler.sh` — the official Gate-1 self-check — before considering this done.
+
+**Stop and tell me if training crashes, loss doesn't go down, or the exported GGUF fails to load** — those are worth debugging together rather than guessing blind on a rented GPU clock.
 
 ---
 
-## How to resume (local environment)
+## Known limitations / honest caveats
 
-- Repo venv (tests, stdlib code): `./venv` (Python 3.14; `pytest`, `numpy`). `make test` works.
-- Measurement env: `$HOME/adtc_models/venv311` (Python 3.11 with `torch`, `lm_eval`, `llama-cpp-python`, `datasets`).
-- Built llama.cpp binaries: `$HOME/adtc_models/llama.cpp/build/bin/` (`llama-bench`, `llama-cli`, `llama-server`, `llama-quantize`, `llama-imatrix`).
-- Downloaded GGUFs (scratch, NOT in repo): `$HOME/adtc_models/gguf/` — currently `qwen3-0.6b-q4km`, `qwen3-0.6b-q4_0`, `qwen3-1.7b-q4km`. Still to fetch: 4B Q4_K_M, and Q4_0 variants for the quant sweep (bartowski repos; `-Base` GGUFs are NOT on bartowski → convert via `export_gguf.sh`/`convert_hf_to_gguf.py`).
-- **Known gotcha:** macOS has no `timeout` command; lm-eval's `--model gguf` server backend is broken (`zip strict` mismatch) → use `scripts/mcq_eval.py` instead (llama-cpp-python direct, validated approach).
+- Speed margin on 0.6B is thin (15.6 vs 15.0 cutoff, measured on a GitHub Actions shared runner — the real grading laptop could be faster or slower). If the quant sweep or final export pushes speed down, this is the first thing to check.
+- The listwise ranking trainer processes one MCQA item as its own small forward-pass batch (correctness prioritized over throughput) — this is slower per-example than plain SFT. Budget more wall-clock than a naive token-count estimate would suggest; not a blocker on a rented GPU, just don't be surprised.
+- Track B dataset sources (MedQuAD/EPFL-guidelines/flashcards/WikiDoc) are real and verified to exist, but were only smoke-tested at tiny scale locally — first full run on RunPod is the real test of the complete pipeline end-to-end.
+- The automated-vs-judge split inside S_acc is genuinely unpublished by the organizers (confirmed by direct research — not an oversight on our part). Emailing `challenge@africadeeptech.org` remains a free, real information edge no other team likely has.
 
 ---
 
-## Non-code action items for the user
+## Non-code action items for the user (unchanged, still open)
 
-- **Eligibility:** confirm the entry qualifies (reside in an eligible African nation; early-stage/PoC venture <12 months, <$25k raised). Entering via a company that fails these could disqualify regardless of code quality.
-- **Optional:** email organizers to resolve two ambiguities — is S_perf fixed-at-15 or relative-to-fastest, and is the African bonus +10 pts or a +15% multiplier. (Our strategy wins under either, but it affects how hard to push size.)
-- Host the final GGUF publicly and update `download_model.sh` before the submission commit (the download link is pinned to the commit hash).
+- **Eligibility:** confirm the entry qualifies (reside in an eligible African nation; early-stage/PoC venture <12 months, <$25k raised).
+- **Deadline:** Aug 24, 2026, 11:45pm PDT. Submission is frozen to a git commit hash at that point — no post-hoc fixes.
+- Record the 2-minute demo video (submission requirement) once the final model is in place.

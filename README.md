@@ -12,11 +12,11 @@
 
 The score is `0.50·S_acc + 0.30·S_perf + 0.20·S_eff − P_thermal`. The official `adtc-profiler` measures perf/memory by running **`llama-bench` on the raw GGUF** and accuracy via **lm-eval** — it never runs our app — and the **audit build has all SIMD disabled**. So:
 
-- **Small beats big here.** A 14B model (the plan we inherited) scores ~12/100 on efficiency and near-zero on throughput on a scalar build — it throws away half the score. We ship **Qwen3-1.7B** (Apache-2.0, Kiswahili-capable) at **Q4_K_M ≈ 1.1 GB → ~1.3 GB peak RAM** (S_eff ~81), the fastest capable option on the audit's no-SIMD build.
+- **Small beats big here.** A 14B model (the plan we inherited) scores ~12/100 on efficiency and near-zero on throughput on a scalar build — it throws away half the score. We ship **Qwen3-0.6B** (Apache-2.0, Kiswahili-capable) at **Q4_K_M ≈ 1.1 GB → ~600 MB peak RAM (measured: 598 MB on x86 scalar CI)** (S_eff ~92 (measured)), the fastest capable option on the audit's no-SIMD build.
 - **Accuracy is recovered, not sacrificed:** WHO/IMCI **RAG grounding** + few-shot + a domain **LoRA** (Kiswahili + answer format), while the base model's general reasoning is preserved for lm-eval.
 - **Our numbers survive the audit.** We benchmark against a **scalar (no-SIMD) llama.cpp build** that mirrors the grading VM, so Gate-1 self-reports match the Gate-2 audit within tolerance — a variance-fail trap most teams miss.
 
-Full reasoning and the model A/B (1.7B vs 4B) are in **[REPORT.md](REPORT.md)**.
+Full reasoning and the model A/B (0.6B vs 4B) are in **[REPORT.md](REPORT.md)**.
 
 ---
 
@@ -29,7 +29,7 @@ Query (EN/SW)
 BM25 retriever ──▶ extractive compressor ──▶ prompt: [system+few-shot] → [context] → [query]
 (src/retriever.py)   (src/compressor.py)              │
    over data/medical_guidelines.json                  ▼
-                                          llama.cpp engine (Qwen3-1.7B Q4_K_M)
+                                          llama.cpp engine (Qwen3-0.6B Q4_K_M)
                                           (src/engine.py: q8_0 KV cache, KV prefix
                                            cache, prompt-lookup speculative decode)
                                                        │
@@ -50,7 +50,7 @@ make test             # 32 offline tests — pass WITHOUT model weights
 # Try the pipeline before downloading anything (RAG-preview mode):
 PYTHONPATH=. python -m src.main --query "Mtoto ana homa kali na kikohozi. Nifanye nini?"
 
-# Full offline advisor (downloads the ~1.1 GB GGUF once):
+# Full offline advisor (downloads the ~460 MB GGUF once):
 make model            # ./download_model.sh
 make run              # interactive     |  make demo  (runs the metadata test prompts)
 ```
@@ -67,7 +67,7 @@ make profiler         # run the official adtc-profiler (Gate-1 self-check)
 ```bash
 make setup-dev                         # torch/transformers/peft/trl/lm-eval/...
 python scripts/prepare_dataset.py      # splits + EN/SW imatrix calibration corpus
-python scripts/train_lora.py           # QLoRA on Qwen3-1.7B (Kiswahili + format)
+python scripts/train_lora.py           # QLoRA on Qwen3-0.6B (Kiswahili + format)
 bash scripts/export_gguf.sh            # merge → convert → domain imatrix → Q4_K_M
 ```
 
@@ -77,7 +77,7 @@ bash scripts/export_gguf.sh            # merge → convert → domain imatrix �
 
 ```
 ├── metadata.json            # profiler manifest (strict schema; validated by src/manifest.py)
-├── download_model.sh        # fetch GGUF → model/  (baseline: Qwen3-1.7B; swap to our final model)
+├── download_model.sh        # fetch GGUF → model/  (baseline: Qwen3-0.6B; swap to our final model)
 ├── REPORT.md                # technical report (official template)
 ├── requirements*.txt · Makefile · LICENSE (MIT)
 ├── data/
@@ -99,6 +99,6 @@ bash scripts/export_gguf.sh            # merge → convert → domain imatrix �
 
 ## Status & honesty
 
-Benchmark tables in REPORT.md are marked **pending real measurement** — no numbers are fabricated. The current `download_model.sh` fetches the **baseline** Qwen3-1.7B GGUF so the repo is runnable today; the **final** submission swaps in our fine-tuned + domain-imatrix GGUF produced by `scripts/`. Everything except the model weights is testable now (`make test`).
+Benchmark tables in REPORT.md are marked **pending real measurement** — no numbers are fabricated. The current `download_model.sh` fetches the **baseline** Qwen3-0.6B GGUF so the repo is runnable today; the **final** submission swaps in our fine-tuned + domain-imatrix GGUF produced by `scripts/`. Everything except the model weights is testable now (`make test`).
 
 *Medical content is derived from public WHO/IMCI/national-guideline material and is for clinical decision support only — not a substitute for a qualified clinician.*

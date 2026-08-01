@@ -90,7 +90,7 @@ def main() -> int:
     (OUT / "calibration_corpus.txt").write_text(corpus, encoding="utf-8")
 
     print(f"Prepared {len(rows)} rows -> {len(train)} train / {len(val)} val")
-    print(f"  output/train.jsonl, output/val.jsonl")
+    print("  output/train.jsonl, output/val.jsonl")
     print(f"  output/calibration_corpus.txt ({len(corpus.split())} words for imatrix)")
     return 0
 

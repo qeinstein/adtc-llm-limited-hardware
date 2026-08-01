@@ -28,13 +28,13 @@
     }
   ],
   "model": {
-    "name": "JamiiAfya-Qwen3-1.7B-Medical",
+    "name": "JamiiAfya-Qwen3-0.6B-Medical",
     "runtime": "llama.cpp",
-    "quantization": "GGUF Q4_K_M (EN+SW medical imatrix calibration)",
-    "parameters_estimate": "1.7B",
+    "quantization": "GGUF Q4_K_M (EN+SW medical imatrix calibration; may move to Q5_K_M/Q8_0 pending scripts/quant-sweep results)",
+    "parameters_estimate": "0.6B",
     "packaging": "binary_bundle"
   },
   "_runtime": {
-    "model_path": "model/Qwen3-1.7B-Q4_K_M.gguf"
+    "model_path": "model/Qwen3-0.6B-Q4_K_M.gguf"
   }
 }

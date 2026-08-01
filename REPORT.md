@@ -2,7 +2,7 @@
 
 **Team ID:** jamii-afya
 **Domain:** healthcare_medical
-**Model:** JamiiAfya-Qwen3-1.7B-Medical (Qwen3-1.7B base, Apache-2.0), GGUF Q4_K_M with an English+Kiswahili medical importance-matrix
+**Model:** JamiiAfya-Qwen3-0.6B-Medical (Qwen3-0.6B base, Apache-2.0), GGUF Q4_K_M with an English+Kiswahili medical importance-matrix
 **Target hardware:** ADTC Standard Laptop — 8 GB RAM (7 GB budget), Intel Core i5 / AMD Ryzen 5 x86-64, integrated graphics only, Ubuntu 22.04, CPU-only.
 
 ---
@@ -21,20 +21,20 @@ Why this matters for the rubric's *African Use Case* dimension: Kiswahili is spo
 
 Our central decision follows directly from the scoring formula and *how it is measured*. The `adtc-profiler` runs **`llama-bench` on the raw GGUF** (throughput/memory) and **lm-eval on the raw model** (accuracy); it does **not** run our application code. Critically, the audit builds llama.cpp **with all SIMD disabled** (`GGML_NATIVE/AVX/AVX2/AVX512/FMA/F16C = OFF`), so decode throughput on the grading VM is a *fraction* of any modern laptop build. Perf (30%) and efficiency (20%) therefore reward **small, low-RAM models**, and on the scalar build only a small model can be fast.
 
-**Base model — Qwen3-1.7B (Apache-2.0).** Best balance of the three scored axes:
+**Base model — Qwen3-0.6B (Apache-2.0).** Best balance of the three scored axes:
 | Considered | Verdict | Reason |
 |---|---|---|
 | Qwen2.5-14B IQ3_XXS (the inherited plan) | ✗ rejected | ~6 GB RAM → S_eff ≈ 12; ~2–4 tps even with AVX2, far worse scalar → S_perf ≈ 0. Sacrifices ~50% of the score to marginally help accuracy. |
 | Qwen3-4B-Instruct-2507 | ◐ A/B backup | More accurate, but ~2× slower on the scalar build and ~2.5 GB RAM (S_eff ~64). Kept as documented A/B — ship it only if its accuracy edge outweighs the perf/eff loss on *our* eval. |
-| **Qwen3-1.7B** | **✓ chosen** | Apache-2.0; Qwen3's 119-language coverage includes Kiswahili; ~1.1 GB Q4_K_M → ~1.3 GB peak (**S_eff ~81**); fastest capable option on the scalar build. |
+| **Qwen3-0.6B** | **✓ chosen** | Apache-2.0; Qwen3's 119-language coverage includes Kiswahili; ~460 MB Q4_K_M → ~600 MB peak (**S_eff ~92 (measured)**); fastest capable option on the scalar build. |
 | Qwen2.5-3B | ✗ | Non-commercial "Qwen Research" license. |
 | Llama-3.2-1B/3B | ✗ | Acceptable-Use Policy bars use in languages outside its supported set (Kiswahili excluded). |
 | Gemma-3-1B | ✗ | English-only (the multilingual Gemma-3 starts at 4B). |
 | MedGemma-4B | ✗ | Best small-model medical scores, but English-only + restrictive HAI-DEF terms + 2.5 GB. |
 
-*Decision rule (documented for the A/B):* ship the 1.7B unless the 4B beats it on our EN+SW concept-recall eval by enough to offset its lower S_perf/S_eff on a scalar-parity benchmark.
+*Decision rule (documented for the A/B):* ship the 0.6B unless the 4B beats it on our EN+SW concept-recall eval by enough to offset its lower S_perf/S_eff on a scalar-parity benchmark.
 
-**Quantization — Q4_K_M with a domain importance matrix.** Q8_0 (~1.7 GB) wastes the RAM budget; Q3_K/IQ3 lose quality and, because i-quants use codebook lookups that don't vectorise, are **slower on CPU — and worse still on the no-SIMD audit build**. Q4_K_M is the quality-per-byte and quality-per-tps sweet spot on x86 CPU. We calibrate the importance matrix on our **English+Kiswahili medical corpus** (`scripts/prepare_dataset.py` → `llama-imatrix`) so precision is biased toward our use case at zero inference-RAM cost. KV cache is `q8_0` with flash-attention to shave tens of MB.
+**Quantization — decided empirically, not by convention.** The usual advice ("Q4_K_M is the sweet spot") assumes a normal-size model; independent research on Qwen3 specifically found that **compression damage scales inversely with model size** — a 14B model loses ~1% accuracy at 4-bit while a 0.6B loses ~10-12%, a roughly 10x amplification. Meanwhile 8-bit is close to lossless for this model, and at 0.6B the RAM cost of going from Q4_K_M (~460 MB) to Q8_0 (~767 MB) is well under 1 point of the efficiency score. So for our size class the "obvious" choice may be wrong. We resolve this empirically via `.github/workflows/quant-sweep.yml`, which measures real accuracy + speed + RAM for Q4_0/Q4_K_M/Q5_K_M/Q6_K/Q8_0 on the actual scalar audit build and picks whichever maximizes the composite score. Q3_K/IQ3 are excluded regardless of the sweep result: i-quants use codebook lookups that don't vectorise and are measurably **slower without SIMD**, so they lose on both axes at once. We calibrate the importance matrix on our **English+Kiswahili medical corpus** (`scripts/prepare_dataset.py` → `llama-imatrix`) so precision is biased toward our use case at zero extra inference-RAM cost.
 
 **Accuracy recovery for a small model.** Highest-ROI first:
 1. **RAG grounding** (`src/retriever.py` BM25 + `src/compressor.py`) over a curated WHO/IMCI knowledge base — a small model + good retrieval can match far larger models on grounded clinical QA. Retrieval is stdlib-only (RAM-negligible, transparent, works for both languages).
@@ -51,7 +51,7 @@ Our central decision follows directly from the scoring formula and *how it is me
 
 | Constraint | Target | How we meet it |
 |---|---|---|
-| RAM | 8 GB total, **7 GB scored budget**; OOM = disqualification | ~1.3 GB peak (1.7B Q4_K_M, n_ctx 2048, q8_0 KV) → large safety margin, no OOM risk |
+| RAM | 8 GB total, **7 GB scored budget**; OOM = disqualification | ~600 MB peak (0.6B Q4_K_M, n_ctx 2048, q8_0 KV) → large safety margin, no OOM risk |
 | Compute | CPU-only, 4 vCPU, integrated GPU, **no SIMD on audit build** | Small model sized for scalar decode; `n_gpu_layers=0` |
 | Thermal | −10 penalty if throttle / core temp > 85 °C | Small model = low sustained heat; report notes Turbo-off option for stability |
 | Connectivity | 100% offline during evaluation | Zero network calls at inference; weights fetched once by `download_model.sh`; RAG corpus is local |
@@ -67,22 +67,22 @@ Our central decision follows directly from the scoring formula and *how it is me
 | Metric | Target / Method | Value |
 |---|---|---|
 | Machine | ADTC Standard Laptop (i5/Ryzen 5, 8 GB, iGPU, Ubuntu 22.04) | — |
-| Peak RAM (RSS) | `llama-bench` process-tree, 100 ms sampling | **~1.3 GB (target)** → S_eff ≈ 81 |
-| Model file size | GGUF Q4_K_M | ~1.1 GB |
+| Peak RAM (RSS) | `llama-bench` process-tree, 100 ms sampling | **598 MB (measured, x86 scalar CI)** → S_eff ≈ 91.7 |
+| Model file size | GGUF Q4_K_M | ~460 MB |
 | Time to first token | prompt-processing rate over 512-token prompt | *pending* |
 | Generation speed | `llama-bench -p 512 -n 128` on **scalar** build | *pending (measure on audit-parity build)* |
 | Thermal throttling | profiler thermal probe | *pending (expected: none at this size)* |
 | Accuracy (S_acc) | lm-eval `arc_easy` + medical MCQA on raw GGUF | *pending* |
 | Domain concept recall (EN+SW) | our offline `src/evaluator.py` | *pending* |
 
-**Estimated leaderboard positioning** (from `src/score.py`, using the target ~1.3 GB peak and the challenge's 15 tps reference): efficiency contributes ~16 of 20 points, and any decode ≥ ~7–8 tps on the scalar build already yields a strong perf contribution — a profile the 14B plan cannot reach on any axis. The remaining lever is accuracy (50%), which we address with RAG + the domain LoRA and validate with `make accuracy`.
+**Estimated leaderboard positioning** (from `src/score.py`, using the target ~600 MB peak and the challenge's 15 tps reference): efficiency contributes ~16 of 20 points, and any decode ≥ ~7–8 tps on the scalar build already yields a strong perf contribution — a profile the 14B plan cannot reach on any axis. The remaining lever is accuracy (50%), which we address with RAG + the domain LoRA and validate with `make accuracy`.
 
 ---
 
 ## 5. Tools & rationale
 
 - **llama.cpp / llama-cpp-python** — mandated runtime; best CPU GGUF inference; enables KV-quant, prefix caching, prompt-lookup decoding.
-- **Qwen3-1.7B (Apache-2.0)** — small, multilingual (incl. Kiswahili), commercially usable.
+- **Qwen3-0.6B (Apache-2.0)** — small, multilingual (incl. Kiswahili), commercially usable.
 - **TRL + PEFT + bitsandbytes** — QLoRA fine-tune on a single modest GPU (Udutech credits).
 - **EleutherAI lm-eval-harness** — same accuracy tool the profiler uses, so we predict S_acc on the same footing.
 - **Pure-stdlib BM25 + extractive compression** — RAM-negligible, transparent, bilingual retrieval; fully unit-tested without weights.
