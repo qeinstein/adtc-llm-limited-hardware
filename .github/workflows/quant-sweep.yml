@@ -1,0 +1,134 @@
+name: Quant sweep — accuracy vs speed vs RAM (the S_total decision)
+
+# THE decision experiment. Research finding that motivates it:
+# Qwen3-0.6B loses ~10-12 MMLU points under 4-bit quantization, while Qwen3-14B
+# loses ~1% — small models are hit ~10x harder (arXiv 2505.02214). 8-bit is
+# ~lossless for this model. Meanwhile the RAM cost of a higher-precision quant is
+# tiny at 0.6B (Q4_K_M 462MB -> Q8_0 767MB, worth <1 point of S_total).
+# So we may be silently throwing away ~3 points of S_total by shipping Q4_K_M.
+#
+# The blocker is SPEED: our Q4_K_M measured 15.62 tok/s against a 15.0 tok/s
+# scoring threshold — almost no margin. A heavier quant moves more bytes per token.
+# BUT on a scalar (no-SIMD) build decode may be compute-bound rather than
+# bandwidth-bound, and Q8_0 has the simplest dequant of all (one multiply, no
+# nibble unpacking) — so it might NOT be proportionally slower. Unknown; measure.
+#
+# This workflow measures, for every quant, on real x86 with the audit's scalar build:
+#   - decode speed (llama-bench -p 512 -n 128, exactly as the profiler runs it)
+#   - peak RSS
+#   - MCQ accuracy (loglikelihood ranking, same metric the profiler scores)
+#   - the resulting estimated S_total
+# then prints them ranked, so the quant choice is made on data.
+
+on:
+  workflow_dispatch:
+    inputs:
+      quants:
+        description: "Space-separated quants to sweep"
+        required: false
+        default: "Q4_0 Q4_K_M Q5_K_M Q6_K Q8_0"
+      acc_limit:
+        description: "Number of eval questions per model (higher = less noise, slower)"
+        required: false
+        default: "200"
+      task:
+        description: "Eval task (arc_easy = the profiler default)"
+        required: false
+        default: "arc_easy"
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Runner hardware
+        run: |
+          echo "### Runner" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          grep -m1 "model name" /proc/cpuinfo >> "$GITHUB_STEP_SUMMARY" || true
+          echo "cores: $(nproc)" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Install build tools
+        run: sudo apt-get update -y && sudo apt-get install -y cmake build-essential
+
+      - name: Build SCALAR llama.cpp (audit parity)
+        run: bash scripts/build_llamacpp_scalar.sh
+
+      - name: Verify build is truly scalar
+        run: |
+          ./llama.cpp/build-scalar/bin/llama-cli --version 2>&1 | tee /tmp/sysinfo.txt || true
+          if grep -qiE "AVX = 1|AVX2 = 1|FMA = 1" /tmp/sysinfo.txt; then
+            echo "::error::Build is NOT scalar."; exit 1
+          fi
+          echo "Confirmed scalar (no AVX/AVX2/FMA)."
+
+      - name: Set up Python for the accuracy eval
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install eval deps
+        run: |
+          python -m pip install -q --upgrade pip
+          # CPU-only build; prebuilt wheel expected for linux x86_64
+          python -m pip install -q llama-cpp-python datasets
+
+      - name: Download all quants
+        run: |
+          mkdir -p models
+          for q in ${{ github.event.inputs.quants }}; do
+            url="https://huggingface.co/bartowski/Qwen_Qwen3-0.6B-GGUF/resolve/main/Qwen_Qwen3-0.6B-${q}.gguf"
+            echo "Downloading $q ..."
+            curl -sL --fail -o "models/${q}.gguf" "$url" || echo "::warning::failed $q"
+          done
+          ls -la models/
+
+      - name: Sweep — speed, RAM, accuracy, S_total
+        run: |
+          BIN=./llama.cpp/build-scalar/bin/llama-bench
+          LIMIT="${{ github.event.inputs.acc_limit }}"
+          TASK="${{ github.event.inputs.task }}"
+          echo "## Quant sweep on scalar x86 (task=$TASK, n=$LIMIT)" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| quant | size | decode tok/s | peak RSS MB | acc | acc_norm | S_perf | S_eff | est S_total* |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|---|---|---|---|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          for f in models/*.gguf; do
+            [ -f "$f" ] || continue
+            q=$(basename "$f" .gguf)
+            size=$(du -h "$f" | cut -f1)
+
+            # --- speed + peak RSS, exactly the profiler's command ---
+            out=$(/usr/bin/time -v "$BIN" -m "$f" -p 512 -n 128 -ngl 0 --output json 2>/tmp/t_$q.log)
+            tg=$(echo "$out" | grep -o '"avg_ts"[^,]*' | sed -n '2p' | grep -o '[0-9.]*')
+            peak_kb=$(grep "Maximum resident set size" /tmp/t_$q.log | grep -o '[0-9]*')
+            peak_mb=$(( ${peak_kb:-0} / 1024 ))
+
+            # --- accuracy (hardware-independent, same metric the profiler scores) ---
+            accout=$(python scripts/mcq_eval.py --model "$f" --task "$TASK" --limit "$LIMIT" 2>/dev/null | grep -E "^${TASK}:" || echo "")
+            acc=$(echo "$accout" | grep -o 'acc=[0-9.]*' | cut -d= -f2)
+            accn=$(echo "$accout" | grep -o 'acc_norm=[0-9.]*' | cut -d= -f2)
+
+            # --- scores (mirrors src/score.py / the profiler README formula) ---
+            scores=$(TG="${tg:-0}" PEAK="${peak_mb:-0}" ACC="${acc:-0}" ACCN="${accn:-0}" python scripts/score_row.py)
+            sperf=$(echo "$scores" | cut -d" " -f1)
+            seff=$(echo "$scores" | cut -d" " -f2)
+            stotal=$(echo "$scores" | cut -d" " -f3)
+            echo "| $q | $size | ${tg:-?} | $peak_mb | ${acc:-?} | ${accn:-?} | $sperf | $seff | $stotal |" >> "$GITHUB_STEP_SUMMARY"
+            echo "$q: tg=$tg peak=${peak_mb}MB acc=$acc acc_norm=$accn S_perf=$sperf S_eff=$seff S_total=$stotal"
+          done
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "\\* est S_total uses the measured MCQ accuracy as a stand-in for S_acc. The real S_acc is largely judge-assessed, so treat this column as a *relative* ranking signal between quants, not an absolute score prediction." >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Decision rule: pick the quant with the best est S_total that keeps decode comfortably above 15 tok/s (margin matters — the real grading laptop may be slower than this runner)." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quant-sweep-logs
+          path: /tmp/*.log
+          if-no-files-found: ignore
