@@ -36,3 +36,4 @@ __pycache__/
 .DS_Store
 
 # NOTE: data/*.json (RAG corpus, eval sets, LoRA dataset) IS tracked on purpose — do not ignore it.
+llama.cpp/
