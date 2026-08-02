@@ -12,7 +12,7 @@
 
 The score is `0.50·S_acc + 0.30·S_perf + 0.20·S_eff − P_thermal`. The official `adtc-profiler` measures perf/memory by running **`llama-bench` on the raw GGUF** and accuracy via **lm-eval** — it never runs our app — and the **audit build has all SIMD disabled**. So:
 
-- **Small beats big here.** A 14B model (the plan we inherited) scores ~12/100 on efficiency and near-zero on throughput on a scalar build — it throws away half the score. We ship **Qwen3-0.6B** (Apache-2.0, Kiswahili-capable) at **Q4_K_M ≈ 1.1 GB → ~600 MB peak RAM (measured: 598 MB on x86 scalar CI)** (S_eff ~92 (measured)), the fastest capable option on the audit's no-SIMD build.
+- **Small beats big here.** A 14B model (the plan we inherited) scores ~12/100 on efficiency and near-zero on throughput on a scalar build — it throws away half the score. We ship a fine-tuned **Qwen3-0.6B-Base** (Apache-2.0, Kiswahili-capable) at **Q4_0, 364 MB on disk → 527 MB peak RAM**, measured by the official profiler on a scalar x86 build: **20.33 tok/s (S_perf 100/100), S_eff 92.65/100, no thermal throttling**.
 - **Accuracy is recovered, not sacrificed:** WHO/IMCI **RAG grounding** + few-shot + a domain **LoRA** (Kiswahili + answer format), while the base model's general reasoning is preserved for lm-eval.
 - **Our numbers survive the audit.** We benchmark against a **scalar (no-SIMD) llama.cpp build** that mirrors the grading VM, so Gate-1 self-reports match the Gate-2 audit within tolerance — a variance-fail trap most teams miss.
 
@@ -29,9 +29,9 @@ Query (EN/SW)
 BM25 retriever ──▶ extractive compressor ──▶ prompt: [system+few-shot] → [context] → [query]
 (src/retriever.py)   (src/compressor.py)              │
    over data/medical_guidelines.json                  ▼
-                                          llama.cpp engine (Qwen3-0.6B Q4_K_M)
+                                          llama.cpp engine (Qwen3-0.6B Q4_0)  
                                           (src/engine.py: q8_0 KV cache, KV prefix
-                                           cache, prompt-lookup speculative decode)
+                                           cache; speculative decode disabled) 
                                                        │
                                                        ▼
                                      Safety-framed bilingual advisory + danger signs
@@ -72,7 +72,7 @@ make profiler         # run the official adtc-profiler (Gate-1 self-check)
 make setup-dev                         # torch/transformers/peft/trl/lm-eval/...
 python scripts/prepare_dataset.py      # splits + EN/SW imatrix calibration corpus
 python scripts/train_lora.py           # QLoRA on Qwen3-0.6B (Kiswahili + format)
-bash scripts/export_gguf.sh            # merge → convert → domain imatrix → Q4_K_M
+bash scripts/export_gguf.sh            # merge → convert → domain imatrix → Q4_0
 ```
 
 ---
@@ -103,6 +103,6 @@ bash scripts/export_gguf.sh            # merge → convert → domain imatrix �
 
 ## Status & honesty
 
-Benchmark tables in REPORT.md are marked **pending real measurement** — no numbers are fabricated. The current `download_model.sh` fetches the **baseline** Qwen3-0.6B GGUF so the repo is runnable today; the **final** submission swaps in our fine-tuned + domain-imatrix GGUF produced by `scripts/`. Everything except the model weights is testable now (`make test`).
+Benchmark tables in REPORT.md are **measured**, not projected: throughput and memory come from a real `adtc-profiler` participant run on a scalar (no-SIMD) build, accuracy from held-out test splits. `download_model.sh` fetches our **fine-tuned** GGUF from Hugging Face. REPORT.md §6 documents known limitations and the bugs we found by testing — including one where our own accuracy checker was wrong before the model was. Everything except the weights is testable offline (`make test`, 37 tests).
 
 *Medical content is derived from public WHO/IMCI/national-guideline material and is for clinical decision support only — not a substitute for a qualified clinician.*

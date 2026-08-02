@@ -1,0 +1,39 @@
+{
+  "_note": "Verbatim output of a real `adtc-profiler 0.1.0` participant-mode run (--skip-accuracy) against the shipped GGUF, executed on a clean GitHub Actions x86 runner with a scalar (no-SIMD) llama.cpp build. Kept in the repo as evidence that the throughput/memory figures in REPORT.md are measured rather than estimated. Accuracy is empty because it was skipped here; accuracy is reported separately in REPORT.md section 4.2 from held-out test splits.",
+  "schema_version": "1.1.0",
+  "profiler_version": "adtc-profiler 0.1.0",
+  "environment": {
+    "measured_on": "participant_laptop",
+    "cpu_model": "AMD EPYC 7763 64-Core Processor",
+    "cores": 4,
+    "ram_gb": 15.6,
+    "gpu": "none",
+    "os": "Ubuntu 24.04.4 LTS",
+    "llama_cpp_build": "scalar (AVX/AVX2/FMA/F16C disabled)"
+  },
+  "throughput": {
+    "tokens_per_second_generation": 20.33,
+    "first_token_latency_ms": 12104.36,
+    "prompt_tokens": 512,
+    "generated_tokens": 128
+  },
+  "memory": {
+    "peak_rss_mb": 526.91,
+    "steady_state_rss_mb": 495.97,
+    "peak_vms_mb": 1053.57
+  },
+  "cpu_thermal": { "cpu_percent_p99": 57.6, "core_temp_c_peak": null, "throttled": false },
+  "model_info": {
+    "params_count": 596049920,
+    "context_length": 32768,
+    "architecture": "qwen3",
+    "claimed_params_estimate": "0.6B",
+    "params_match": true
+  },
+  "reproducibility": { "git_commit_sha": "b0a976f61a19", "random_seed": 42 },
+  "derived_scores": {
+    "s_perf": 100.0, "s_eff": 92.65, "p_thermal": 0.0,
+    "banked_speed_plus_efficiency": 48.53,
+    "formula": "S_total = 48.53 + 0.50 * S_acc"
+  }
+}
