@@ -123,7 +123,7 @@ class BM25Retriever:
         query: str,
         top_n: int = 3,
         min_score: float = 1e-9,
-        min_rel_score: float = 0.35,
+        min_rel_score: float = 0.45,
     ) -> list[dict[str, Any]]:
         """Return the ``top_n`` best-matching documents (with a ``score`` field).
 
@@ -137,6 +137,14 @@ class BM25Retriever:
         tell which slice of its context to ignore, so padding to top_n with
         loosely-related text actively causes wrong clinical advice. Relative
         (not absolute) because BM25 scores are not comparable across queries.
+
+        0.45 was picked by sweeping the threshold over real queries, not guessed.
+        "Diabetes Basics" lands at rel 0.33-0.38 for pre-eclampsia questions
+        depending on phrasing, so an earlier 0.35 cutoff was on a knife-edge and
+        let it back in whenever the wording shifted. Genuine matches sat at 0.52+
+        in every case tested. Going higher does start costing real hits: at 0.50
+        the child-fever prompt loses its third (relevant) guideline, so 0.45 is
+        the widest margin that keeps recall intact.
         """
         if not self.documents:
             return []
