@@ -1,6 +1,8 @@
 # Jamii Afya — ADTC 2026 submission. Common workflows.
 # Override the interpreter: make PYTHON=./venv/bin/python test
-PYTHON ?= python
+# Auto-detects whichever of python3/python is actually on PATH, so it works
+# on any machine regardless of which one is installed -- no manual override needed.
+PYTHON ?= $(shell command -v python3 2>/dev/null || command -v python 2>/dev/null)
 export PYTHONPATH := .
 
 .PHONY: help setup setup-dev test lint validate data model run demo webui bench scalar bench-audit accuracy profiler clean
