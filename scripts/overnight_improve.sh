@@ -11,8 +11,12 @@
 #
 # This run does a LoRA-SFT pass on top of the recovered fine-tuned weights
 # (scripts/gguf_to_hf.py — the pod with the original adapter is gone), mixing:
-#     12,000 instruction rows  <- the fix (was 80)
-#      6,000 MCQA rows         <- anchor, so the 80.0 ranking doesn't drift
+#      5,000 instruction rows  <- the fix (the original run had 80)
+#      1,200 MCQA rows         <- anchor, so the 80.0 ranking doesn't drift
+# MCQA items cost ~3.9 forward rows each (one per answer choice) vs 1 for an SFT
+# row, so they dominate wall-clock; the anchor is deliberately small because the
+# ranking ability already lives in the recovered weights and only needs holding
+# in place, not relearning.
 # Retraining from Base instead would forfeit that 80.0: on an M4 we can afford
 # ~18k item-passes overnight vs the original run's ~186k, and the automated
 # accuracy score is 50% of the total. Preserve it, don't gamble it.
@@ -45,14 +49,20 @@ step() { echo ""; echo "===== $* ($(date +%H:%M:%S)) ====="; }
 [ -f "$SHIPPED" ] && cp -f "$SHIPPED" "$BACKUP" && echo "backed up shipped GGUF"
 
 step "1/5 LoRA-SFT on recovered weights"
-"$PY" scripts/train_lora.py \
+# batch_size 1 (effective batch still 32 via grad_accum) and max_len 320: a
+# batch_size-2 run drove swap to 12.6GB of 13.3GB on this 16GB machine, and the
+# step time degraded from 44s to 90s as it thrashed. Smaller micro-batches keep
+# the (rows x len x 152k vocab) logit tensor small, which is what dominates.
+# PYTHONUNBUFFERED so loss lines actually reach the log while it runs (stdout is
+# block-buffered through tee, so they were invisible until process exit).
+PYTHONUNBUFFERED=1 "$PY" scripts/train_lora.py \
     --base_model "$RECOVERED" \
     --accuracy_file "$ROOT/output/mcqa_night.jsonl" \
     --clinical_file "$ROOT/output/sft_night.json" \
     --healthcare_corpus_file /dev/null \
     --clinical_repeat 1 \
-    --batch_size 2 --grad_accum 16 --max_len 384 \
-    --epochs 1 --lr 5e-5 \
+    --batch_size 1 --grad_accum 32 --max_len 320 \
+    --epochs 1 --lr 5e-5 --save_steps 40 \
     --output_dir "$ADAPTER"
 TRAIN_RC=$?
 echo "train exit: $TRAIN_RC"
@@ -109,8 +119,8 @@ echo "wrote $GEN_NEW and $GEN_OLD"
   echo
   echo "## What this run did"
   echo
-  echo "LoRA-SFT pass on the recovered fine-tuned weights, mixing 12,000 instruction"
-  echo "rows (the fix — the original run had only 80) with 6,000 MCQA rows as an anchor"
+  echo "LoRA-SFT pass on the recovered fine-tuned weights, mixing 5,000 instruction"
+  echo "rows (the fix — the original run had only 80) with 1,200 MCQA rows as an anchor"
   echo "to stop the 80.0 ranking score from drifting."
   echo
   echo "## Accuracy A/B (200 items each, held-out test splits)"

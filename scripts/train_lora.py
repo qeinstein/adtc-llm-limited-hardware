@@ -92,6 +92,10 @@ def parse_args() -> argparse.Namespace:
                    help="Upsample the (small) clinical set so it isn't drowned by MCQA")
     p.add_argument("--aux_nll_weight", type=float, default=0.2,
                    help="Weight of the plain gold-NLL term mixed with the ranking loss")
+    p.add_argument("--save_steps", type=int, default=0,
+                   help="Checkpoint every N steps instead of only at epoch end. On a "
+                        "laptop an OOM kill mid-run is a real risk (MPS + 16GB), and "
+                        "epoch-only saving means a kill at 95%% loses everything.")
     p.add_argument("--resume_adapter", default=None,
                    help="Path to an existing LoRA adapter dir (e.g. output/jamii-lora) to "
                         "CONTINUE training from, instead of initializing a fresh adapter. "
@@ -410,7 +414,8 @@ def main() -> int:
         lr_scheduler_type="cosine",
         warmup_ratio=0.03,
         logging_steps=20,
-        save_strategy="epoch",
+        save_strategy=("steps" if args.save_steps > 0 else "epoch"),
+        **({"save_steps": args.save_steps, "save_total_limit": 2} if args.save_steps > 0 else {}),
         # bf16 is a CUDA/Ampere+ feature; MPS doesn't support it and Trainer will
         # raise if we ask for it. We already loaded fp16 weights on MPS, and we
         # deliberately do NOT set fp16=True there either — fp16 turns on the CUDA
