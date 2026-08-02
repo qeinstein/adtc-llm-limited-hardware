@@ -38,6 +38,7 @@ FEWSHOT = (
 )
 
 
+
 @dataclass
 class RAGResult:
     query: str
@@ -64,6 +65,20 @@ class RAGPipeline:
     @property
     def system_prompt(self) -> str:
         return SYSTEM_PROMPT + (FEWSHOT if self.use_fewshot else "")
+
+    def system_prompt_for(self, result: "RAGResult") -> str:
+        """Same system prompt, minus the few-shot exemplars when nothing was retrieved.
+
+        Why (found by real testing, not theory): FEWSHOT embeds two COMPLETE
+        worked clinical answers. Given input with no clinical signal — a
+        greeting, a thank-you, a typo — a 0.6B model has nothing to anchor on
+        and just copies the nearest in-context example verbatim; a bare "hi"
+        came back as the full ORS/zinc diarrhoea answer. Dropping the examples
+        when there is no retrieved context removes the thing being copied and
+        lets the model answer normally, rather than us enumerating greetings to
+        intercept (no word list survives two languages plus typos).
+        """
+        return self.system_prompt if result.retrieved else SYSTEM_PROMPT
 
     def build(
         self, query: str, top_n: int = 3, max_context_words: int = 220

@@ -100,7 +100,12 @@ def chat(req: ChatRequest) -> ChatResponse:
             model_ready=False,
         )
 
-    system_prompt = _rag.system_prompt + (CAREFUL_MODE_SUFFIX if req.careful_mode else "")
+    # Few-shot exemplars only when we actually retrieved grounding — otherwise a
+    # small model copies them verbatim for any low-signal input (see
+    # RAGPipeline.system_prompt_for).
+    system_prompt = _rag.system_prompt_for(result) + (
+        CAREFUL_MODE_SUFFIX if req.careful_mode else ""
+    )
     messages = [{"role": "system", "content": system_prompt}]
     messages += [{"role": t.role, "content": t.content} for t in req.history]
     messages.append({"role": "user", "content": result.user_content})

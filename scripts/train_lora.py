@@ -262,23 +262,42 @@ def main() -> int:
         print("ERROR: no training items. Run build_accuracy_sft.py and/or check clinical_file.")
         return 1
 
-    bnb = BitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.bfloat16,
-        bnb_4bit_use_double_quant=True,
-    )
-    model = AutoModelForCausalLM.from_pretrained(
-        args.base_model, quantization_config=bnb, device_map="auto",
-        trust_remote_code=True, torch_dtype=torch.bfloat16,
-    )
+    # bitsandbytes 4-bit is CUDA-only. On Apple Silicon (MPS) we load in fp16
+    # instead — fine here because 0.6B fp16 is only ~1.2 GB, so 4-bit buys us
+    # nothing we need, and LoRA adapters stay tiny either way.
+    use_cuda = torch.cuda.is_available()
+    if use_cuda:
+        bnb = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=torch.bfloat16,
+            bnb_4bit_use_double_quant=True,
+        )
+        model = AutoModelForCausalLM.from_pretrained(
+            args.base_model, quantization_config=bnb, device_map="auto",
+            trust_remote_code=True, torch_dtype=torch.bfloat16,
+        )
+    else:
+        mps = torch.backends.mps.is_available()
+        # MPS has no bfloat16 support in several ops; float16 is the safe choice.
+        dtype = torch.float16 if mps else torch.float32
+        print(f"No CUDA — loading unquantized ({'MPS' if mps else 'CPU'}, {dtype}).")
+        model = AutoModelForCausalLM.from_pretrained(
+            args.base_model, trust_remote_code=True, torch_dtype=dtype,
+        )
+        model = model.to("mps" if mps else "cpu")
+
     model.config.use_cache = False
-    # NOTE: this helper defaults to use_gradient_checkpointing=True internally,
-    # independent of the TrainingArguments flag below — must be passed explicitly
-    # or it silently re-enables checkpointing regardless of --gradient_checkpointing.
-    model = prepare_model_for_kbit_training(
-        model, use_gradient_checkpointing=args.gradient_checkpointing
-    )
+    if use_cuda:
+        # NOTE: this helper defaults to use_gradient_checkpointing=True internally,
+        # independent of the TrainingArguments flag below — must be passed explicitly
+        # or it silently re-enables checkpointing regardless of --gradient_checkpointing.
+        model = prepare_model_for_kbit_training(
+            model, use_gradient_checkpointing=args.gradient_checkpointing
+        )
+    elif args.gradient_checkpointing:
+        model.gradient_checkpointing_enable()
+        model.enable_input_require_grads()
 
     if args.resume_adapter:
         print(f"Continuing training from existing adapter: {args.resume_adapter}")
@@ -392,7 +411,11 @@ def main() -> int:
         warmup_ratio=0.03,
         logging_steps=20,
         save_strategy="epoch",
-        bf16=True,
+        # bf16 is a CUDA/Ampere+ feature; MPS doesn't support it and Trainer will
+        # raise if we ask for it. We already loaded fp16 weights on MPS, and we
+        # deliberately do NOT set fp16=True there either — fp16 turns on the CUDA
+        # GradScaler path, which is unsupported on MPS.
+        bf16=use_cuda,
         gradient_checkpointing=args.gradient_checkpointing,
         report_to="none",
         remove_unused_columns=False,

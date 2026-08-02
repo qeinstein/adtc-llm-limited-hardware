@@ -28,8 +28,12 @@ IMATRIX="$ROOT/output/imatrix.dat"
 OUT_GGUF="$ROOT/model/Qwen3-0.6B-${QUANT}.gguf"
 LLAMA_DIR="$ROOT/llama.cpp"
 
+# Stock macOS has no bare `python`; prefer an explicit venv/py3 if present.
+PY="${PYTHON:-$( [ -x "$ROOT/venv/bin/python" ] && echo "$ROOT/venv/bin/python" || command -v python3 || command -v python )}"
+echo "using interpreter: $PY"
+
 echo "== [1/4] Merge LoRA adapter into base =="
-python - "$BASE_MODEL" "$LORA_DIR" "$MERGED_DIR" <<'PY'
+"$PY" - "$BASE_MODEL" "$LORA_DIR" "$MERGED_DIR" <<'PY'
 import sys, torch
 from peft import PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -56,10 +60,10 @@ if [ ! -x "$LLAMA_DIR/build/bin/llama-quantize" ]; then
     [ "$JOBS" -gt 8 ] && JOBS=8
     cmake --build "$LLAMA_DIR/build" --config Release -j"$JOBS" --target llama-quantize llama-imatrix
 fi
-pip install -q -r "$LLAMA_DIR/requirements.txt" || true
+"$PY" -m pip install -q -r "$LLAMA_DIR/requirements.txt" || true
 
 echo "== [3/4] Convert merged HF model -> GGUF f16 =="
-python "$LLAMA_DIR/convert_hf_to_gguf.py" "$MERGED_DIR" --outfile "$GGUF_F16" --outtype f16
+"$PY" "$LLAMA_DIR/convert_hf_to_gguf.py" "$MERGED_DIR" --outfile "$GGUF_F16" --outtype f16
 
 echo "== [4/4] Domain imatrix + quantize to $QUANT =="
 mkdir -p "$ROOT/model"

@@ -24,6 +24,7 @@ in tests and when no model weights are present.
 from __future__ import annotations
 
 import os
+import re
 import time
 from dataclasses import dataclass
 from typing import Any, Iterator, Optional
@@ -86,6 +87,29 @@ SAFETY_FALLBACK = (
 )
 
 
+def _trim_foreign_script(text: str) -> str:
+    """Cut the answer at the first CJK character.
+
+    Jamii Afya answers only in English or Kiswahili — both Latin script. Qwen3 is
+    Chinese-pretrained, and because we fine-tuned from the Base checkpoint (no
+    instruction post-training), real testing showed it finish a correct Kiswahili
+    clinical answer and then drift into Chinese. Any CJK output is therefore
+    base-model bleed-through, never a legitimate answer, so truncating there is
+    safe and unambiguous — no language detection or heuristics needed.
+    """
+    for i, ch in enumerate(text):
+        o = ord(ch)
+        if (
+            0x4E00 <= o <= 0x9FFF      # CJK Unified Ideographs
+            or 0x3040 <= o <= 0x30FF   # Hiragana + Katakana
+            or 0xAC00 <= o <= 0xD7AF   # Hangul
+            or 0x3000 <= o <= 0x303F   # CJK punctuation
+            or 0xFF00 <= o <= 0xFFEF   # Fullwidth forms
+        ):
+            return text[:i].rstrip()
+    return text
+
+
 def _guard_repetition(text: str, min_chunk_words: int = 6, min_repeats: int = 3) -> str:
     """Detect degenerate generation (a word-chunk repeating back-to-back) and
     truncate to the last clean sentence before it, falling back to a short
@@ -98,6 +122,22 @@ def _guard_repetition(text: str, min_chunk_words: int = 6, min_repeats: int = 3)
     MCQ continuations, never free generation) — this only protects the
     interactive chat product from shipping garbled/looping output.
     """
+    # Sentence-level pass FIRST. The word-chunk scan below only looks at blocks up
+    # to ~26 words, which real testing showed is too narrow: the model looped a
+    # ~50-word hallucinated citation four times and slipped straight through. Whole
+    # repeated sentences are both the common shape of this failure and much cheaper
+    # to spot than widening the word scan.
+    sentences = re.split(r"(?<=[.!?])\s+", text)
+    seen: dict[str, int] = {}
+    for idx, sent in enumerate(sentences):
+        key = sent.strip().lower()
+        if len(key.split()) < 5:
+            continue  # short fragments legitimately recur ("Refer urgently.")
+        seen[key] = seen.get(key, 0) + 1
+        if seen[key] >= 2:
+            clean = " ".join(sentences[:idx]).strip()
+            return clean if len(clean) >= 20 else SAFETY_FALLBACK
+
     words = text.split()
     for chunk_len in range(min_chunk_words, min_chunk_words + 20):
         for start in range(0, max(len(words) - chunk_len * min_repeats, 0)):
@@ -209,6 +249,7 @@ class MedicalLLMEngine:
             top_p=overrides.get("top_p", gen.top_p),
             top_k=overrides.get("top_k", gen.top_k),
             repeat_penalty=overrides.get("repeat_penalty", gen.repeat_penalty),
+            stop=list(overrides.get("stop", gen.stop)),
         )
         elapsed = max(time.time() - start, 1e-3)
         peak = max(peak, _rss_mb())
@@ -224,7 +265,7 @@ class MedicalLLMEngine:
             throughput_tps=completion_tokens / elapsed,
             peak_rss_mb=peak,
         )
-        return {"text": _guard_repetition(text.strip()), "telemetry": telemetry.as_dict()}
+        return {"text": _guard_repetition(_trim_foreign_script(text.strip())), "telemetry": telemetry.as_dict()}
 
     def stream(
         self,
@@ -241,6 +282,7 @@ class MedicalLLMEngine:
             top_p=overrides.get("top_p", gen.top_p),
             top_k=overrides.get("top_k", gen.top_k),
             repeat_penalty=overrides.get("repeat_penalty", gen.repeat_penalty),
+            stop=list(overrides.get("stop", gen.stop)),
             stream=True,
         ):
             delta = chunk.get("choices", [{}])[0].get("delta", {})
@@ -269,6 +311,7 @@ class MedicalLLMEngine:
             top_p=overrides.get("top_p", gen.top_p),
             top_k=overrides.get("top_k", gen.top_k),
             repeat_penalty=overrides.get("repeat_penalty", gen.repeat_penalty),
+            stop=list(overrides.get("stop", gen.stop)),
         )
         elapsed = max(time.time() - start, 1e-3)
         peak = max(peak, _rss_mb())
@@ -284,7 +327,7 @@ class MedicalLLMEngine:
             throughput_tps=completion_tokens / elapsed,
             peak_rss_mb=peak,
         )
-        return {"text": _guard_repetition(text.strip()), "telemetry": telemetry.as_dict()}
+        return {"text": _guard_repetition(_trim_foreign_script(text.strip())), "telemetry": telemetry.as_dict()}
 
     def stream_chat(
         self,
@@ -300,6 +343,7 @@ class MedicalLLMEngine:
             top_p=overrides.get("top_p", gen.top_p),
             top_k=overrides.get("top_k", gen.top_k),
             repeat_penalty=overrides.get("repeat_penalty", gen.repeat_penalty),
+            stop=list(overrides.get("stop", gen.stop)),
             stream=True,
         ):
             delta = chunk.get("choices", [{}])[0].get("delta", {})

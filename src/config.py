@@ -99,6 +99,20 @@ class GenerationConfig:
     top_p: float = 0.9
     top_k: int = 40
     repeat_penalty: float = 1.1
+    # We fine-tuned from Qwen3-0.6B-**Base**, which has no instruction post-training
+    # of its own, so it does not reliably emit EOS at the end of an answer. Real
+    # testing showed it produce a correct clinical answer and then keep going —
+    # starting a fresh "Q:"/"S:" pair, opening a markdown section, or drifting into
+    # Chinese (base-model bleed-through). These stops cut generation at the point
+    # the answer is actually finished. Without them the answer is right but the
+    # output looks broken.
+    stop: tuple[str, ...] = (
+        "\nQ:", "\nA:", "\nS:", "\nJ:",
+        "\nQuestion:", "\nAnswer:", "\nSwali:", "\nJibu:",
+        "\nExample", "\nMfano",
+        "\n##", "\n---",
+        "<|im_end|>", "<|endoftext|>",
+    )
 
 
 # System prompt for the advisor. Deliberately safety-first: this is clinical

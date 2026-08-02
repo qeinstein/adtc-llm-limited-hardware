@@ -54,7 +54,13 @@ demo:
 	$(PYTHON) -m src.main --demo
 
 webui:
-	@$(PYTHON) -m pip install -q -r requirements.txt
+	@# Always run out of a local venv. System Python on macOS/Debian is
+	@# "externally managed" (PEP 668) and refuses pip installs, so installing
+	@# into it is not just bad practice here -- it hard-fails.
+	@test -x venv/bin/python || ( echo "Creating venv..." && $(PYTHON) -m venv venv )
+	@echo "Installing dependencies (first run only, ~1 min)..."
+	@./venv/bin/python -m pip install -q --upgrade pip
+	@./venv/bin/python -m pip install -q -r requirements.txt
 	@bash download_model.sh
 	@echo ""
 	@echo "=================================================================="
@@ -67,8 +73,8 @@ webui:
 	@echo " Press Ctrl+C to stop the server."
 	@echo "=================================================================="
 	@echo ""
-	@( sleep 2 && $(PYTHON) -c "import webbrowser; webbrowser.open('http://localhost:8420')" ) &
-	$(PYTHON) -m uvicorn src.webapp:app --host 0.0.0.0 --port 8420
+	@( sleep 3 && ./venv/bin/python -c "import webbrowser; webbrowser.open('http://localhost:8420')" ) &
+	./venv/bin/python -m uvicorn src.webapp:app --host 0.0.0.0 --port 8420
 
 bench:
 	$(PYTHON) -m src.benchmark
