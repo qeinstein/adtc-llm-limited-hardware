@@ -53,7 +53,19 @@ def resolve_model_path(meta: dict[str, Any] | None = None) -> Path:
 
     The profiler reads ``_runtime.model_path`` relative to the submission root
     and falls back to ``model.gguf``.
+
+    ADTC_MODEL_PATH overrides it for local A/B testing only. Candidate models are
+    deliberately exported to their own filenames (``-v2``, ``-v3``) so nothing
+    ships until an A/B says it should — but that also meant the web UI always
+    loaded the shipped model, and a whole manual audit got run against the wrong
+    one. The env var makes trying a candidate in the browser a one-liner instead
+    of an edit to metadata.json (which the profiler reads, so editing it for a
+    local test risks shipping a half-tested path).
     """
+    override = os.environ.get("ADTC_MODEL_PATH", "").strip()
+    if override:
+        p = Path(override)
+        return p if p.is_absolute() else (ROOT / p)
     if meta is None:
         meta = load_metadata()
     rel = meta.get("_runtime", {}).get("model_path", "model.gguf")
