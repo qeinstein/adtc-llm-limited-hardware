@@ -119,9 +119,25 @@ class BM25Retriever:
         return score
 
     def retrieve(
-        self, query: str, top_n: int = 3, min_score: float = 1e-9
+        self,
+        query: str,
+        top_n: int = 3,
+        min_score: float = 1e-9,
+        min_rel_score: float = 0.35,
     ) -> list[dict[str, Any]]:
-        """Return the ``top_n`` best-matching documents (with a ``score`` field)."""
+        """Return the ``top_n`` best-matching documents (with a ``score`` field).
+
+        ``min_rel_score`` drops any hit scoring below that fraction of the TOP
+        hit. Found by testing against the submission's own test prompts: for
+        tp_002 (pregnant woman, severe headache, blurred vision) the top two
+        hits are correct — Maternal Danger Signs (21.3) and Pre-eclampsia (11.1)
+        — but "Diabetes Basics" also came back at 7.07, and the model dutifully
+        answered about blood glucose and giving sugar instead of pre-eclampsia.
+        A weak third match is worse than no third match: a small model cannot
+        tell which slice of its context to ignore, so padding to top_n with
+        loosely-related text actively causes wrong clinical advice. Relative
+        (not absolute) because BM25 scores are not comparable across queries.
+        """
         if not self.documents:
             return []
         query_terms = content_tokens(query)
@@ -131,9 +147,11 @@ class BM25Retriever:
             (self._score(query_terms, i), i) for i in range(len(self.documents))
         ]
         scored.sort(key=lambda t: (t[0], -t[1]), reverse=True)
+        top = scored[0][0] if scored else 0.0
+        floor = max(min_score, top * min_rel_score)
         results: list[dict[str, Any]] = []
         for score, i in scored[:top_n]:
-            if score <= min_score:
+            if score <= min_score or score < floor:
                 break
             results.append({**self.documents[i], "score": round(score, 4)})
         return results

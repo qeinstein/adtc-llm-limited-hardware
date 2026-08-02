@@ -37,7 +37,11 @@ def test_real_swahili_loop_from_stress_test_log_is_truncated():
     )
     real_case = prefix + phrase * 6
     out = _guard_repetition(real_case)
-    assert out == prefix.strip()
+    # The sentence-level pass keeps the FIRST occurrence of the repeated sentence
+    # (that one is legitimate content) and cuts from the second onward. An earlier
+    # version discarded the first occurrence too, which threw away a usable answer.
+    assert out == (prefix + phrase).strip()
+    assert out.count("Kipindupisha") == 1
 
 
 def test_repetition_starting_mid_clause_falls_back():
