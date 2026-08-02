@@ -53,6 +53,10 @@ PYTHONPATH=. python -m src.main --query "Mtoto ana homa kali na kikohozi. Nifany
 # Full offline advisor (downloads the ~460 MB GGUF once):
 make model            # ./download_model.sh
 make run              # interactive     |  make demo  (runs the metadata test prompts)
+
+# Or the full web UI in ONE command (installs deps, downloads the model,
+# launches the server, opens your browser automatically):
+make webui             # -> http://localhost:8420
 ```
 
 ### Measure it the way the judges will

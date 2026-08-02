@@ -3,7 +3,7 @@
 PYTHON ?= python
 export PYTHONPATH := .
 
-.PHONY: help setup setup-dev test lint validate data model run demo bench scalar bench-audit accuracy profiler clean
+.PHONY: help setup setup-dev test lint validate data model run demo webui bench scalar bench-audit accuracy profiler clean
 
 help:
 	@echo "Targets:"
@@ -15,6 +15,7 @@ help:
 	@echo "  data        build fine-tune splits + imatrix calibration corpus"
 	@echo "  model       download the GGUF weights"
 	@echo "  run|demo    launch the advisor (interactive | metadata test prompts)"
+	@echo "  webui       ONE COMMAND: install deps, download model, launch the web UI, open browser"
 	@echo "  bench       benchmark the interactive engine"
 	@echo "  scalar      build a no-SIMD llama.cpp (audit parity)"
 	@echo "  bench-audit run llama-bench exactly like the profiler (needs scalar build)"
@@ -49,6 +50,23 @@ run:
 
 demo:
 	$(PYTHON) -m src.main --demo
+
+webui:
+	@$(PYTHON) -m pip install -q -r requirements.txt
+	@bash download_model.sh
+	@echo ""
+	@echo "=================================================================="
+	@echo " Jamii Afya is starting..."
+	@echo " Once ready (a few seconds), open your browser to:"
+	@echo ""
+	@echo "   http://localhost:8420"
+	@echo ""
+	@echo " Landing page first -> click \"Try the demo\" for the chat."
+	@echo " Press Ctrl+C to stop the server."
+	@echo "=================================================================="
+	@echo ""
+	@( sleep 2 && $(PYTHON) -c "import webbrowser; webbrowser.open('http://localhost:8420')" ) &
+	$(PYTHON) -m uvicorn src.webapp:app --host 0.0.0.0 --port 8420
 
 bench:
 	$(PYTHON) -m src.benchmark
