@@ -63,6 +63,9 @@ make run              # interactive     |  make demo  (runs the metadata test pr
 make webui             # -> http://localhost:8420
 ```
 
+`--no-rag` is a safety-path diagnostic: it disables retrieval and returns the
+fixed referral response instead of asking the model for ungrounded clinical advice.
+
 ### Measure it the way the judges will
 ```bash
 make scalar           # build a no-SIMD llama.cpp matching the audit environment

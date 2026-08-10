@@ -4,7 +4,7 @@ Usage:
     PYTHONPATH=. python -m src.main                 # interactive chat
     PYTHONPATH=. python -m src.main --query "..."   # one-shot
     PYTHONPATH=. python -m src.main --demo          # run the metadata test prompts
-    PYTHONPATH=. python -m src.main --no-rag        # disable retrieval grounding
+    PYTHONPATH=. python -m src.main --no-rag        # disable retrieval; return safe referral
 
 Runs end-to-end WITH model weights. Without weights it degrades to a
 "RAG preview" that shows the retrieved+compressed clinical context, so the
@@ -88,7 +88,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Jamii Afya offline clinical advisor")
     parser.add_argument("--query", type=str, help="Single question, then exit")
     parser.add_argument("--demo", action="store_true", help="Run the metadata test prompts")
-    parser.add_argument("--no-rag", action="store_true", help="Disable retrieval grounding")
+    parser.add_argument(
+        "--no-rag",
+        action="store_true",
+        help="Disable retrieval (returns safe referral; never generates ungrounded advice)",
+    )
     parser.add_argument("--no-stream", action="store_true", help="Print full answer at once")
     parser.add_argument("--top-n", type=int, default=3, help="Docs to retrieve (default 3)")
     parser.add_argument("--max-tokens", type=int, default=512)
