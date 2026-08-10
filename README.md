@@ -39,13 +39,17 @@ BM25 retriever ──▶ extractive compressor ──▶ prompt: [system+few-sho
 
 The RAG stack (`retriever`, `compressor`, `evaluator`, `config`, `manifest`, `score`) is **pure standard library** — it runs and is unit-tested with **no model weights and no heavy deps**.
 
+For clinical safety, a question with no relevant match in the reviewed local corpus receives a fixed bilingual referral-to-clinician response; it is never sent to the model for ungrounded clinical generation.
+
+The repository also contains experimental constrained-answer and cache-augmented prototypes under `src/fact_answer.py` and `scripts/build_cag_cache.py`. They are deliberately not part of the shipped CLI/web path until their artifacts, latency, and clinical behavior are independently validated.
+
 ---
 
 ## Quickstart
 
 ```bash
 make setup            # venv + runtime deps (llama-cpp-python, psutil)
-make test             # 32 offline tests — pass WITHOUT model weights
+make test             # offline test suite — passes WITHOUT model weights
 
 # Try the pipeline before downloading anything (RAG-preview mode):
 PYTHONPATH=. python -m src.main --query "Mtoto ana homa kali na kikohozi. Nifanye nini?"
@@ -95,7 +99,7 @@ bash scripts/export_gguf.sh            # merge → convert → domain imatrix �
 │   ├── benchmark.py              # honest bench + profiler-parity mode
 │   ├── manifest.py · main.py     # schema self-check + CLI app
 ├── scripts/                 # prepare_dataset · train_lora · export_gguf · build_llamacpp_scalar · run_profiler
-├── tests/                   # 32 offline tests (no weights needed)
+├── tests/                   # offline tests (no weights needed)
 └── model/                   # weights land here (git-ignored)
 ```
 
@@ -103,6 +107,6 @@ bash scripts/export_gguf.sh            # merge → convert → domain imatrix �
 
 ## Status & honesty
 
-Benchmark tables in REPORT.md are **measured**, not projected: throughput and memory come from a real `adtc-profiler` participant run on a scalar (no-SIMD) build, accuracy from held-out test splits. `download_model.sh` fetches our **fine-tuned** GGUF from Hugging Face. REPORT.md §6 documents known limitations and the bugs we found by testing — including one where our own accuracy checker was wrong before the model was. Everything except the weights is testable offline (`make test`, 37 tests).
+Benchmark tables in REPORT.md are **measured**, not projected: throughput and memory come from a real `adtc-profiler` participant run on a scalar (no-SIMD) build, accuracy from held-out test splits. `download_model.sh` fetches our **fine-tuned** GGUF from Hugging Face. REPORT.md §6 documents known limitations and the bugs we found by testing — including one where our own accuracy checker was wrong before the model was. Everything except the weights is testable offline (`make test`).
 
 *Medical content is derived from public WHO/IMCI/national-guideline material and is for clinical decision support only — not a substitute for a qualified clinician.*

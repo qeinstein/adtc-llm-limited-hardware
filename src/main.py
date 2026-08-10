@@ -17,7 +17,7 @@ import argparse
 import sys
 
 from src.config import load_metadata, resolve_model_path
-from src.rag import RAGPipeline
+from src.rag import RAGPipeline, ungrounded_response
 
 
 def _print_header(domain: str, model_ready: bool) -> None:
@@ -32,14 +32,23 @@ def _print_header(domain: str, model_ready: bool) -> None:
 
 def _answer(engine, rag: RAGPipeline, query: str, args) -> None:
     result = rag.build(query, top_n=args.top_n) if not args.no_rag else rag.build(query, top_n=0)
-    if result.retrieved:
+    if result.is_grounded:
         srcs = ", ".join(d.get("id", d.get("title", "?")) for d in result.retrieved)
         print(f"\n[RAG] Retrieved: {srcs}  ({len(result.context.split())} context words)")
 
     if engine is None:
-        print("\n[RAG preview — model not downloaded]")
-        print("Retrieved clinical context that would ground the answer:\n")
-        print(result.context or "(no matching guideline found)")
+        if not result.is_grounded:
+            print("\n--- Advisory ---")
+            print(ungrounded_response(query))
+        else:
+            print("\n[RAG preview — model not downloaded]")
+            print("Retrieved clinical context that would ground the answer:\n")
+            print(result.context)
+        return
+
+    if not result.is_grounded:
+        print("\n--- Advisory ---")
+        print(ungrounded_response(query))
         return
 
     print("\n--- Advisory ---")

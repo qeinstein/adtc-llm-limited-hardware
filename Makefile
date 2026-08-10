@@ -1,8 +1,9 @@
 # Jamii Afya — ADTC 2026 submission. Common workflows.
 # Override the interpreter: make PYTHON=./venv/bin/python test
-# Auto-detects whichever of python3/python is actually on PATH, so it works
-# on any machine regardless of which one is installed -- no manual override needed.
-PYTHON ?= $(shell command -v python3 2>/dev/null || command -v python 2>/dev/null)
+# Prefer the project venv once `make setup` has created it. Falling back to a
+# system interpreter made `make test` miss pytest even when the project venv
+# already contained the declared test dependencies.
+PYTHON ?= $(if $(wildcard venv/bin/python),./venv/bin/python,$(shell command -v python3 2>/dev/null || command -v python 2>/dev/null))
 export PYTHONPATH := .
 
 .PHONY: help setup setup-dev test lint validate data model run demo webui bench scalar bench-audit accuracy profiler clean
@@ -28,15 +29,17 @@ setup:
 	$(PYTHON) -m venv venv
 	./venv/bin/python -m pip install --upgrade pip
 	./venv/bin/python -m pip install -r requirements.txt
+	./venv/bin/python -m pip install -r requirements-test.txt
 
 setup-dev:
-	$(PYTHON) -m pip install -r requirements-dev.txt
+	@test -x venv/bin/python || $(MAKE) setup
+	./venv/bin/python -m pip install -r requirements-dev.txt
 
 test:
 	$(PYTHON) -m pytest tests/ -q
 
 lint:
-	ruff check src tests scripts
+	$(PYTHON) -m ruff check src tests scripts
 
 validate:
 	$(PYTHON) -c "from src.config import load_metadata; from src.manifest import validate_metadata; e=validate_metadata(load_metadata()); print('metadata.json:', 'VALID' if not e else e)"

@@ -1,0 +1,5 @@
+# Small, CPU-only developer dependencies used by `make test` and `make lint`.
+# Kept separate from requirements-dev.txt so normal app setup does not pull GPU
+# training packages such as torch and bitsandbytes.
+pytest>=8.0.0
+ruff>=0.5.0

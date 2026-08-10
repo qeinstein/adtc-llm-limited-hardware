@@ -20,7 +20,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 
-from src.rag import RAGPipeline
+from src.rag import RAGPipeline, ungrounded_response
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
@@ -87,7 +87,16 @@ def chat(req: ChatRequest) -> ChatResponse:
     from src.config import resolve_model_path
 
     result = _rag.build(req.message, top_n=3)
-    sources = [d.get("id", d.get("title", "?")) for d in result.retrieved]
+    sources = [d.get("id", d.get("title", "?")) for d in result.retrieved] if result.is_grounded else []
+
+    # Never ask the model for clinical management from parametric memory when
+    # the reviewed local corpus does not support the question.
+    if not result.is_grounded:
+        return ChatResponse(
+            reply=ungrounded_response(req.message), sources=[],
+            telemetry={"elapsed_sec": 0, "throughput_tps": 0, "peak_rss_mb": 0},
+            model_ready=resolve_model_path().exists(),
+        )
 
     if not resolve_model_path().exists():
         preview = (

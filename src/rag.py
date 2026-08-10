@@ -18,7 +18,7 @@ from typing import Any, Optional
 
 from src.compressor import compress_documents
 from src.config import GUIDELINES_PATH, SYSTEM_PROMPT
-from src.retriever import BM25Retriever
+from src.retriever import BM25Retriever, content_tokens
 
 # Two short bilingual exemplars. Few-shot markedly lifts small-model quality and
 # pins the expected answer shape (assessment -> action -> danger signs -> refer).
@@ -37,6 +37,32 @@ FEWSHOT = (
     "-> peleka haraka kituo cha rufaa. Huu ni ushauri wa kusaidia, si mbadala wa daktari."
 )
 
+SAFE_UNGROUNDED_EN = (
+    "I don't have verified guidance for this specific question in the offline "
+    "clinical corpus. Please consult a clinician or follow the national treatment "
+    "guideline, especially if there are danger signs."
+)
+SAFE_UNGROUNDED_SW = (
+    "Sina mwongozo uliohakikiwa kwa swali hili katika maktaba ya kliniki ya nje ya "
+    "mtandao. Tafadhali wasiliana na daktari au fuata mwongozo wa kitaifa wa "
+    "matibabu, hasa ikiwa kuna ishara za hatari."
+)
+
+
+def query_language(query: str) -> str:
+    """Choose the language for a fixed, non-clinical safety response."""
+    sw_markers = {
+        "mtoto", "mgonjwa", "mjamzito", "homa", "kikohozi", "maumivu",
+        "nifanye", "tafadhali", "dalili", "ishara", "hatari", "dawa",
+    }
+    terms = set(query.lower().replace("?", " ").replace(",", " ").split())
+    return "sw" if terms & sw_markers else "en"
+
+
+def ungrounded_response(query: str) -> str:
+    """Return a safe response when the reviewed corpus has no relevant match."""
+    return SAFE_UNGROUNDED_SW if query_language(query) == "sw" else SAFE_UNGROUNDED_EN
+
 
 
 @dataclass
@@ -45,6 +71,33 @@ class RAGResult:
     retrieved: list[dict[str, Any]]
     context: str
     user_content: str
+    is_grounded: bool
+
+
+def _has_sufficient_lexical_support(query: str, document: dict[str, Any]) -> bool:
+    """Reject a weak partial BM25 hit before it reaches clinical generation.
+
+    BM25 can return a plausible-looking document from one generic word (such as
+    ``mtoto``/child) even when the question names no condition. A reviewed
+    source must cover more than half of the query's content terms to count as
+    grounding. This deliberately prefers a safe referral for underspecified,
+    fabricated, or heavily misspelled questions.
+    """
+    terms = content_tokens(query)
+    if not terms:
+        return False
+    source = f"{document.get('title', '')} {document.get('text', '')}"
+    source_terms = set(content_tokens(source))
+    matched = sum(term in source_terms for term in terms)
+    coverage = matched / len(terms)
+    if coverage > 0.5:
+        return True
+    # A short, bilingual query can legitimately contain two exact clinical
+    # terms plus an inflected synonym absent from the source (for example,
+    # ``mtoto ana homa kali na kikohozi``). Permit an exactly-half match only
+    # when BM25's absolute evidence is strong; weak half-matches are the shape
+    # seen for fabricated-drug prompts such as "dose of Zaptomycin".
+    return coverage == 0.5 and float(document.get("score", 0.0)) >= 4.0
 
 
 class RAGPipeline:
@@ -78,15 +131,16 @@ class RAGPipeline:
         lets the model answer normally, rather than us enumerating greetings to
         intercept (no word list survives two languages plus typos).
         """
-        return self.system_prompt if result.retrieved else SYSTEM_PROMPT
+        return self.system_prompt if result.is_grounded else SYSTEM_PROMPT
 
     def build(
         self, query: str, top_n: int = 3, max_context_words: int = 220
     ) -> RAGResult:
         retrieved = self.retriever.retrieve(query, top_n=top_n)
+        is_grounded = bool(retrieved) and _has_sufficient_lexical_support(query, retrieved[0])
         context = (
             compress_documents(query, retrieved, max_words=max_context_words)
-            if retrieved
+            if is_grounded
             else ""
         )
         if context:
@@ -98,5 +152,9 @@ class RAGPipeline:
         else:
             user_content = query
         return RAGResult(
-            query=query, retrieved=retrieved, context=context, user_content=user_content
+            query=query,
+            retrieved=retrieved,
+            context=context,
+            user_content=user_content,
+            is_grounded=is_grounded,
         )

@@ -42,6 +42,16 @@ def _env_str(name: str, default: str) -> str:
     return raw if raw else default
 
 
+def _env_float(name: str, default: float) -> float:
+    raw = os.environ.get(name)
+    if raw is None or raw.strip() == "":
+        return default
+    try:
+        return float(raw)
+    except ValueError:
+        return default
+
+
 def load_metadata(path: Path | str = METADATA_PATH) -> dict[str, Any]:
     """Load and return the profiler manifest (``metadata.json``)."""
     with open(path, "r", encoding="utf-8") as f:
@@ -107,7 +117,14 @@ class GenerationConfig:
     """Sampling defaults tuned for factual, low-variance clinical answers."""
 
     max_tokens: int = 512
-    temperature: float = 0.3
+    # ADTC_TEMPERATURE override: real testing showed the same clinical prompt
+    # sometimes returns the correct answer and sometimes hallucinates an unindicated
+    # drug (e.g. an antihistamine for pre-eclampsia) purely from sampling variance
+    # at temperature 0.3. Lower values (e.g. 0.1, or 0.0 for greedy) reduce that
+    # variance -- they don't remove the wrong association from the model, but they
+    # make the model's most-likely (and here, more often correct) output win
+    # consistently instead of a roll of the dice each time.
+    temperature: float = field(default_factory=lambda: _env_float("ADTC_TEMPERATURE", 0.3))
     top_p: float = 0.9
     top_k: int = 40
     repeat_penalty: float = 1.1
@@ -135,8 +152,9 @@ SYSTEM_PROMPT = (
     "language as the question (English or Kiswahili). Be clear, concise, and "
     "practical for a low-resource setting.\n"
     "Rules:\n"
-    "1. Use the retrieved reference context when it is provided; if it is missing or "
-    "irrelevant, rely on standard WHO/IMCI primary-care guidance and say so.\n"
+    "1. Use only the retrieved reference context for clinical management. If it is "
+    "missing or irrelevant, do not give clinical instructions: advise consultation "
+    "with a clinician or the national treatment guideline.\n"
     "2. Always surface DANGER SIGNS and say clearly when to REFER urgently.\n"
     "3. Give only widely-standardized doses (e.g. ORS, zinc 20 mg, paracetamol "
     "10-15 mg/kg, ACT by weight band); if unsure of a dose, say to follow the "
