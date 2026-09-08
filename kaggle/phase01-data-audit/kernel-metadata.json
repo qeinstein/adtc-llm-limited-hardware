@@ -1,0 +1,13 @@
+{
+  "id": "toheebogunade/jamii-afya-phase01-data-audit",
+  "title": "Jamii Afya Phase 01 Data Audit",
+  "code_file": "phase01_data_audit.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_internet": true,
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": []
+}
