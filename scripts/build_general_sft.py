@@ -176,7 +176,10 @@ def main() -> int:
             for p in pairs:
                 q, a = (p.get("q") or "").strip(), (p.get("a") or "").strip()
                 if q and a and len(a) <= 600:
-                    rows.append({"instruction": q, "input": "", "output": a})
+                    rows.append({
+                        "instruction": q, "input": "", "output": a,
+                        "_source": "general_teacher", "_category": cat, "_synthetic": True,
+                    })
                     new += 1
             got += new
             print(f"  {cat:9s} +{new:3d}  (total {got}/{args.per_category})", flush=True)

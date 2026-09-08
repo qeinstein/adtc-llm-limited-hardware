@@ -231,7 +231,10 @@ def main() -> int:
                 if cat in ("unknown_drug", "unknown_condition", "dose_uncertainty") and DOSE_RE.search(a):
                     dropped += 1
                     continue
-                rows.append({"instruction": q, "input": "", "output": a})
+                rows.append({
+                    "instruction": q, "input": "", "output": a,
+                    "_source": "refusal_teacher", "_category": cat, "_synthetic": True,
+                })
                 new += 1
             got += new
             print(f"  {cat:18s} +{new:3d}  (total {got}/{args.per_category})", flush=True)

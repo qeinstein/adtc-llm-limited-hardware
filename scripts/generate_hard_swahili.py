@@ -171,14 +171,22 @@ def main() -> int:
             for item in result.get("long_answers_sw", []):
                 q, a = item.get("question"), item.get("answer")
                 if q and a and len(a.split()) >= 15:  # enforce genuinely "long"
-                    chat_rows.append({"instruction": q, "input": "", "output": a})
+                    chat_rows.append({
+                        "instruction": q, "input": "", "output": a,
+                        "_source": "hard_swahili_teacher", "_category": "medical",
+                        "_language": "sw", "_synthetic": True,
+                    })
 
             for item in result.get("escalation_dialogues_sw", []):
                 q1, a1 = item.get("turn1_question"), item.get("turn1_answer")
                 q2, a2 = item.get("turn2_question"), item.get("turn2_answer")
                 if q1 and a1 and q2 and a2:
                     instruction = ESCALATION_CONTEXT_TEMPLATE.format(q1=q1, a1=a1, q2=q2)
-                    chat_rows.append({"instruction": instruction, "input": "", "output": a2})
+                    chat_rows.append({
+                        "instruction": instruction, "input": "", "output": a2,
+                        "_source": "hard_swahili_teacher", "_category": "medical",
+                        "_language": "sw", "_synthetic": True,
+                    })
 
             n_ok += 1
             print(f"  [{n_ok+n_fail}/{len(guidelines)}] {title[:50]:50s} OK "

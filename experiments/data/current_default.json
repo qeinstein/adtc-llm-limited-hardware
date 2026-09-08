@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0.0",
+  "audit_id": "current-train-lora-defaults",
+  "repository_root_parents": 2,
+  "tokenizer": "Qwen/Qwen3-0.6B-Base",
+  "tokenizer_revision": "da87bfb608c14b7cf20ba1ce41287e8de496c0cd",
+  "max_len": 256,
+  "sources": [
+    {
+      "name": "accuracy_sft_unknown_source",
+      "path": "output/accuracy_sft.jsonl",
+      "format": "mcqa",
+      "repeat": 1,
+      "stream": "mcqa",
+      "capability": "mcqa",
+      "domain": "mixed",
+      "provenance": "sourced",
+      "required": true,
+      "source_overrides": {
+        "arc_easy": {"capability": "reasoning_science", "domain": "general"},
+        "arc_challenge": {"capability": "reasoning_science", "domain": "general"},
+        "openbookqa": {"capability": "reasoning_science", "domain": "general"},
+        "mmlu_aux": {"capability": "general_factual_qa", "domain": "general"},
+        "medmcqa": {"capability": "medical", "domain": "medical"},
+        "medqa": {"capability": "medical", "domain": "medical"},
+        "pubmedqa": {"capability": "medical", "domain": "medical"},
+        "headqa": {"capability": "medical", "domain": "medical"},
+        "synthetic_mcqa": {"capability": "medical", "domain": "medical", "provenance": "synthetic"}
+      }
+    },
+    {
+      "name": "handwritten_clinical_chat",
+      "path": "data/medical_lora_dataset.json",
+      "format": "alpaca",
+      "repeat": 3,
+      "stream": "generation",
+      "capability": "medical",
+      "domain": "medical",
+      "provenance": "curated",
+      "required": true
+    },
+    {
+      "name": "healthcare_corpus_unknown_source",
+      "path": "output/healthcare_corpus.jsonl",
+      "format": "corpus",
+      "repeat": 1,
+      "stream": "causal_lm",
+      "capability": "healthcare_continued_pretraining",
+      "domain": "medical",
+      "provenance": "sourced",
+      "required": false,
+      "source_overrides": {
+        "synthetic_corpus": {"provenance": "synthetic"}
+      }
+    }
+  ]
+}
