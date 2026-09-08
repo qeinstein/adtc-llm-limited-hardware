@@ -11,8 +11,8 @@ kaggle kernels push -p kaggle/phase01-data-audit
 Check status and download outputs with:
 
 \`\`\`bash
-kaggle kernels status toheebogunade/jamii-afya-phase01-data-audit
-kaggle kernels output toheebogunade/jamii-afya-phase01-data-audit \
+kaggle kernels status toheebogunade/jamii-afya-phase-01-data-audit
+kaggle kernels output toheebogunade/jamii-afya-phase-01-data-audit \
   -p output/kaggle-phase01-data-audit
 \`\`\`
 
