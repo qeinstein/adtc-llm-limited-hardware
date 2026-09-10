@@ -1,0 +1,140 @@
+name: MoE-35B single-GGUF systems test (GATE B)
+
+# GATE B: can stock llama.cpp run a 35B sparse-MoE single GGUF under the
+# profiler's exact bench command, and what RSS/tok-s does it actually show?
+# One file only (runner disk is the constraint). No training, no custom runtime.
+
+on:
+  workflow_dispatch:
+    inputs:
+      gguf_file:
+        description: "GGUF filename in unsloth/Qwen3.5-35B-A3B-GGUF"
+        required: false
+        default: "Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf"
+      gguf_bytes:
+        description: "Expected exact byte size (sanity check)"
+        required: false
+        default: "10656955008"
+
+jobs:
+  moe35:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Runner hardware + disk
+        run: |
+          uname -a
+          grep -m1 "model name" /proc/cpuinfo || true
+          grep -o 'avx[^ ]*\|fma' /proc/cpuinfo | sort -u || true
+          echo "cores: $(nproc)"; free -h; df -h /; lsblk 2>/dev/null || true
+          echo "### Runner" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          grep -m1 "model name" /proc/cpuinfo >> "$GITHUB_STEP_SUMMARY" || true
+          echo "cores: $(nproc)" >> "$GITHUB_STEP_SUMMARY"
+          df -h / >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Reclaim disk (one GGUF is ~10.7GB)
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc 2>/dev/null || true
+          df -h /
+
+      - name: Install build tools
+        run: sudo apt-get update -y && sudo apt-get install -y cmake build-essential python3-psutil
+
+      - name: Build SCALAR llama.cpp (audit parity)
+        run: bash scripts/build_llamacpp_scalar.sh
+
+      - name: Record revisions + verify scalar
+        run: |
+          git -C llama.cpp log --oneline -1 | tee /tmp/revs.txt
+          ./llama.cpp/build-scalar/bin/llama-cli --version 2>&1 | tee /tmp/sysinfo.txt || true
+          if grep -qiE "AVX = 1|AVX2 = 1|FMA = 1" /tmp/sysinfo.txt; then
+            echo "::error::Build is NOT scalar."; exit 1
+          fi
+          echo "Confirmed scalar (no AVX/AVX2/FMA)."
+
+      - name: Download single GGUF (resumable)
+        run: |
+          mkdir -p /tmp/moe35
+          URL="https://huggingface.co/unsloth/Qwen3.5-35B-A3B-GGUF/resolve/main/${{ github.event.inputs.gguf_file }}"
+          curl -L --fail --retry 3 --retry-delay 5 -C - -o "/tmp/moe35/model.gguf" "$URL"
+          ls -la /tmp/moe35/
+          SZ=$(stat -c%s /tmp/moe35/model.gguf)
+          echo "bytes: $SZ (expected ${{ github.event.inputs.gguf_bytes }})"
+          [ "$SZ" = "${{ github.event.inputs.gguf_bytes }}" ] || echo "::warning::size mismatch"
+
+      - name: Profiler-exact bench with RSS-over-time trace
+        run: |
+          BIN=./llama.cpp/build-scalar/bin/llama-bench
+          # RSS sampler: poll /proc VmRSS + process-tree children every 0.5s
+          cat > /tmp/rss_trace.py <<'EOF'
+          import subprocess, sys, time, os
+          cmd = sys.argv[1:]
+          p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+          import psutil
+          root = psutil.Process(p.pid)
+          t0 = time.monotonic()
+          print("t_s,rss_mb", flush=True)
+          peak = 0.0
+          while p.poll() is None:
+            try:
+              fam = [root] + root.children(recursive=True)
+              rss = sum(x.memory_info().rss for x in fam if x.is_running()) / 2**20
+              peak = max(peak, rss)
+              print(f"{time.monotonic()-t0:.1f},{rss:.1f}", flush=True)
+            except Exception:
+              pass
+            time.sleep(0.5)
+          out, err = p.communicate()
+          open("/tmp/bench_stdout.json", "w").write(out)
+          open("/tmp/bench_stderr.txt", "w").write(err)
+          print(f"EXIT={p.returncode} PEAK_MB={peak:.1f}", flush=True)
+          sys.exit(0 if p.returncode == 0 else 0)  # never fail the trace itself
+          EOF
+          /usr/bin/time -v python3 /tmp/rss_trace.py "$BIN" -m /tmp/moe35/model.gguf -p 512 -n 128 -ngl 0 --output json > /tmp/trace.csv 2>/tmp/time_bench.log; true
+          tail -5 /tmp/trace.csv
+          echo "--- bench json rows ---"
+          python3 -c "import json; [print(r.get('n_prompt'),r.get('n_gen'),round(r.get('avg_ts',0),2)) for r in json.load(open('/tmp/bench_stdout.json'))]"
+          echo "--- time -v tail ---"
+          grep -E "Maximum resident|Major.*page|Minor.*page|Elapsed" /tmp/time_bench.log || tail -20 /tmp/time_bench.log
+
+      - name: Generation smoke test (correct inference?)
+        run: |
+          ./llama.cpp/build-scalar/bin/llama-cli -m /tmp/moe35/model.gguf -ngl 0 \
+            -p "A child has fast breathing and chest indrawing. What danger signs must a community health worker check?" \
+            -n 96 --temp 0.0 2>/tmp/gen_stderr.txt | tee /tmp/generation.txt
+          echo "--- stderr tail ---"; tail -5 /tmp/gen_stderr.txt
+
+      - name: Summarize
+        if: always()
+        run: |
+          echo "## MoE-35B GATE B result" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          cat /tmp/revs.txt >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+          echo "--- trace head/tail ---" >> "$GITHUB_STEP_SUMMARY"
+          head -4 /tmp/trace.csv >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+          tail -3 /tmp/trace.csv >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+          grep -E "Maximum resident|Major.*page|Minor.*page|Elapsed" /tmp/time_bench.log >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+          echo "--- generation ---" >> "$GITHUB_STEP_SUMMARY"
+          head -c 1500 /tmp/generation.txt >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+          echo >> "$GITHUB_STEP_SUMMARY"; echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: moe35-gateb
+          path: |
+            /tmp/trace.csv
+            /tmp/bench_stdout.json
+            /tmp/bench_stderr.txt
+            /tmp/time_bench.log
+            /tmp/generation.txt
+            /tmp/gen_stderr.txt
+            /tmp/revs.txt
+            /tmp/sysinfo.txt
+          if-no-files-found: warn
