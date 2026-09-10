@@ -102,12 +102,36 @@ jobs:
           echo "--- time -v tail ---"
           grep -E "Maximum resident|Major.*page|Minor.*page|Elapsed" /tmp/time_bench.log || tail -20 /tmp/time_bench.log
 
+      - name: Upload bench artifacts immediately (bench data must survive later steps)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: moe35-gateb-bench
+          path: |
+            /tmp/trace.csv
+            /tmp/bench_stdout.json
+            /tmp/bench_stderr.txt
+            /tmp/time_bench.log
+            /tmp/revs.txt
+            /tmp/sysinfo.txt
+          if-no-files-found: warn
+
+      - name: Disk + memory diagnostics pre-generation
+        if: always()
+        run: |
+          df -h /; free -h; echo "---"; ls -la /tmp/moe35/ /tmp/*.csv /tmp/*.json 2>/dev/null || true
+
       - name: Generation smoke test (correct inference?)
         run: |
-          ./llama.cpp/build-scalar/bin/llama-cli -m /tmp/moe35/model.gguf -ngl 0 \
+          ./llama.cpp/build-scalar/bin/llama-cli -m /tmp/moe35/model.gguf -ngl 0 -c 2048 \
             -p "A child has fast breathing and chest indrawing. What danger signs must a community health worker check?" \
-            -n 96 --temp 0.0 2>/tmp/gen_stderr.txt | tee /tmp/generation.txt
+            -n 32 --temp 0.0 2>/tmp/gen_stderr.txt | tee /tmp/generation.txt
           echo "--- stderr tail ---"; tail -5 /tmp/gen_stderr.txt
+
+      - name: Post-generation diagnostics (OOM/disk triage)
+        if: always()
+        run: |
+          df -h /; free -h; echo "--- dmesg OOM? ---"; dmesg 2>/dev/null | grep -i -E "oom|killed process" | tail -5 || echo "no dmesg OOM lines (or dmesg unavailable)"
 
       - name: Summarize
         if: always()
