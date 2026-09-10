@@ -1,5 +1,10 @@
 # Edge0-35B architecture notes (Phase 1, source-read + stock-config verified)
 
+> GATE A1 (Edge0 custom multi-file runtime + sidecars + custom engine):
+> KILLED under the current profiler contract — recorded, do not resume.
+> GATE A2 (large sparse-MoE single-GGUF on stock llama.cpp): OPEN — the live
+> direction. This doc is preserved as prior art; its portable lessons feed A2.
+
 Sources: `Edge0-AI/Edge0 @ 0700e65`, stock `Qwen/Qwen3.5-35B-A3B` config.json
 (HF, `model_type: qwen3_5_moe`). No weights downloaded; no upstream numbers
 reproduced (see §8). Apache-2.0; NOTICE names mlx-lm (MIT) + Ling MLX (Apache-2.0)
