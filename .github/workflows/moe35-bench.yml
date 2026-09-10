@@ -122,11 +122,20 @@ jobs:
           df -h /; free -h; echo "---"; ls -la /tmp/moe35/ /tmp/*.csv /tmp/*.json 2>/dev/null || true
 
       - name: Generation smoke test (correct inference?)
+        # NOTE: current llama-cli auto-enables conversation mode for chatted
+        # models and loops on stdin after the first turn; without --single-turn
+        # a non-interactive runner spins forever printing empty "> " prompts
+        # (observed: 200k+ empty log lines). --single-turn exits after turn one.
         run: |
-          ./llama.cpp/build-scalar/bin/llama-cli -m /tmp/moe35/model.gguf -ngl 0 -c 2048 \
+          timeout 1500 ./llama.cpp/build-scalar/bin/llama-cli -m /tmp/moe35/model.gguf -ngl 0 -c 2048 \
+            --single-turn --no-display-prompt \
             -p "A child has fast breathing and chest indrawing. What danger signs must a community health worker check?" \
-            -n 32 --temp 0.0 2>/tmp/gen_stderr.txt | tee /tmp/generation.txt
-          echo "--- stderr tail ---"; tail -5 /tmp/gen_stderr.txt
+            -n 32 --temp 0.0 </dev/null > /tmp/generation.txt 2>/tmp/gen_stderr.txt
+          echo "exit=$?"
+          lines=$(wc -l < /tmp/generation.txt)
+          echo "generation lines: $lines"
+          [ "$lines" -lt 5000 ] || { echo "::error::runaway smoke-test output ($lines lines)"; exit 1; }
+          tail -c 1200 /tmp/generation.txt
 
       - name: Post-generation diagnostics (OOM/disk triage)
         if: always()
