@@ -53,7 +53,7 @@ SYSTEM = (
 )
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description="QLoRA fine-tune (listwise MCQ ranking + clinical chat)")
     p.add_argument("--base_model", default="Qwen/Qwen3-0.6B-Base")
     p.add_argument("--accuracy_file", default=str(ROOT / "output" / "accuracy_sft.jsonl"))
@@ -103,7 +103,58 @@ def parse_args() -> argparse.Namespace:
                         "without repeating the full multi-hour run. Use a low --lr "
                         "(e.g. 2e-5) to avoid catastrophically overwriting what the "
                         "first run already learned.")
-    return p.parse_args()
+    p.add_argument("--quantize", choices=("4bit", "none"), default="4bit",
+                   help="'4bit' = QLoRA via bitsandbytes (locked recipe default). "
+                        "'none' = plain unquantized LoRA: required on GPUs without "
+                        "bitsandbytes support (e.g. Kaggle P100, sm_60), and faster "
+                        "per step for a 0.6B model (fp16 weights are only ~1.2 GB, "
+                        "so 4-bit buys nothing but dequant overhead).")
+    p.add_argument("--compute-dtype", choices=("auto", "bf16", "fp16", "fp32"),
+                   default="auto",
+                   help="Training compute dtype on CUDA. 'auto' keeps the locked "
+                        "recipe (bf16 with 4bit) and picks bf16 on sm>=80 / fp16 "
+                        "below for --quantize none.")
+    p.add_argument("--torch-compile", action="store_true", default=False,
+                   help="torch.compile the model (inductor needs sm>=70; silently "
+                        "skipped on older GPUs). Off by default: measure before trusting.")
+    p.add_argument("--optim", default=None,
+                   help="Optimizer passthrough for TrainingArguments (e.g. "
+                        "'adamw_torch_fused'). Unset = current default behavior.")
+    return p.parse_args(argv)
+
+
+def resolve_precision(*, use_cuda, cuda_capability=None, mps=False,
+                      quantize="4bit", compute_dtype="auto"):
+    """Choose load mode + compute dtype WITHOUT importing torch (pure, tested).
+
+    Returns (load_mode, dtype_name) where load_mode is 'bnb4' or 'plain' and
+    dtype_name is one of 'bf16'/'fp16'/'fp32'.
+
+    Rules (also encode hardware facts, not just preferences):
+    - No CUDA -> plain fp16 on MPS (no bf16 ops), else plain fp32.
+    - CUDA + 4bit -> bitsandbytes NF4 (locked recipe); bf16 unless overridden.
+      NOTE: bitsandbytes requires sm>=70 — on older GPUs (P100/sm_60) use
+      --quantize none instead of failing at runtime.
+    - CUDA + none -> plain weights; auto picks bf16 on sm>=80, fp16 below
+      (P100/T4 have no bf16 tensor cores; fp16 is the safe fast choice).
+    """
+    if not use_cuda:
+        return ("plain", "fp16" if mps else "fp32")
+    if quantize == "4bit":
+        return ("bnb4", compute_dtype if compute_dtype != "auto" else "bf16")
+    if compute_dtype != "auto":
+        return ("plain", compute_dtype)
+    cap = cuda_capability or (0, 0)
+    if cap >= (8, 0):
+        return ("plain", "bf16")
+    return ("plain", "fp16")
+
+
+def compile_supported(*, use_cuda, cuda_capability=None):
+    """Inductor/Triton needs sm>=70. Pure predicate so callers skip cleanly."""
+    if not use_cuda:
+        return False
+    return (cuda_capability or (0, 0)) >= (7, 0)
 
 
 # --------------------------------------------------------------------------- #
@@ -266,33 +317,44 @@ def main() -> int:
         print("ERROR: no training items. Run build_accuracy_sft.py and/or check clinical_file.")
         return 1
 
-    # bitsandbytes 4-bit is CUDA-only. On Apple Silicon (MPS) we load in fp16
-    # instead — fine here because 0.6B fp16 is only ~1.2 GB, so 4-bit buys us
-    # nothing we need, and LoRA adapters stay tiny either way.
+    # bitsandbytes 4-bit is CUDA-only AND sm>=70-only (fails on Kaggle P100).
+    # --quantize none loads plain weights instead: for 0.6B, fp16 is ~1.2 GB,
+    # so 4-bit buys nothing we need, and skipping dequant is faster per step.
+    # Defaults (4bit + auto dtype) reproduce the locked recipe exactly.
     use_cuda = torch.cuda.is_available()
-    if use_cuda:
+    mps = (not use_cuda) and torch.backends.mps.is_available()
+    cap = torch.cuda.get_capability() if use_cuda else None
+    load_mode, dtype_name = resolve_precision(
+        use_cuda=use_cuda, cuda_capability=cap, mps=mps,
+        quantize=args.quantize, compute_dtype=args.compute_dtype,
+    )
+    _dtypes = {"bf16": torch.bfloat16, "fp16": torch.float16, "fp32": torch.float32}
+    dtype = _dtypes[dtype_name]
+    print(f"Precision: load_mode={load_mode} dtype={dtype_name} cuda_cap={cap}")
+
+    if load_mode == "bnb4":
         bnb = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=torch.bfloat16,
+            bnb_4bit_compute_dtype=dtype,
             bnb_4bit_use_double_quant=True,
         )
         model = AutoModelForCausalLM.from_pretrained(
             args.base_model, quantization_config=bnb, device_map="auto",
-            trust_remote_code=True, torch_dtype=torch.bfloat16,
+            trust_remote_code=True, torch_dtype=dtype,
         )
     else:
-        mps = torch.backends.mps.is_available()
-        # MPS has no bfloat16 support in several ops; float16 is the safe choice.
-        dtype = torch.float16 if mps else torch.float32
-        print(f"No CUDA — loading unquantized ({'MPS' if mps else 'CPU'}, {dtype}).")
+        print(f"Loading unquantized ({dtype_name}).")
         model = AutoModelForCausalLM.from_pretrained(
             args.base_model, trust_remote_code=True, torch_dtype=dtype,
         )
-        model = model.to("mps" if mps else "cpu")
+        if use_cuda:
+            model = model.to("cuda")
+        else:
+            model = model.to("mps" if mps else "cpu")
 
     model.config.use_cache = False
-    if use_cuda:
+    if load_mode == "bnb4":
         # NOTE: this helper defaults to use_gradient_checkpointing=True internally,
         # independent of the TrainingArguments flag below — must be passed explicitly
         # or it silently re-enables checkpointing regardless of --gradient_checkpointing.
@@ -416,15 +478,23 @@ def main() -> int:
         logging_steps=20,
         save_strategy=("steps" if args.save_steps > 0 else "epoch"),
         **({"save_steps": args.save_steps, "save_total_limit": 2} if args.save_steps > 0 else {}),
-        # bf16 is a CUDA/Ampere+ feature; MPS doesn't support it and Trainer will
-        # raise if we ask for it. We already loaded fp16 weights on MPS, and we
-        # deliberately do NOT set fp16=True there either — fp16 turns on the CUDA
-        # GradScaler path, which is unsupported on MPS.
-        bf16=use_cuda,
+        # Match the flags to the resolved dtype (not just "CUDA on/off"): bf16
+        # is Ampere+; fp16 keeps the CUDA GradScaler path valid; MPS gets
+        # neither (GradScaler is unsupported there).
+        bf16=(use_cuda and dtype_name == "bf16"),
+        fp16=(use_cuda and dtype_name == "fp16"),
+        **({"optim": args.optim} if args.optim else {}),
         gradient_checkpointing=args.gradient_checkpointing,
         report_to="none",
         remove_unused_columns=False,
     )
+
+    if args.torch_compile:
+        if compile_supported(use_cuda=use_cuda, cuda_capability=cap):
+            print("torch.compile enabled (inductor).")
+            model = torch.compile(model)
+        else:
+            print("WARN: --torch-compile skipped (needs CUDA sm>=70).")
 
     trainer = RankingTrainer(
         model=model, args=targs, train_dataset=dataset, data_collator=identity_collate,

@@ -30,11 +30,22 @@ def fmt_letter(q, options, gold_idx):
     return f"{q.strip()}\n{body}\nAnswer:", [f" {LETTERS[i]}" for i in range(len(options))], gold_idx
 
 
-def load_task(task, limit):
+def _take(items, limit, offset=0):
+    """Frozen slice: items[offset:offset+limit]. Pure (tested).
+
+    Screening and confirmation runs use disjoint offsets over the same frozen
+    dataset order, so no question is ever scored twice across stages.
+    """
+    offset = max(0, offset)
+    return items[offset:offset + limit]
+
+
+def load_task(task, limit, offset=0):
     """Return list of (context, continuations, gold_idx). TEST/VALIDATION splits only
     (we EVALUATE here; training uses the train splits — never mixed)."""
     from datasets import load_dataset
     items = []
+    want = limit + max(0, offset)
     if task in ("arc_easy", "arc_challenge"):
         cfg = "ARC-Easy" if task == "arc_easy" else "ARC-Challenge"
         for r in load_dataset("allenai/ai2_arc", cfg, split="test"):
@@ -42,7 +53,7 @@ def load_task(task, limit):
             if r["answerKey"] not in labels:
                 continue
             items.append(fmt_fulltext(r["question"], texts, labels.index(r["answerKey"])))
-            if len(items) >= limit:
+            if len(items) >= want:
                 break
     elif task == "openbookqa":
         for r in load_dataset("allenai/openbookqa", "main", split="test"):
@@ -50,14 +61,14 @@ def load_task(task, limit):
             if r["answerKey"] not in labels:
                 continue
             items.append(fmt_fulltext(r["question_stem"], texts, labels.index(r["answerKey"])))
-            if len(items) >= limit:
+            if len(items) >= want:
                 break
     elif task == "medmcqa":
         for r in load_dataset("openlifescienceai/medmcqa", split="validation"):
             opts = [r["opa"], r["opb"], r["opc"], r["opd"]]
             if 0 <= r["cop"] < 4 and all(opts):
                 items.append(fmt_letter(r["question"], opts, r["cop"]))
-            if len(items) >= limit:
+            if len(items) >= want:
                 break
     elif task == "pubmedqa":
         for r in load_dataset("qiaojin/PubMedQA", "pqa_labeled", split="train"):
@@ -68,11 +79,11 @@ def load_task(task, limit):
                 c, conts, _ = fmt_fulltext("", choices, choices.index(dec))
                 items.append((f"Abstract: {ctx}\nQuestion: {r['question'].strip()}\nAnswer:",
                               [f" {x}" for x in choices], choices.index(dec)))
-            if len(items) >= limit:
+            if len(items) >= want:
                 break
     else:
         raise SystemExit(f"unknown task {task}")
-    return items
+    return _take(items, limit, offset)
 
 
 def loglik(llm, ctx, cont):
@@ -112,6 +123,8 @@ def main() -> int:
     ap.add_argument("--model", required=True)
     ap.add_argument("--task", default="arc_easy")
     ap.add_argument("--limit", type=int, default=100)
+    ap.add_argument("--offset", type=int, default=0,
+                    help="Start at item OFFSET (disjoint confirmation slices).")
     ap.add_argument("--n-ctx", type=int, default=4096)
     ap.add_argument("--threads", type=int, default=4)
     args = ap.parse_args()
@@ -120,7 +133,7 @@ def main() -> int:
     llm = Llama(model_path=args.model, n_ctx=args.n_ctx, n_gpu_layers=0,
                 n_threads=args.threads, logits_all=True, verbose=False)
 
-    items = load_task(args.task, args.limit)
+    items = load_task(args.task, args.limit, args.offset)
     acc = acc_norm = 0
     for ctx, conts, gold in items:
         scores, norms = [], []
