@@ -24,6 +24,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Validate battery schema (fail fast, before build)
+        run: python3 scripts/validate_battery.py docs/research/falcon_baseline_prompts.json
+
       - name: Runner hardware + disk
         run: |
           uname -a
