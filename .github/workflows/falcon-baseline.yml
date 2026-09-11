@@ -1,0 +1,150 @@
+name: Falcon-H1-1.5B-Deep-Instruct stock baseline
+
+# Stock baseline for the locked foundation candidate. No training, no mods.
+# Scalar audit-parity build + profiler-exact bench + deterministic 21-prompt
+# battery (docs/research/falcon_baseline_prompts.json). Raw responses uploaded.
+
+on:
+  workflow_dispatch:
+    inputs:
+      gguf_file:
+        description: "GGUF filename"
+        required: false
+        default: "Falcon-H1-1.5B-Deep-Instruct-Q4_K_M.gguf"
+      gguf_bytes:
+        description: "Expected exact byte size"
+        required: false
+        default: "938466368"
+
+jobs:
+  baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Runner hardware + disk
+        run: |
+          uname -a
+          grep -m1 "model name" /proc/cpuinfo || true
+          echo "cores: $(nproc)"; free -h; df -h /
+
+      - name: Install build tools
+        run: sudo apt-get update -y && sudo apt-get install -y cmake build-essential python3-psutil
+
+      - name: Build SCALAR llama.cpp (audit parity)
+        run: bash scripts/build_llamacpp_scalar.sh
+
+      - name: Record revisions + verify scalar
+        run: |
+          git -C llama.cpp log --oneline -1 | tee /tmp/revs.txt
+          ./llama.cpp/build-scalar/bin/llama-cli --version 2>&1 | tee /tmp/sysinfo.txt || true
+          if grep -qiE "AVX = 1|AVX2 = 1|FMA = 1" /tmp/sysinfo.txt; then
+            echo "::error::Build is NOT scalar."; exit 1
+          fi
+          echo "Confirmed scalar (no AVX/AVX2/FMA)."
+
+      - name: Download GGUF (resumable)
+        run: |
+          mkdir -p /tmp/falcon
+          URL="https://huggingface.co/unsloth/Falcon-H1-1.5B-Deep-Instruct-GGUF/resolve/main/${{ github.event.inputs.gguf_file }}"
+          curl -L --fail --retry 3 --retry-delay 5 -C - -o "/tmp/falcon/model.gguf" "$URL"
+          SZ=$(stat -c%s /tmp/falcon/model.gguf)
+          echo "bytes: $SZ (expected ${{ github.event.inputs.gguf_bytes }})"
+          [ "$SZ" = "${{ github.event.inputs.gguf_bytes }}" ] || echo "::warning::size mismatch"
+
+      - name: Profiler-exact bench with RSS trace
+        run: |
+          BIN=./llama.cpp/build-scalar/bin/llama-bench
+          cat > /tmp/rss_trace.py <<'EOF'
+          import subprocess, sys, time
+          cmd = sys.argv[1:]
+          p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+          import psutil
+          root = psutil.Process(p.pid)
+          t0 = time.monotonic()
+          print("t_s,rss_mb", flush=True)
+          peak = 0.0
+          while p.poll() is None:
+            try:
+              fam = [root] + root.children(recursive=True)
+              rss = sum(x.memory_info().rss for x in fam if x.is_running()) / 2**20
+              peak = max(peak, rss)
+              print(f"{time.monotonic()-t0:.1f},{rss:.1f}", flush=True)
+            except Exception:
+              pass
+            time.sleep(0.5)
+          out, err = p.communicate()
+          open("/tmp/bench_stdout.json", "w").write(out)
+          open("/tmp/bench_stderr.txt", "w").write(err)
+          print(f"EXIT={p.returncode} PEAK_MB={peak:.1f}", flush=True)
+          EOF
+          /usr/bin/time -v python3 /tmp/rss_trace.py "$BIN" -m /tmp/falcon/model.gguf -p 512 -n 128 -ngl 0 --output json > /tmp/trace.csv 2>/tmp/time_bench.log; true
+          python3 -c "import json; [print(r.get('n_prompt'),r.get('n_gen'),round(r.get('avg_ts',0),2)) for r in json.load(open('/tmp/bench_stdout.json'))]"
+          grep -E "Maximum resident|Major.*page|Minor.*page|Elapsed" /tmp/time_bench.log || tail -5 /tmp/time_bench.log
+
+      - name: Upload bench artifacts immediately
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: falcon-bench
+          path: |
+            /tmp/trace.csv
+            /tmp/bench_stdout.json
+            /tmp/bench_stderr.txt
+            /tmp/time_bench.log
+            /tmp/revs.txt
+            /tmp/sysinfo.txt
+          if-no-files-found: warn
+
+      - name: 21-prompt deterministic battery (stock behavior)
+        run: |
+          mkdir -p /tmp/falcon_resp
+          python3 - <<'EOF'
+          import json, subprocess
+          prompts = json.load(open("docs/research/falcon_baseline_prompts.json"))["prompts"]
+          cli = "./llama.cpp/build-scalar/bin/llama-cli"
+          index = []
+          for pr in prompts:
+            pid, mt = pr["id"], pr["max_tokens"]
+            open("/tmp/prompt.txt", "w").write(pr["text"])
+            out = f"/tmp/falcon_resp/{pid}.txt"
+            cmd = [cli, "-m", "/tmp/falcon/model.gguf", "-ngl", "0", "-c", "2048",
+                   "--single-turn", "--no-display-prompt",
+                   "-f", "/tmp/prompt.txt", "-n", str(mt),
+                   "--temp", "0.0", "-s", "42"]
+            # stdin closed: llama-cli must never go interactive (--single-turn)
+            r = subprocess.run(cmd, stdin=subprocess.DEVNULL,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                               text=True, timeout=1500)
+            txt = r.stdout
+            open(out, "w").write(txt)
+            lines = txt.count("\n")
+            print(f"{pid}: exit={r.returncode} chars={len(txt)} lines={lines}", flush=True)
+            assert lines < 5000, f"runaway output in {pid}"
+            index.append({"id": pid, "section": pr["section"], "exit": r.returncode,
+                          "chars": len(txt), "stderr_tail": r.stderr[-500:]})
+          json.dump(index, open("/tmp/falcon_resp/_index.json", "w"), indent=1)
+          print(f"battery complete: {len(index)}/21")
+          EOF
+
+      - name: Upload responses (raw, for manual inspection)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: falcon-responses
+          path: /tmp/falcon_resp/
+          if-no-files-found: warn
+
+      - name: Summarize
+        if: always()
+        run: |
+          echo "## Falcon-H1-1.5B-Deep-Instruct stock baseline" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          cat /tmp/revs.txt >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+          python3 -c "import json; [print('pp' if r.get('n_gen',0)==0 else 'tg', round(r.get('avg_ts',0),2)) for r in json.load(open('/tmp/bench_stdout.json'))]" >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+          grep -E "Maximum resident|Elapsed" /tmp/time_bench.log >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+          echo "--- battery ---" >> "$GITHUB_STEP_SUMMARY"
+          cat /tmp/falcon_resp/_index.json >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || echo "battery index missing" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
