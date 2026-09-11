@@ -223,9 +223,17 @@ class UnifiedDataset:
             inp = (item.get("input") or "").strip()
             user = f"{instr}\n\n{inp}" if inp else instr
             msgs = [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}]
-            prompt = self.tok.apply_chat_template(
-                msgs, tokenize=False, add_generation_prompt=True, enable_thinking=False
-            )
+            try:
+                prompt = self.tok.apply_chat_template(
+                    msgs, tokenize=False, add_generation_prompt=True, enable_thinking=False
+                )
+            except TypeError:
+                # Templates without a thinking switch (e.g. Falcon-H1): same
+                # call without the kwarg. Model-agnostic fallback, Qwen path
+                # unchanged.
+                prompt = self.tok.apply_chat_template(
+                    msgs, tokenize=False, add_generation_prompt=True
+                )
             ctx_ids = self._encode(prompt)
             tgt_ids = self._encode(out) + [self.tok.eos_token_id]
             if len(ctx_ids) + len(tgt_ids) > self.max_len:
