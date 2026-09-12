@@ -1,0 +1,2973 @@
+============================================================
+DENSE -> SPARSE -> STORAGE-RESIDENT LLM LITERATURE NOTEBOOK
+============================================================
+
+LAST UPDATED: 2026-09-12
+CURRENT RESEARCH QUESTION:
+
+Can a large pretrained dense model, with Qwen3.8-27B as the main candidate,
+be transformed into a conditionally executed sparse model whose inactive
+parameters remain on SSD/flash, while retaining most capability on a
+commodity Linux/x86 CPU with less than 8 GB RAM?  The target is single-user
+autoregressive decode, eventually using llama.cpp/GGUF, where actual wall
+clock tokens/second matters more than FLOP reduction.
+
+RESEARCH SCOPE / EVIDENCE DISCIPLINE:
+
+This notebook deliberately distinguishes:
+
+1. STATIC PRUNING: permanently remove weights.
+2. ACTIVATION SPARSITY: many neurons naturally produce zero or small values.
+3. CONTEXTUAL SPARSITY: the active parameter subset depends on input context.
+4. MIXTURE OF EXPERTS: an explicitly trained router selects parameter groups.
+5. MOEFICATION: post-hoc functional partition of a dense FFN.
+6. SPARSE UPCYCLING: initialize a new MoE from a dense checkpoint and continue
+   training.
+7. STORAGE RESIDENCY: inactive weights still exist but are outside RAM.
+
+Numbers are tagged with model, hardware, batch, precision, context/decode
+conditions where the source reports them. A FLOP claim is not treated as a
+wall-clock claim. “Not reported” is intentional where a source or public
+repository does not expose the required measurement.
+
+Evidence status: 18 source records are included below. The source set contains
+papers, implementation repositories, primary model/configuration files, and a
+storage-energy analysis. Edge0, DejaVu and PowerInfer code were inspected from
+the repositories; Edge0 was inspected at commit 03a5a15, DejaVu at ee902c1.
+The notebook is a research artifact, not an implementation plan approval.
+
+------------------------------------------------------------
+1. EXECUTIVE SYNTHESIS
+------------------------------------------------------------
+
+CURRENT STATE OF THE EVIDENCE
+
+Prior art establishes each major ingredient separately, and recent work has
+now combined most of them:
+
+- MoEfication shows that a dense FFN can be partitioned into functionally
+  aligned neuron experts and selected at runtime without changing the total
+  dense parameter count. It is primarily a ReLU-era method and does not by
+  itself solve modern gated FFNs or SSD I/O.
+- DejaVu shows that an already dense model has contextual head and MLP
+  sparsity and that shallow predictors can choose sparse structures before
+  the expensive operation. It reports GPU wall-clock speedups, not an SSD
+  resident CPU design.
+- LLM in a Flash, PowerInfer and PowerInfer-2 show that storage bandwidth,
+  read granularity, neuron bundling, hot/cold placement, caches and overlap
+  can matter more than nominal arithmetic. Their device and activation
+  assumptions differ from Linux/x86 NVMe.
+- Edge0 demonstrates a practical SSD-resident sparse-MoE runtime with
+  mmap-backed expert bundles, global LRU, prefetch buffers, fixed staging
+  slots, asynchronous cross-token/cross-layer routing prediction and
+  adapter recovery. It starts from a sparse MoE checkpoint; it does not
+  demonstrate dense Qwen3.8 -> sparse conversion.
+- DynaMoE demonstrates post-training conversion of dense MLPs into nested
+  variable-width experts with a router and modest continued fine-tuning. It
+  has no real storage-resident benchmark and its quality drops are material
+  at aggressive budgets.
+- NeuroPrefetcher is the closest recent system analogue: it predicts future
+  sparse masks, stores neuron records in a storage-friendly layout, reads
+  only mask deltas, reuses fixed slots, and overlaps NVMe with execution.
+  Its evaluation is Jetson GPU/Arm/unified-memory, not x86 CPU, and it still
+  achieves only roughly 1.7-3.7 tok/s under 9-13.2 GiB caps on its reported
+  workload. This substantially narrows any claim that delta prefetching or
+  neuron-centric SSD layout is new by itself.
+
+WHAT PRIOR ART ALREADY ESTABLISHES
+
+- A bounded resident working set plus a larger storage-resident model is
+  physically possible. The hardest issue is the bytes and latency of the
+  changing working set, not mmap syntax.
+- SSD reads need large, coalesced, reuse-heavy transfers. Small random reads
+  can erase the benefit of sparsity. A practical design must store aligned
+  gate/up/down neuron or group records and maintain fixed staging slots.
+- Prediction must happen early enough to hide storage. A predictor launched
+  immediately before an FFN is usually too late if that FFN has to be read
+  from SSD. Cross-layer or cross-token prediction is the useful pattern.
+- A gated FFN must preserve the shared intermediate index: the same neuron
+  row in gate and up and the corresponding column in down. Loading one
+  projection without the aligned others is incorrect.
+- The storage system needs a cache policy, explicit prefetch queue, bounded
+  staging buffers, a miss/fallback policy and statistics. mmap alone is not a
+  storage scheduler.
+- A dense model can expose substantial contextual sparsity, but modern SiLU/
+  SwiGLU is less naturally sparse than ReLU. A paper reporting 90% ReLU
+  sparsity is not evidence for 90% safe Qwen3.8 SwiGLU sparsity.
+- Reducing active FFN work does not make all model compute disappear. Qwen3.8
+  has 48 linear-attention/hybrid blocks, 16 full-attention blocks, embedding,
+  normalization and output-head costs that remain unless separately changed.
+
+WHAT REMAINS UNSOLVED FOR THIS TARGET
+
+- No source found demonstrates a dense Qwen3.8-27B checkpoint transformed into
+  a gated, group-sparse, SSD-resident model on a Linux/x86 commodity CPU,
+  inside 8 GB RAM, with 10-20 single-stream decode tok/s and measured quality
+  retention.
+- There is no reliable public estimate of the safe active-neuron fraction for
+  the exact Qwen3.8-27B gated DeltaNet/full-attention hybrid. This must be
+  measured, not borrowed from OPT, ReLU, sparse Qwen2, or native MoE models.
+- The CPU cost of gathering/repacking quantized Qwen rows, dequantizing small
+  groups, applying the gate/up product, and writing a down projection is not
+  established. Sparse matmul overhead can dominate after the arithmetic is
+  reduced.
+- A predictor must be judged against storage bytes/token, false negatives and
+  cache misses, not only mask accuracy. A false negative may require an
+  emergency read or cause a quality error; a false positive wastes SSD and
+  bandwidth.
+- Under 8 GB, a dense resident prefix, embeddings/output head, attention/
+  linear blocks, predictors, KV cache and staging/cache memory may leave too
+  little room for useful active MLP rows. Exact accounting is needed.
+
+STRONGEST EVIDENCE THE IDEA CAN WORK
+
+- Edge0 reports 2.9 GiB peak active memory for an SSD-offloaded 35B-class
+  sparse model and 14.9-17.7 tok/s decode on an M4 Pro, with 4-bit expert
+  bundles and prerouting. This validates the systems pattern, although not
+  the target model, CPU or conversion method.
+- LLM in a Flash reports 669 ms/token-equivalent end-to-end latency for OPT
+  6.7B on M1 CPU using selective persistence, prediction, windows and
+  bundling, versus 3182 ms for a naive baseline in its single-stream setup.
+- DejaVu reports 1.8-2x over FasterTransformer on 8 A100 GPUs at structured
+  sparsity, with no measured accuracy loss for its tested OPT workloads.
+- PowerInfer-2 reports a 47B Mixtral-family model at 11.68 tok/s on a phone
+  at a high memory budget, and 2.13 tok/s at a 7 GB memory budget. Its
+  cluster/cache/pipeline ablations show that cache hit rate and overlap, not
+  arithmetic alone, produce the gain.
+- NeuroPrefetcher reports 82-85% token-to-token active-neuron persistence and
+  103 MiB/token NVMe reads at a 14.8 GiB cap in its Jetson setup. Delta
+  reads and fixed slots are therefore credible design tools, even though
+  the absolute throughput target is not yet met.
+
+STRONGEST EVIDENCE IT MAY FAIL
+
+- A 4 GB/s effective SSD budget provides only 400 MB/token at 10 tok/s, or
+  200 MB/token at 20 tok/s, before other I/O, queueing, filesystem and
+  overlap losses. At realistic random-read rates the budget can be far lower.
+- Qwen3.8 has approximately 17.1B MLP parameters. At 4-bit storage the MLP
+  pool is roughly 9.6 GB including a rough group-scale overhead, so even 10%
+  fresh reads can be about 1 GB per token if reuse is poor.
+- Modern SiLU/SwiGLU does not zero the up branch, and it generally has less
+  exact activation sparsity than ReLU. Thresholding small contributions can
+  change the output continuously rather than merely skipping exact zeros.
+- For an 8 GB machine, the non-MLP model, output head, KV cache, runtime,
+  predictor and staging buffers may consume most of RAM. If the resident
+  floor is 5-7 GB, the active SSD working set becomes very small.
+- Published sparse systems mostly use GPUs, NPUs, Apple unified memory or
+  native sparse MoE checkpoints. Their kernels and memory systems do not
+  prove a CPU/GGUF design.
+- SSD offload can be energy-expensive: one 2025 analysis estimates up to
+  roughly 12x the per-token energy of HBM for SSD-resident MoE weights. This
+  is not a throughput kill by itself, but it matters for sustained deployment
+  and flash endurance.
+
+LIKELY ARCHITECTURE
+
+The most plausible path is a hybrid, not a pure new MoE:
+
+1. Keep embeddings, output head, all norms, routers/predictors, linear
+   attention and full-attention projections resident where possible.
+2. Treat the three Qwen3.8 MLP matrices as aligned intermediate-neuron
+   records. Build groups large enough for sequential/coalesced SSD access,
+   probably 128-512 intermediate neurons rather than single neurons.
+3. Use a dense calibration trace to rank the actual gated contribution
+   `|silu(gate_i) * up_i|^2 * ||down_i||^2`, and measure group-level error and
+   token-to-token persistence.
+4. Start with a training-free or lightly trained lookahead predictor. A
+   low-rank/SVD gate predictor is attractive for a no-large-training path;
+   a DejaVu/DynaMoE-style learned predictor may recover more quality.
+5. Store group records in a GGUF-compatible or adjacent file with aligned,
+   coalesced gate/up/down data. Maintain fixed staging slots and read only
+   predicted-set deltas. Keep a resident hot core and use a bounded LRU for
+   cold groups.
+6. Add distillation/fine-tuning only after exact activation traces establish
+   a viable sparsity/bytes envelope. Do not begin by building a full MoE
+   router and assuming it will preserve the dense function.
+
+LIKELY BOTTLENECK
+
+The limiting resource is the maximum number of fresh, non-reused quantized
+bytes that must be delivered per decoded token, multiplied by the latency and
+CPU overhead of small/random reads and sparse kernels. The main mathematical
+compute may become secondary. A second likely bottleneck is the resident
+floor: Qwen3.8's attention/linear/hybrid path and output head may leave no
+useful RAM for a large dynamic MLP cache under 8 GB.
+
+POSSIBLE NOVELTY
+
+The core ideas—contextual sparsity, neuron grouping, prediction, SSD
+streaming, delta prefetch, hot/cold caches and fixed staging—are already in
+the literature. The plausible contribution is an empirically validated
+combination for a dense Qwen3.8-style gated hybrid model on Linux/x86,
+including a post-hoc conversion, CPU/GGUF-oriented quantized layout, exact
+bytes/token and quality/latency tradeoffs under an 8 GB cap. This is a
+combination claim only; novelty must not be claimed until a more exhaustive
+search and a direct comparison are completed.
+
+------------------------------------------------------------
+2. PAPER / SYSTEM NOTES
+------------------------------------------------------------
+
+[S01] EDGE0
+
+TITLE: Edge0: Streaming Mixture-of-Experts Inference at the Edge
+AUTHORS: Edge0-AI repository authors
+YEAR: 2025 repository snapshot inspected; README does not establish a peer-
+      reviewed publication year
+VENUE: Open-source implementation
+URL: https://github.com/Edge0-AI/Edge0
+CODE: Repository, commit 03a5a15; docs/architecture.md,
+      docs/streaming.md, docs/prerouter.md, streaming/{mmap,cache,layer}.py,
+      engine/{hooks,qwen}.py, prerouter/{heads,install}.py
+RELEVANCE: high
+
+PROBLEM:
+Run sparse MoE models whose expert weights exceed practical DRAM without
+loading the whole expert pool, while preserving useful decode throughput.
+
+KEY IDEA:
+Keep the non-expert model resident, mmap quantized expert bundles from SSD,
+reuse a global bounded cache, stage predicted experts into fixed slots, and
+overlap prefetch with model execution. Recover some quantization/sparsity
+quality loss with LoRA adapters. A learned prerouter predicts the next layer
+and next token's expert set before it is needed.
+
+ARCHITECTURE:
+The public configurations are Qwen3.5-MoE 35B-A3B (40 layers, 256 routed
+experts, top-4 plus one shared expert) and Ling 3.0 8B (24 layers, 128
+experts, top-8). The README describes 4-bit weights, approximately 23 GB
+and 4.2 GB disk footprints, and claimed peak active memory of about 2.9 GB
+and 1.0 GB respectively. The backend in the inspected repository is MLX on
+Apple Silicon, not Linux/x86 CUDA or llama.cpp.
+
+ALGORITHM:
+Each expert bundle contains gate/up/down weight, scale and bias ranges. The
+Qwen gated computation is `down(silu(gate(x)) * up(x))`. The bundle order is
+important: fused gate/up has gate rows followed by up rows; using the wrong
+order produces a large numerical error.
+
+The mmap reader opens each safetensors shard with `mmap.ACCESS_READ`, parses
+the header and returns zero-copy byte slices. `madvise(MADV_WILLNEED)` and a
+sequential walk are available, but the public code does not use MAP_POPULATE
+and does not guarantee residency.
+
+`SharedExpertCache` is a global OrderedDict LRU keyed by `(layer, expert)`;
+this is not one full cache per layer. `PrefetchBuffer` is a separate,
+capacity-bounded OrderedDict. A request searches pinned/hot data, shared LRU,
+prefetch entries and in-flight futures before building a bundle from its nine
+quantized ranges. Thread pools perform load and prefetch work.
+
+The staged path maintains fixed tensor slots and an expert-to-slot table.
+Survivor experts remain in their slots, changed experts overwrite slots, and
+an overflow slot can represent a missing expert as zero/drop. GPU-side slot
+selection avoids host synchronization. `staged_sync` is needed when the
+actual used set is reconciled; `staged_replace` can use predicted indices as
+the execution set and the production prerouter mapping is intended to avoid
+drops.
+
+The prerouter is cross-token and cross-layer. A head owned by layer N reads
+that layer's MoE input and predicts layer N+1. Layer N+1 consumes the
+prediction made at token t-1, producing one-layer/one-token lookahead. Its
+input concatenates the hidden state and current/previous top-k one-hot route
+features. A two-layer head is used, with hidden width 512, fp16 by default.
+The implementation falls back to the true router for initial/uncovered
+layers/tokens.
+
+IMPORTANT EQUATIONS:
+Gated MLP:
+`y = down(silu(gate(x)) * up(x))`.
+
+Quantized affine group of 64 (conceptually):
+`w ~= scale * q + bias`, with packed 4-bit values. The inspected layout
+stores weight u32 arrays shaped `[experts, output, input/8]` and bf16
+scales/biases shaped `[experts, output, input/64]`.
+
+The staged execution is effectively:
+`slot = expert_to_slot[layer, expert_id]`
+`selected_bundle = staged_tensor[layer, slot]`.
+Missing slots can be zero, exact-loaded, or dropped depending on mode.
+
+TRAINING REQUIRED:
+The streaming runtime itself does not require training. Edge0's Recover-LoRA
+adapters require a recovery/fine-tuning procedure. The prerouter is trained
+or supplied with checkpoint heads. The public documentation does not give a
+complete predictor training dataset/optimization recipe or a full accuracy
+breakdown for the predictor alone.
+
+INFERENCE MECHANISM:
+Prefill can use a full-layer path: direct stacked tensor load avoids building
+256 individual expert bundles. Decode uses exact per-expert, hot-cache, or
+staged fixed-slot paths. Hooks prefetch previous-token expert sets and stage
+the prior layer's used set. The Qwen engine stages and swaps the next set at
+each non-full forward. Hot pinning uses decayed counts plus predicted-expert
+bonus; hot data can be materialized for a layer window.
+
+MEMORY BEHAVIOR:
+The expert weights remain mmapped/SSD backed and are not all loaded up front.
+The global cache has fixed capacity; staging and prefetch buffers are bounded.
+Embeddings, attention/linear layers, routers, norms, shared experts, output
+head and runtime state remain resident. Peak active memory in README examples
+is 2.9 GiB for edge0-35b and 1.0 GiB for edge0-8b, excluding the full mapped
+expert address space and adding KV cache for long context.
+
+I/O BEHAVIOR:
+Each expert miss causes several byte-range reads. Prefetch submits futures;
+the callback inserts completed bundles in the prefetch cache and tracks
+wasted prefetch. The system can reuse a global cache across layers. Staged
+slots trade exactness for predictable indexing. Public docs/code expose load,
+hit, prefetch and wasted-prefetch counters, but the inspected README/docs do
+not publish a complete bytes-moved/token or cache-hit table.
+
+THROUGHPUT RESULTS:
+README benchmark: Apple M4 Pro, 3.3k prompt tokens, 10 warmup, 200 decode
+tokens, two runs. Edge0-35b reports 14.9-17.7 tok/s and 2.9 GiB peak active
+memory; edge0-8b reports 23.9-25.3 tok/s and 1.0 GiB. Prerouter is claimed
+to improve decode throughput by up to 59%. Prefill cold/warm values are
+reported as approximately 113/140 and 500/1428 tok/s for the two examples.
+These are Apple/MLX results, not CPU/x86 measurements.
+
+QUALITY RESULTS:
+README average score is 79.2 for edge0-35b int4 plus adapters versus 83.2
+for its fp16 base, and 69.9 versus 72.7 for edge0-8b. This includes the
+sparse/quantized checkpoint and recovery adapters; it does not isolate SSD
+miss errors or prerouter errors.
+
+HARDWARE:
+Apple M4 Pro, MLX, Apple Silicon. No Linux/x86 path is present in the
+inspected repository; CUDA is listed as a future direction.
+
+WHAT ACTUALLY CAUSED THE SPEEDUP:
+Resident non-expert computation, 4-bit weights, bounded global reuse,
+coalesced expert bundle reads, fixed staged GPU lookup, asynchronous load,
+and cross-layer/cross-token prediction. FLOP reduction alone is not enough.
+
+WHAT DID NOT WORK:
+The repository supports several fallback paths because staging can miss,
+prefetch can be wasted, and exact/hot/full-layer execution are needed for
+different phases. Staged execution can represent missing experts as zeros or
+must fall back to exact loads. The design is not a general x86 implementation.
+
+LIMITATIONS:
+The base model is already sparse MoE, so Edge0 does not answer how to derive
+experts from dense Qwen3.8 weights. It does not publish the desired bytes per
+token, cache-hit distribution, SSD random-read breakdown, or an 8 GB x86
+result. Mmap is a virtual-memory interface, not proof that SSD latency is
+hidden. The hybrid model also leaves a resident compute floor.
+
+ASSUMPTIONS:
+Expert tensors can be independently ranged from shards; predicted experts are
+available early enough; a global cache is better than isolated per-layer
+caches; MLX asynchronous execution is safe with the chosen synchronization;
+4-bit quantization and LoRA can recover acceptable quality.
+
+TRANSFER TO QWEN3.8-27B:
+Copy the expert/neuron bundle layout, global LRU, fixed slots, prefetch queue,
+hot pinning, full-layer prefill path, counters and one-layer/one-token
+lookahead. Replace native MoE experts with aligned gated-FFN groups and build
+a Qwen3.8-specific CPU implementation. Do not assume Edge0's 256-expert
+route distribution, quality, Apple latency or bytes/token.
+
+TRANSFER TO LLAMA.CPP:
+The conceptual cache/staging/prefetch design transfers. MLX tensors,
+`gather_qmm`, Python thread callbacks and Apple execution do not. llama.cpp
+will need explicit GGUF tensor records, an x86 sparse/gather kernel and a
+storage-aware scheduler that avoids implicit page faults.
+
+WHAT WE SHOULD COPY:
+[PRIOR ART] One global cache; separate prefetch buffer; fixed staging slots;
+slot-table routing; explicit actual-vs-predicted statistics; full-layer
+prefill; hot pinning; early cross-layer/cross-token prediction; exact fallback.
+
+WHAT WE SHOULD NOT COPY:
+[PRIOR ART LIMIT] Treating mmap as the entire I/O design; relying on zero/drop
+misses without a measured quality guard; assuming Apple/MLX asynchronous
+behavior transfers to x86; building one tiny request per neuron; claiming
+bytes/token without counters.
+
+OPEN QUESTIONS:
+Can Qwen3.8 gated neuron groups achieve enough overlap and reuse at 8 GB?
+What fixed group size gives the best CPU/SSD tradeoff? Can a predictor's
+false negatives be repaired without synchronous random reads? How should
+quantized down columns be repacked?
+
+[S02] MOEFICATION
+
+TITLE: MoEfication: Transformer Feed-forward Layers are Mixtures of Experts
+AUTHORS: Zhang et al.
+YEAR: 2022
+VENUE: Findings of ACL 2022
+URL: https://arxiv.org/abs/2110.01786 ; https://aclanthology.org/2022.findings-acl.71/
+CODE: https://github.com/thunlp/MoEfication
+RELEVANCE: high
+
+PROBLEM:
+Exploit the observation that only a small fraction of dense FFN neurons are
+strongly active for an input, without initially training an MoE architecture.
+
+KEY IDEA:
+Partition an existing FFN's intermediate neurons into experts. Every expert
+keeps the corresponding columns of W1/b1 and rows of W2, so selecting a subset
+is functionally meaningful. Predict which experts matter for each input and
+run only those experts.
+
+ARCHITECTURE:
+For a simple ReLU FFN, `h = x W1 + b1`, `F(x)=sigma(h) W2+b2`. Partition
+intermediate width `d_ff` into k experts of width `d_ff/k`, after permuting
+W1 columns and W2 rows consistently. Selecting all experts is the original
+dense FFN; selecting a subset reduces the intermediate work.
+
+ALGORITHM:
+The paper constructs experts by neuron coactivation. One stated similarity
+is the positive coactivation graph weight
+`C(n,m) = sum_x h_n h_m 1(h_n>0 and h_m>0)`, followed by graph partitioning
+(METIS). The released fast path also has a FAISS K-means/balanced assignment
+implementation. It normalizes W1 neuron vectors, creates expert centers,
+and uses center similarity to score groups. A small MLP predicts expert
+scores from x; top 20% is selected in the main experiments.
+
+In the code, `MLPCenter` is two linear layers without bias with tanh between;
+the first layer is initialized from centers and the second approximately
+identity-like. The training script uses BCE against normalized positive
+activation-score labels, Adam at lr .01 for 30 epochs. It is a calibration/
+predictor training procedure, not dense-model pretraining.
+
+IMPORTANT EQUATIONS:
+For expert e with neuron set I_e:
+`F_e(x) = sigma(x W1[:,I_e] + b1[I_e]) W2[I_e,:]`.
+The full output is the sum over all experts for linear output accumulation.
+
+The similarity predictor cost is reported as approximately `O(k d_model)`;
+with expert width 32 this can be `O(d_model^2/8)`, plus the small MLP cost.
+
+TRAINING REQUIRED:
+Activation traces/calibration data and router training are required. The
+paper relu-fies BERT for its GELU experiment and reports roughly 400 update
+steps to adapt versus about 10k pretraining steps, but that does not prove a
+safe Qwen3.8 SiLU conversion. It is not training-free.
+
+INFERENCE MECHANISM:
+Compute/predict expert scores, choose top-k groups, run their submatrices and
+accumulate. Ground-truth selection is an upper bound; a classifier produces
+the deployable route.
+
+MEMORY BEHAVIOR:
+Total parameter count is approximately unchanged by partitioning. The groups
+can be laid out independently, which is the useful bridge to SSD residency.
+The paper does not implement SSD paging or a bounded RAM cache.
+
+I/O BEHAVIOR:
+Not measured. Grouping creates a potential storage unit, but the paper's
+experiments assume weights are already available.
+
+THROUGHPUT RESULTS:
+At 50%, 25% and 12.5% selected, reported speed ratios are approximately
+1.50/1.43/1.15, 2.00/1.98/1.20 and 2.40/2.28/1.47 for theoretical FLOPs/
+CPU/GPU respectively. The CPU/GPU experiments use batch/sequence settings
+around 64, Intel Broadwell and Tesla V100; they are not single-token decode.
+Attention becomes a bottleneck. The CPU numbers are more relevant than FLOPs
+but still do not establish Qwen3.8/x86/SSD behavior.
+
+QUALITY RESULTS:
+At 20% selection for T5-Large, original SST2/MNLI/RACE scores are about
+96.2/89.5/81.3; coactivation plus MLP is about 95.4/87.5/79.0, while
+ground-truth selection is about 96.3/89.1/80.8. Calibration reduces an
+average drop reported near 1.5 points to near 0.3 points in the tested cases.
+T5-XL examples retain roughly 98% quality at 10% selected for easier tasks;
+RACE is harder. Usage has a long tail: general experts can serve over 80%
+of examples while input-specific experts serve under 10%.
+
+HARDWARE:
+Intel Broadwell CPU and Tesla V100 GPU; older transformer models/T5/BERT.
+
+WHAT ACTUALLY CAUSED THE SPEEDUP:
+Aligned neuron partitioning plus structured submatrix computation; not disk
+offload. CPU wall time follows arithmetic better than GPU, but attention and
+router overhead limit end-to-end gains.
+
+WHAT DID NOT WORK:
+Naive/ground-truth interpretation is not a deployable router; classifier
+errors reduce quality. ReLU assumptions and expert granularity are important.
+The method does not solve small SSD reads, gated activations or continuous
+nonzero SiLU outputs.
+
+LIMITATIONS:
+The most important limitation for Qwen is the activation. A simple ReLU
+positive/nonpositive mask does not exist for `silu(gate) * up`; up values can
+be negative and SiLU is not exactly zero on negative inputs. Old experiment
+percentages cannot be transferred. The reported wall-clock experiments use
+larger batches/sequence processing than our single-token target.
+
+ASSUMPTIONS:
+Neurons are separable into groups; selected groups preserve enough function;
+the router can be evaluated cheaply; submatrices can be computed efficiently.
+
+TRANSFER TO QWEN3.8-27B:
+Partition the intermediate index jointly across gate, up and down. For group
+I, load gate rows I, up rows I and down columns I. Use contribution-aware
+scores, not just positive gate counts:
+`q_i(x)=|silu(gate_i(x))*up_i(x)|^2 * ||down[:,i]||^2`.
+Group scores should include within-group interference/correlation. A first
+calibration can use exact full FFN outputs and measure grouped truncation.
+
+TRANSFER TO LLAMA.CPP:
+The grouping/reordering idea transfers. A GGUF converter must repack aligned
+groups and a kernel must gather contiguous group rows/columns. Generic dense
+GGML matmul does not automatically obtain the benefit.
+
+WHAT WE SHOULD COPY:
+[PRIOR ART] Function-preserving neuron permutation, aligned W1/W2 grouping,
+calibration labels, a small score predictor, and comparison against
+ground-truth group selection.
+
+WHAT WE SHOULD NOT COPY:
+[PRIOR ART LIMIT] ReLU positivity labels, “10% active” claims for Qwen,
+unstructured tiny groups, or CPU speed ratios measured at batch 64.
+
+OPEN QUESTIONS:
+What group size balances contribution error with SSD sequentiality? Does
+coactivation computed on gated contributions remain stable over long decode?
+Can a group predictor be trained from only a small calibration set without
+false negatives that force synchronous reads?
+
+[S03] LLM IN A FLASH
+
+TITLE: LLM in a flash: Efficient Large Language Model Inference with Limited Memory
+AUTHORS: Alizadeh et al.
+YEAR: 2024
+VENUE: ACL 2024
+URL: https://arxiv.org/abs/2312.11514 ; https://aclanthology.org/2024.acl-long.678/
+CODE: No primary runtime repository identified in the paper record.
+RELEVANCE: high
+
+PROBLEM:
+Run LLMs when model weights exceed DRAM by using flash storage without turning
+every token into a catastrophic random-I/O workload.
+
+KEY IDEA:
+Persist embeddings and attention in DRAM, predict only the useful FFN
+neurons, read them in windows, reuse recent neurons, and bundle corresponding
+up/down data so flash transfers are larger and more sequential.
+
+ARCHITECTURE:
+The selective-persistence design keeps approximately one third of the model
+(embedding plus attention) resident and treats active FFN rows/columns as a
+working set. The paper uses ReLU/FATReLU-like sparsity and low-rank predictors.
+
+ALGORITHM:
+A predictor uses an attention output to estimate positive up-projection
+neurons before loading them. The predictor is trained on 10k C4 samples for
+two epochs and deliberately overpredicts by about 3x. Reported OPT false
+negative and false positive rates are approximately 5% and 7% in one setup,
+with later layers more sensitive. A low-rank predictor is used to reduce
+overhead.
+
+Windowing with k=4 or 5 reuses recently active sets. The incremental read is
+conceptually `S_agg(k+1) - S_agg(k)` instead of reloading the entire current
+set. Row-column bundling stores the ith up column with the ith down row. The
+paper notes that naive hot-neuron bundling can be negative when a row/column
+has high degree, so coactivation and layout must be measured.
+
+IMPORTANT EQUATIONS / COST MODEL:
+For a token, a useful first-order latency decomposition is:
+`T_token = T_I/O + T_memory_management + T_compute`.
+
+Flash has higher first-byte latency for small/random access, but large reads
+(reported around 32 KiB or more) can be serviced with many threads. On an M1
+Max, the paper reports approximately 6.1 GiB/s for dense sequential reads and
+1.25 GiB/s for sparse/random access in a relevant configuration.
+
+The target storage traffic is the selected weight volume. For this project:
+`B_effective_per_token = bandwidth / tokens_per_second`.
+Thus 4 GB/s / 10 tok/s = 400 MB/token and 4 GB/s / 20 tok/s = 200 MB/token
+as absolute upper bounds; filesystem, queue, CPU and overlap reduce them.
+
+TRAINING REQUIRED:
+Predictor training and calibration. The base model is not converted to MoE.
+
+INFERENCE MECHANISM:
+Predict, issue grouped reads, allocate fixed DRAM rows, copy active up/down
+pieces, and reuse a sliding window. The implementation uses many read threads
+and bypasses OS cache in throughput measurements to make I/O explicit.
+
+MEMORY BEHAVIOR:
+Approximately half of the model is placed outside DRAM in the headline
+experiments; embeddings/attention remain resident. Preallocated rows avoid
+fragmentation and swap overhead. This is a bounded working-set strategy, not
+a proof that an arbitrary 27B model fits below 8 GB.
+
+I/O BEHAVIOR:
+Naive random sparse reads are slow. A reported OPT 6.7B, 16-bit example gives
+approximately 6.10 GB/s and 2196 ms for naive I/O, 1.09 GB/s and 738 ms with
+the predictor, then about 0.2 GB and 164 ms with windowing, and about 0.2 GB,
+2.25 GB/s and 87 ms with bundling in one comparison table. These table values
+are component measurements, not a universal per-token law.
+
+THROUGHPUT RESULTS:
+Single sequence, approximately 128 prompt + 256 generation tokens. OPT 6.7B
+end-to-end times are reported as about 669 ms for the proposed CPU path versus
+3182 ms for the naive baseline on M1; M1/M2/GPU variants are also reported.
+Falcon, Persimmon and Phi2 examples are approximately 706, 1041 and 546 ms
+in the table. Hardware is Apple M1/M2 and GPU variants, not x86 NVMe.
+
+QUALITY RESULTS:
+For Llama2 in the sparse setup, MMLU is reported around 41.8 dense,
+38.96 sparse and 38.63 predictor. This is a real quality cost, not merely a
+FLOP result. The paper also evaluates perplexity and model-specific tasks.
+
+HARDWARE:
+Apple M1 Max/M1/M2 and associated GPU/Metal/PyTorch/MLX-style systems. Single
+sequence; not llama.cpp and not commodity Linux CPU.
+
+WHAT ACTUALLY CAUSED THE SPEEDUP:
+Selective persistence, overprediction to reduce false negatives, temporal
+window reuse, large row/column transfers and preallocated buffers. The key
+lesson is layout plus reuse, not mmap by itself.
+
+WHAT DID NOT WORK:
+Naive paging/random reads; small read granularity; predictor false negatives;
+bundling without coactivation analysis. Memory management is a first-class
+term in the cost model.
+
+LIMITATIONS:
+ReLU/FATReLU assumptions, Apple storage/memory stack, no Qwen3.8 gated FFN,
+no x86 CPU results, and roughly half-model DRAM rather than an 8 GB absolute
+cap. The reported speedups do not directly imply 10-20 tok/s for a 27B model.
+
+ASSUMPTIONS:
+Active neurons can be predicted from current context; recent active sets are
+reusable; flash large reads are much more efficient than tiny reads; attention
+and embeddings fit in resident memory.
+
+TRANSFER TO QWEN3.8-27B:
+Copy the cost model, resident-vs-streamed partition, sliding-window reuse,
+coactivation-based bundling and fixed rows. Replace positive ReLU neuron
+selection with contribution-aware gated-group selection and measure whether
+Qwen token-to-token overlap is high enough.
+
+TRANSFER TO LLAMA.CPP:
+Copy the explicit storage scheduler and packed layout. Avoid relying on
+generic page faults. A C++ implementation should expose reads/token,
+read-size histogram, queue depth, cache hits, overlap and stall time.
+
+WHAT WE SHOULD COPY:
+[PRIOR ART] Window reuse; up/down row-column bundles; resident attention
+floor; overprediction policy; preallocated staging; bandwidth-first accounting.
+
+WHAT WE SHOULD NOT COPY:
+[PRIOR ART LIMIT] ReLU sparsity rates or Apple timings as Qwen/x86 estimates;
+uncounted random I/O; and a predictor trained only on prompt contexts if its
+distribution shifts during generation.
+
+OPEN QUESTIONS:
+What is the equivalent of FATReLU for unmodified Qwen SwiGLU? Is a group
+large enough for SSD reads still accurate? Does Qwen's hybrid linear attention
+produce stronger or weaker active-set reuse than OPT?
+
+[S04] POWERINFER-2
+
+TITLE: PowerInfer-2: Fast Large Language Model Inference on a Smartphone
+AUTHORS: PowerInfer-2 authors
+YEAR: 2024
+VENUE: arXiv preprint
+URL: https://arxiv.org/abs/2406.06282 ; https://arxiv.org/pdf/2406.06282
+CODE: https://github.com/SJTU-IPADS/PowerInfer ; https://powerinfer.ai/v2/
+RELEVANCE: high
+
+PROBLEM:
+Run models larger than smartphone memory by making neuron activation and
+storage/compute scheduling aware of heterogeneous NPU, CPU and UFS behavior.
+
+KEY IDEA:
+Use neuron clusters as the unit of activation/I/O, keep frequently used hot
+clusters in a segmented cache, stream cold clusters through a pipelined gate/
+up/down execution path, and place work on NPU or CPU according to locality.
+
+ARCHITECTURE:
+For a typical 14336 x 4096 FFN, a 50% offload example uses 7168 hot neurons
+and 7168 cold neurons. CPU cold chunks are around 512 x 4096. Cluster sizes
+adapt to activation similarity. Decode uses NPU dense hot clusters and CPU
+sparse cold work; prefill can use dense NPU processing.
+
+ALGORITHM:
+Clusters with similar activation are created offline. Gate/up/down for a
+neuron are bundled. After removing hot neurons, the paper reports about 80%
+coactivation for corresponding Gate+Up+Down. It can read the gate first and
+skip up/down for a zero gate, saving around 20% wasted work in its design.
+
+The segmented cache has fixed attention/KV state, a hot region of dense
+clusters with LRU replacement, and a cold region with neuron-level replacement.
+The execution pipeline has gate I/O/calculation followed by up/down I/O/
+calculation, using one I/O thread plus compute threads to break matrix barriers.
+
+IMPORTANT EQUATIONS:
+The paper's core scheduling cost is operational rather than a single new
+equation: active cluster data is selected by a device-specific hot/cold
+profile; corresponding gate/up/down records are transferred as a unit.
+
+TRAINING REQUIRED:
+Offline profiling on 10M+ Wikipedia/RefinedWeb tokens and device-specific
+hot/cold classification/centroids. Predictor/placement preparation is not
+free. The base model is not converted into a MoE.
+
+INFERENCE MECHANISM:
+Hot clusters run in the NPU-resident path; cold clusters are prefetched and
+processed by CPU threads; segmented caches and pipeline overlap storage with
+compute. Device-specific placement is central.
+
+MEMORY BEHAVIOR:
+One reported Mixtral47B setup at a 7 GB memory cap allocates approximately
+1 GB non-FFN, 2.6 GB predictor, 2.7 GB scales and 0.4 GB runtime/cache in the
+breakdown, leaving only about 1.8% of FFN weights cached. This illustrates how
+metadata/predictor/scales can consume the memory budget.
+
+I/O BEHAVIOR:
+The paper reports UFS sequential around 4 GB/s versus PC SSD around 7.5 GB/s,
+but random IOPS differ greatly. UFS 4 KB random behavior and a single command
+queue make thread count important; multiple I/O cores can degrade throughput
+by up to about 40%. The design uses cluster-sized transfers and one I/O thread
+in the critical pipeline.
+
+THROUGHPUT RESULTS:
+On OnePlus12/Ace2, Mistral7B with 50% FFN offload is about 1.4 tok/s for
+PowerInfer-2 versus 2.3 tok/s for LLM in a Flash in one comparison. A
+Mixtral47B result is 11.68 tok/s at 19 GB and 2.13 tok/s at 7 GB, with a
+reported 21.2x improvement over llama.cpp in its setup. The 7 GB point is the
+more relevant warning: aggressive memory caps leave I/O dominant.
+
+QUALITY RESULTS:
+PowerInfer-2 reports quality comparable to llama.cpp in its evaluated models;
+one Qwen2 average is about 78.38 versus 79.25 for llama.cpp. Exact task and
+model details must be preserved when comparing.
+
+HARDWARE:
+OnePlus12/Ace2 smartphone, Arm CPU, NPU, UFS storage, unified/mobile memory.
+
+WHAT ACTUALLY CAUSED THE SPEEDUP:
+Cluster-level coalescing, segmented cache, gate-first filtering, explicit
+I/O/compute pipeline, and device-specific hot placement. Not portable NPU
+throughput alone.
+
+WHAT DID NOT WORK:
+At low memory the cache is tiny and storage remains dominant. UFS random
+reads and excessive I/O threads degrade. A generic CPU/SSD scheduler cannot
+assume the same cache or queue behavior.
+
+LIMITATIONS:
+Mobile NPU/CPU and Android implementation; no Linux/x86 CPU-only result; the
+predictor and scales consume a large fraction of a small cap; native sparse
+models/modified model variants are used.
+
+ASSUMPTIONS:
+Activation clusters are stable; a hot subset is globally reusable; NPU can
+run dense hot work; cluster reads amortize storage latency.
+
+TRANSFER TO QWEN3.8-27B:
+Copy neuron/group bundling, segmented hot/cold cache, gate-first filtering,
+one-I/O-thread pipeline, and explicit small-cap memory accounting. Test
+whether Qwen SwiGLU gate values can safely filter up/down groups; do not
+assume mobile NPU placement or cluster quality.
+
+TRANSFER TO LLAMA.CPP:
+The segment/cache/pipeline concepts transfer; NPU scheduling and Android
+memory mechanisms do not. A CPU implementation should start with fixed group
+records and sequential ranges, then benchmark whether a sparse CPU kernel is
+worth the bookkeeping.
+
+WHAT WE SHOULD COPY:
+[PRIOR ART] Cluster I/O unit; corresponding gate/up/down storage; segmented
+cache; gate-first two-stage pipeline; device-specific profiling.
+
+WHAT WE SHOULD NOT COPY:
+[PRIOR ART LIMIT] Mobile-specific hot/cold ratios, NPU/CPU split, and a memory
+budget that hides predictor/scales costs in a different way.
+
+OPEN QUESTIONS:
+Can Qwen group records be made 8-32 KiB each without too much overfetch? Is a
+CPU gate-first phase cheaper than reading both gate and up together? How much
+predictor state can be kept below 8 GB?
+
+[S05] SPARSE UPCYCLING
+
+TITLE: Sparse Upcycling: Training Mixture-of-Experts from Dense Checkpoints
+AUTHORS: Komatsuzaki et al.
+YEAR: 2023
+VENUE: ICLR 2023
+URL: https://arxiv.org/abs/2212.05055 ; https://arxiv.org/html/2212.05055v2
+CODE: Paper artifacts/checkpoint details are linked from the paper; no
+      storage runtime is supplied.
+RELEVANCE: high
+
+PROBLEM:
+Obtain a sparse MoE model without paying the full cost of training a large
+MoE from random initialization.
+
+KEY IDEA:
+Copy a dense checkpoint into multiple identical experts, add a router, and
+continue training. The copied initialization starts near the dense function;
+continued training breaks symmetry and specializes experts.
+
+ARCHITECTURE:
+Experiments use T5 encoder/decoder models, with MoE layers inserted in a
+subset of layers (for example six layers) and up to 32 experts. The decoder
+uses top-k routing (often k=2); expert choice routing is used in some encoder
+settings. The copied experts initially compute a redundant version of the
+dense FFN.
+
+ALGORITHM:
+Dense weights are copied into each expert. Router weights are newly
+initialized. Expert capacity and token routing follow standard sparse MoE
+mechanics. The important initialization is copied weights, not random expert
+weights. Identical copies create a symmetry problem: only continued training
+with different routes/gradients can specialize them.
+
+IMPORTANT EQUATIONS:
+MoE output is the standard routed sum:
+`y = sum_{e in TopK(router(x))} p_e(x) E_e(x)`.
+At initialization, copied experts have `E_e ~= E_dense`, so selecting all or
+appropriately weighted copies preserves the dense function, but top-k routing
+and normalization can still change scale/output.
+
+TRAINING REQUIRED:
+Substantial continued training, reported in the range of roughly 10-60%
+additional training budget depending on the experiment. The paper reports
+that upcycling catches a sparse-from-scratch baseline at around 120% of the
+dense training budget in relevant comparisons. More experts and more severe
+changes increase the requirement.
+
+INFERENCE MECHANISM:
+A conventional router chooses experts. Active compute is generally kept near
+the dense baseline while total capacity increases; this is the key mismatch
+with our objective.
+
+MEMORY BEHAVIOR:
+Total parameters rise sharply. Illustrative T5 sizes are approximately
+248M -> 2B, 783M -> 7.22B and 2.85B -> 26.26B for sparse variants. Expert
+weights could be stored on SSD, but the paper does not do so.
+
+I/O BEHAVIOR:
+Not studied.
+
+THROUGHPUT RESULTS:
+No storage or single-token CPU wall-clock result. Sparse MoE FLOPs are lower
+than a dense model of the same expanded capacity, not necessarily lower than
+the original dense checkpoint.
+
+QUALITY RESULTS:
+Copied initialization is better than random under limited continued training;
+random can catch up with more training. The results establish a practical
+dense-to-MoE route, not a no-training or lower-active-FLOP conversion.
+
+HARDWARE:
+Large-scale TPU training, T5 models.
+
+WHAT ACTUALLY CAUSED THE SPEEDUP:
+The technique's value is training cost/quality and capacity scaling. It does
+not demonstrate lower active compute than the source dense model.
+
+WHAT DID NOT WORK:
+Naively copying many experts without enough training leaves symmetry and
+specialization problems. Applying sparse-upcycling as if it automatically
+reduced source-model compute is incorrect.
+
+LIMITATIONS:
+It increases total parameters and commonly preserves comparable active FLOPs.
+It requires continued training and routing changes. It is not a storage
+layout or predictor solution.
+
+ASSUMPTIONS:
+Training data and compute are available to break symmetry; standard MoE
+routing and capacity mechanisms are acceptable.
+
+TRANSFER TO QWEN3.8-27B:
+Borrow copied initialization and symmetry-breaking logic only if we decide to
+train a genuine Qwen sparse expert model. To reduce active compute below
+dense, expert width and/or top-k must also be reduced; that creates a quality
+problem the original paper does not answer.
+
+TRANSFER TO LLAMA.CPP:
+Only after a trained sparse checkpoint exists: expert serialization/routing
+could be supported. Upcycling itself gives no llama.cpp storage solution.
+
+WHAT WE SHOULD COPY:
+[PRIOR ART] Dense checkpoint copying as a stable initialization and explicit
+measurement of additional training budget/symmetry.
+
+WHAT WE SHOULD NOT COPY:
+[PRIOR ART LIMIT] Treat “sparse MoE” as “lower active compute than dense”; do
+not multiply experts and then assume an 8 GB model.
+
+OPEN QUESTIONS:
+How much can copied group experts be narrowed before fine-tuning becomes
+prohibitive? Could distillation from the dense Qwen3.8 model replace most of
+the continued pretraining?
+
+[S06] NVIDIA DENSE-TO-MOE UPCYCLING
+
+TITLE: Upcycling Large Language Models into Mixture of Experts
+AUTHORS: He et al. / NVIDIA authors
+YEAR: 2024
+VENUE: arXiv preprint
+URL: https://arxiv.org/abs/2410.07524 ; https://ar5iv.labs.arxiv.org/html/2410.07524
+CODE: No storage runtime in the paper record.
+RELEVANCE: high
+
+PROBLEM:
+Convert billion-scale dense LLMs into fine-grained MoE models while retaining
+quality and making training/inference tradeoffs explicit.
+
+KEY IDEA:
+Partition dense FFN weights into virtual groups, replicate them into many
+fine-grained experts, scale the copied weights, and continue training. Virtual
+groups preserve a structured path back to the dense matrix; routing chooses a
+small number of groups.
+
+ARCHITECTURE:
+For dense groups G and replicated experts E, experts contain shards of the
+dense FFN. Typical experiments compare E=8, group counts such as G=1 or 8,
+and top-T routing such as T=2 or 8. The method includes experiments on
+Nemotron-scale 2B/15B models and gated FFNs.
+
+ALGORITHM:
+Basic copy partitions and replicates weights. With topK-then-softmax,
+normalization after selection can preserve the dense function only in a
+particular all-replica limit. Softmax-then-topK retains absolute router
+logit information and is empirically better in the paper. For squared ReLU,
+the paper gives a scaling related to `T/(E G^2)` and rescales W1/W2 using a
+cube-root factor; equal scaling is reported to work for SwiGLU in practice.
+Auxiliary load balancing is around 1e-2 to 1e-3; too high harms quality.
+
+IMPORTANT EQUATIONS:
+The relevant initialization has a group/expert scale of the form
+`scale ~ (E G^2 / T)^(1/3)` for the paired projections in one stated
+derivation, with the inverse convention depending on which tensor is being
+normalized. The exact paper equation must be followed in code; the key lesson
+is that replicated fine-grained shards need explicit magnitude correction.
+
+TRAINING REQUIRED:
+Continued pretraining. One reported comparison uses one trillion examples/
+tokens of dense continued training and then compares E8G8T8 or E8G1T2 MoE
+variants. More experts have diminishing returns; 64 is generally useful while
+128/256 add less.
+
+INFERENCE MECHANISM:
+Router logits -> chosen fine-grained experts -> gated FFN. T=2 costs more
+than top-1; the paper studies quality/computation rather than SSD paging.
+
+MEMORY BEHAVIOR:
+Total capacity rises with replication. Fine-grained experts can make storage
+units smaller, but metadata and random reads become harder. No RAM/SSD result.
+
+I/O BEHAVIOR:
+Not reported.
+
+THROUGHPUT RESULTS:
+Quality/computation tradeoffs and iso-FLOP comparisons are reported, not
+single-stream CPU wall time or storage bytes/token.
+
+QUALITY RESULTS:
+Examples include dense continued val loss 1.377 / MMLU 65.3 versus E8G8T8
+val loss 1.320 / MMLU 66.2, and E8G1T2 val loss 1.306 / MMLU 67.6 in the
+reported comparisons. High load-balance loss harms quality; group granularity
+around 8 is favorable; a shared expert did not clearly help.
+
+HARDWARE:
+NVIDIA-scale training, billion-scale models.
+
+WHAT ACTUALLY CAUSED THE SPEEDUP:
+Conditional active experts at a fixed expanded capacity, plus fine-grained
+routing. It does not show lower active compute than the original dense model
+without a separate width/top-k choice.
+
+WHAT DID NOT WORK:
+Excessive expert granularity/routing overhead, too-high auxiliary loss,
+naive scaling, and assuming more experts always improves quality.
+
+LIMITATIONS:
+Requires substantial continued training and does not solve storage. The
+reported models are not Qwen3.8 and no x86/8 GB target is evaluated.
+
+ASSUMPTIONS:
+Large continued-training budget; standard MoE router; expert replication is
+acceptable.
+
+TRANSFER TO QWEN3.8-27B:
+Borrow virtual-group initialization, explicit projection scaling and the
+softmax-order comparison if a trained MoE branch is attempted. Gated SwiGLU
+compatibility is encouraging. Do not assume the method gives a post-hoc
+low-compute checkpoint; it is a training recipe.
+
+TRANSFER TO LLAMA.CPP:
+Expert granularity can inform on-disk group size, but routing/checkpoint
+conversion must be implemented separately.
+
+WHAT WE SHOULD COPY:
+[PRIOR ART] Virtual groups, projection scaling, load-balance loss sweeps,
+granularity ablations, and explicit active-compute accounting.
+
+WHAT WE SHOULD NOT COPY:
+[PRIOR ART LIMIT] Continued-training results as evidence for training-free
+conversion or SSD throughput.
+
+OPEN QUESTIONS:
+Can a tiny distillation run reproduce useful virtual-group specialization?
+Does fine-grained replication make SSD reads too random for a CPU decoder?
+
+[S07] DEJAVU
+
+TITLE: Deja Vu: Contextual Sparsity for Efficient LLMs at Inference Time
+AUTHORS: Liu et al.
+YEAR: 2023
+VENUE: ICML 2023 / arXiv 2023
+URL: https://arxiv.org/abs/2310.17157 ; https://proceedings.mlr.press/v202/liu23am/liu23am.pdf
+CODE: https://github.com/FMInference/DejaVu, commit ee902c1
+RELEVANCE: high
+
+PROBLEM:
+Use input-dependent sparsity in a dense pretrained LLM without requiring a
+MoE architecture up front.
+
+KEY IDEA:
+Predict which attention heads and MLP parameters will matter for the current
+context, then run structured sparse kernels. Prediction is asynchronous and
+lookahead exploits the slow change of consecutive hidden states.
+
+ARCHITECTURE:
+Contextual sparsity selects attention heads and MLP intermediate rows/columns.
+The sparse MLP is `MLP_S(y)=sigma(y W1_S) W2_S^T`. For OPT-175B the paper
+reports up to about 80% head sparsity and 95% MLP parameter sparsity in a
+tested regime.
+
+ALGORITHM:
+The predictor is a two-layer fully connected classifier, not online nearest
+neighbor search. HNSW/FAISS were too slow in the cited comparison (over 10 ms
+and over 4 ms), while a small MLP was about 0.2 ms for OPT-175B. Code uses a
+low-rank/parallel classifier: embedding -> low-rank dimension (example D=1000)
+-> output logits. Training uses memmapped predictor data, BCE with weighted
+positives, AdamW, default 20 epochs, lr 1e-4 and roughly 400k samples in the
+repository training script. The paper describes a 500 C4 sample setup for
+some predictor construction; exact data scale differs by experiment.
+
+The async predictor estimates the next layer's set from the current output.
+An informal slow-change argument is that if `||y_l-y_{l-1}|| <= epsilon`, a
+MaxIP-style set remains close enough for high recall. The real implementation
+runs the predictor on a separate CUDA stream and synchronizes with an event.
+
+Attention prediction can save selected KV heads and token embeddings so a
+missing head can be recomputed later. Sparse MLP kernels gather W1 rows and
+W2 columns; the repository uses a layout chosen for coalesced indexed loads.
+
+IMPORTANT EQUATIONS:
+`S_A^l = SP_A^l(y_l)` and `S_M^l = SP_M^l(MHA(y_l))` are the native current-
+layer predictor sets. The asynchronous lookahead uses current activations to
+predict `S_A^(l+1), S_M^(l+1)` while current work proceeds.
+
+TRAINING REQUIRED:
+Small predictor training/calibration on activation/mask labels. The base LLM
+weights remain unchanged.
+
+INFERENCE MECHANISM:
+Predict mask, gather selected rows/columns, run fused sparse kernels. Predictors
+are launched early and hidden behind current MLP/attention work where the GPU
+allows it. This hides predictor cost but does not automatically hide SSD reads.
+
+MEMORY BEHAVIOR:
+Sparse kernels avoid loading all selected-unselected rows into GPU memory.
+The paper's primary setting is large A100 memory; it does not maintain an SSD
+resident cold pool.
+
+I/O BEHAVIOR:
+The paper is about GPU memory traffic, not flash. Its fused indexing avoids a
+separate indexing pass that would multiply weight traffic. No SSD bytes/token.
+
+THROUGHPUT RESULTS:
+Batch 1 on 8 A100 80 GB GPUs with NVLink, FP16, prompt lengths 128-1024.
+At a reported regime of roughly 75% sparsity, DejaVu is 1.8-2x faster than
+FasterTransformer and 4.8-6x faster than Hugging Face in the paper's setup.
+These are actual wall-clock results but not CPU/SSD decode.
+
+QUALITY RESULTS:
+OPT-175B/66B/30B tests report no accuracy drop at selected regimes in the
+paper tables, with MLP around 85% sparse and attention around 50% sparse for
+one OPT-175B setting. Predictor recall varies by depth; the paper reports
+shallow MLP over 99% improving to roughly 93%, and attention middle layers
+around 93% with shallow/deep around 99% in one analysis. W4A16 compatibility
+is discussed and tested without compounding errors in the table.
+
+HARDWARE:
+8x NVIDIA A100 80 GB NVLink; CUDA/Triton custom kernels.
+
+WHAT ACTUALLY CAUSED THE SPEEDUP:
+Structured indexing kernels, high mask recall, predictor overlap, reduced
+GPU memory traffic and attention/MLP sparsity. Not merely sparse FLOPs.
+
+WHAT DID NOT WORK:
+Nearest-neighbor search predictors were too slow; predictors run too late if
+not overlapped; low recall causes quality errors; GPU kernels are necessary.
+
+LIMITATIONS:
+The models/activations are mostly older dense ReLU/GELU-era LLMs. It does not
+show storage reads, x86 CPU kernels, Qwen3.8 hybrid blocks or <8 GB RAM. A
+per-layer predictor can be too late to fetch from SSD.
+
+ASSUMPTIONS:
+Temporal/context locality; predictor overhead can overlap current GPU work;
+indexed sparse matrix kernels are efficient; mask errors are rare enough.
+
+TRANSFER TO QWEN3.8-27B:
+Use contextual sparsity as a router without converting all MLPs to MoE. Train
+or construct an early shared predictor and measure gated contribution masks.
+Borrow lookahead, but move the prediction horizon earlier than DejaVu's
+within-layer operation so storage reads can complete.
+
+TRANSFER TO LLAMA.CPP:
+Architecture/predictor idea transfers. CUDA streams/Triton kernels do not.
+On CPU, predictor cost and gather overhead must be measured alongside I/O.
+
+WHAT WE SHOULD COPY:
+[PRIOR ART] Shallow predictors, async lookahead, structured W1/W2 indexing,
+recall-first evaluation, and predictor overhead accounting.
+
+WHAT WE SHOULD NOT COPY:
+[PRIOR ART LIMIT] Per-layer-late prediction for SSD, GPU speedups as CPU
+results, or head sparsity without a Qwen hybrid-quality test.
+
+OPEN QUESTIONS:
+Can one early predictor predict all 64 Qwen MLP layers accurately enough?
+Does a group-level mask improve storage locality without losing too much
+recall? Can predictor execution overlap CPU attention rather than GPU work?
+
+[S08] POWERINFER
+
+TITLE: PowerInfer: Fast Large Language Model Serving with a Consumer-grade GPU
+AUTHORS: Song et al.
+YEAR: 2023
+VENUE: MLSys/ arXiv 2023
+URL: https://arxiv.org/abs/2312.12456 ; https://arxiv.org/pdf/2312.12456
+CODE: https://github.com/SJTU-IPADS/PowerInfer
+RELEVANCE: high
+
+PROBLEM:
+Serve models larger than consumer GPU memory by exploiting nonuniform neuron
+activation and a CPU/GPU split.
+
+KEY IDEA:
+Activation frequencies follow a power-law. Place globally hot neurons on GPU
+and context-dependent cold neurons on CPU; use an online predictor and sparse
+neuron-aware operators.
+
+ARCHITECTURE:
+The method keeps hot neurons resident on the GPU and computes cold neurons on
+the CPU, then merges results. It does not convert the model to MoE and does
+not use SSD as the cold pool.
+
+ALGORITHM:
+An offline profiler measures activation frequencies on about one million
+Wikipedia tokens, while an online predictor handles contextual variation.
+Placement is formulated using activation frequency/impact and an ILP-like
+policy. Sparse operators handle selected neuron rows/columns. Predictor sizes
+are reported around 4.88-8.68% of model parameters and training can take
+hours on multiple GPUs.
+
+IMPORTANT EQUATIONS:
+The useful empirical rule is the activation frequency/impact priority
+`v_i ~= f_i` for hot placement. It is a placement heuristic, not a general
+quality guarantee. Sparse FFN work is grouped by active neuron indices and
+merged with hot GPU output.
+
+TRAINING REQUIRED:
+Offline hot/cold profiling and predictor training. No dense-to-MoE training.
+
+INFERENCE MECHANISM:
+GPU hot dense path + CPU cold sparse path + synchronization/merge. Batch 1 is
+the target in the main consumer-GPU comparison; speedup falls with larger
+batches.
+
+MEMORY BEHAVIOR:
+Hot neurons consume GPU memory; cold weights remain CPU-resident. This proves
+the “resident hot core + external cold pool” abstraction but not SSD residency.
+
+I/O BEHAVIOR:
+PCIe transfers rather than SSD. False predictor choices and synchronization
+are important; the paper reports examples where a hot neuron can be predicted
+inactive.
+
+THROUGHPUT RESULTS:
+PC-High uses i9-13900K, 8 cores, 192 GB RAM and RTX4090 24 GB; PC-Low uses
+i7-12700K, 8 cores, 64 GB RAM and RTX2080Ti 11 GB. INT4 batch-one averages
+are about 13.2 tok/s on the high-end setup, with peak 29.08 and average
+speedup around 2.89 (maximum about 4.28); OPT-175B is close to 2 tok/s and
+about 2.66x in the reported setting. These are not storage measurements.
+
+QUALITY RESULTS:
+The paper reports good quality preservation across supported models while
+using hot/cold placement. LLaMA2/ReGLU/SwiGLU activation distributions are
+measured, not assumed.
+
+HARDWARE:
+Consumer NVIDIA GPUs plus x86 CPUs and PCIe, not CPU-only SSD.
+
+WHAT ACTUALLY CAUSED THE SPEEDUP:
+Hot global reuse, sparse cold operators, predictor placement and avoiding
+GPU-memory capacity failure. It explicitly exploits the activation distribution.
+
+WHAT DID NOT WORK:
+Predictor mismatch and synchronization can erase gains. The CPU/GPU split is
+not a flash scheduler.
+
+LIMITATIONS:
+The reported hot percentages differ by activation: ReLU OPT30B about 26%
+neurons account for 80% activations, LLaMA2 ReGLU70B about 43%, and SwiGLU
+LLaMA270B about 69% in one table; across-model percentages also differ. These
+are global frequency observations, not per-token safe sparsity. Predictor
+training and PCIe/GPU assumptions do not transfer unchanged.
+
+ASSUMPTIONS:
+Global hot neurons are stable across tasks; cold work can be sparse on CPU;
+GPU hot capacity and PCIe transfers are available.
+
+TRANSFER TO QWEN3.8-27B:
+Strongly supports a resident hot core plus SSD cold pool, but global hot
+groups should be used as cache candidates, not as the entire route. Profile
+Qwen3.8 gated groups and retain high-frequency groups in RAM.
+
+TRANSFER TO LLAMA.CPP:
+CPU sparse operators, frequency-based cache selection and predictor error
+accounting transfer. GPU/PCIe placement does not.
+
+WHAT WE SHOULD COPY:
+[PRIOR ART] Power-law/hot-core measurement, offline profile plus online
+prediction, impact-aware placement, and explicit merge/synchronization costs.
+
+WHAT WE SHOULD NOT COPY:
+[PRIOR ART LIMIT] Hot percentages as guaranteed per-token activity or GPU
+speedup as SSD performance.
+
+OPEN QUESTIONS:
+How much of Qwen3.8's active set is globally hot? Does hot-core residency
+lower SSD reads enough for 10-20 tok/s? How should cache placement account for
+the different 48 linear and 16 full-attention layers?
+
+[S09] SPARSEGPT
+
+TITLE: SparseGPT: Massive Language Models Can be Accurately Pruned in One-Shot
+AUTHORS: Frantar and Alistarh
+YEAR: 2023
+VENUE: ICML 2023
+URL: https://arxiv.org/abs/2301.00774 ; https://proceedings.mlr.press/v202/frantar23a/frantar23a.pdf
+CODE: https://github.com/IST-DASLab/sparsegpt
+RELEVANCE: medium-high
+
+PROBLEM:
+Remove static weight redundancy from very large LMs using a single calibration
+pass rather than retraining.
+
+KEY IDEA:
+Use a Hessian/OBS-inspired one-shot update to choose a sparse mask and
+reconstruct remaining weights. It supports unstructured sparsity and some
+structured N:M patterns.
+
+ARCHITECTURE:
+Layerwise pruning treats each linear weight matrix independently. It is not
+contextual and does not create experts.
+
+ALGORITHM:
+The layer objective is approximately
+`min_{M,W} ||W X - (M * W_hat) X||_2^2`.
+For a fixed mask, reconstruction uses a Hessian inverse. A stated OBS-style
+deletion update is
+`delta_m = -w_m / [H^-1]_{mm} * H^-1_{:,m}`
+with estimated deletion error
+`epsilon_m = w_m^2 / [H^-1]_{mm}`.
+Calibration uses a small multiple of the layer input dimension and block
+processing (often block 128); the core complexity is cubic in hidden dimension
+for the Hessian operations.
+
+TRAINING REQUIRED:
+No gradient training, but calibration activations are required.
+
+INFERENCE MECHANISM:
+Static sparse weights are used for every token. There is no router/predictor.
+
+MEMORY BEHAVIOR:
+Can reduce stored weight size and potentially resident RAM. Unstructured
+sparsity may need specialized kernels; 2:4/4:8 is more hardware-friendly.
+
+I/O BEHAVIOR:
+Static reduction lowers every future read but does not reduce context-dependent
+working-set volume. A structured packed format is necessary for SSD efficiency.
+
+THROUGHPUT RESULTS:
+The paper emphasizes perplexity and sparsity; exact single-stream x86 SSD
+throughput is not a result.
+
+QUALITY RESULTS:
+OPT/BLOOM around 50-60% unstructured sparsity is reported with small
+perplexity changes. Example OPT-175B PPL is about 8.21 at 50% versus dense
+8.35; 4:8 about 8.45 and 2:4 about 8.74 in one table.
+
+HARDWARE:
+Large-model calibration and sparse hardware experiments; not our storage
+runtime.
+
+WHAT ACTUALLY CAUSED THE SPEEDUP:
+Permanent parameter removal/structured hardware sparsity, not contextual
+selection.
+
+WHAT DID NOT WORK:
+Unstructured masks can fail to translate to wall-clock CPU speedups; high
+structured sparsity costs quality; it cannot distinguish “inactive now” from
+“needed later.”
+
+LIMITATIONS:
+It is static pruning, not a solution to conditional SSD residency. It may
+also interact badly with Qwen gated rows if the three aligned projections are
+pruned independently.
+
+ASSUMPTIONS:
+Calibration distribution represents deployment; remaining weights can be
+computed efficiently.
+
+TRANSFER TO QWEN3.8-27B:
+Use as an optional permanent first stage to reduce all group records and the
+resident floor. Apply jointly or consistently to gate/up/down structure. Do
+not treat it as a replacement for contextual routing.
+
+TRANSFER TO LLAMA.CPP:
+N:M or block-structured static packing is more plausible than arbitrary masks.
+It could reduce the amount of every SSD group, but kernel/layout work remains.
+
+WHAT WE SHOULD COPY:
+[PRIOR ART] Calibration-aware reconstruction and the distinction between
+weight redundancy and contextual inactivity.
+
+WHAT WE SHOULD NOT COPY:
+[PRIOR ART LIMIT] Unstructured sparsity as a guaranteed CPU/SSD wall-clock
+gain or independent pruning of gated projections.
+
+OPEN QUESTIONS:
+Can static group-aware pruning reduce Qwen's 9.6 GB MLP pool enough to make a
+dynamic SSD design feasible without consuming the quality budget first?
+
+[S10] SWITCH TRANSFORMERS
+
+TITLE: Switch Transformers: Scaling to Trillion Parameter Models with Simple and Efficient Sparsity
+AUTHORS: Fedus, Zoph and Shazeer
+YEAR: 2021/2022
+VENUE: JMLR 2022
+URL: https://arxiv.org/abs/2101.03961 ; https://jmlr.org/papers/v23/21-0998.html
+CODE: No storage implementation used.
+RELEVANCE: high for MoE mechanics
+
+PROBLEM:
+Scale parameter capacity with sparse expert routing while keeping per-token
+compute and communication manageable.
+
+KEY IDEA:
+Top-1 routing: each token is sent to one expert, minimizing router and
+communication cost relative to top-2 MoE.
+
+ARCHITECTURE:
+Router logits `h = W_r x`, probabilities `p_i=softmax(h)_i`; selected expert
+output is `E_argmax(p)(x)` with a gating scale. Capacity is bounded per expert.
+
+ALGORITHM:
+Expert capacity is approximately
+`capacity = tokens_per_batch / num_experts * capacity_factor`.
+Overflow tokens can be dropped and passed through/residual-connected. The
+load-balance auxiliary loss is
+`L_aux = alpha * N * sum_i f_i P_i`, where `f_i` is the fraction of tokens
+dispatched to expert i and `P_i` is mean router probability for i. The paper
+uses alpha near 1e-2 as a common setting, with sweeps. Router computation is
+performed in float32 for stability; router initialization scale is reduced.
+
+TRAINING REQUIRED:
+Designed for end-to-end MoE training. Expert collapse/imbalance must be
+managed during training.
+
+INFERENCE MECHANISM:
+Top-1 route with fixed capacity. This makes active compute predictable at
+batch scale, but a single-token decode cannot exploit capacity balancing in
+the same way as large-batch training.
+
+MEMORY BEHAVIOR:
+Only selected expert weights need to be active in principle, making the
+mechanism attractive for SSD. Capacity buffers and expert metadata still
+matter.
+
+I/O BEHAVIOR:
+Not studied. Token dropping is unacceptable for a quality-sensitive single
+stream unless a fallback is guaranteed.
+
+THROUGHPUT RESULTS:
+Training scaling/throughput on TPU; no CPU/SSD single-token result.
+
+QUALITY RESULTS:
+The paper demonstrates competitive quality at scale, subject to routing
+stability and capacity/drop settings.
+
+HARDWARE:
+TPUv3 training, large distributed batches.
+
+WHAT ACTUALLY CAUSED THE SPEEDUP:
+Top-1 conditional compute and reduced communication relative to dense scaling.
+
+WHAT DID NOT WORK:
+Router instability, expert imbalance/collapse and token overflow. Capacity
+factor above one wastes memory/compute; too low drops tokens.
+
+LIMITATIONS:
+Single-token storage inference has no natural token pool to balance. An
+auxiliary loss learned on batches does not guarantee a stable one-token route.
+
+ASSUMPTIONS:
+Large training batches and continued end-to-end optimization; overflow can
+be tolerated or is rare.
+
+TRANSFER TO QWEN3.8-27B:
+Use router logits/top-k/aux-loss mechanics only for a trained branch. For
+post-hoc conversion, a deterministic group predictor plus exact fallback is
+safer than token dropping.
+
+TRANSFER TO LLAMA.CPP:
+Top-1 expert selection can map to a small number of SSD group reads, but
+capacity-factor logic should not be copied blindly to batch-one decode.
+
+WHAT WE SHOULD COPY:
+[PRIOR ART] Float32 router logits, explicit balance diagnostics, capacity and
+overflow accounting, and the distinction between top-k routing and capacity.
+
+WHAT WE SHOULD NOT COPY:
+[PRIOR ART LIMIT] Token dropping or batch-oriented load balance for a single
+user unless a quality-preserving fallback exists.
+
+OPEN QUESTIONS:
+Could routing be constrained to storage-friendly contiguous groups without
+destroying the learned function? Can a one-token stream use a small persistent
+route history as its balancing signal?
+
+[S11] EXPERT CHOICE ROUTING
+
+TITLE: Mixture-of-Experts with Expert Choice Routing
+AUTHORS: Zhou et al.
+YEAR: 2022
+VENUE: NeurIPS 2022
+URL: https://arxiv.org/abs/2202.09368 ; https://ar5iv.labs.arxiv.org/html/2202.09368
+CODE: Paper method; no storage runtime.
+RELEVANCE: medium-high
+
+PROBLEM:
+Avoid token-choice load imbalance and token dropping in MoE training.
+
+KEY IDEA:
+Experts choose their top-k tokens instead of each token choosing experts.
+Each expert receives a fixed-capacity bucket, giving perfect expert capacity
+balance and a variable number of experts per token.
+
+ARCHITECTURE:
+For an expert capacity factor, each expert selects tokens with highest router
+affinity. A token can be selected by zero, one, or several experts; expert
+capacity is fixed.
+
+ALGORITHM:
+The router creates an expert-by-token score matrix and top-k selection per
+expert. It avoids the usual auxiliary balance loss. Reported token
+distribution includes a majority with 1-2 experts, about 23% with 3-4 and
+about 3% with more in one analysis. Capacity-factor 2 can have active work
+similar to top-2 token routing.
+
+IMPORTANT EQUATIONS:
+The conceptual route is `I_e = TopK_tokens(score_e,:)`, with fixed `|I_e|`.
+This reverses the usual `e = TopK_experts(score_token,:)` direction.
+
+TRAINING REQUIRED:
+End-to-end MoE training, large batches and TPU-scale experiments.
+
+INFERENCE MECHANISM:
+Variable experts/token. That can be useful when token difficulty varies, but
+expert choice needs a population of tokens to fill buckets.
+
+MEMORY BEHAVIOR:
+Fixed expert buckets simplify training buffer allocation, not SSD single-token
+reads.
+
+I/O BEHAVIOR:
+Not studied. For a single autoregressive token, expert-choice has too little
+token population and can require awkward microbatch/history buffering.
+
+THROUGHPUT RESULTS:
+The paper reports over 2x convergence improvements in 8B/64E experiments and
+large TPU training, not SSD inference.
+
+QUALITY RESULTS:
+Competitive quality and improved training efficiency under the evaluated
+large-batch settings.
+
+HARDWARE:
+512 TPUv4-scale training.
+
+WHAT ACTUALLY CAUSED THE SPEEDUP:
+Balanced training batches and no token overflow, not lower single-token I/O.
+
+WHAT DID NOT WORK:
+The routing direction is a poor direct fit for one-token decode and variable
+storage traffic.
+
+LIMITATIONS:
+No evidence for x86/SSD, no post-hoc dense conversion, and no deterministic
+small active set for a single user.
+
+ASSUMPTIONS:
+Large batches can be formed and tokens can be assigned globally.
+
+TRANSFER TO QWEN3.8-27B:
+Useful only as a training/load-balance concept. A storage scheduler could
+borrow fixed capacity buckets offline, but runtime route should remain
+token-choice for single-stream decode.
+
+TRANSFER TO LLAMA.CPP:
+Not a direct runtime design.
+
+WHAT WE SHOULD COPY:
+[PRIOR ART] Fixed-capacity thinking and analysis of variable experts/token.
+
+WHAT WE SHOULD NOT COPY:
+[PRIOR ART LIMIT] Expert-choice dispatch for batch-one SSD fetches.
+
+OPEN QUESTIONS:
+Could a short rolling microbatch of speculative tokens make expert-choice
+useful, or would KV/latency constraints outweigh it?
+
+[S12] DYNAMOE
+
+TITLE: From Dense to Dynamic: Token-Difficulty Driven MoEfication of Pre-Trained LLMs
+AUTHORS: Nishu et al.
+YEAR: 2025
+VENUE: arXiv preprint
+URL: https://arxiv.org/abs/2502.12325 ; https://arxiv.org/html/2502.12325v1
+CODE: No public storage/runtime implementation identified in the paper record.
+RELEVANCE: high
+
+PROBLEM:
+Turn a dense pretrained LLM into a dynamic MoE whose compute depends on token
+difficulty, using only limited additional training.
+
+KEY IDEA:
+Reorder MLP neurons by activation magnitude and create nested experts of
+increasing width. A router predicts the smallest expert whose output is close
+to the full dense MLP output. Attention is frozen.
+
+ARCHITECTURE:
+Only MLPs are changed. For E experts and dense width H, expert e has nested
+width `H_e = floor((e+1)/E * H)`; the final expert is full width. The same
+prefix rows/columns are used, so storage can naturally be prefix/range based.
+The reported 4-expert sizes are 0.25H, 0.5H, 0.75H and H.
+
+ALGORITHM:
+Run all nested experts and the full dense output on calibration data. Define
+similarity `S_{b,e}=<Y_e,Y_full>/<Y_full,Y_full>` and label each token with the
+smallest e satisfying threshold theta. Train a two-linear-layer router
+(hidden U=256) with about 33.6M parameters across layers, around 0.51% of the
+base model. The loss combines language modeling and router terms, with one
+reported `lambda_LLM=.2, lambda_router=1`.
+
+TRAINING REQUIRED:
+Reported continued fine-tuning uses about 10B Falcon RefinedWeb tokens,
+AdamW lr1e-5. Without the router loss, the router can collapse to one expert
+per layer. Neighboring expert misclassifications occur.
+
+INFERENCE MECHANISM:
+Predict token difficulty, select a nested width, and run prefix rows/columns.
+This is attractive for storage because the selected data can be a contiguous
+prefix, but it does not itself implement asynchronous SSD streaming.
+
+MEMORY BEHAVIOR:
+Nested experts duplicate/organize dense weights rather than materially
+shrinking the full disk model. Prefix storage and a resident hot prefix are
+possible.
+
+I/O BEHAVIOR:
+Not measured. No SSD bytes/token or cache/prefetch results.
+
+THROUGHPUT RESULTS:
+The paper explicitly does not provide a real deployment speed benchmark; it
+reports compute/capacity and quality, including a claimed 1/9 Flextron cost
+in its framing. This must not be treated as x86 wall-clock speed.
+
+QUALITY RESULTS:
+For Mistral7B, base average scores are about 77.8 on a 4-task group and 74.2
+on a 7-task group. DynaMoE at theta .9 is about 74.0/70.1, theta .8 about
+70.5/66.5 and theta .7 about 67.7/64.0, with parameter/compute points around
+6.0/5.1/4.6B in the table. The quality cost is substantial at aggressive
+sparsity.
+
+HARDWARE:
+Training/evaluation framework; no storage hardware result reported.
+
+WHAT ACTUALLY CAUSED THE SPEEDUP:
+Nested width reduction by token difficulty in the theoretical/compute sense.
+No evidence yet of storage overlap or sparse CPU kernel speed.
+
+WHAT DID NOT WORK:
+Router loss removal caused collapse; neighboring width mistakes and threshold
+tradeoffs limit quality; no end-to-end deployment result.
+
+LIMITATIONS:
+10B-token fine-tuning is not a cheap post-hoc conversion. Results are Mistral7B
+and not Qwen3.8 gated hybrid blocks. It does not show SSD residency.
+
+ASSUMPTIONS:
+MLP output similarity is a good token-difficulty label; nested prefixes are
+good approximations; attention can remain dense/frozen.
+
+TRANSFER TO QWEN3.8-27B:
+Borrow nested/prefix group layout and output-similarity labels. It may make
+SSD reads sequential and cache-friendly. Expect a separate Qwen gated trace
+and distillation/fine-tuning, and do not assume 10B tokens are acceptable.
+
+TRANSFER TO LLAMA.CPP:
+Prefix groups are easy to range-read and can use fixed slots. Router and
+quality validation still need implementation.
+
+WHAT WE SHOULD COPY:
+[PRIOR ART] Nested groups; full-output similarity labels; explicit token-
+difficulty route; router-loss anti-collapse test.
+
+WHAT WE SHOULD NOT COPY:
+[PRIOR ART LIMIT] Claimed compute cost as actual speed, or its quality/ratio
+as a Qwen3.8 prediction.
+
+OPEN QUESTIONS:
+Can an output-aware group order be found for SwiGLU that preserves dense
+quality at 20-40% width? Does nested prefix selection reduce random SSD I/O
+enough to offset overfetch?
+
+[S13] SPARSING LAW
+
+TITLE: Sparsing Law: Scaling Laws for Activation Sparsity in Large Language Models
+AUTHORS: Luo et al.
+YEAR: 2025
+VENUE: PMLR 267
+URL: https://proceedings.mlr.press/v267/luo25i.html ; https://github.com/thunlp/SparsingLaw/
+CODE: https://github.com/thunlp/SparsingLaw/
+RELEVANCE: medium-high
+
+PROBLEM:
+Characterize how activation sparsity changes with training data, model width,
+depth and activation function.
+
+KEY IDEA:
+Define CETT-PPL-1% activation-sparsity metrics and fit power-law relations.
+The paper reports that ReLU-like activations become more sparse/competent than
+SiLU, that smaller width/depth ratio helps, and that sparsity is relatively
+scale-insensitive in its tested regime.
+
+ARCHITECTURE:
+Training-time language models with different activation functions and
+scaling configurations; not a post-hoc storage runtime.
+
+ALGORITHM:
+Measure activation sparsity while scaling data/model properties. The relevant
+result is empirical, not a router algorithm.
+
+IMPORTANT EQUATIONS:
+The named metric CETT-PPL-1% relates sparsity to competence measured by
+perplexity; the exact paper definition should be used for reproducibility.
+
+TRAINING REQUIRED:
+Models are trained/evaluated across scaling regimes. It is not evidence that
+an existing Qwen checkpoint can be sparsified without adaptation.
+
+INFERENCE MECHANISM: Not supplied.
+MEMORY BEHAVIOR: Not supplied.
+I/O BEHAVIOR: Not supplied.
+
+THROUGHPUT RESULTS:
+The abstract reports a 2.4B model at 93.52% sparsity and 4.1x dense speedup
+in its relevant experiment. Hardware/batch/kernel details must be checked
+before transferring this to CPU/SSD.
+
+QUALITY RESULTS:
+The paper relates sparsity to perplexity, but these are training-architecture
+results, not a Qwen3.8 post-hoc result.
+
+HARDWARE: Not the target x86/SSD runtime.
+
+WHAT ACTUALLY CAUSED THE SPEEDUP: A trained sparse activation function/model,
+not storage paging.
+
+WHAT DID NOT WORK: Smooth SiLU generally does not provide the same exact-zero
+behavior as ReLU. This is a warning against transferring ReLU percentages.
+
+LIMITATIONS:
+Training-time architecture changes; no gated Qwen3.8 conversion, SSD cache,
+or single-stream CPU measurement.
+
+ASSUMPTIONS: Sparsity/competence laws extrapolate across selected scales.
+
+TRANSFER TO QWEN3.8-27B:
+Use only as prior evidence that activation function matters and that a future
+training intervention may create more sparsity. Do not use 93.52% as a budget.
+
+TRANSFER TO LLAMA.CPP: None directly.
+
+WHAT WE SHOULD COPY:
+[PRIOR ART] Measure activation sparsity jointly with quality/perplexity and
+report activation-function dependence.
+
+WHAT WE SHOULD NOT COPY:
+[PRIOR ART LIMIT] Training-time ReLU results as post-hoc SiLU/SwiGLU evidence.
+
+OPEN QUESTIONS:
+Can a small Qwen-specific activation regularization/distillation run make
+SwiGLU contributions more thresholdable without harming capability?
+
+[S14] SVD CONTEXTUAL SPARSITY PREDICTORS
+
+TITLE: SVD Contextual Sparsity Predictors for Fast LLM Inference
+AUTHORS: Serbin, Koshkin, Sun, Bistrigova and Korikov
+YEAR: 2026
+VENUE: arXiv preprint
+URL: https://arxiv.org/abs/2603.14110 ; https://arxiv.org/html/2603.14110v1
+CODE: No implementation repository verified during this pass.
+RELEVANCE: high
+
+PROBLEM:
+Avoid training a large neural sparsity predictor while retaining contextual
+FFN sparsity for edge inference.
+
+KEY IDEA:
+Approximate each gate projection with a data-whitened low-rank SVD, then add
+per-neuron calibrated thresholds. The predictor is affine plus a Heaviside
+mask and uses only a few thousand calibration tokens.
+
+ARCHITECTURE:
+The method modifies only ReGLU/dReLU FFNs. For
+`FFN(x)=W_down(ReLU(W_gate x) * (W_up x))`, the mask is predicted from a
+low-rank approximation of W_gate. Gate and up are executed sequentially:
+predicted positives are checked by the real gate, then false positives are
+removed before up/down.
+
+ALGORITHM:
+Given calibration X, form a Cholesky whitening S from `X X^T`, factor
+`W_gate S = U Sigma V^T`, and use rank r:
+`A = U_:,:r Sigma_:r,:r`, `B = V_:r,: S^-1`, predictor `P(x)=H(A B x+b)`.
+Threshold/bias b is greedily calibrated. Importance for neuron i/sample t is
+`w_i^t = |ReLU(gate_i) * up_i|^2 ||down_:,i||^2`; thresholds are increased by
+the smallest empirical damage until a target sparsity/drop budget is reached.
+The appendix gives a deterministic residual/error bound based on the SVD
+residual and bias.
+
+The sequential sparse-compute complexity is reported as
+`r(d+D) + d(1-s)D + 2d(1-s')D`, versus dense `3dD`, where s is predicted and
+s' realized sparsity. The authors explicitly warn that FLOP reduction does
+not directly imply wall-clock speedup.
+
+TRAINING REQUIRED:
+No predictor gradient training; SVD, whitening and greedy threshold
+calibration use a small calibration set. The base evaluated models are already
+sparse/ReGLU/dReLU models, so this is not proof for unmodified Qwen SwiGLU.
+
+INFERENCE MECHANISM:
+Predict at the start of each FFN; compute gate; remove false positives; then
+compute only remaining up/down. CUDA custom kernels and CANN executors are
+provided in the paper's evaluation.
+
+MEMORY BEHAVIOR:
+Predictor storage is low-rank and per-neuron bias. No SSD working-set design.
+
+I/O BEHAVIOR:
+No flash results. Sequential gate/up is potentially useful for reducing cold
+reads, but if gate itself must be fetched it still needs a storage schedule.
+
+THROUGHPUT RESULTS:
+Single RTX3090 GPU, fp16/vLLM, and Ascend 310P3. E2E includes prefill plus
+200-token generation. On ProSparse-LLaMA2-7B, reported speedups are about
+1.61-1.71x at 40-70% target sparsity; TurboSparse-Mistral about 1.67-1.84x;
+SparseQwen2-7B about 1.78-1.86x. The best reported benchmark average drops
+are under roughly 1.4 points at the high settings, with many under 1 point.
+
+QUALITY RESULTS:
+SparseQwen2-7B dense average 65.84; SVDP averages about 65.41/65.20/65.13/
+64.49 at target s=.4/.5/.6/.7. The paper reports up to 1.8x E2E and less
+than 1% degradation in selected complex math/code settings, but results use
+already sparse/dReLU/ReGLU models.
+
+HARDWARE:
+RTX3090 and Ascend 310P3, CUDA/CANN, no x86 CPU or NVMe result.
+
+WHAT ACTUALLY CAUSED THE SPEEDUP:
+Low-rank predictor plus sequential gate validation and custom sparse kernels.
+
+WHAT DID NOT WORK:
+Naive SVD thresholding caused quality loss; whitening and bias calibration
+were required. The paper notes predictor pipelining may be infeasible on some
+hardware platforms.
+
+LIMITATIONS:
+ReGLU/ReLU/dReLU assumption; unmodified SiLU gate is not an exact zero mask;
+GPU/NPU kernels; no storage. Predictor rank and calibration may be large for
+Qwen's D=17408 if recall must be very high.
+
+ASSUMPTIONS:
+Gate projection is low-rank enough; calibrated scores generalize; exact gate
+validation can safely filter false positives.
+
+TRANSFER TO QWEN3.8-27B:
+Test a Qwen-specific low-rank gate predictor as a training-light option, but
+use continuous contribution thresholds, not binary ReLU correctness. A gated
+sequential path may first read/predict gate groups, then fetch up/down only
+for surviving groups. This could be especially useful for SSD bytes/token.
+
+TRANSFER TO LLAMA.CPP:
+The affine low-rank predictor is CPU-friendly in principle. Its value depends
+on a sparse/group CPU kernel and storage-aware two-stage reads, neither of
+which is provided.
+
+WHAT WE SHOULD COPY:
+[PRIOR ART] Data-aware low-rank gate predictor, per-neuron damage-aware
+threshold calibration, sequential gate->up/down testing and explicit FLOP/
+wall-clock distinction.
+
+WHAT WE SHOULD NOT COPY:
+[PRIOR ART LIMIT] ReGLU exact-zero guarantees or GPU speedups as Qwen SwiGLU
+claims.
+
+OPEN QUESTIONS:
+Does a low-rank approximation predict Qwen3.8 gated contribution groups with
+high recall? Is a two-stage SSD read cheaper than reading bundled gate+up at
+once? Can the predictor be quantized and kept resident below 8 GB?
+
+[S15] SSD OFFLOADING ENERGY ANALYSIS
+
+TITLE: SSD Offloading for LLM Mixture-of-Experts Weights Considered Harmful
+AUTHORS: Kyung, Yun and Ahn
+YEAR: 2025
+VENUE: IEEE Computer Architecture Letters
+URL: https://doi.org/10.1109/LCA.2025.3592563 ; https://snu.elsevierpure.com/en/publications/ssd-offloading-for-llm-mixture-of-experts-weights-considered-harm-2/
+CODE: No public implementation used.
+RELEVANCE: medium-high
+
+PROBLEM:
+Quantify energy implications of placing MoE weights on SSD rather than HBM or
+DDR, where latency can sometimes be hidden by prefetch.
+
+KEY IDEA:
+Build an energy model for storage-resident MoE reads and show that hiding
+latency does not make flash energy free.
+
+ARCHITECTURE: Analytical model for SSD-offloaded MoE weights.
+ALGORITHM: Parameter/traffic/energy accounting, not a router or kernel.
+
+IMPORTANT EQUATIONS:
+The central comparison is energy per transferred/useful byte and per token
+across SSD, DDR and HBM. The paper reports SSD can be up to about 12x the
+per-token energy of HBM in relevant cases; exact values depend on device and
+traffic.
+
+TRAINING REQUIRED: None.
+INFERENCE MECHANISM: Assumes prefetch can hide some read latency.
+MEMORY BEHAVIOR: SSD can reduce expensive DRAM/HBM capacity pressure.
+I/O BEHAVIOR: More SSD bytes/token directly increase energy; prefetch does not
+remove transfer energy.
+THROUGHPUT RESULTS: Not the primary result.
+QUALITY RESULTS: Not applicable.
+HARDWARE: Modeled storage/memory systems, not the target machine.
+
+WHAT ACTUALLY CAUSED THE SPEEDUP: Not a speedup paper; it identifies an
+energy cost of the storage strategy.
+
+WHAT DID NOT WORK: Treating hidden latency as the complete cost model.
+
+LIMITATIONS: Analytical assumptions and no Qwen3.8/x86 benchmark.
+ASSUMPTIONS: Device energy characteristics are representative.
+
+TRANSFER TO QWEN3.8-27B:
+Include SSD bytes/token and sustained write/read/endurance in the experiment
+plan. A 10-20 tok/s design should minimize fresh reads not only for latency
+but also for energy.
+
+TRANSFER TO LLAMA.CPP:
+Expose read volume and device statistics; avoid repeated reads caused by
+cache thrash.
+
+WHAT WE SHOULD COPY:
+[PRIOR ART] Energy as a separate metric and “prefetch hides latency, not
+energy” as a design constraint.
+
+WHAT WE SHOULD NOT COPY: The exact 12x number as a universal device constant.
+
+OPEN QUESTIONS:
+What are the actual energy and endurance costs of a commodity NVMe under the
+target read pattern and token rate?
+
+[S16] QWEN3.8-27B CHECKPOINT MAPPING
+
+TITLE: Qwen3.8-27B model configuration and checkpoint index
+AUTHORS: Qwen team
+YEAR: 2026 checkpoint/configuration observed at research time
+VENUE: Hugging Face model release
+URL: https://huggingface.co/Qwen/Qwen3.8-27B
+     https://huggingface.co/Qwen/Qwen3.8-27B/raw/main/config.json
+     https://huggingface.co/Qwen/Qwen3.8-27B/raw/main/model.safetensors.index.json
+CODE: Model configuration/checkpoint tensor index
+RELEVANCE: high
+
+PROBLEM:
+Establish the exact target architecture and tensor sizes before designing a
+dense-to-sparse conversion.
+
+KEY IDEA:
+Qwen3.8-27B is not a conventional all-full-attention Transformer. It uses a
+hybrid of gated linear-attention/DeltaNet-like blocks and full attention, with
+gated dense FFNs in every layer.
+
+ARCHITECTURE:
+The observed config identifies `Qwen3_5ForConditionalGeneration`, text
+`model_type=qwen3_5`, bf16 weights, hidden size 5120, intermediate size 17408,
+64 hidden layers, `full_attention_interval=4`, 24 attention heads and 4 KV
+heads, head dimension 256. The repeating layer types are 3 linear-attention
+blocks followed by 1 full-attention block: 48 linear/hybrid and 16 full.
+Linear attention fields include conv1d, A_log, dt_bias, in_proj_a/b/qkv/z,
+linear key/value heads and output gate swish. Full attention has q/k/v/o and
+q/k norms. Vocabulary size is 248320, max position 262144. MTP count is 1.
+The release also includes a vision branch; text-only inference should not
+load it.
+
+PARAMETER ACCOUNTING:
+Each MLP has three matrices of `17408 * 5120 = 89,128,960` parameters, or
+267,386,880 parameters/layer. Across 64 layers that is 17.113B MLP params.
+At bf16, one MLP is about 534.8 MB decimal (roughly 510 MiB); all MLPs are
+about 34.23 GB decimal. A raw 4-bit payload is about 133.7 MB/layer and
+8.55 GB all layers; adding group scales/biases and metadata gives a rough
+q4 MLP pool near 9.6 GB. These are estimates, not a converted-file size.
+
+Embeddings and an untied LM head each have about 1.271B parameters; together
+they are about 2.542B. At q4 this is roughly 1.3 GB of raw payload before
+scales. Full model q4 disk size is plausibly around 14-16 GB depending on
+quantization of non-MLP tensors and metadata.
+
+TENSOR NAMES IN HF CHECKPOINT:
+Embedding/head: `model.language_model.embed_tokens.weight`, `lm_head.weight`.
+Per layer: norms; linear attention `A_log`, `conv1d`, `dt_bias`,
+`in_proj_a`, `in_proj_b`, `in_proj_qkv`, `in_proj_z`, `norm`, `out_proj`;
+MLP `gate_proj`, `up_proj`, `down_proj`; full attention `q_proj`, `k_proj`,
+`v_proj`, `o_proj`, `q_norm`, `k_norm`; and post-attention layer norm.
+
+ACTIVATION:
+The MLP activation is SiLU/gated. The intended form is
+`down(silu(gate(x)) * up(x))`, not a simple ReLU `W2 sigma(W1x)`.
+
+ALGORITHM:
+No dense-to-sparse algorithm is supplied by the checkpoint. The architecture
+mapping requires grouping the same intermediate indices across gate/up/down.
+
+IMPORTANT EQUATIONS:
+Per layer MLP bytes at q4 are roughly
+`3 * 17408 * 5120 * 0.5 ~= 133.7 MB` raw, plus scales/biases. A group of 256
+intermediate neurons contains roughly 1.97 MB raw q4 weight payload before
+scales/metadata and about 5.24 MB bf16 for gate+up only. Group size must be
+large enough for storage but small enough to limit overfetch/error.
+
+TRAINING REQUIRED: Not applicable to the base checkpoint.
+INFERENCE MECHANISM: Hybrid linear/full attention plus gated MLP.
+MEMORY BEHAVIOR: The MLP pool dominates storage; embeddings/head and hybrid
+blocks create a large resident floor.
+I/O BEHAVIOR: Not supplied.
+THROUGHPUT RESULTS: Not supplied for this research target.
+QUALITY RESULTS: Base checkpoint quality is not a sparsity result.
+HARDWARE: Model release does not establish x86/SSD behavior.
+
+WHAT ACTUALLY CAUSED THE SPEEDUP: None; this is a mapping source.
+WHAT DID NOT WORK: Assuming Qwen3.8 is a native sparse MoE or a simple
+Transformer with only one attention type.
+
+LIMITATIONS: Exact disk bytes depend on quantization/converter; the observed
+config/model naming may evolve in future releases; VLM tensors are not part
+of the text-only budget.
+
+ASSUMPTIONS: Text-only target; bf16 source; no MTP use in the first sparse
+experiment.
+
+TRANSFER TO QWEN3.8-27B:
+Candidate sparsification points are the 64 gated MLPs first; all attention/
+linear projections are initially resident. Attention sparsity is a later,
+riskier experiment because linear-attention state and full-attention KV
+semantics differ. MTP is optional and likely not useful before the base
+working-set experiment.
+
+TRANSFER TO LLAMA.CPP:
+Converter and runtime must preserve the 48 linear/hybrid and 16 full block
+types and their tensor names. A generic Llama MLP sparse path alone is not
+enough.
+
+WHAT WE SHOULD COPY:
+[PRIOR ART / FACT] Exact tensor-index audit and parameter-by-component budget
+before any architecture conversion.
+
+WHAT WE SHOULD NOT COPY:
+[HYPOTHESIS WARNING] Do not assume Qwen's activation sparsity equals Qwen2,
+Mistral, OPT or ReLU-trained model measurements.
+
+OPEN QUESTIONS:
+What is the exact quantized non-MLP resident floor? How much of the 17.1B MLP
+can be safely omitted per token? What is the effect of sparse MLP error on
+linear-attention state over long contexts?
+
+[S17] LLAMA.CPP QWEN3.5 TENSOR MAPPING
+
+TITLE: llama.cpp Qwen3.5 model implementation and GGUF tensor mapping
+AUTHORS: ggml-org/llama.cpp contributors
+YEAR: 2026 source inspected at research time
+VENUE: Open-source inference implementation
+URL: https://github.com/ggml-org/llama.cpp/blob/master/src/models/qwen35.cpp
+     https://raw.githubusercontent.com/ggml-org/llama.cpp/master/gguf-py/gguf/tensor_mapping.py
+CODE: llama.cpp source files above
+RELEVANCE: high
+
+PROBLEM:
+Determine the actual runtime tensor names/shapes and the integration boundary
+for an eventual GGUF sparse-storage implementation.
+
+KEY IDEA:
+The current Qwen3.5 implementation represents the MLP as a standard parallel
+gated FFN, while its surrounding block is hybrid linear/full attention.
+
+ARCHITECTURE:
+The source constructs MLP tensors corresponding to `ffn_gate` shape
+`{n_embd,n_ff}`, `ffn_up` shape `{n_embd,n_ff}`, and `ffn_down` shape
+`{n_ff,n_embd}`, using a parallel SiLU FFN. It explicitly notes Qwen3.5 does
+not use MoE FFN. The MTP block has its own Qwen3.5 structures and should not
+be enabled in the first sparse experiment.
+
+ALGORITHM:
+Generic HF names `model.layers.{bid}.mlp.gate_proj`, `up_proj` and
+`down_proj` map to GGUF names equivalent to `blk.{bid}.ffn_gate.weight`,
+`blk.{bid}.ffn_up.weight`, and `blk.{bid}.ffn_down.weight` through llama.cpp's
+tensor-name abstraction. Linear-attention source names map to attention/SSM
+tensor types such as ATTn_QKV/ATTN_GATE/SSM_ALPHA/BETA/OUT depending on the
+actual enum/mapping version. The runtime creates dense tensors today.
+
+IMPORTANT EQUATIONS:
+The GGML orientation means selected intermediate index i corresponds to a
+column in gate/up and a row/column according to the down representation. A
+sparse converter must verify actual storage strides rather than only semantic
+HF names. The safe invariant is still: the same intermediate index is moved
+or selected in all three projections.
+
+TRAINING REQUIRED: None for mapping.
+INFERENCE MECHANISM: Dense GGML graph today.
+MEMORY BEHAVIOR: mmap/quantization behavior is runtime-specific; no sparse
+expert paging in the inspected Qwen3.5 path.
+I/O BEHAVIOR: Generic GGUF loading/mmap does not equal selective group reads.
+THROUGHPUT RESULTS: Not a sparse result.
+QUALITY RESULTS: Not a sparse result.
+HARDWARE: llama.cpp targets many CPU/GPU backends; this source alone gives no
+8 GB SSD result.
+
+WHAT ACTUALLY CAUSED THE SPEEDUP: None; this is an integration map.
+WHAT DID NOT WORK: Treating existing dense GGUF mmap as dynamic expert cache.
+
+LIMITATIONS:
+The exact upstream source can change; a converted Qwen3.8 file should be
+inspected after conversion. Tensor mapping is semantic, so raw GGUF tensor
+names must be verified in the generated file.
+
+ASSUMPTIONS: Current qwen35.cpp is a useful close analogue for Qwen3.8.
+
+TRANSFER TO QWEN3.8-27B:
+Use the existing Qwen3.5 hybrid block as the implementation skeleton. Add a
+separate sparse MLP tensor family/layout rather than mutating generic dense
+matmul behavior. Keep all non-MLP tensors in the ordinary path initially.
+
+TRANSFER TO LLAMA.CPP:
+This is the main transfer: converter-side group packing, model loader metadata,
+an explicit sparse FFN graph/operator, and a storage scheduler/cache. Do not
+let page faults decide active groups.
+
+WHAT WE SHOULD COPY:
+[PRIOR ART] Existing Qwen hybrid block/tensor abstraction and GGUF mapping
+boundary; semantic tensor names plus post-conversion verification.
+
+WHAT WE SHOULD NOT COPY:
+[PRIOR ART LIMIT] Generic dense FFN allocation as evidence that sparse groups
+are loaded independently.
+
+OPEN QUESTIONS:
+What new GGUF metadata identifies group offsets, quantization scales, and
+gate/up/down alignment? Can the existing backend's quantized kernels accept
+contiguous group ranges without a full model reload?
+
+[S18] NEUROPREFETCHER
+
+TITLE: NeuroPrefetcher: Storage-Aware Sparse LLM Inference via Delta Prefetching
+AUTHORS: Nobel Dhar et al.
+YEAR: 2026
+VENUE: ICPP 2026 paper / arXiv preprint
+URL: https://arxiv.org/abs/2608.22643 ; https://arxiv.org/html/2608.22643v1
+     https://doi.org/10.1145/3832810.3832862
+CODE / ARTIFACT: https://github.com/nobeldhar/llm-activation-sparsity
+RELEVANCE: very high
+
+PROBLEM:
+Run a model larger than resident memory when dynamic sparse MLP weights must
+come from NVMe during autoregressive decode.
+
+KEY IDEA:
+Predict all downstream MLP gate/up active masks with one resident predictor,
+cluster masks into a centroid vocabulary, store neuron records contiguously,
+and fetch only mask deltas between adjacent tokens. Reuse fixed slots instead
+of compacting the entire working set each token.
+
+ARCHITECTURE:
+Jetson AGX Orin 32 GB unified LPDDR5, 12 Arm A78AE cores, Ampere GPU and
+Samsung 990 Pro NVMe. Mistral7B is about 7.24B parameters/13.49 GiB fp16,
+32 layers, hidden4096/intermediate14336. A dense prefix fits in the cap;
+the sparse suffix has active row buffers. Embeddings/head/final norm,
+attention/projections, per-layer norms, predictor and centroid data stay
+resident. The paper says layers 1-31 are predicted; its dense/sparse handling
+of down is described in a way that should be checked carefully because the
+main layout and delta text both discuss active down-transposed columns.
+
+ALGORITHM:
+Threshold small activation values per layer and cluster binary gate/up masks
+into K=512 centroids. The predictor uses token embedding, pre-attention norm,
+a 128-dimensional attention sketch, post-attention norm scalar and layer-0
+gate centroid ID. It has four feature projection blocks to width 512, a
+centroid embedding, a four-block residual MLP trunk and gate/up heads for each
+later layer. It is about 206.8M parameters / 413.6 MB fp16, 2.86% of base.
+
+For current active set A_t and previous A_(t-1):
+`D_in = A_t - A_(t-1)`
+`D_out = A_(t-1) - A_t`.
+Only D_in is read; D_out slots are reusable. A fixed Kmax slot map avoids
+compaction. The first token requires a full predicted set.
+
+Storage records are repacked gate/up/downT for each intermediate neuron,
+approximately 24.5 KiB per fp16 Mistral neuron record (3*4096*2 bytes plus
+alignment in the described layout). Active IDs are sorted and adjacent ranges
+coalesced. Linux io_uring with O_DIRECT, QD256, page-aligned registered/mapped
+staging and a fused deinterleave/scatter kernel are used. Some staging/cache
+coherence is Jetson-specific.
+
+IMPORTANT EQUATIONS:
+Delta traffic is proportional to `|D_in| * bytes_per_neuron`, not
+`|A_t| * bytes_per_neuron`, when reuse holds. Their mask thresholds and
+centroid/predictor equations are implementation-specific; the important
+system equation is the delta set above.
+
+TRAINING REQUIRED:
+Mask clustering and predictor training; the predictor is 2.86% of base in
+the reported setup. The model itself is an existing sparse-activation setup,
+not a dense Qwen3.8 post-hoc conversion.
+
+INFERENCE MECHANISM:
+Predict future masks from a single resident predictor, issue async O_DIRECT
+delta reads, scatter into fixed buffers, then execute sparse MLP. A dense
+prefix is used to reduce storage exposure under a memory cap.
+
+MEMORY BEHAVIOR:
+Evaluates caps around 9-17 GiB and reports a substantial dense prefix plus
+sparse suffix. At 9 GB, predictor and fixed resident state consume a large
+fraction; active working buffers are bounded.
+
+I/O BEHAVIOR:
+At 14.8 GiB, NVMe reads are about 103 MiB/token; at 9 GiB, just under 1 GiB/
+token. 80-87% of latency is NVMe in reported cap settings. Active-mask
+persistence is about 82-85% token-to-token, making delta reuse the dominant
+I/O reduction.
+
+THROUGHPUT RESULTS:
+At a 14 GiB-ish cap, NeuroPrefetcher is reported around 3.22 tok/s versus
+llama.cpp about 0.34 tok/s in the model-exceeds-memory regime. At 9 GiB,
+about 1.7 tok/s; at 13.2 GiB, about 3.7 tok/s. When llama.cpp also fits near
+13.9/14.8 GiB, its throughput is roughly 5.9/7.7 tok/s and the advantage
+narrows to about 1.2/1.1x. This is far below a universal 10-20 tok/s target.
+
+QUALITY RESULTS:
+The abstract reports preserving roughly 92-96% of dense accuracy; evaluation
+uses WikiText2 perplexity and 10-shot HellaSwag on Llama3-8B/related models.
+Centroid/predictor layer decisions are reported around 99% accuracy, but
+quality depends on threshold/clustering. It is not Qwen3.8 quality evidence.
+
+HARDWARE:
+Jetson AGX Orin/Arm/NVIDIA unified memory, Samsung 990 Pro NVMe, CUDA/IO
+Uring/O_DIRECT. Not CPU-only x86.
+
+WHAT ACTUALLY CAUSED THE SPEEDUP:
+Delta prefetch, 82-85% active-set reuse, contiguous neuron records, fixed
+slots, O_DIRECT/queueing, fused scatter, and dense-prefix selection. Predictor
+overhead is secondary; NVMe remains 80-87% of latency.
+
+WHAT DID NOT WORK:
+At low caps, active-set deltas become large and I/O dominates. The method
+does not reach 10-20 tok/s. Platform-specific mapped staging/coherence and
+GPU kernels do not transfer directly to CPU.
+
+LIMITATIONS:
+Mistral/Llama-like model, Jetson GPU/unified-memory hardware, no dense Qwen3.8
+conversion, no <8 GB x86 result. The paper's handling of down matrices should
+be replicated exactly before using its bytes/neuron calculation.
+
+ASSUMPTIONS:
+Activation masks persist across tokens; centroids generalize; contiguous
+neuron records and O_DIRECT queues outperform page cache; a dense prefix can
+fit.
+
+TRANSFER TO QWEN3.8-27B:
+This is the strongest direct system template: centroid or low-rank mask
+predictor, one early predictor, delta reads, fixed slots, coalesced ranges,
+O_DIRECT/io_uring experiment, and dense prefix. Qwen requires a new gated
+contribution threshold, 64-layer/hybrid mapping and x86 CPU kernels. Its
+reported bytes/token give a realistic warning: even excellent reuse may not
+meet 10-20 tok/s under 8 GB.
+
+TRANSFER TO LLAMA.CPP:
+The layout/scheduler ideas transfer conceptually. Linux io_uring/O_DIRECT can
+be tested, but C++ CPU staging and quantized deinterleave kernels replace
+CUDA/Jetson paths. Exact read histograms must be added.
+
+WHAT WE SHOULD COPY:
+[PRIOR ART] Delta sets; fixed slot map; mask clustering; one lookahead
+predictor; dense prefix; sorted range coalescing; O_DIRECT microbenchmarks;
+read bytes/token and latency fractions.
+
+WHAT WE SHOULD NOT COPY:
+[PRIOR ART LIMIT] Jetson throughput, predictor size, activation thresholds,
+or GPU staging as Qwen/x86 guarantees. Do not claim delta prefetch itself as
+novel.
+
+OPEN QUESTIONS:
+Will Qwen3.8 gated group masks persist 82-85% across decode? Can 4-bit group
+records reduce the 24.5 KiB/neuron equivalent enough? Can CPU execution and
+NVMe overlap without a GPU scheduler? What dense-prefix size leaves useful
+cache under 8 GB?
+
+------------------------------------------------------------
+3. CROSS-PAPER COMPARISON
+------------------------------------------------------------
+
+A) SPARSITY / TRANSFORMATION COMPARISON
+
+method                 dense/MoE  unit                    training required        active % / quality                 real wall-clock
+---------------------  ----------  ----------------------  -----------------------  ----------------------------------  ----------------
+MoEfication [S02]      dense       grouped FFN neurons     calibration + predictor  10-30% tested; task-dependent       CPU 1.4-2.3x in batch/seq
+Sparse Upcycling [S05] dense->MoE copied experts + route  10-60% continued train  active near dense; quality gain       no SSD/decode result
+NVIDIA upcycling [S06] dense->MoE virtual groups          continued pretraining    T/group tradeoff; quality gains      no SSD/decode result
+DejaVu [S07]           dense       MLP rows + heads        predictor training       ~15% MLP / ~50% heads selected       1.8-2x vs FT GPU
+PowerInfer [S08]       dense       hot/cold neurons        profiling + predictor    model/task dependent                  2.9x avg GPU hybrid
+SparseGPT [S09]        dense       static weights         calibration              50-60% static; PPL near dense         kernel-dependent
+DynaMoE [S12]          dense       nested MLP prefixes     10B-token fine-tune      25-100% widths; quality drops         no deployment result
+SVDP [S14]              sparse/ReGLU low-rank gate masks   calibration only         40-70% target in tests; <~1-1.4%     1.6-1.86x GPU
+NeuroPrefetcher [S18]  sparse LLM  clustered MLP masks    mask/predictor training  31-69% active caps                   1.7-3.7 tok/s Jetson
+Edge0 [S01]            native MoE  expert bundles         adapters/prerouter        top4/256 or top8/128; quality -3-4    14.9-25.3 tok/s Apple
+
+Interpretation: “active %” is not comparable across rows. Some are active
+neurons, some selected experts, some target sparsity, and some memory caps.
+Only Edge0 and NeuroPrefetcher directly measure a storage-resident style
+runtime; neither is dense Qwen3.8/x86 CPU.
+
+B) STORAGE / SYSTEM COMPARISON
+
+method                storage mechanism       bytes/token       RAM / cap             cache              prefetch             tok/s / hardware
+--------------------  -----------------------  ----------------  --------------------  -----------------  -------------------  -------------------------
+Edge0 [S01]           mmap safetensors        not published     2.9/1.0 GiB active   global LRU + hot   bundle futures/stage 14.9-25.3 Apple M4
+Flash [S03]           flash ranged reads       table-specific    about half model DRAM window k=4/5        predictor/read threads  M1 component/E2E
+PowerInfer [S08]      PCIe CPU/GPU weights    not SSD           GPU hot + CPU cold    hot placement      online prediction     2.0-13.2 hybrid GPU
+PowerInfer-2 [S04]    UFS clustered neurons   not one universal 7-19 GB setups         segmented hot/cold pipeline              2.13-11.68 phone
+NeuroPrefetcher [S18]NVMe O_DIRECT records    103 MiB to <1 GB 9-14.8 GiB caps       fixed slots        delta lookahead       1.7-3.7 Jetson
+Target hypothesis     NVMe/GGUF groups        <=200-400 MB at  8 GB total RAM        hot core + LRU    cross-layer delta      10-20 x86 CPU (unproven)
+                                              20/10 tok/s budget
+
+C) ROUTER / PREDICTOR COMPARISON
+
+method                router/predictor          horizon                accuracy/recall            overhead              failure behavior
+--------------------  ------------------------  ---------------------  -------------------------  --------------------  -----------------------
+Edge0 [S01]           2-layer prerouter head   1 layer + 1 token     not fully published;       512 hidden head       fallback/zero/drop;
+                                                                     production zero-drop route                         wasted prefetch
+MoEfication [S02]     MLP/center classifier     current FFN           task-dependent             O(kd)+small MLP        wrong group quality loss
+DejaVu [S07]          2-layer FC               next layer async       shallow >99; some ~93     ~0.2ms cited GPU       sparse miss/quality loss
+Flash [S03]           low-rank FFN predictor    current/future set    OPT FN~5%, FP~7%          2.4-4.8% cited         overread vs missing row
+PowerInfer [S08]      online activation pred   current cold neurons   mismatch examples        <10% params cited      CPU/GPU sync mismatch
+DynaMoE [S12]         2-linear difficulty      current MLP width      threshold/neighbor errors 0.51% base router      collapse without aux loss
+SVDP [S14]            low-rank SVD + bias       current FFN gate       tested benchmark drops    r(d+D), calibration   false negatives / overread
+NeuroPrefetcher [S18]one predictor + centroids all downstream layers   centroid ~99% decisions    2.86% base            delta grows; I/O dominates
+Target hypothesis     early group predictor    >=1 layer lookahead    >=99% recall more useful  resident CPU cost      emergency read/fallback
+
+------------------------------------------------------------
+4. QWEN3.8-27B ARCHITECTURE MAPPING
+------------------------------------------------------------
+
+EXACT OBSERVED CONFIGURATION
+
+- architecture/model type: Qwen3_5ForConditionalGeneration / qwen3_5.
+- hidden size: 5120.
+- intermediate FFN size: 17408.
+- layers: 64.
+- attention: 24 query heads, 4 KV heads, head dimension 256.
+- layer pattern: `full_attention_interval=4`; 48 linear/hybrid blocks and 16
+  full-attention blocks in the repeating 3-linear/1-full pattern.
+- linear/hybrid fields: convolution width 4, linear key heads 16 of size 128,
+  linear value heads 48 of size 128, output gate swish, A_log, dt_bias,
+  in_proj_a/b/qkv/z and out_proj.
+- full attention fields: q/k/v/o projections, q_norm/k_norm, 24 Q heads and
+  4 KV heads.
+- gated activation: SiLU; MLP is `down(silu(gate(x))*up(x))`.
+- vocabulary: 248320; maximum position: 262144; MTP count: 1.
+- source text dtype: bfloat16.
+- index metadata total BF16 size: approximately 55,562,855,904 bytes across
+  18 shards, including the full released model components.
+
+PARAMETERS / BYTES (BACK-OF-ENVELOPE)
+
+MLP per layer:
+`3 * 17408 * 5120 = 267,386,880 parameters`.
+64 MLPs: approximately 17.113B parameters.
+BF16 MLP per layer: approximately 534.8 MB decimal / 510 MiB.
+BF16 MLP total: approximately 34.23 GB decimal.
+Raw q4 MLP per layer: approximately 133.7 MB, before scales/biases.
+Rough q4 MLP total with group metadata: about 9.6 GB.
+
+Embeddings: `248320 * 5120 = 1,271,398,400` parameters.
+Untied head: same order; together about 2.5428B parameters, roughly 1.3 GB
+raw at q4 before quantizer metadata.
+
+The full q4 text-only model is expected around 14-16 GB depending on tensor
+quantization and metadata. This must be replaced with exact measurements once
+a converter produces a target file.
+
+HF TENSOR NAMES
+
+- `model.language_model.embed_tokens.weight`
+- `model.layers.{i}.input_layernorm.weight`
+- `model.layers.{i}.post_attention_layernorm.weight`
+- linear branch: `linear_attn.A_log`, `conv1d`, `dt_bias`, `in_proj_a`,
+  `in_proj_b`, `in_proj_qkv`, `in_proj_z`, `norm`, `out_proj`
+- MLP: `mlp.gate_proj`, `mlp.up_proj`, `mlp.down_proj`
+- full attention: `self_attn.q_proj`, `k_proj`, `v_proj`, `o_proj`, `q_norm`,
+  `k_norm`
+- `lm_head.weight`
+
+GGUF / LLAMA.CPP MAPPING
+
+Current qwen35.cpp creates dense `ffn_gate`, `ffn_up`, `ffn_down` tensors and
+uses a parallel SiLU FFN. The generic semantic mapping corresponds to names
+like `blk.{i}.ffn_gate.weight`, `blk.{i}.ffn_up.weight` and
+`blk.{i}.ffn_down.weight`, but a converted file must be inspected because
+GGUF names are generated through tensor enums and mapping tables.
+
+Candidate grouping must account for actual matrix orientation. Semantically:
+gate/up have one row per intermediate neuron in HF; down has one aligned
+column per intermediate neuron. In GGML layout/source shape the dimensions
+are represented as `{n_embd,n_ff}` for gate/up and `{n_ff,n_embd}` for down.
+The converter should move/pack all three with one permutation and record
+strides/offsets explicitly.
+
+CANDIDATE SPARSIFICATION POINTS
+
+ATTENTION:
+possible? Yes, contextual head/key/value sparsity exists in DejaVu.
+risk? High for Qwen3.8: 48 linear-state blocks and 16 full-attention blocks
+have different semantics; sparse state updates can create accumulated error;
+KV/head misses can require recomputation. Keep dense initially.
+
+FFN GATE PROJECTION:
+possible? Yes. It is the natural early predictor/filter and can be grouped.
+risk? A predictor false negative changes the final gated contribution; gate
+alone is not the output importance because up and down matter.
+
+FFN UP PROJECTION:
+possible? Yes, after a gate/group mask. It must share intermediate indices.
+risk? The up value is not naturally zero under SiLU; skipping small values is
+an approximation, not exact ReLU sparsity.
+
+FFN DOWN PROJECTION:
+possible? Yes, select aligned down columns or down-transposed rows.
+risk? Random column access and quantization layout can destroy CPU/SSD
+locality; repacking is likely necessary.
+
+WHOLE FFN EXPERTS:
+possible? Yes, use MoEfication/DynaMoE-style aligned groups.
+risk? Group granularity creates overfetch and group error; a conventional
+router adds training/symmetry issues and does not guarantee dense quality.
+
+NEURON CLUSTERS:
+possible? Yes, likely best first unit for storage.
+risk? Single-neuron records are too small for SSD; large clusters reduce
+selectivity. Need contribution-aware clustering and contiguous packing.
+
+LAYERS:
+possible? Full layer paging is possible, but a 64-layer decode would read
+large blocks and lose fine-grained reuse.
+risk? Layer skip changes the architecture severely and leaves no good
+lookahead; avoid as first path.
+
+MTP:
+possible? Could support speculative decoding.
+risk? Extra resident state/compute and a second unvalidated source of error;
+not useful until basic sparse decode works.
+
+RESIDENT FLOOR ESTIMATE
+
+Keep initially: embeddings/head, all 64 layer norms, 48 linear-attention
+branches, 16 full-attention branches, routers/predictor, runtime, staging and
+KV. The exact q4 floor is not yet measured. A conservative planning range is
+roughly 5-7 GB for non-MLP weights plus runtime/KV depending quantization and
+context. If true, an 8 GB machine leaves only approximately 1-3 GB for the
+active MLP cache and staging. This is a hypothesis and must be measured from
+an actual converted file.
+
+------------------------------------------------------------
+5. CANDIDATE ARCHITECTURES
+------------------------------------------------------------
+
+All estimates below are ranges for the Qwen3.8 target, not measurements. The
+model has 17.1B MLP parameters; the non-MLP resident floor is a major unknown.
+Use q4 raw payload plus scales/metadata for storage estimates.
+
+ARCHITECTURE A - MOEFICATION-STYLE GATED GROUPS
+
+Method: Permute intermediate neurons by gated coactivation/contribution,
+partition into groups (candidate 128-512 neurons), and predict top groups.
+
+active parameters/token: approximately 10-30% of MLP if traces permit;
+                         whole-model active parameter floor remains high
+resident parameters:     non-MLP floor + hot groups/cache
+SSD bytes/token:         roughly fresh-active-groups * 2-3 MB/group/layer;
+                         target must be <=200-400 MB/token at 20-10 tok/s
+random reads/token:      must be coalesced to tens/hundreds of ranges, not
+                         one read per neuron
+compute/token:            10-30% of MLP arithmetic plus predictor/gather;
+                         dense hybrid/attention remains
+predictor cost:           small MLP or SVD/group predictor; must be early
+likely quality loss:      unknown for SiLU; expect measurable truncation loss
+required training:        calibration; possibly distillation/fine-tuning
+implementation difficulty:high; quantized down-column packing and CPU kernel
+
+ARCHITECTURE B - DEJAVU-LIKE CONTEXTUAL GROUPS
+
+Method: Leave dense weights semantically intact; predictor emits per-layer
+group masks and sparse kernels execute selected groups.
+
+active parameters/token: 15-30% MLP as an initial target, not a claim
+resident parameters:     dense non-MLP + predictor + hot groups
+SSD bytes/token:         depends on mask delta; unacceptable if each layer
+                         reads full 15-30% independently
+random reads/token:      poor unless ranges are sorted/coalesced
+compute/token:            sparse MLP plus predictor; attention dense
+predictor cost:           per-layer predictors or one early predictor
+likely quality loss:      potentially low at conservative recall; gated tests
+                         required
+required training:        predictor labels; no model retraining initially
+implementation difficulty:high CPU sparse kernel and lookahead scheduler
+
+ARCHITECTURE C - HOT RESIDENT CORE + COLD SSD GROUPS
+
+Method: Keep globally hot groups resident, predict context-dependent cold
+groups, and stream only cold misses.
+
+active parameters/token: 40-70% of MLP may be touched if hot coverage is good;
+                         arithmetic reduction is smaller but robust
+resident parameters:     non-MLP + hot core, perhaps 20-50% MLP
+SSD bytes/token:         hot coverage *must* reduce misses below 200-400 MB
+random reads/token:      low if hot/cold records are clustered
+compute/token:            still high; likely a safer CPU path
+predictor cost:           low/medium online predictor
+likely quality loss:      low if all required cold groups are fetched
+required training:        profiling; predictor calibration
+implementation difficulty:medium-high; cache policy is central
+
+ARCHITECTURE D - SPARSE UPCYCLED / VIRTUAL-GROUP MOE
+
+Method: Copy dense weights into narrower/replicated experts, train a router,
+and continue pretraining/distill.
+
+active parameters/token: 25-50% of expanded capacity depending top-k/width;
+                         not necessarily below original dense MLP
+resident parameters:     router + hot experts + non-MLP
+SSD bytes/token:         group/expert misses; layout can be sequential
+random reads/token:      potentially large if many fine experts
+compute/token:            controlled by top-k/width but training needed
+predictor cost:           conventional router, low enough but route quality
+likely quality loss:      unknown; DynaMoE shows aggressive quality loss
+required training:        substantial continued training; possibly billions
+implementation difficulty:high; checkpoint conversion + training + runtime
+
+ARCHITECTURE E - SVD / GATE-FIRST SEQUENTIAL FILTER
+
+Method: Build a low-rank predictor of gate rows, validate gate values, then
+fetch/run only surviving up/down groups.
+
+active parameters/token: predicted mask can be 30-60% sparse, realized higher
+resident parameters:     non-MLP + low-rank predictor + gate metadata
+SSD bytes/token:         gate prediction/data first, then surviving up/down;
+                         two-stage reads may save bytes but add latency
+random reads/token:      coalesce group ranges; do not read per row
+compute/token:            predictor + gate + sparse up/down
+predictor cost:           `r(d+D)` per layer or one shared predictor; Qwen D
+                         is 17408, so this is nontrivial
+likely quality loss:      unknown for SiLU; SVDP ReGLU results encouraging
+required training:        calibration only initially
+implementation difficulty:high; sequential CPU/SSD overlap is unresolved
+
+ARCHITECTURE F - HYBRID RECOMMENDED HYPOTHESIS
+
+Method: Optional static block/N:M reduction, contribution-aware Qwen gated
+groups, resident hot core, one early predictor, delta prefetch, fixed staging,
+and optional distillation only after trace validation.
+
+active parameters/token: target 20-40% MLP initially; measure rather than set
+resident parameters:     non-MLP floor + hot core + predictor + 0.5-2 GB cache
+SSD bytes/token:         kill if sustained fresh traffic exceeds target budget;
+                         aim <100-200 MB/token for 20 tok/s aspiration
+random reads/token:      sorted/coalesced group ranges; target low tens
+compute/token:            hybrid dense floor + 20-40% MLP + CPU bookkeeping
+predictor cost:           one early group predictor, perhaps centroid/SVD
+likely quality loss:      first safe target <1% local KL / small PPL shift;
+                         benchmark loss unknown
+required training:        calibration first; small distillation next; no
+                         pretraining-from-scratch assumption
+implementation difficulty:very high; only candidate aligned with question
+
+BACK-OF-ENVELOPE STORAGE BUDGET
+
+At 4 GB/s effective sequential storage bandwidth:
+`4 GB/s / 10 token/s = 400 MB/token`.
+`4 GB/s / 20 token/s = 200 MB/token`.
+
+These are ceilings. If effective random/coalesced throughput is 1.25 GB/s,
+the corresponding budgets are 125 MB/token at 10 tok/s and 62.5 MB/token at
+20 tok/s. If a q4 Qwen MLP layer is roughly 150 MB and a group of 256 neurons
+is about 2.0-2.5 MB including metadata, then 64 layers with 10% fresh groups
+could approach 1 GB/token before delta reuse. That is impossible at 10-20
+tok/s unless the active sets persist and the cache covers most data.
+
+CONSEQUENCE: The first experiment must measure active-set overlap and bytes
+after a realistic layout. An “active 10%” result without delta/read accounting
+does not support the architecture.
+
+------------------------------------------------------------
+6. PRIOR ART / NOVELTY MAP
+------------------------------------------------------------
+
+ALREADY DONE:
+
+- Dense FFN neuron grouping and a predictor: MoEfication [S02].
+- Dense contextual MLP/head sparsity with asynchronous lookahead: DejaVu [S07].
+- Static one-shot weight pruning: SparseGPT [S09].
+- Hot/cold activation placement and sparse operators: PowerInfer [S08].
+- Flash windowing, row/column bundling and predictor-based reads: LLM in a
+  Flash [S03].
+- Neuron clusters, segmented cache and gate/up/down pipeline on a phone:
+  PowerInfer-2 [S04].
+- mmap expert bundles, global LRU, fixed staging slots, prefetch and learned
+  one-layer/one-token prerouter for a native sparse MoE: Edge0 [S01].
+- Post-training dense-to-nested dynamic MoE: DynaMoE [S12].
+- Training-free low-rank gate prediction for ReGLU/dReLU: SVDP [S14].
+- Delta-prefetch, fixed slots, clustered masks and storage-aware sparse
+  records for over-memory inference: NeuroPrefetcher [S18].
+- Standard top-1 router, capacity and balance mechanics: Switch [S10].
+- Expert-choice balancing: [S11].
+- Dense-to-MoE copied initialization and virtual-group scaling: [S05], [S06].
+
+PARTIALLY DONE:
+
+- Gated/SwiGLU dense-to-sparse conversion: DynaMoE/SVDP are adjacent but use
+  different models/activations and do not solve storage-resident Qwen3.8.
+- CPU/SSD sparse decode: flash and mobile/Jetson systems exist, but no exact
+  Linux/x86 Qwen3.8-27B under-8-GB result was found.
+- GGUF/llama.cpp expert paging: generic mmap exists, but a public integrated
+  dense-Qwen sparse-group/delta scheduler was not found in this pass.
+- Predictor plus storage layout: NeuroPrefetcher and Edge0 establish the
+  system pattern, but their hardware/model/activation assumptions differ.
+
+NOT FOUND IN THIS PASS (NOT A NOVELTY CLAIM):
+
+- A published dense Qwen3.8-27B -> gated group-sparse -> GGUF/llama.cpp
+  conversion with measured quality, bytes/token and x86 CPU wall time.
+- A public <8 GB RAM Linux/x86 run at 10-20 tok/s for a 27B dense-derived
+  model whose inactive MLP parameters remain on SSD.
+- An apples-to-apples comparison of MoEfication, DejaVu, SVD-like prediction,
+  NeuroPrefetcher-style delta reads and Edge0-style staging on one Qwen
+  SwiGLU checkpoint.
+
+POTENTIALLY NOVEL COMBINATION:
+
+Post-hoc Qwen3.8 gated-FFN group conversion + Qwen hybrid-block-aware
+resident-floor accounting + x86 CPU/quantized sparse kernel + GGUF-neuron/
+group storage + delta prefetch/fixed slots + exact bytes/token and quality
+measurements under 8 GB. The contribution would be an integrated empirical
+system and its tradeoff curve, not the isolated ingredients.
+
+DO NOT CLAIM NOVELTY FOR:
+
+- SSD expert streaming itself;
+- mmap/LRU/prefetch/fixed staging;
+- contextual sparsity prediction;
+- hot/cold neuron placement;
+- row/column bundling;
+- delta prefetch or mask persistence;
+- dense-to-MoE initialization;
+- neuron grouping.
+
+------------------------------------------------------------
+7. FAILURE MODES
+------------------------------------------------------------
+
+- Expert/group prediction misses: false negatives either force synchronous
+  random reads, use an approximation, or corrupt quality. False positives
+  waste bytes and cache slots. Record both separately.
+- Random I/O amplification: noncontiguous down columns or single-neuron reads
+  can make “sparse” traffic slower than sequential dense reads.
+- Small-read SSD collapse: align records and benchmark 4 KiB, 16 KiB, 32 KiB,
+  128 KiB and multi-range requests on the actual drive.
+- Cache thrashing: a global cache can help cross-layer reuse but one hot
+  sequence can evict another layer's working set. Track per-layer and global
+  hit rates.
+- Activation distribution shifts: prompt calibration may not represent long
+  autoregressive decode, code, multilingual prompts or rare reasoning tokens.
+- Activation shift after sparsification: a small MLP error changes the next
+  layer's routing/active set, so local error can compound.
+- Router collapse/expert symmetry: copied experts remain identical without
+  enough training; router loss can collapse to one group.
+- Quality loss from SiLU approximation: unlike ReLU, omitted negative/small
+  values are not exact zeros. Down projection norms alone are insufficient.
+- Dense floor dominance: 48 linear-attention blocks, 16 full-attention blocks,
+  embeddings, norms and output head can dominate after MLP pruning.
+- Output embedding/head dominance: the untied 1.27B-parameter head is a
+  resident compute/memory cost and may erase the expected speedup.
+- Quantization interactions: group scales/biases, dequantization and row/column
+  repacking can alter contribution rankings and add metadata overhead.
+- CPU sparse-kernel overhead: gathers, sorting, branchy loops and small GEMMs
+  can cost more than skipped multiplies; BLAS dense kernels may win at modest
+  sparsity.
+- Bookkeeping overhead: route prediction, slot maps, locks, futures and
+  synchronization can dominate one-token decode.
+- Page-cache interference: mmap can evict resident model/KV pages; `WILLNEED`
+  is advisory, and accidental page faults can serialize execution.
+- Linux readahead mismatch: sequential readahead can help ranges or read too
+  much; O_DIRECT may be necessary but increases alignment/implementation work.
+- mmap accidentally becoming resident: virtual address size is not RAM use;
+  measure RSS/PSS and major faults, not mapped bytes.
+- SSD endurance and energy: high reads/token can consume energy and device
+  lifetime even if latency is overlapped. See [S15].
+- Preprocessing/layout cost: creating grouped q4 records, changing down
+  orientation, storing indexes and validating tensor alignment can be a large
+  conversion project.
+- Predictor storage: NeuroPrefetcher shows a predictor can consume hundreds
+  of MB; under 8 GB this is material.
+- Prefill/decode mismatch: a full-layer prefill path may be optimal while
+  token decode needs delta groups. Do not use prompt throughput as decode.
+- KV-cache growth: long context consumes RAM and reduces active group cache.
+- Hybrid-state error: sparse MLP errors enter linear-attention recurrent state
+  and may persist longer than in ordinary full-attention blocks.
+- Tooling mismatch: MLX, CUDA, CANN, Android and Jetson synchronization do
+  not prove x86/llama.cpp behavior.
+- Token capacity/dropping: Switch-style overflow is unacceptable unless a
+  dense/exact fallback prevents silent quality loss.
+
+------------------------------------------------------------
+8. IMPLEMENTATION IDEAS
+------------------------------------------------------------
+
+Do not implement these yet. Each item is labeled by provenance.
+
+[PRIOR ART] Build an activation-trace tool that records per-layer gate, up,
+down contribution, selected group IDs, group byte ranges, active-set overlap,
+and local/full-model output error. Inspired by MoEfication [S02], SVDP [S14]
+and NeuroPrefetcher [S18].
+
+[PRIOR ART] Preserve the same intermediate permutation across gate/up/down and
+store aligned records. From MoEfication [S02], Flash [S03], PowerInfer-2 [S04]
+and NeuroPrefetcher [S18].
+
+[OUR HYPOTHESIS] Use contribution score
+`q_i=|silu(gate_i)*up_i|^2 * ||down[:,i]||^2` and a group score that includes
+within-group contribution correlation. This is a Qwen-specific extension;
+validate against exact output error.
+
+[PRIOR ART] Keep a global bounded LRU plus a separate prefetch buffer and
+fixed staging slots. From Edge0 [S01].
+
+[PRIOR ART] Use one early predictor with a one-layer/multi-layer horizon and
+delta sets rather than per-layer-late prediction. From Edge0 [S01], DejaVu
+[S07] and NeuroPrefetcher [S18].
+
+[OUR HYPOTHESIS] Use a Qwen-specific low-rank/SVD gate predictor as a training-
+light alternative, with per-group damage-aware thresholds and optional
+gate-first reads. Inspired by SVDP [S14], but Qwen uses SiLU and needs new
+validation.
+
+[PRIOR ART] Store gate/up/down group data in sorted contiguous ranges; consider
+O_DIRECT/io_uring, aligned staging and fixed slot maps. From Flash [S03] and
+NeuroPrefetcher [S18].
+
+[OUR HYPOTHESIS] For llama.cpp, introduce a separate sparse-FFN tensor family
+and operator rather than making ordinary GGUF mmap tensors page-fault into the
+working set. Store an index table with layer/group offsets, quantization
+metadata, and aligned gate/up/down strides.
+
+[PRIOR ART] Retain globally hot groups in RAM and stream context-dependent
+cold groups. From PowerInfer [S08] and PowerInfer-2 [S04].
+
+[MODIFICATION] Make the hot score a combination of global frequency, expected
+SSD read cost, contribution norm and predicted next-token probability, rather
+than frequency alone.
+
+[PRIOR ART] Use full-layer reads during prefill and sparse/delta reads during
+decode. From Edge0 [S01].
+
+[MODIFICATION] Keep all Qwen3.8 attention/linear tensors on the dense path for
+the first experiment; add attention sparsity only after MLP-only traces pass.
+
+[OUR HYPOTHESIS] Optional SparseGPT-style static block/N:M reduction can lower
+the SSD pool before contextual selection, but only if applied consistently to
+the gated groups and measured separately from dynamic sparsity.
+
+[PRIOR ART] Record exact cache hits, wasted prefetch, reads/token, range-size
+histogram, major faults, queue depth, overlap and stall time. Edge0 exposes
+several counters; Flash/NeuroPrefetcher show why these measurements matter.
+
+[MODIFICATION] Define emergency miss policy: first try a bounded synchronous
+read; if latency exceeds a threshold, use a quality-preserving dense fallback
+or conservative resident group, never silent zero/drop in quality benchmarks.
+
+[OUR HYPOTHESIS] Distill the sparse model to the dense Qwen3.8 logits after
+the trace chooses a target group budget. Only then consider a router or
+virtual-group upcycling. This avoids spending training effort on an impossible
+SSD byte budget.
+
+------------------------------------------------------------
+9. EXPERIMENTS WE MUST RUN
+------------------------------------------------------------
+
+EXPERIMENT 1 - GATED QWEN ACTIVE-SET / ERROR TRACE (FIRST IMPLEMENTATION)
+
+hypothesis:
+Qwen3.8 gated MLP contributions can be grouped so that a substantial fraction
+of MLP rows can be omitted per token, with high token-to-token overlap and a
+storage traffic budget compatible with a future 10-20 tok/s design.
+
+model:
+Qwen3.8-27B text-only checkpoint if feasible. If 27B cannot fit for tracing,
+use a smaller Qwen3.5/Qwen-family gated model only as a pipeline proxy and
+label all results as proxy. Trace full dense outputs first; do not modify
+weights or begin a sparse implementation.
+
+hardware:
+Available Linux/x86 machine; record CPU, RAM, NVMe model, filesystem,
+quantization, threads. A GPU is acceptable for trace generation but the
+trace must be replayable against x86 storage assumptions.
+
+metric:
+Per-layer and whole-model next-token KL/logit error; MLP output relative L2;
+active fraction at multiple thresholds; group truncation error; gate/up/down
+contribution; Jaccard overlap across adjacent tokens; contiguous range count;
+fresh group bytes/token under candidate group sizes 64/128/256/512; prompt vs
+decode split; CPU trace time.
+
+success threshold:
+At least one operating point with >=50% MLP activity omitted (or a clearly
+measured lower bound for unmodified SiLU), <=1% local calibration perplexity
+or small agreed KL increase, >=80% adjacent active-set persistence, and
+estimated coalesced fresh reads <=200-400 MB/token before overlap optimism.
+
+kill threshold:
+No point below 30% omitted activity at acceptable error; adjacent overlap
+below 60%; or every acceptable-quality point requires >400 MB/token at an
+effective 4 GB/s device. If the resident floor alone exceeds 8 GB, stop the
+8 GB objective or reduce model scope before building a runtime.
+
+EXPERIMENT 2 - STORAGE LAYOUT MICROBENCHMARK
+
+hypothesis:
+Aligned group records and sorted range reads make the selected Qwen groups
+fast enough; per-neuron/page-fault access does not.
+
+model:
+Synthetic records with exact Qwen3.8 q4 dimensions plus a small real converted
+layer. Compare group 64/128/256/512 and gate+up+down layouts.
+
+hardware:
+Target Linux/x86 NVMe; report filesystem, direct/buffered I/O, queue depth,
+threads, read alignment and thermals.
+
+metric:
+MiB/s, p50/p95/p99 read latency, IOPS, CPU copy/dequant time, ranges/request,
+bytes overfetched, queue depth, read amplification and energy if available.
+
+success threshold:
+Sustained candidate delta reads at >=50% of the device's realistic sequential
+bandwidth with bounded p99; group reads materially beat one-neuron/page reads.
+
+kill threshold:
+Small/range reads remain below the bytes/token budget even with full overlap,
+or CPU dequant/gather dominates the dense baseline.
+
+EXPERIMENT 3 - EXACT REPLAY CACHE/PREFETCH SIMULATOR
+
+hypothesis:
+Edge0/NeuroPrefetcher-style global cache, fixed slots and delta prefetch can
+keep cold reads within budget using the actual Qwen trace.
+
+model: Experiment 1 traces; no model execution needed.
+hardware: Parameterized by measured NVMe/CPU results; then real machine.
+metric: cache hit/miss, wasted prefetch, fresh bytes/token, ranges/token,
+lookahead misses, slot churn, queue occupancy, hypothetical stall time.
+success threshold: >=80% active-set reuse, >=90% predicted-group recall,
+fresh bytes within target at p95, no pathological per-layer thrashing.
+kill threshold: p95/prompt shifts cause >400 MB/token, predictor recall below
+99% for the groups that matter, or cache needs more RAM than available.
+
+EXPERIMENT 4 - CPU SPARSE FFN VS DENSE BASELINE
+
+hypothesis:
+At the trace-selected group sizes, CPU sparse execution plus predictor/gather
+is faster than dense q4 FFN, not just fewer FLOPs.
+
+model: one or several Qwen3.8 MLP layers, then full text decode.
+hardware: target x86 CPU, one thread count sweep, RAM under target cap.
+metric: layer time, decode tok/s, predictor time, gather/dequant time, branch
+misses/cache misses, dense-vs-sparse crossover by active fraction.
+success threshold: measured layer and end-to-end speedup at the selected point;
+initially require >=1.2x end-to-end before any SSD complexity.
+kill threshold: dense q4 wins at all acceptable sparsity points or sparse
+bookkeeping consumes the expected savings.
+
+EXPERIMENT 5 - QUALITY RECOVERY
+
+hypothesis:
+Small calibration/distillation/fine-tuning recovers most of the gated group
+truncation loss without changing the bytes budget.
+
+model: Qwen3.8 target or proxy, group layout from Experiment 1.
+hardware: available training/inference hardware; record tokens and time.
+metric: calibration KL/PPL, WikiText2, HellaSwag and selected math/code tasks;
+long-context recurrent/hybrid-state drift; active bytes unchanged.
+success threshold: <=1-2% benchmark degradation at the selected IO budget,
+with a reproducible finite training budget.
+kill threshold: quality recovery requires full pretraining-scale data or
+increases active bytes enough to invalidate storage.
+
+EXPERIMENT 6 - END-TO-END STORAGE-RESIDENT DECODE
+
+hypothesis:
+The integrated design reaches useful tokens/s under 8 GB without silent
+quality fallback.
+
+model: final chosen Qwen3.8 sparse representation.
+hardware: Linux/x86, <=8 GB RSS cap, target NVMe, single stream, context and
+decode lengths reported separately.
+
+metric: tok/s prefill/decode, p50/p95 token latency, RSS/PSS, major faults,
+bytes read/token, read ranges, SSD utilization, CPU utilization, cache/predictor
+stats, benchmark quality.
+
+success threshold:
+At least 10 tok/s decode with <=8 GB RSS would meet the ambitious target; a
+lower reproducible point with a clear bottleneck is still scientifically useful.
+
+kill threshold:
+Below 5 tok/s at the most favorable safe quality point, >8 GB RSS, or
+quality fallback/misses that cannot be bounded. Do not continue to optimize a
+design that fails the first three experiments.
+
+------------------------------------------------------------
+10. BIBLIOGRAPHY
+------------------------------------------------------------
+
+[S01] Edge0-AI. Edge0 repository, architecture, streaming and prerouter docs.
+      https://github.com/Edge0-AI/Edge0
+      Inspected implementation commit: 03a5a15.
+
+[S02] Zhang et al. “MoEfication: Transformer Feed-forward Layers are Mixtures
+      of Experts.” Findings of ACL 2022.
+      https://arxiv.org/abs/2110.01786
+      https://aclanthology.org/2022.findings-acl.71/
+      https://github.com/thunlp/MoEfication
+
+[S03] Alizadeh et al. “LLM in a flash: Efficient Large Language Model
+      Inference with Limited Memory.” ACL 2024.
+      https://arxiv.org/abs/2312.11514
+      https://aclanthology.org/2024.acl-long.678/
+
+[S04] “PowerInfer-2: Fast Large Language Model Inference on a Smartphone.”
+      arXiv 2024.
+      https://arxiv.org/abs/2406.06282
+      https://arxiv.org/pdf/2406.06282
+      https://github.com/SJTU-IPADS/PowerInfer
+
+[S05] Komatsuzaki et al. “Sparse Upcycling: Training Mixture-of-Experts from
+      Dense Checkpoints.” ICLR 2023.
+      https://arxiv.org/abs/2212.05055
+      https://arxiv.org/html/2212.05055v2
+
+[S06] He et al. “Upcycling Large Language Models into Mixture of Experts.”
+      arXiv 2024.
+      https://arxiv.org/abs/2410.07524
+      https://ar5iv.labs.arxiv.org/html/2410.07524
+
+[S07] Liu et al. “Deja Vu: Contextual Sparsity for Efficient LLMs at Inference
+      Time.” ICML 2023.
+      https://arxiv.org/abs/2310.17157
+      https://proceedings.mlr.press/v202/liu23am/liu23am.pdf
+      https://github.com/FMInference/DejaVu
+      Inspected implementation commit: ee902c1.
+
+[S08] Song et al. “PowerInfer: Fast Large Language Model Serving with a
+      Consumer-grade GPU.” arXiv 2023.
+      https://arxiv.org/abs/2312.12456
+      https://github.com/SJTU-IPADS/PowerInfer
+
+[S09] Frantar and Alistarh. “SparseGPT: Massive Language Models Can be
+      Accurately Pruned in One-Shot.” ICML 2023.
+      https://arxiv.org/abs/2301.00774
+      https://proceedings.mlr.press/v202/frantar23a/frantar23a.pdf
+      https://github.com/IST-DASLab/sparsegpt
+
+[S10] Fedus, Zoph and Shazeer. “Switch Transformers: Scaling to Trillion
+      Parameter Models with Simple and Efficient Sparsity.” JMLR 2022.
+      https://arxiv.org/abs/2101.03961
+      https://jmlr.org/papers/v23/21-0998.html
+
+[S11] Zhou et al. “Mixture-of-Experts with Expert Choice Routing.” NeurIPS
+      2022.
+      https://arxiv.org/abs/2202.09368
+      https://ar5iv.labs.arxiv.org/html/2202.09368
+
+[S12] Nishu et al. “From Dense to Dynamic: Token-Difficulty Driven MoEfication
+      of Pre-Trained LLMs.” arXiv 2025.
+      https://arxiv.org/abs/2502.12325
+      https://arxiv.org/html/2502.12325v1
+
+[S13] Luo et al. “Sparsing Law: Scaling Laws for Activation Sparsity in Large
+      Language Models.” PMLR 267, 2025.
+      https://proceedings.mlr.press/v267/luo25i.html
+      https://github.com/thunlp/SparsingLaw/
+
+[S14] Serbin et al. “SVD Contextual Sparsity Predictors for Fast LLM
+      Inference.” arXiv 2026.
+      https://arxiv.org/abs/2603.14110
+      https://arxiv.org/html/2603.14110v1
+
+[S15] Kyung, Yun and Ahn. “SSD Offloading for LLM Mixture-of-Experts Weights
+      Considered Harmful.” IEEE Computer Architecture Letters, 2025.
+      https://doi.org/10.1109/LCA.2025.3592563
+      https://snu.elsevierpure.com/en/publications/ssd-offloading-for-llm-mixture-of-experts-weights-considered-harm-2/
+
+[S16] Qwen team. Qwen3.8-27B model release/configuration/index.
+      https://huggingface.co/Qwen/Qwen3.8-27B
+      https://huggingface.co/Qwen/Qwen3.8-27B/raw/main/config.json
+      https://huggingface.co/Qwen/Qwen3.8-27B/raw/main/model.safetensors.index.json
+
+[S17] ggml-org/llama.cpp. Qwen3.5 model implementation and GGUF tensor mapping.
+      https://github.com/ggml-org/llama.cpp/blob/master/src/models/qwen35.cpp
+      https://raw.githubusercontent.com/ggml-org/llama.cpp/master/gguf-py/gguf/tensor_mapping.py
+
+[S18] Dhar et al. “NeuroPrefetcher: Storage-Aware Sparse LLM Inference via
+      Delta Prefetching.” ICPP 2026 / arXiv 2026.
+      https://arxiv.org/abs/2608.22643
+      https://arxiv.org/html/2608.22643v1
+      https://doi.org/10.1145/3832810.3832862
+      https://github.com/nobeldhar/llm-activation-sparsity
+
+END OF RESEARCH NOTEBOOK CHECKPOINT.
