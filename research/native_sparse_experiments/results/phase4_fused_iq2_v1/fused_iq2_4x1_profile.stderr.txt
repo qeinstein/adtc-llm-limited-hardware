@@ -1,0 +1,5 @@
+PHASE4_FUSED_IQ2_PROFILE total_cycles=278752737540 load_cycles=15995103654 decode_mac_cycles=87801949064 calls=15810560 blocks=126484480
+PHASE4_FUSED_IQ2_PROFILE total_cycles=278752737540 load_cycles=15995103654 decode_mac_cycles=87801949064 calls=15810560 blocks=126484480
+PHASE4_FUSED_IQ2_PROFILE total_cycles=278752737540 load_cycles=15995103654 decode_mac_cycles=87801949064 calls=15810560 blocks=126484480
+PHASE4_FUSED_IQ2_PROFILE total_cycles=278752737540 load_cycles=15995103654 decode_mac_cycles=87801949064 calls=15810560 blocks=126484480
+PHASE3_IQP_PROFILE decode_cycles=0 gemv_cycles=0 decode_calls=0 gemv_calls=0

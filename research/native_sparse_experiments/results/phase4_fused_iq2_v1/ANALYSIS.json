@@ -1,0 +1,53 @@
+{
+  "experiment_id": "phase4_fused_iq2_v1",
+  "status": "valid",
+  "control": {
+    "generic_tok_s_mean": 4.731438,
+    "generic_tok_s_samples": [4.50071, 4.86853, 4.82507],
+    "generic_ms_per_token": 211.3522358318972
+  },
+  "raw_row_reference": {
+    "tok_s_mean": 4.885292,
+    "tok_s_samples": [4.91949, 4.91474, 4.82165],
+    "ms_per_token": 204.69605501574932
+  },
+  "fused_iq2_4x1": {
+    "tok_s_mean": 4.778353,
+    "tok_s_samples": [4.77198, 4.73168, 4.8314],
+    "ms_per_token": 209.2771295883749,
+    "delta_vs_generic_percent": 0.9915590144053521,
+    "delta_vs_raw_row_percent": -2.188999142732917,
+    "peak_rss_mib": 10526.359375
+  },
+  "correctness": {
+    "response_equal": true,
+    "response_sha256": "a3c3c73a067cbb5fab9e68bd7d06c03d3c488e74467d33c40fae339836006c8c",
+    "native_k": 8,
+    "layers": 40,
+    "router_or_weights_changed": false,
+    "no_drop_or_substitution": true
+  },
+  "profile": {
+    "total_cycles": 278752737540,
+    "load_cycles": 15995103654,
+    "decode_mac_cycles": 87801949064,
+    "calls": 15810560,
+    "blocks": 126484480,
+    "profile_decode_tokens": 256,
+    "total_cycles_per_call": 17630.794705563876,
+    "load_cycles_per_call": 1011.672176950089,
+    "decode_mac_cycles_per_call": 5553.373761840187,
+    "load_fraction_of_total": 0.057380974246772236,
+    "decode_mac_fraction_of_total": 0.3149814772721317,
+    "unattributed_fraction_of_total": 0.6276375484810961,
+    "registration_report_duplicate_count": 4,
+    "note": "Summed worker TSC intervals; profile instrumentation is not a throughput result."
+  },
+  "ram_floor": {
+    "non_moe_peak_rss_mib": 1613.0234375,
+    "non_moe_peak_anon_mib": 539.75,
+    "non_moe_peak_file_mib": 1073.3359375,
+    "lazy_steady_peak_rss_mib": 6539.01171875
+  },
+  "next_experiment": "two-row fused packed-IQ2 AVX2 kernel with atomic-once profile registration"
+}
