@@ -148,7 +148,7 @@
     "required_before_long_run": true,
     "backend": "kaggle_dataset_version",
     "dataset_slug_env": "FALCON_CHECKPOINT_DATASET",
-    "checkpoint_upload_every_steps": 100,
+    "checkpoint_upload_every_steps": 8,
     "allow_ephemeral_only": false
   },
   "export": {
