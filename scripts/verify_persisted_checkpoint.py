@@ -42,9 +42,11 @@ def main(argv: list[str] | None = None) -> int:
         checkpoint = state_path.parent
         required = ["optimizer.pt", "scheduler.pt", "rng_state.pth"]
         missing = [name for name in required if not (checkpoint / name).is_file()]
-        adapter_files = list(checkpoint.glob("adapter_model.*"))
+        adapter_files = [path for path in checkpoint.glob("adapter_model.*") if path.is_file()]
         manifest_path = checkpoint / "checkpoint_manifest.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.is_file() else {}
+        if manifest.get("scaler_required") is True and not (checkpoint / "scaler.pt").is_file():
+            missing.append("scaler.pt")
         if missing or not adapter_files or manifest.get("complete") is not True:
             raise SystemExit(f"incomplete persisted checkpoint: {checkpoint}; missing={missing}")
         checkpoints.append({"path": str(state_path), "global_step": state.get("global_step"), "files": sorted(x.name for x in checkpoint.iterdir() if x.is_file())})

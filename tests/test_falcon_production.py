@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from scripts.build_falcon_dataset import canonical, near_holdout
-from scripts.train_falcon_production import FalconDataset, latest_checkpoint, token_share_sampling_weights
+from scripts.train_falcon_production import FalconDataset, checkpoint_is_complete, latest_checkpoint, token_share_sampling_weights
 
 
 class FakeTokenizer:
@@ -82,3 +82,14 @@ def test_token_share_weights_match_expected_loss_token_mass():
     mcqa_mass = sum(w * item["tokens"] for w, item in zip(weights, items) if item["kind"] == "mcqa")
     assert sft_mass == pytest.approx(0.75)
     assert mcqa_mass == pytest.approx(0.25)
+
+
+def test_checkpoint_manifest_can_require_fp16_scaler(tmp_path: Path):
+    checkpoint = tmp_path / "checkpoint-1"
+    checkpoint.mkdir()
+    for name in ("trainer_state.json", "optimizer.pt", "scheduler.pt", "rng_state.pth", "adapter_model.safetensors"):
+        (checkpoint / name).write_text("{}")
+    (checkpoint / "checkpoint_manifest.json").write_text('{"complete": true, "scaler_required": true}')
+    assert not checkpoint_is_complete(checkpoint)
+    (checkpoint / "scaler.pt").write_text("{}")
+    assert checkpoint_is_complete(checkpoint)

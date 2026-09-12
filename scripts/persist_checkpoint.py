@@ -60,7 +60,7 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit(f"checkpoint trainer_state.json is invalid: {exc}") from exc
     if not isinstance(trainer_state.get("global_step"), int):
         raise SystemExit("checkpoint trainer_state.json has no integer global_step")
-    adapter_files = list(checkpoint.glob("adapter_model.*"))
+    adapter_files = [path for path in checkpoint.glob("adapter_model.*") if path.is_file()]
     required_state = [checkpoint / "optimizer.pt", checkpoint / "scheduler.pt", checkpoint / "rng_state.pth"]
     if not adapter_files:
         raise SystemExit(f"checkpoint has no adapter_model.* file: {checkpoint}")
@@ -75,6 +75,8 @@ def main(argv: list[str] | None = None) -> int:
             raise SystemExit(f"checkpoint_manifest.json is invalid: {exc}") from exc
         if manifest.get("complete") is not True or int(manifest.get("global_step", -1)) != trainer_state["global_step"]:
             raise SystemExit("checkpoint manifest is not marked complete or disagrees with trainer_state global_step")
+        if manifest.get("scaler_required") is True and not (checkpoint / "scaler.pt").is_file():
+            raise SystemExit("checkpoint manifest requires scaler.pt but it is missing")
     with tempfile.TemporaryDirectory(prefix="falcon-persist-") as tmp:
         staging = Path(tmp) / "checkpoint"
         shutil.copytree(checkpoint, staging)

@@ -226,11 +226,20 @@ class Progress:
                         record["gpu_memory_reserved_mb"] = round(torch.cuda.memory_reserved() / 1024**2, 1)
                 except Exception:  # noqa: BLE001 - heartbeat must never kill training
                     pass
+                try:
+                    result = subprocess.run(
+                        ["nvidia-smi", "--query-gpu=utilization.gpu", "--format=csv,noheader,nounits"],
+                        text=True, capture_output=True, check=False, timeout=3,
+                    )
+                    value = result.stdout.strip().splitlines()[0]
+                    record["gpu_utilization_percent"] = float(value)
+                except (OSError, IndexError, ValueError, subprocess.TimeoutExpired):
+                    pass
             print("[{}] HEARTBEAT {}".format(record["timestamp_utc"], json.dumps({k: v for k, v in record.items() if k not in {"timestamp_utc", "event"}}, sort_keys=True)), flush=True)
             append_jsonl(self.path, record)
 
 
-def checkpoint_is_complete(path: Path) -> bool:
+def checkpoint_is_complete(path: Path, *, require_scaler: bool = False) -> bool:
     """Return true only for a checkpoint that can actually be resumed.
 
     ``trainer_state.json`` alone is not enough: an interrupted save can leave
@@ -238,13 +247,17 @@ def checkpoint_is_complete(path: Path) -> bool:
     resume selector conservative and fail closed.
     """
     required = ["trainer_state.json", "optimizer.pt", "scheduler.pt", "rng_state.pth"]
-    return (
-        path.is_dir()
-        and any(path.glob("adapter_model.*"))
-        and all((path / name).is_file() for name in required)
-        and (not (path / "checkpoint_manifest.json").exists()
-             or json.loads((path / "checkpoint_manifest.json").read_text(encoding="utf-8")).get("complete") is True)
-    )
+    if not path.is_dir() or not any(candidate.is_file() for candidate in path.glob("adapter_model.*")):
+        return False
+    if not all((path / name).is_file() for name in required):
+        return False
+    manifest_path = path / "checkpoint_manifest.json"
+    if manifest_path.exists():
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if manifest.get("complete") is not True:
+            return False
+        require_scaler = require_scaler or manifest.get("scaler_required") is True
+    return not require_scaler or (path / "scaler.pt").is_file()
 
 
 def latest_checkpoint(directory: Path) -> Path | None:
@@ -500,22 +513,22 @@ def main(argv: list[str] | None = None) -> int:
             self._training_started = time.monotonic()
             super().__init__(*trainer_args, **trainer_kwargs)
 
-        def _pad(self, sequences: list[list[int]], value: int) -> tuple[torch.Tensor, torch.Tensor]:
+        def _pad(self, sequences: list[list[int]], value: int, device: torch.device) -> tuple[torch.Tensor, torch.Tensor]:
             width = max(len(x) for x in sequences)
-            ids = torch.full((len(sequences), width), value, dtype=torch.long, device=model.device)
+            ids = torch.full((len(sequences), width), value, dtype=torch.long, device=device)
             mask = torch.zeros_like(ids)
             for i, seq in enumerate(sequences):
-                ids[i, :len(seq)] = torch.tensor(seq, dtype=torch.long, device=model.device)
+                ids[i, :len(seq)] = torch.tensor(seq, dtype=torch.long, device=device)
                 mask[i, :len(seq)] = 1
             return ids, mask
 
-        def _sft_loss(self, batch: list[dict[str, Any]]) -> tuple[torch.Tensor, int]:
-            ids, mask = self._pad([x["input_ids"] for x in batch], int(tokenizer.pad_token_id))
-            labels, _ = self._pad([x["labels"] for x in batch], -100)
-            out = model(input_ids=ids, attention_mask=mask, labels=labels)
+        def _sft_loss(self, model_arg, batch: list[dict[str, Any]]) -> tuple[torch.Tensor, int]:
+            ids, mask = self._pad([x["input_ids"] for x in batch], int(tokenizer.pad_token_id), model_arg.device)
+            labels, _ = self._pad([x["labels"] for x in batch], -100, model_arg.device)
+            out = model_arg(input_ids=ids, attention_mask=mask, labels=labels)
             return out.loss, sum(x["tokens"] for x in batch)
 
-        def _mcqa_loss(self, batch: list[dict[str, Any]]) -> tuple[torch.Tensor, int]:
+        def _mcqa_loss(self, model_arg, batch: list[dict[str, Any]]) -> tuple[torch.Tensor, int]:
             sequences: list[list[int]] = []
             spans: list[tuple[int, int, int, list[int]]] = []
             for item in batch:
@@ -523,8 +536,8 @@ def main(argv: list[str] | None = None) -> int:
                 for choice in item["choice_ids"]:
                     sequences.append(item["context_ids"] + choice)
                 spans.append((start, len(sequences), len(item["context_ids"]), item["choice_ids"]))
-            ids, mask = self._pad(sequences, int(tokenizer.pad_token_id))
-            out = model(input_ids=ids, attention_mask=mask)
+            ids, mask = self._pad(sequences, int(tokenizer.pad_token_id), model_arg.device)
+            out = model_arg(input_ids=ids, attention_mask=mask)
             rows: list[int] = []
             positions: list[int] = []
             targets: list[int] = []
@@ -539,9 +552,9 @@ def main(argv: list[str] | None = None) -> int:
                 choices_per_item.append(item_spans)
             if any(position < 0 for position in positions):
                 raise RuntimeError("MCQA context must contain at least one token")
-            selected = out.logits[torch.tensor(rows, device=model.device), torch.tensor(positions, device=model.device), :].float()
+            selected = out.logits[torch.tensor(rows, device=model_arg.device), torch.tensor(positions, device=model_arg.device), :].float()
             selected = selected - selected.max(dim=-1, keepdim=True).values
-            token_logp = selected.log_softmax(dim=-1).gather(1, torch.tensor(targets, device=model.device).unsqueeze(1)).squeeze(1)
+            token_logp = selected.log_softmax(dim=-1).gather(1, torch.tensor(targets, device=model_arg.device).unsqueeze(1)).squeeze(1)
             losses = []
             offset = 0
             for item, item_spans in zip(batch, choices_per_item):
@@ -562,10 +575,10 @@ def main(argv: list[str] | None = None) -> int:
             losses = {}
             token_count = 0
             if by_kind["sft"]:
-                losses["sft"] , tokens = self._sft_loss(by_kind["sft"])
+                losses["sft"] , tokens = self._sft_loss(model_arg, by_kind["sft"])
                 token_count += tokens
             if by_kind["mcqa"]:
-                losses["mcqa"], tokens = self._mcqa_loss(by_kind["mcqa"])
+                losses["mcqa"], tokens = self._mcqa_loss(model_arg, by_kind["mcqa"])
                 token_count += tokens
             active = [(name, loss, float(self.objective_weights.get(name, 0.0))) for name, loss in losses.items() if self.objective_weights.get(name, 0.0) > 0]
             if not active:
@@ -588,6 +601,14 @@ def main(argv: list[str] | None = None) -> int:
             if not torch.isfinite(loss):
                 raise FloatingPointError(f"non-finite training loss at microstep {self._microstep}")
             return (loss, None) if return_outputs else loss
+
+        def prediction_step(self, model_arg, inputs, prediction_loss_only, ignore_keys=None):
+            """Evaluate this list-based dataset without asking Trainer to collate labels/logits."""
+            del prediction_loss_only, ignore_keys
+            model_arg.eval()
+            with torch.no_grad():
+                loss = self.compute_loss(model_arg, inputs)
+            return loss.detach(), None, None
 
         def log(self, logs: dict[str, float], *log_args, **log_kwargs):
             enriched = dict(logs)
@@ -655,10 +676,10 @@ def main(argv: list[str] | None = None) -> int:
             del control, kwargs
             path = Path(args_.output_dir) / f"checkpoint-{state.global_step}"
             if path.exists():
-                if not checkpoint_is_complete(path):
+                if not checkpoint_is_complete(path, require_scaler=bool(args_.fp16)):
                     raise RuntimeError(f"Trainer produced an incomplete checkpoint: {path}")
                 files = [str(x.relative_to(path)) for x in path.rglob("*") if x.is_file()]
-                atomic_json(path / "checkpoint_manifest.json", {"timestamp_utc": now(), "global_step": int(state.global_step), "files": files, "complete": True})
+                atomic_json(path / "checkpoint_manifest.json", {"timestamp_utc": now(), "global_step": int(state.global_step), "files": files, "complete": True, "scaler_required": bool(args_.fp16), "scaler_present": (path / "scaler.pt").is_file()})
                 event(event_path, "checkpoint_saved", path=str(path), global_step=int(state.global_step), file_count=len(files))
                 self._persist(path, int(state.global_step), args_)
 
@@ -740,8 +761,8 @@ def main(argv: list[str] | None = None) -> int:
                 rng["cuda"] = torch.cuda.get_rng_state_all()
             torch.save(rng, path / "rng_state.pth")
         files = [str(x.relative_to(path)) for x in path.rglob("*") if x.is_file()]
-        atomic_json(path / "checkpoint_manifest.json", {"timestamp_utc": now(), "global_step": step, "files": files, "complete": True, "terminal": True})
-        if not checkpoint_is_complete(path):
+        atomic_json(path / "checkpoint_manifest.json", {"timestamp_utc": now(), "global_step": step, "files": files, "complete": True, "terminal": True, "scaler_required": bool(train_args.fp16), "scaler_present": (path / "scaler.pt").is_file()})
+        if not checkpoint_is_complete(path, require_scaler=bool(train_args.fp16)):
             raise RuntimeError(f"terminal checkpoint failed completeness validation: {path}")
         return path
     resume = args.resume_from_checkpoint
