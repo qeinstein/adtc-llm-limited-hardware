@@ -1,0 +1,150 @@
+{
+  "schema_version": "1.0.0",
+  "experiment_id": "falcon-production-v1",
+  "model": {
+    "id": "tiiuae/Falcon-H1-1.5B-Deep-Instruct",
+    "revision": "b6648636ddc906688974282de6e7a243395f5423",
+    "tokenizer_revision": "b6648636ddc906688974282de6e7a243395f5423",
+    "license": "Falcon LLM License"
+  },
+  "data": {
+    "system_prompt": "You are Jamii Afya, an offline medical decision-support assistant for community health workers in rural African clinics. Answer in the question's language (English or Kiswahili). Always surface danger signs and when to refer.",
+    "max_length": 512,
+    "dev_fraction": 0.1,
+    "split_seed": 3407,
+    "sources": [
+      {
+        "name": "project_clinical_safety",
+        "path": "data/falcon_probe_sft.json",
+        "format": "alpaca",
+        "objective": "sft",
+        "category": "clinical_safety",
+        "provenance": "project_curated",
+        "license": "project-authored",
+        "language": "en",
+        "required": true
+      },
+      {
+        "name": "project_clinical_generation",
+        "path": "data/medical_lora_dataset.json",
+        "format": "alpaca",
+        "objective": "sft",
+        "category": "clinical_generation",
+        "provenance": "project_curated",
+        "license": "project-authored",
+        "language": "en+sw",
+        "required": true
+      },
+      {
+        "name": "public_mcqa_train_only",
+        "path": "output/accuracy_sft.jsonl",
+        "format": "mcqa",
+        "objective": "mcqa",
+        "category": "general_and_medical_mcqa",
+        "provenance": "public_train_splits_only",
+        "license": "per-source; see builder provenance",
+        "language": "en",
+        "required": false
+      },
+      {
+        "name": "project_general_sft",
+        "path": "output/general_sft.json",
+        "format": "alpaca",
+        "objective": "sft",
+        "category": "general_instruction",
+        "provenance": "teacher_generated_quality_filtered",
+        "license": "project-generated; teacher terms recorded at generation",
+        "language": "en+sw",
+        "required": false
+      },
+      {
+        "name": "project_instruction_sft",
+        "path": "output/instruction_sft.json",
+        "format": "alpaca",
+        "objective": "sft",
+        "category": "medical_instruction",
+        "provenance": "public_source_filtered",
+        "license": "per-source; see builder provenance",
+        "language": "en",
+        "required": false
+      }
+    ],
+    "final_holdouts": [
+      "docs/research/falcon_probe_heldout.json",
+      "docs/research/falcon_baseline_prompts.json",
+      "data/swahili_eval_set.json"
+    ]
+  },
+  "stages": {
+    "stage_a_capability_preserving": {
+      "epochs": 1.0,
+      "max_steps": 0,
+      "objective_weights": {"sft": 1.0, "mcqa": 0.15},
+      "sampling_token_share": {"sft": 0.9, "mcqa": 0.1},
+      "learning_rate": 0.00003,
+      "lora_r": 16,
+      "lora_alpha": 32,
+      "lora_dropout": 0.05
+    },
+    "stage_b_clinical_safety": {
+      "epochs": 1.0,
+      "max_steps": 0,
+      "objective_weights": {"sft": 1.0, "mcqa": 0.05},
+      "sampling_token_share": {"sft": 0.95, "mcqa": 0.05},
+      "learning_rate": 0.00002,
+      "lora_r": 16,
+      "lora_alpha": 32,
+      "lora_dropout": 0.05
+    },
+    "stage_c_mcqa_replay": {
+      "epochs": 1.0,
+      "max_steps": 0,
+      "objective_weights": {"sft": 0.8, "mcqa": 0.8},
+      "sampling_token_share": {"sft": 0.5, "mcqa": 0.5},
+      "learning_rate": 0.00001,
+      "lora_r": 16,
+      "lora_alpha": 32,
+      "lora_dropout": 0.05
+    }
+  },
+  "training": {
+    "seed": 3407,
+    "per_device_batch_size": 1,
+    "gradient_accumulation_steps": 16,
+    "gradient_checkpointing": true,
+    "max_grad_norm": 1.0,
+    "warmup_ratio": 0.05,
+    "scheduler": "cosine",
+    "optimizer": "adamw_torch",
+    "logging_steps": 1,
+    "heartbeat_seconds": 45,
+    "save_steps": 25,
+    "save_total_limit": 3,
+    "eval_steps": 25,
+    "finite_loss_policy": "fail_fast",
+    "precision_policy": "auto; P100 uses plain fp16 LoRA, sm80+ may use 4-bit QLoRA",
+    "lora_target_modules": [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj",
+      "in_proj",
+      "out_proj",
+      "gate_proj",
+      "up_proj",
+      "down_proj"
+    ]
+  },
+  "persistence": {
+    "required_before_long_run": true,
+    "backend": "kaggle_dataset_version",
+    "dataset_slug_env": "FALCON_CHECKPOINT_DATASET",
+    "checkpoint_upload_every_steps": 100,
+    "allow_ephemeral_only": false
+  },
+  "export": {
+    "quantization": "Q4_K_M",
+    "evaluate_fp16_merged_before_quantization": true,
+    "evaluate_quantized_deployment_model": true
+  }
+}

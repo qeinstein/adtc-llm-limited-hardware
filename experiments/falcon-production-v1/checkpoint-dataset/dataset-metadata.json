@@ -1,0 +1,11 @@
+{
+  "title": "Jamii Afya Falcon production checkpoints",
+  "id": "toheebogunade/jamii-afya-falcon-production-checkpoints",
+  "licenses": [
+    {
+      "name": "other"
+    }
+  ],
+  "subtitle": "Private resumable Falcon adapter checkpoints",
+  "description": "Private checkpoint store for falcon-production-v1. Uploaded versions contain adapter weights, optimizer/scheduler/RNG state, manifests, and logs needed to resume a stage. The Hugging Face base model is always reloaded from its pinned revision."
+}

@@ -1,0 +1,60 @@
+#!/usr/bin/env python3
+"""Persist a small Falcon adapter/checkpoint through Kaggle Dataset versioning.
+
+The production notebook must set ``FALCON_CHECKPOINT_DATASET`` to an existing
+private dataset slug. This script refuses to guess credentials or create a
+remote destination implicitly. The uploaded directory is deliberately limited
+to adapter/trainer state and manifests, never the base model.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import shutil
+import subprocess
+import tempfile
+from pathlib import Path
+
+
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--checkpoint", required=True)
+    ap.add_argument("--dataset", default=os.environ.get("FALCON_CHECKPOINT_DATASET"))
+    ap.add_argument("--message", required=True)
+    ap.add_argument("--dry-run", action="store_true")
+    args = ap.parse_args(argv)
+    if not args.dataset:
+        raise SystemExit("FALCON_CHECKPOINT_DATASET/--dataset is required; refusing ephemeral-only persistence")
+    checkpoint = Path(args.checkpoint).resolve()
+    if not checkpoint.is_dir():
+        raise SystemExit(f"checkpoint directory does not exist: {checkpoint}")
+    if not (checkpoint / "trainer_state.json").exists():
+        raise SystemExit(f"checkpoint has no trainer_state.json: {checkpoint}")
+    adapter_files = list(checkpoint.glob("adapter_model.*"))
+    required_state = [checkpoint / "optimizer.pt", checkpoint / "scheduler.pt", checkpoint / "rng_state.pth"]
+    if not adapter_files:
+        raise SystemExit(f"checkpoint has no adapter_model.* file: {checkpoint}")
+    missing_state = [str(path.name) for path in required_state if not path.exists()]
+    if missing_state:
+        raise SystemExit(f"checkpoint is not resumable; missing: {', '.join(missing_state)}")
+    with tempfile.TemporaryDirectory(prefix="falcon-persist-") as tmp:
+        staging = Path(tmp) / "checkpoint"
+        shutil.copytree(checkpoint, staging)
+        metadata = {
+            "title": "Jamii Afya Falcon production checkpoints",
+            "id": args.dataset,
+            "licenses": [{"name": "other"}],
+            "subtitle": "Private resumable adapter and trainer state; base model is not stored here."
+        }
+        (staging / "dataset-metadata.json").write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
+        command = ["kaggle", "datasets", "version", "-p", str(staging), "-m", args.message, "--dir-mode", "zip"]
+        print("PERSIST:", " ".join(command), flush=True)
+        if args.dry_run:
+            return 0
+        return subprocess.run(command, check=False).returncode
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

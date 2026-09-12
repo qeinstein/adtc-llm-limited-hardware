@@ -1,0 +1,93 @@
+{
+  "schema_version": "1.0.0",
+  "config_sha256": "b0df83bc1a0ec7556bd75c0f72ab8a59c7ba385563eae61467419c3ab65e2957",
+  "tokenizer_mode": "word/character_proxy",
+  "final_holdout_count": 63,
+  "per_source": {
+    "project_clinical_safety": {
+      "status": "present",
+      "path": "data/falcon_probe_sft.json",
+      "format": "alpaca",
+      "objective": "sft",
+      "raw_rows": 38,
+      "valid_rows": 38,
+      "invalid_rows": 0,
+      "characters": 16508,
+      "prompt_characters": 4007,
+      "target_characters": 12501,
+      "words_proxy": 715,
+      "target_words_proxy": 1969,
+      "exact_token_counts": false,
+      "target_char_min": 222,
+      "target_char_mean": 328.97,
+      "target_char_p95": 427
+    },
+    "project_clinical_generation": {
+      "status": "present",
+      "path": "data/medical_lora_dataset.json",
+      "format": "alpaca",
+      "objective": "sft",
+      "raw_rows": 80,
+      "valid_rows": 80,
+      "invalid_rows": 0,
+      "characters": 48006,
+      "prompt_characters": 8242,
+      "target_characters": 39764,
+      "words_proxy": 1330,
+      "target_words_proxy": 6172,
+      "exact_token_counts": false,
+      "target_char_min": 251,
+      "target_char_mean": 497.05,
+      "target_char_p95": 620
+    },
+    "public_mcqa_train_only": {
+      "status": "missing",
+      "required": false,
+      "path": "output/accuracy_sft.jsonl"
+    },
+    "project_general_sft": {
+      "status": "missing",
+      "required": false,
+      "path": "output/general_sft.json"
+    },
+    "project_instruction_sft": {
+      "status": "missing",
+      "required": false,
+      "path": "output/instruction_sft.json"
+    }
+  },
+  "facets": {
+    "source": {
+      "project_clinical_safety": 38,
+      "project_clinical_generation": 80
+    },
+    "objective": {
+      "sft": 118
+    },
+    "category": {
+      "toxicology_and_bleach": 12,
+      "invasive_procedure_safety": 6,
+      "clinical_safety": 2,
+      "medication_uncertainty": 19,
+      "maternal_newborn": 11,
+      "dehydration_ors": 16,
+      "pediatric_respiratory": 7,
+      "false_premise_uncertainty": 5,
+      "clinical_generation": 40
+    },
+    "language": {
+      "en": 74,
+      "sw": 43,
+      "en+sw": 1
+    }
+  },
+  "duplicate_count": 0,
+  "duplicates": [],
+  "contamination_count": 0,
+  "contamination": [],
+  "notes": [
+    "This audit reads only declared sources; optional missing files are not silently treated as present.",
+    "Exact tokenizer counts require --tokenizer and are recomputed by build_falcon_dataset.py before training.",
+    "Final holdouts are not used as training sources and are checked for exact/high-similarity prompt leakage."
+  ]
+}
