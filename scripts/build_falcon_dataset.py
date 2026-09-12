@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 from scripts.audit_falcon_data import infer_category, infer_language
 WORD_RE = re.compile(r"[^\W\d_]+", re.UNICODE)
 

@@ -161,7 +161,7 @@ def from_pubmedqa(max_ctx_chars: int = 1200):
 def from_headqa(config: str = "en"):
     from datasets import load_dataset
 
-    ds = load_dataset("dvilares/head_qa", config, split="train")
+    ds = load_dataset("dvilares/head_qa", config, split="train", trust_remote_code=True)
     for r in ds:
         ans = {a["aid"]: a["atext"] for a in r["answers"]}
         ordered = [ans[a["aid"]] for a in r["answers"] if a["aid"] in ans]
