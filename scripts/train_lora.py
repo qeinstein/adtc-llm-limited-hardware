@@ -162,6 +162,25 @@ def get_cuda_capability(torch_module):
     return torch_module.cuda.get_device_capability(0)
 
 
+def patch_peft_transformers_compat() -> bool:
+    """Restore PEFT's legacy Bloom symbol on Transformers 4.52+.
+
+    Falcon-H1 first appears in Transformers 4.53, while PEFT releases used by
+    this probe still import ``BloomPreTrainedModel`` from the Transformers
+    top-level namespace.  Transformers moved that lazy export, so install the
+    same class at the old name before importing PEFT.  Return whether a patch
+    was needed; callers can log it without hiding other import failures.
+    """
+    import transformers
+
+    if getattr(transformers, "BloomPreTrainedModel", None) is None:
+        from transformers.models.bloom.modeling_bloom import BloomPreTrainedModel
+
+        transformers.BloomPreTrainedModel = BloomPreTrainedModel
+        return True
+    return False
+
+
 # --------------------------------------------------------------------------- #
 # Dataset: unifies MCQA choice-list rows and clinical chat rows into one schema
 # --------------------------------------------------------------------------- #
@@ -307,6 +326,7 @@ def main() -> int:
 
     import torch
     import torch.nn.functional as F
+    patch_peft_transformers_compat()
     from peft import LoraConfig, PeftModel, get_peft_model, prepare_model_for_kbit_training
     from transformers import (
         AutoModelForCausalLM,

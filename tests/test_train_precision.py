@@ -1,6 +1,11 @@
 """Precision/compile routing for train_lora (pure logic, no torch/GPU needed)."""
 
-from scripts.train_lora import compile_supported, get_cuda_capability, parse_args, resolve_precision
+from scripts.train_lora import (
+    compile_supported,
+    get_cuda_capability,
+    parse_args,
+    resolve_precision,
+)
 
 
 class _FakeCuda:
