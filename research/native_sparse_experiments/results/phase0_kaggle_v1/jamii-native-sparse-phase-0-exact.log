@@ -1,0 +1,431 @@
+[{"stream_name":"stdout","time":0.770527286,"data":"+ git clone --filter=blob:none https://github.com/ggml-org/llama.cpp.git /tmp/native-sparse-phase0/llama.cpp\n"}
+,{"stream_name":"stdout","time":8.564564864,"data":"Cloning into '/tmp/native-sparse-phase0/llama.cpp'...\n"}
+,{"stream_name":"stdout","time":8.564606762,"data":"Updating files:   0% (2/3583)\n"}
+,{"stream_name":"stdout","time":8.564611622,"data":"Updating files:   1% (36/3583)\n"}
+,{"stream_name":"stdout","time":8.564615064,"data":"Updating files:   2% (72/3583)\n"}
+,{"stream_name":"stdout","time":8.56461882,"data":"Updating files:   3% (108/3583)\n"}
+,{"stream_name":"stdout","time":8.564622477,"data":"Updating files:   4% (144/3583)\n"}
+,{"stream_name":"stdout","time":8.564626047,"data":"Updating files:   5% (180/3583)\n"}
+,{"stream_name":"stdout","time":8.564630067,"data":"Updating files:   6% (215/3583)\n"}
+,{"stream_name":"stdout","time":8.564633707,"data":"Updating files:   7% (251/3583)\n"}
+,{"stream_name":"stdout","time":8.564637559,"data":"Updating files:   8% (287/3583)\n"}
+,{"stream_name":"stdout","time":8.564641297,"data":"Updating files:   9% (323/3583)\n"}
+,{"stream_name":"stdout","time":8.564653593,"data":"Updating files:  10% (359/3583)\n"}
+,{"stream_name":"stdout","time":8.564657479,"data":"Updating files:  11% (395/3583)\n"}
+,{"stream_name":"stdout","time":8.564661659,"data":"Updating files:  12% (430/3583)\n"}
+,{"stream_name":"stdout","time":8.564664899,"data":"Updating files:  13% (466/3583)\n"}
+,{"stream_name":"stdout","time":8.564667474,"data":"Updating files:  14% (502/3583)\n"}
+,{"stream_name":"stdout","time":8.564670015,"data":"Updating files:  15% (538/3583)\n"}
+,{"stream_name":"stdout","time":8.564672756,"data":"Updating files:  16% (574/3583)\n"}
+,{"stream_name":"stdout","time":8.564675324,"data":"Updating files:  17% (610/3583)\n"}
+,{"stream_name":"stdout","time":8.564678031,"data":"Updating files:  18% (645/3583)\n"}
+,{"stream_name":"stdout","time":8.564680487,"data":"Updating files:  19% (681/3583)\n"}
+,{"stream_name":"stdout","time":8.564682867,"data":"Updating files:  20% (717/3583)\n"}
+,{"stream_name":"stdout","time":8.564685203,"data":"Updating files:  21% (753/3583)\n"}
+,{"stream_name":"stdout","time":8.564687656,"data":"Updating files:  22% (789/3583)\n"}
+,{"stream_name":"stdout","time":8.5646901,"data":"Updating files:  23% (825/3583)\n"}
+,{"stream_name":"stdout","time":8.56469275,"data":"Updating files:  24% (860/3583)\n"}
+,{"stream_name":"stdout","time":8.564695167,"data":"Updating files:  25% (896/3583)\n"}
+,{"stream_name":"stdout","time":8.564697807,"data":"Updating files:  26% (932/3583)\n"}
+,{"stream_name":"stdout","time":8.564700334,"data":"Updating files:  27% (968/3583)\n"}
+,{"stream_name":"stdout","time":8.564702746,"data":"Updating files:  28% (1004/3583)\n"}
+,{"stream_name":"stdout","time":8.564705134,"data":"Updating files:  29% (1040/3583)\n"}
+,{"stream_name":"stdout","time":8.564707611,"data":"Updating files:  30% (1075/3583)\n"}
+,{"stream_name":"stdout","time":8.564709991,"data":"Updating files:  31% (1111/3583)\n"}
+,{"stream_name":"stdout","time":8.564712594,"data":"Updating files:  32% (1147/3583)\n"}
+,{"stream_name":"stdout","time":8.564715004,"data":"Updating files:  33% (1183/3583)\n"}
+,{"stream_name":"stdout","time":8.564717422,"data":"Updating files:  34% (1219/3583)\n"}
+,{"stream_name":"stdout","time":8.564719852,"data":"Updating files:  35% (1255/3583)\n"}
+,{"stream_name":"stdout","time":8.564722223,"data":"Updating files:  36% (1290/3583)\n"}
+,{"stream_name":"stdout","time":8.564724643,"data":"Updating files:  37% (1326/3583)\n"}
+,{"stream_name":"stdout","time":8.564740839,"data":"Updating files:  38% (1362/3583)\n"}
+,{"stream_name":"stdout","time":8.56474345,"data":"Updating files:  39% (1398/3583)\n"}
+,{"stream_name":"stdout","time":8.564746047,"data":"Updating files:  40% (1434/3583)\n"}
+,{"stream_name":"stdout","time":8.564748453,"data":"Updating files:  41% (1470/3583)\n"}
+,{"stream_name":"stdout","time":8.564750888,"data":"Updating files:  42% (1505/3583)\n"}
+,{"stream_name":"stdout","time":8.564753335,"data":"Updating files:  43% (1541/3583)\n"}
+,{"stream_name":"stdout","time":8.564755726,"data":"Updating files:  44% (1577/3583)\n"}
+,{"stream_name":"stdout","time":8.564758106,"data":"Updating files:  45% (1613/3583)\n"}
+,{"stream_name":"stdout","time":8.564760511,"data":"Updating files:  46% (1649/3583)\n"}
+,{"stream_name":"stdout","time":8.564762875,"data":"Updating files:  47% (1685/3583)\n"}
+,{"stream_name":"stdout","time":8.564765464,"data":"Updating files:  48% (1720/3583)\n"}
+,{"stream_name":"stdout","time":8.564767879,"data":"Updating files:  49% (1756/3583)\n"}
+,{"stream_name":"stdout","time":8.564770376,"data":"Updating files:  50% (1792/3583)\n"}
+,{"stream_name":"stdout","time":8.56477282,"data":"Updating files:  51% (1828/3583)\n"}
+,{"stream_name":"stdout","time":8.564775193,"data":"Updating files:  52% (1864/3583)\n"}
+,{"stream_name":"stdout","time":8.564777553,"data":"Updating files:  53% (1899/3583)\n"}
+,{"stream_name":"stdout","time":8.564779931,"data":"Updating files:  54% (1935/3583)\n"}
+,{"stream_name":"stdout","time":8.564782288,"data":"Updating files:  55% (1971/3583)\n"}
+,{"stream_name":"stdout","time":8.564784864,"data":"Updating files:  56% (2007/3583)\n"}
+,{"stream_name":"stdout","time":8.564787268,"data":"Updating files:  56% (2032/3583)\n"}
+,{"stream_name":"stdout","time":8.56478978,"data":"Updating files:  57% (2043/3583)\n"}
+,{"stream_name":"stdout","time":8.564792224,"data":"Updating files:  58% (2079/3583)\n"}
+,{"stream_name":"stdout","time":8.564794824,"data":"Updating files:  59% (2114/3583)\n"}
+,{"stream_name":"stdout","time":8.564798717,"data":"Updating files:  60% (2150/3583)\n"}
+,{"stream_name":"stdout","time":8.564801149000001,"data":"Updating files:  61% (2186/3583)\n"}
+,{"stream_name":"stdout","time":8.564803555,"data":"Updating files:  62% (2222/3583)\n"}
+,{"stream_name":"stdout","time":8.564809924,"data":"Updating files:  63% (2258/3583)\n"}
+,{"stream_name":"stdout","time":8.564812397,"data":"Updating files:  64% (2294/3583)\n"}
+,{"stream_name":"stdout","time":8.564814905,"data":"Updating files:  65% (2329/3583)\n"}
+,{"stream_name":"stdout","time":8.564817484,"data":"Updating files:  66% (2365/3583)\n"}
+,{"stream_name":"stdout","time":8.564819870000001,"data":"Updating files:  67% (2401/3583)\n"}
+,{"stream_name":"stdout","time":8.564822224,"data":"Updating files:  68% (2437/3583)\n"}
+,{"stream_name":"stdout","time":8.564824682,"data":"Updating files:  69% (2473/3583)\n"}
+,{"stream_name":"stdout","time":8.564827036,"data":"Updating files:  70% (2509/3583)\n"}
+,{"stream_name":"stdout","time":8.564829644,"data":"Updating files:  71% (2544/3583)\n"}
+,{"stream_name":"stdout","time":8.564832055,"data":"Updating files:  72% (2580/3583)\n"}
+,{"stream_name":"stdout","time":8.564834575999999,"data":"Updating files:  73% (2616/3583)\n"}
+,{"stream_name":"stdout","time":8.564837007,"data":"Updating files:  74% (2652/3583)\n"}
+,{"stream_name":"stdout","time":8.564839397,"data":"Updating files:  75% (2688/3583)\n"}
+,{"stream_name":"stdout","time":8.564844971,"data":"Updating files:  76% (2724/3583)\n"}
+,{"stream_name":"stdout","time":8.564847502,"data":"Updating files:  77% (2759/3583)\n"}
+,{"stream_name":"stdout","time":8.564849852,"data":"Updating files:  78% (2795/3583)\n"}
+,{"stream_name":"stdout","time":8.564852451,"data":"Updating files:  79% (2831/3583)\n"}
+,{"stream_name":"stdout","time":8.564854888,"data":"Updating files:  80% (2867/3583)\n"}
+,{"stream_name":"stdout","time":8.564857342,"data":"Updating files:  81% (2903/3583)\n"}
+,{"stream_name":"stdout","time":8.564859806,"data":"Updating files:  82% (2939/3583)\n"}
+,{"stream_name":"stdout","time":8.564862184,"data":"Updating files:  83% (2974/3583)\n"}
+,{"stream_name":"stdout","time":8.564864556,"data":"Updating files:  84% (3010/3583)\n"}
+,{"stream_name":"stdout","time":8.564866962,"data":"Updating files:  85% (3046/3583)\n"}
+,{"stream_name":"stdout","time":8.564869322,"data":"Updating files:  86% (3082/3583)\n"}
+,{"stream_name":"stdout","time":8.564871913,"data":"Updating files:  87% (3118/3583)\n"}
+,{"stream_name":"stdout","time":8.564874338,"data":"Updating files:  88% (3154/3583)\n"}
+,{"stream_name":"stdout","time":8.564876793,"data":"Updating files:  89% (3189/3583)\n"}
+,{"stream_name":"stdout","time":8.564879226,"data":"Updating files:  90% (3225/3583)\n"}
+,{"stream_name":"stdout","time":8.564881625,"data":"Updating files:  91% (3261/3583)\n"}
+,{"stream_name":"stdout","time":8.564883968,"data":"Updating files:  92% (3297/3583)\n"}
+,{"stream_name":"stdout","time":8.56488646,"data":"Updating files:  93% (3333/3583)\n"}
+,{"stream_name":"stdout","time":8.564888831,"data":"Updating files:  94% (3369/3583)\n"}
+,{"stream_name":"stdout","time":8.564891425,"data":"Updating files:  95% (3404/3583)\n"}
+,{"stream_name":"stdout","time":8.564893847,"data":"Updating files:  96% (3440/3583)\n"}
+,{"stream_name":"stdout","time":8.564896295,"data":"Updating files:  97% (3476/3583)\n"}
+,{"stream_name":"stdout","time":8.564899956,"data":"Updating files:  98% (3512/3583)\n"}
+,{"stream_name":"stdout","time":8.564903541,"data":"Updating files:  99% (3548/3583)\n"}
+,{"stream_name":"stdout","time":8.564907055,"data":"Updating files: 100% (3583/3583)\n"}
+,{"stream_name":"stdout","time":8.564910534,"data":"Updating files: 100% (3583/3583), done.\n"}
+,{"stream_name":"stdout","time":8.564913696,"data":"\n"}
+,{"stream_name":"stdout","time":8.564917279,"data":"+ git fetch --depth 1 origin 3057bb66c86c46d5781e50e85462a760ba7d1feb\n"}
+,{"stream_name":"stdout","time":9.231031853,"data":"From https://github.com/ggml-org/llama.cpp\n"}
+,{"stream_name":"stdout","time":9.231065539,"data":" * branch                3057bb66c86c46d5781e50e85462a760ba7d1feb -\u003e FETCH_HEAD\n"}
+,{"stream_name":"stdout","time":9.231071102,"data":"\n"}
+,{"stream_name":"stdout","time":9.231075452,"data":"+ git checkout --detach 3057bb66c86c46d5781e50e85462a760ba7d1feb\n"}
+,{"stream_name":"stdout","time":9.336623856,"data":"HEAD is now at 3057bb66c ui : add cache (#28802)\n"}
+,{"stream_name":"stdout","time":9.336655141,"data":"\n"}
+,{"stream_name":"stdout","time":9.340277838,"data":"+ git diff -- src/models/qwen35moe.cpp ggml/src/ggml-cpu/ggml-cpu.c\n"}
+,{"stream_name":"stdout","time":9.349157605,"data":"diff --git a/ggml/src/ggml-cpu/ggml-cpu.c b/ggml/src/ggml-cpu/ggml-cpu.c\n"}
+,{"stream_name":"stdout","time":9.349182743,"data":"index 87a329f26..d86620afd 100644\n"}
+,{"stream_name":"stdout","time":9.349187551,"data":"--- a/ggml/src/ggml-cpu/ggml-cpu.c\n"}
+,{"stream_name":"stdout","time":9.349190974,"data":"+++ b/ggml/src/ggml-cpu/ggml-cpu.c\n"}
+,{"stream_name":"stdout","time":9.349212725,"data":"@@ -573,6 +573,52 @@ struct ggml_state {\n"}
+,{"stream_name":"stdout","time":9.349216484,"data":" \n"}
+,{"stream_name":"stdout","time":9.349220301,"data":" static struct ggml_state g_state = {0};\n"}
+,{"stream_name":"stdout","time":9.349224207,"data":" \n"}
+,{"stream_name":"stdout","time":9.349227979,"data":"+\n"}
+,{"stream_name":"stdout","time":9.349232087,"data":"+// Observation-only Phase-0 hook. Log IDs and packed tensor sizes for routed\n"}
+,{"stream_name":"stdout","time":9.349236574,"data":"+// expert matmuls. This does not alter routing or math.\n"}
+,{"stream_name":"stdout","time":9.349240599,"data":"+static void ggml_phase0_trace_moe_ids(\n"}
+,{"stream_name":"stdout","time":9.349244249,"data":"+        const struct ggml_compute_params * params,\n"}
+,{"stream_name":"stdout","time":9.34924777,"data":"+        const struct ggml_tensor * tensor) {\n"}
+,{"stream_name":"stdout","time":9.349251661,"data":"+    if (params-\u003eith != 0 || tensor-\u003eop != GGML_OP_MUL_MAT_ID) {\n"}
+,{"stream_name":"stdout","time":9.349255789,"data":"+        return;\n"}
+,{"stream_name":"stdout","time":9.349259242,"data":"+    }\n"}
+,{"stream_name":"stdout","time":9.349262692,"data":"+    const char * path = getenv(\"GGML_PHASE0_ROUTE_TRACE\");\n"}
+,{"stream_name":"stdout","time":9.349266499,"data":"+    if (path == NULL || path[0] == '\\0') {\n"}
+,{"stream_name":"stdout","time":9.349269968,"data":"+        return;\n"}
+,{"stream_name":"stdout","time":9.349273429,"data":"+    }\n"}
+,{"stream_name":"stdout","time":9.3492767,"data":"+    const struct ggml_tensor * weights = tensor-\u003esrc[0];\n"}
+,{"stream_name":"stdout","time":9.349280298,"data":"+    const struct ggml_tensor * ids = tensor-\u003esrc[2];\n"}
+,{"stream_name":"stdout","time":9.349283929,"data":"+    if (weights == NULL || ids == NULL ||\n"}
+,{"stream_name":"stdout","time":9.349287624,"data":"+            strstr(weights-\u003ename, \"ffn_\") == NULL ||\n"}
+,{"stream_name":"stdout","time":9.349291275,"data":"+            strstr(weights-\u003ename, \"_exps\") == NULL ||\n"}
+,{"stream_name":"stdout","time":9.349295514,"data":"+            ids-\u003etype != GGML_TYPE_I32 || !ggml_is_contiguous(ids)) {\n"}
+,{"stream_name":"stdout","time":9.349299472,"data":"+        return;\n"}
+,{"stream_name":"stdout","time":9.349302968,"data":"+    }\n"}
+,{"stream_name":"stdout","time":9.349306339,"data":"+    static FILE * fp = NULL;\n"}
+,{"stream_name":"stdout","time":9.349310012,"data":"+    static uint64_t event_id = 0;\n"}
+,{"stream_name":"stdout","time":9.349313668,"data":"+    if (fp == NULL) {\n"}
+,{"stream_name":"stdout","time":9.34931699,"data":"+        fp = fopen(path, \"a\");\n"}
+,{"stream_name":"stdout","time":9.349320792,"data":"+        if (fp == NULL) {\n"}
+,{"stream_name":"stdout","time":9.349324712,"data":"+            return;\n"}
+,{"stream_name":"stdout","time":9.349328557,"data":"+        }\n"}
+,{"stream_name":"stdout","time":9.34933183,"data":"+        setvbuf(fp, NULL, _IOLBF, 0);\n"}
+,{"stream_name":"stdout","time":9.349335317,"data":"+    }\n"}
+,{"stream_name":"stdout","time":9.349338795,"data":"+    struct timespec ts;\n"}
+,{"stream_name":"stdout","time":9.349342857,"data":"+    clock_gettime(CLOCK_MONOTONIC, \u0026ts);\n"}
+,{"stream_name":"stdout","time":9.349346827,"data":"+    const int64_t n = ggml_nelements(ids);\n"}
+,{"stream_name":"stdout","time":9.349350557,"data":"+    const int32_t * values = (const int32_t *) ids-\u003edata;\n"}
+,{"stream_name":"stdout","time":9.349358953,"data":"+    fprintf(fp,\n"}
+,{"stream_name":"stdout","time":9.349362607,"data":"+        \"{\\\"event\\\":%\" PRIu64 \",\\\"mono_ns\\\":%\" PRIu64\n"}
+,{"stream_name":"stdout","time":9.349366755,"data":"+        \",\\\"weight\\\":\\\"%s\\\",\\\"weight_nbytes\\\":%zu,\\\"shape\\\":[%\" PRId64 \",%\" PRId64\n"}
+,{"stream_name":"stdout","time":9.34937094,"data":"+        \",%\" PRId64 \",%\" PRId64 \"],\\\"ids\\\":[\",\n"}
+,{"stream_name":"stdout","time":9.349374821,"data":"+        event_id++, (uint64_t) ts.tv_sec*1000000000ULL + (uint64_t) ts.tv_nsec,\n"}
+,{"stream_name":"stdout","time":9.349378783,"data":"+        weights-\u003ename, ggml_nbytes(weights), ids-\u003ene[0], ids-\u003ene[1], ids-\u003ene[2], ids-\u003ene[3]);\n"}
+,{"stream_name":"stdout","time":9.349382805,"data":"+    for (int64_t i = 0; i \u003c n; ++i) {\n"}
+,{"stream_name":"stdout","time":9.349386385,"data":"+        fprintf(fp, \"%s%d\", i ? \",\" : \"\", values[i]);\n"}
+,{"stream_name":"stdout","time":9.349390552,"data":"+    }\n"}
+,{"stream_name":"stdout","time":9.349393849,"data":"+    fprintf(fp, \"]}\\n\");\n"}
+,{"stream_name":"stdout","time":9.349397682,"data":"+}\n"}
+,{"stream_name":"stdout","time":9.349401116,"data":"+\n"}
+,{"stream_name":"stdout","time":9.349406631,"data":" void ggml_barrier(struct ggml_threadpool * tp) {\n"}
+,{"stream_name":"stdout","time":9.349410527,"data":"     int n_threads = atomic_load_explicit(\u0026tp-\u003en_graph, memory_order_relaxed) \u0026 GGML_THREADPOOL_N_THREADS_MASK;\n"}
+,{"stream_name":"stdout","time":9.349415272,"data":"     if (n_threads == 1) {\n"}
+,{"stream_name":"stdout","time":9.349419077,"data":"@@ -1740,6 +1786,8 @@ static void ggml_compute_forward(struct ggml_compute_params * params, struct ggm\n"}
+,{"stream_name":"stdout","time":9.349422637,"data":"         return;\n"}
+,{"stream_name":"stdout","time":9.349425769,"data":"     }\n"}
+,{"stream_name":"stdout","time":9.349429281,"data":" \n"}
+,{"stream_name":"stdout","time":9.349432766,"data":"+    ggml_phase0_trace_moe_ids(params, tensor);\n"}
+,{"stream_name":"stdout","time":9.349436547,"data":"+\n"}
+,{"stream_name":"stdout","time":9.34943982,"data":"     // extra_buffer op?\n"}
+,{"stream_name":"stdout","time":9.349443375,"data":"     if (ggml_cpu_extra_compute_forward(params, tensor)) {\n"}
+,{"stream_name":"stdout","time":9.349446956,"data":"         return;\n"}
+,{"stream_name":"stdout","time":9.349450436,"data":"diff --git a/src/models/qwen35moe.cpp b/src/models/qwen35moe.cpp\n"}
+,{"stream_name":"stdout","time":9.349454202,"data":"index bdf772625..efd6718fb 100644\n"}
+,{"stream_name":"stdout","time":9.349457945,"data":"--- a/src/models/qwen35moe.cpp\n"}
+,{"stream_name":"stdout","time":9.349461642,"data":"+++ b/src/models/qwen35moe.cpp\n"}
+,{"stream_name":"stdout","time":9.349465643,"data":"@@ -93,8 +93,11 @@ void llama_model_qwen35moe::load_arch_tensors(llama_model_loader \u0026 ml) {\n"}
+,{"stream_name":"stdout","time":9.349469624,"data":" \n"}
+,{"stream_name":"stdout","time":9.349472831,"data":"         // Routed experts\n"}
+,{"stream_name":"stdout","time":9.349476635,"data":"         layer.ffn_gate_inp  = create_tensor(tn(LLM_TENSOR_FFN_GATE_INP,  \"weight\", il), { n_embd, n_expert }, flags);\n"}
+,{"stream_name":"stdout","time":9.349481293,"data":"-        layer.ffn_down_exps = create_tensor(tn(LLM_TENSOR_FFN_DOWN_EXPS, \"weight\", il), { n_ff_exp, n_embd, n_expert }, flags);\n"}
+,{"stream_name":"stdout","time":9.349485198,"data":"-        create_tensor_gate_up_exps(layer, il, n_embd, n_ff_exp, n_expert, flags);\n"}
+,{"stream_name":"stdout","time":9.349488891,"data":"+        // Phase-0 experiment: routed expert payload is lazy; router/shared/trunk stay resident.\n"}
+,{"stream_name":"stdout","time":9.349505817,"data":"+        // Loading policy only.  Native IDs, K, weights, and math are unchanged.\n"}
+,{"stream_name":"stdout","time":9.349510412,"data":"+        const int expert_flags = flags | TENSOR_READ_LAZY;\n"}
+,{"stream_name":"stdout","time":9.349514345,"data":"+        layer.ffn_down_exps = create_tensor(tn(LLM_TENSOR_FFN_DOWN_EXPS, \"weight\", il), { n_ff_exp, n_embd, n_expert }, expert_flags);\n"}
+,{"stream_name":"stdout","time":9.349518273,"data":"+        create_tensor_gate_up_exps(layer, il, n_embd, n_ff_exp, n_expert, expert_flags);\n"}
+,{"stream_name":"stdout","time":9.349522553,"data":" \n"}
+,{"stream_name":"stdout","time":9.349532592,"data":"         // Shared experts\n"}
+,{"stream_name":"stdout","time":9.349568241,"data":"         layer.ffn_gate_inp_shexp = create_tensor(tn(LLM_TENSOR_FFN_GATE_INP_SHEXP, \"weight\", il), { n_embd }, flags);\n"}
+,{"stream_name":"stdout","time":9.349572904,"data":"\n"}
+,{"stream_name":"stdout","time":9.349583484,"data":"+ cmake -S /tmp/native-sparse-phase0/llama.cpp -B /tmp/native-sparse-phase0/llama.cpp/build-native -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DGGML_NATIVE=ON -DGGML_CUDA=OFF -DGGML_METAL=OFF -DGGML_VULKAN=OFF -DLLAMA_CURL=OFF\n"}
+,{"stream_name":"stdout","time":12.086002615,"data":"-- The C compiler identification is GNU 11.4.0\n"}
+,{"stream_name":"stdout","time":12.086031538,"data":"-- The CXX compiler identification is GNU 11.4.0\n"}
+,{"stream_name":"stdout","time":12.086036416,"data":"-- Detecting C compiler ABI info\n"}
+,{"stream_name":"stdout","time":12.086040499,"data":"-- Detecting C compiler ABI info - done\n"}
+,{"stream_name":"stdout","time":12.086044449,"data":"-- Check for working C compiler: /usr/bin/cc - skipped\n"}
+,{"stream_name":"stdout","time":12.086048433,"data":"-- Detecting C compile features\n"}
+,{"stream_name":"stdout","time":12.086052168,"data":"-- Detecting C compile features - done\n"}
+,{"stream_name":"stdout","time":12.086055927,"data":"-- Detecting CXX compiler ABI info\n"}
+,{"stream_name":"stdout","time":12.086059957,"data":"-- Detecting CXX compiler ABI info - done\n"}
+,{"stream_name":"stdout","time":12.086063924,"data":"-- Check for working CXX compiler: /usr/bin/c++ - skipped\n"}
+,{"stream_name":"stdout","time":12.0860686,"data":"-- Detecting CXX compile features\n"}
+,{"stream_name":"stdout","time":12.086072405,"data":"-- Detecting CXX compile features - done\n"}
+,{"stream_name":"stdout","time":12.086084147,"data":"-- llama.cpp version: 0.4.0-dev\n"}
+,{"stream_name":"stdout","time":12.086086809,"data":"CMAKE_BUILD_TYPE=Release\n"}
+,{"stream_name":"stdout","time":12.086089344,"data":"-- Found Git: /usr/bin/git (found version \"2.34.1\")\n"}
+,{"stream_name":"stdout","time":12.086092015,"data":"-- The ASM compiler identification is GNU\n"}
+,{"stream_name":"stdout","time":12.086095454,"data":"-- Found assembler: /usr/bin/cc\n"}
+,{"stream_name":"stdout","time":12.086099425,"data":"-- Performing Test CMAKE_HAVE_LIBC_PTHREAD\n"}
+,{"stream_name":"stdout","time":12.086103077,"data":"-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success\n"}
+,{"stream_name":"stdout","time":12.086106929,"data":"-- Found Threads: TRUE\n"}
+,{"stream_name":"stdout","time":12.086110921,"data":"-- Warning: ccache not found - consider installing it for faster compilation or disable this warning with GGML_CCACHE=OFF\n"}
+,{"stream_name":"stdout","time":12.08611452,"data":"-- CMAKE_SYSTEM_PROCESSOR: x86_64\n"}
+,{"stream_name":"stdout","time":12.086118323,"data":"-- GGML_SYSTEM_ARCH: x86\n"}
+,{"stream_name":"stdout","time":12.086134669,"data":"-- Found OpenMP_C: -fopenmp (found version \"4.5\")\n"}
+,{"stream_name":"stdout","time":12.086139298,"data":"-- Found OpenMP_CXX: -fopenmp (found version \"4.5\")\n"}
+,{"stream_name":"stdout","time":12.086143488,"data":"-- Found OpenMP: TRUE (found version \"4.5\")\n"}
+,{"stream_name":"stdout","time":12.086147481,"data":"-- Including CPU backend\n"}
+,{"stream_name":"stdout","time":12.086151376,"data":"-- x86 detected\n"}
+,{"stream_name":"stdout","time":12.086154934,"data":"-- Adding CPU backend variant ggml-cpu: -march=native \n"}
+,{"stream_name":"stdout","time":12.086158734,"data":"-- ggml version: 0.23.0\n"}
+,{"stream_name":"stdout","time":12.086162185,"data":"-- ggml commit:  3057bb66c-dirty\n"}
+,{"stream_name":"stdout","time":12.086165575,"data":"-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version \"3.0.2\")\n"}
+,{"stream_name":"stdout","time":12.086169689,"data":"-- Performing Test OPENSSL_VERSION_SUPPORTED\n"}
+,{"stream_name":"stdout","time":12.086174279,"data":"-- Performing Test OPENSSL_VERSION_SUPPORTED - Success\n"}
+,{"stream_name":"stdout","time":12.086178633,"data":"-- OpenSSL found: 3.0.2\n"}
+,{"stream_name":"stdout","time":12.086182392,"data":"-- Generating embedded license file for target: llama-app\n"}
+,{"stream_name":"stdout","time":12.086186414,"data":"-- Configuring done (1.8s)\n"}
+,{"stream_name":"stdout","time":12.08619022,"data":"-- Generating done (0.6s)\n"}
+,{"stream_name":"stdout","time":12.086194053,"data":"-- Build files have been written to: /tmp/native-sparse-phase0/llama.cpp/build-native\n"}
+,{"stream_name":"stdout","time":12.086197925,"data":"\n"}
+,{"stream_name":"stdout","time":12.086203871,"data":"+ cmake --build /tmp/native-sparse-phase0/llama.cpp/build-native --config Release -j4 --target llama-cli llama-bench\n"}
+,{"stream_name":"stdout","time":335.144605105,"data":"dance.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144660472,"data":"[ 83%] Building CXX object common/CMakeFiles/llama-common.dir/log.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144669059,"data":"[ 83%] Building CXX object common/CMakeFiles/llama-common.dir/ngram-cache.cpp.o\n"}
+,{"stream_name":"stdout","time":335.14467459,"data":"[ 83%] Building CXX object common/CMakeFiles/llama-common.dir/ngram-map.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144679469,"data":"[ 83%] Building CXX object common/CMakeFiles/llama-common.dir/ngram-mod.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144684262,"data":"[ 85%] Building CXX object common/CMakeFiles/llama-common.dir/peg-parser.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144689878,"data":"[ 85%] Building CXX object common/CMakeFiles/llama-common.dir/preset.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144694595,"data":"[ 85%] Building CXX object common/CMakeFiles/llama-common.dir/reasoning-budget.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144699526,"data":"[ 85%] Building CXX object common/CMakeFiles/llama-common.dir/sampling.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144704328,"data":"[ 87%] Building CXX object common/CMakeFiles/llama-common.dir/speculative.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144709527,"data":"[ 87%] Building CXX object common/CMakeFiles/llama-common.dir/subproc.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144713911,"data":"[ 87%] Building CXX object common/CMakeFiles/llama-common.dir/trie.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144718327,"data":"[ 87%] Building CXX object common/CMakeFiles/llama-common.dir/unicode.cpp.o\n"}
+,{"stream_name":"stdout","time":335.14472369,"data":"[ 89%] Building CXX object common/CMakeFiles/llama-common.dir/jinja/lexer.cpp.o\n"}
+,{"stream_name":"stdout","time":335.14474188,"data":"[ 89%] Building CXX object common/CMakeFiles/llama-common.dir/jinja/parser.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144746099,"data":"[ 89%] Building CXX object common/CMakeFiles/llama-common.dir/jinja/runtime.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144749507,"data":"[ 89%] Building CXX object common/CMakeFiles/llama-common.dir/jinja/value.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144753424,"data":"[ 89%] Building CXX object common/CMakeFiles/llama-common.dir/jinja/string.cpp.o\n"}
+,{"stream_name":"stdout","time":335.1447569,"data":"[ 91%] Building CXX object common/CMakeFiles/llama-common.dir/jinja/caps.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144760739,"data":"[ 91%] Linking CXX static library libllama-common.a\n"}
+,{"stream_name":"stdout","time":335.144764242,"data":"[ 91%] Built target llama-common\n"}
+,{"stream_name":"stdout","time":335.144767779,"data":"[ 91%] Building CXX object tools/server/CMakeFiles/server-context.dir/cmake_pch.hxx.gch\n"}
+,{"stream_name":"stdout","time":335.144771783,"data":"[ 91%] Building CXX object tools/server/CMakeFiles/server-context.dir/server-chat.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144776111,"data":"[ 91%] Building CXX object tools/server/CMakeFiles/server-context.dir/server-task.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144779826,"data":"[ 93%] Building CXX object tools/server/CMakeFiles/server-context.dir/server-queue.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144784181,"data":"[ 93%] Building CXX object tools/server/CMakeFiles/server-context.dir/server-common.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144788749,"data":"[ 93%] Building CXX object tools/server/CMakeFiles/server-context.dir/server-context.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144795035,"data":"[ 93%] Building CXX object tools/server/CMakeFiles/server-context.dir/server-stream.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144798729,"data":"[ 93%] Building CXX object tools/server/CMakeFiles/server-context.dir/server-tools.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144802772,"data":"[ 95%] Building CXX object tools/server/CMakeFiles/server-context.dir/server-mcp.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144806849,"data":"[ 95%] Building CXX object tools/server/CMakeFiles/server-context.dir/server-schema.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144810972,"data":"[ 95%] Linking CXX static library libserver-context.a\n"}
+,{"stream_name":"stdout","time":335.144815094,"data":"[ 95%] Built target server-context\n"}
+,{"stream_name":"stdout","time":335.144819347,"data":"[ 95%] Building CXX object tools/server/CMakeFiles/llama-server-impl.dir/cmake_pch.hxx.gch\n"}
+,{"stream_name":"stdout","time":335.14482342,"data":"[ 95%] Building CXX object tools/server/CMakeFiles/llama-server-impl.dir/server-http.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144827522,"data":"[ 97%] Building CXX object tools/server/CMakeFiles/llama-server-impl.dir/server.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144831604,"data":"[ 97%] Building CXX object tools/server/CMakeFiles/llama-server-impl.dir/server-models.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144835868,"data":"[ 97%] Linking CXX static library libllama-server-impl.a\n"}
+,{"stream_name":"stdout","time":335.144840094,"data":"[ 97%] Built target llama-server-impl\n"}
+,{"stream_name":"stdout","time":335.14484413,"data":"[ 97%] Building CXX object tools/cli/CMakeFiles/llama-cli-impl.dir/cli.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144848167,"data":"[100%] Building CXX object tools/cli/CMakeFiles/llama-cli-impl.dir/cli-client.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144852592,"data":"[100%] Building CXX object tools/cli/CMakeFiles/llama-cli-impl.dir/cli-context.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144861704,"data":"[100%] Linking CXX static library libllama-cli-impl.a\n"}
+,{"stream_name":"stdout","time":335.14486594,"data":"[100%] Built target llama-cli-impl\n"}
+,{"stream_name":"stdout","time":335.144869797,"data":"[100%] Building CXX object tools/cli/CMakeFiles/llama-cli.dir/main.cpp.o\n"}
+,{"stream_name":"stdout","time":335.14487386,"data":"[100%] Linking CXX executable ../../bin/llama-cli\n"}
+,{"stream_name":"stdout","time":335.14487796,"data":"[100%] Built target llama-cli\n"}
+,{"stream_name":"stdout","time":335.144881903,"data":"[  0%] Built target llama-common-base\n"}
+,{"stream_name":"stdout","time":335.144885516,"data":"[  0%] Built target cpp-httplib\n"}
+,{"stream_name":"stdout","time":335.144889566,"data":"[  6%] Built target ggml-base\n"}
+,{"stream_name":"stdout","time":335.144893777,"data":"[ 20%] Built target ggml-cpu\n"}
+,{"stream_name":"stdout","time":335.144897454,"data":"[ 23%] Built target ggml\n"}
+,{"stream_name":"stdout","time":335.144901196,"data":"[ 56%] Built target llama\n"}
+,{"stream_name":"stdout","time":335.144905252,"data":"[ 96%] Built target llama-common\n"}
+,{"stream_name":"stdout","time":335.144909366,"data":"[ 96%] Building CXX object tools/llama-bench/CMakeFiles/llama-bench-impl.dir/llama-bench.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144913779,"data":"[100%] Linking CXX static library libllama-bench-impl.a\n"}
+,{"stream_name":"stdout","time":335.144917804,"data":"[100%] Built target llama-bench-impl\n"}
+,{"stream_name":"stdout","time":335.144922105,"data":"[100%] Building CXX object tools/llama-bench/CMakeFiles/llama-bench.dir/main.cpp.o\n"}
+,{"stream_name":"stdout","time":335.144926119,"data":"[100%] Linking CXX executable ../../bin/llama-bench\n"}
+,{"stream_name":"stdout","time":335.144930298,"data":"[100%] Built target llama-bench\n"}
+,{"stream_name":"stdout","time":335.144934207,"data":"\n"}
+,{"stream_name":"stdout","time":335.145263301,"data":"+ /tmp/native-sparse-phase0/llama.cpp/build-native/bin/llama-cli --version\n"}
+,{"stream_name":"stdout","time":335.161555818,"data":"version: 0.4.0-dev (build 1, commit 3057bb66c)\n"}
+,{"stream_name":"stdout","time":335.161635177,"data":"built with GNU 11.4.0 for Linux x86_64\n"}
+,{"stream_name":"stdout","time":335.16164151,"data":"\n"}
+,{"stream_name":"stdout","time":335.16177771,"data":"+ /tmp/native-sparse-phase0/llama.cpp/build-native/bin/llama-cli --help\n"}
+,{"stream_name":"stdout","time":335.173718768,"data":"ly used templates are accepted (unless --jinja is set\n"}
+,{"stream_name":"stdout","time":335.173761894,"data":"                                        before this flag):\n"}
+,{"stream_name":"stdout","time":335.173768129,"data":"                                        list of built-in templates:\n"}
+,{"stream_name":"stdout","time":335.173771987,"data":"                                        bailing, bailing-think, bailing2, chatglm3, chatglm4, chatml,\n"}
+,{"stream_name":"stdout","time":335.173776639,"data":"                                        command-r, deepseek, deepseek-ocr, deepseek2, deepseek3, exaone-moe,\n"}
+,{"stream_name":"stdout","time":335.173780954,"data":"                                        exaone3, exaone4, falcon3, gemma, gigachat, glmedge, gpt-oss, granite,\n"}
+,{"stream_name":"stdout","time":335.173785382,"data":"                                        granite-4.0, granite-4.1, grok-2, hunyuan-dense, hunyuan-moe,\n"}
+,{"stream_name":"stdout","time":335.173789683,"data":"                                        hunyuan-vl, kimi-k2, llama2, llama2-sys, llama2-sys-bos,\n"}
+,{"stream_name":"stdout","time":335.173794008,"data":"                                        llama2-sys-strip, llama3, llama4, megrez, minicpm, mistral-v1,\n"}
+,{"stream_name":"stdout","time":335.173809987,"data":"                                        mistral-v3, mistral-v3-tekken, mistral-v7, mistral-v7-tekken, monarch,\n"}
+,{"stream_name":"stdout","time":335.173813015,"data":"                                        openchat, orion, pangu-embedded, phi3, phi4, rwkv-world, seed_oss,\n"}
+,{"stream_name":"stdout","time":335.173815684,"data":"                                        smolvlm, solar-open, vicuna, vicuna-orca, yandex, zephyr\n"}
+,{"stream_name":"stdout","time":335.173818258,"data":"                                        (env: LLAMA_ARG_CHAT_TEMPLATE)\n"}
+,{"stream_name":"stdout","time":335.173820765,"data":"--chat-template-file JINJA_TEMPLATE_FILE\n"}
+,{"stream_name":"stdout","time":335.173823456,"data":"                                        set custom jinja chat template file (default: template taken from\n"}
+,{"stream_name":"stdout","time":335.173826747,"data":"                                        model's metadata)\n"}
+,{"stream_name":"stdout","time":335.173831206,"data":"                                        if suffix/prefix are specified, template will be disabled\n"}
+,{"stream_name":"stdout","time":335.173835278,"data":"                                        only commonly used templates are accepted (unless --jinja is set\n"}
+,{"stream_name":"stdout","time":335.173839414,"data":"                                        before this flag):\n"}
+,{"stream_name":"stdout","time":335.17384338,"data":"                                        list of built-in templates:\n"}
+,{"stream_name":"stdout","time":335.173847693,"data":"                                        bailing, bailing-think, bailing2, chatglm3, chatglm4, chatml,\n"}
+,{"stream_name":"stdout","time":335.17385169,"data":"                                        command-r, deepseek, deepseek-ocr, deepseek2, deepseek3, exaone-moe,\n"}
+,{"stream_name":"stdout","time":335.173856167,"data":"                                        exaone3, exaone4, falcon3, gemma, gigachat, glmedge, gpt-oss, granite,\n"}
+,{"stream_name":"stdout","time":335.173860944,"data":"                                        granite-4.0, granite-4.1, grok-2, hunyuan-dense, hunyuan-moe,\n"}
+,{"stream_name":"stdout","time":335.173865808,"data":"                                        hunyuan-vl, kimi-k2, llama2, llama2-sys, llama2-sys-bos,\n"}
+,{"stream_name":"stdout","time":335.173869226,"data":"                                        llama2-sys-strip, llama3, llama4, megrez, minicpm, mistral-v1,\n"}
+,{"stream_name":"stdout","time":335.173873075,"data":"                                        mistral-v3, mistral-v3-tekken, mistral-v7, mistral-v7-tekken, monarch,\n"}
+,{"stream_name":"stdout","time":335.173876464,"data":"                                        openchat, orion, pangu-embedded, phi3, phi4, rwkv-world, seed_oss,\n"}
+,{"stream_name":"stdout","time":335.173879905,"data":"                                        smolvlm, solar-open, vicuna, vicuna-orca, yandex, zephyr\n"}
+,{"stream_name":"stdout","time":335.173883222,"data":"                                        (env: LLAMA_ARG_CHAT_TEMPLATE_FILE)\n"}
+,{"stream_name":"stdout","time":335.173886994,"data":"--skip-chat-parsing, --no-skip-chat-parsing\n"}
+,{"stream_name":"stdout","time":335.173890831,"data":"                                        force a pure content parser, even if a Jinja template is specified;\n"}
+,{"stream_name":"stdout","time":335.173894855,"data":"                                        model will output everything in the content section, including any\n"}
+,{"stream_name":"stdout","time":335.173898671,"data":"                                        reasoning and/or tool calls (default: disabled)\n"}
+,{"stream_name":"stdout","time":335.173906812,"data":"                                        (env: LLAMA_ARG_SKIP_CHAT_PARSING)\n"}
+,{"stream_name":"stdout","time":335.173910432,"data":"--simple-io                             use basic IO for better compatibility in subprocesses and limited\n"}
+,{"stream_name":"stdout","time":335.173913894,"data":"                                        consoles\n"}
+,{"stream_name":"stdout","time":335.173918146,"data":"--log-prompts-dir PATH                  Log prompts to directory (auto-created if not present; only used for\n"}
+,{"stream_name":"stdout","time":335.173922472,"data":"                                        debugging, default: disabled)\n"}
+,{"stream_name":"stdout","time":335.173926129,"data":"--gpt-oss-20b-default                   use gpt-oss-20b (note: can download weights from the internet)\n"}
+,{"stream_name":"stdout","time":335.17393008,"data":"--gpt-oss-120b-default                  use gpt-oss-120b (note: can download weights from the internet)\n"}
+,{"stream_name":"stdout","time":335.173933739,"data":"--vision-gemma-4b-default               use Gemma 3 4B QAT (note: can download weights from the internet)\n"}
+,{"stream_name":"stdout","time":335.173937818,"data":"--vision-gemma-12b-default              use Gemma 3 12B QAT (note: can download weights from the internet)\n"}
+,{"stream_name":"stdout","time":335.173941894,"data":"--spec-default                          enable default speculative decoding config\n"}
+,{"stream_name":"stdout","time":335.17394577,"data":"\n"}
+,{"stream_name":"stdout","time":335.17432306,"data":"+ curl -L --fail --retry 5 --retry-delay 5 -C - -o /tmp/native-sparse-phase0/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf https://huggingface.co/unsloth/Qwen3.5-35B-A3B-GGUF/resolve/bc014a17be43adabd7066b7a86075ff935c6a4e2/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf\n"}
+,{"stream_name":"stdout","time":489.697341154,"data":" 0  66.1M      0  0:02:33  0:01:45  0:00:48 63.1M\n"}
+,{"stream_name":"stdout","time":489.6974663,"data":" 69  9.9G   69 7038M    0     0  66.2M      0  0:02:33  0:01:46  0:00:47 63.0M\n"}
+,{"stream_name":"stdout","time":489.697474634,"data":" 70  9.9G   70 7127M    0     0  66.3M      0  0:02:33  0:01:47  0:00:46 63.2M\n"}
+,{"stream_name":"stdout","time":489.697479926,"data":" 70  9.9G   70 7176M    0     0  66.1M      0  0:02:33  0:01:48  0:00:45 61.4M\n"}
+,{"stream_name":"stdout","time":489.697485439,"data":" 71  9.9G   71 7274M    0     0  66.5M      0  0:02:32  0:01:49  0:00:43 74.8M\n"}
+,{"stream_name":"stdout","time":489.697490544,"data":" 72  9.9G   72 7342M    0     0  66.3M      0  0:02:33  0:01:50  0:00:43 70.5M\n"}
+,{"stream_name":"stdout","time":489.697495287,"data":" 72  9.9G   72 7382M    0     0  66.3M      0  0:02:33  0:01:51  0:00:42 69.0M\n"}
+,{"stream_name":"stdout","time":489.69749983,"data":" 73  9.9G   73 7452M    0     0  65.9M      0  0:02:34  0:01:52  0:00:42 58.9M\n"}
+,{"stream_name":"stdout","time":489.697504742,"data":" 73  9.9G   73 7494M    0     0  66.1M      0  0:02:33  0:01:53  0:00:40 67.1M\n"}
+,{"stream_name":"stdout","time":489.697509789,"data":" 74  9.9G   74 7566M    0     0  65.6M      0  0:02:34  0:01:55  0:00:39 48.8M\n"}
+,{"stream_name":"stdout","time":489.69751512,"data":" 74  9.9G   74 7570M    0     0  65.6M      0  0:02:34  0:01:55  0:00:39 49.9M\n"}
+,{"stream_name":"stdout","time":489.697520548,"data":" 75  9.9G   75 7660M    0     0  65.7M      0  0:02:34  0:01:56  0:00:38 52.0M\n"}
+,{"stream_name":"stdout","time":489.697526375,"data":" 76  9.9G   76 7726M    0     0  65.7M      0  0:02:34  0:01:57  0:00:37 60.0M\n"}
+,{"stream_name":"stdout","time":489.697530767,"data":" 76  9.9G   76 7806M    0     0  66.0M      0  0:02:33  0:01:58  0:00:35 62.3M\n"}
+,{"stream_name":"stdout","time":489.697573791,"data":" 77  9.9G   77 7853M    0     0  65.6M      0  0:02:34  0:01:59  0:00:35 65.8M\n"}
+,{"stream_name":"stdout","time":489.697580897,"data":" 77  9.9G   77 7870M    0     0  65.4M      0  0:02:35  0:02:00  0:00:35 59.3M\n"}
+,{"stream_name":"stdout","time":489.697585157,"data":" 78  9.9G   78 7938M    0     0  65.4M      0  0:02:35  0:02:01  0:00:34 59.6M\n"}
+,{"stream_name":"stdout","time":489.697589038,"data":" 79  9.9G   79 8042M    0     0  65.7M      0  0:02:34  0:02:02  0:00:32 67.0M\n"}
+,{"stream_name":"stdout","time":489.697592314,"data":" 79  9.9G   79 8090M    0     0  65.6M      0  0:02:34  0:02:03  0:00:31 56.8M\n"}
+,{"stream_name":"stdout","time":489.697604409,"data":" 80  9.9G   80 8144M    0     0  65.3M      0  0:02:35  0:02:04  0:00:31 58.2M\n"}
+,{"stream_name":"stdout","time":489.697608902,"data":" 81  9.9G   81 8244M    0     0  65.8M      0  0:02:34  0:02:05  0:00:29 75.5M\n"}
+,{"stream_name":"stdout","time":489.697612777,"data":" 81  9.9G   81 8294M    0     0  65.6M      0  0:02:34  0:02:06  0:00:28 69.7M\n"}
+,{"stream_name":"stdout","time":489.697616595,"data":" 82  9.9G   82 8354M    0     0  65.4M      0  0:02:35  0:02:07  0:00:28 58.5M\n"}
+,{"stream_name":"stdout","time":489.697620061,"data":" 82  9.9G   82 8420M    0     0  65.5M      0  0:02:34  0:02:08  0:00:26 64.2M\n"}
+,{"stream_name":"stdout","time":489.697624236,"data":" 83  9.9G   83 8518M    0     0  65.5M      0  0:02:35  0:02:09  0:00:26 69.7M\n"}
+,{"stream_name":"stdout","time":489.697627827,"data":" 84  9.9G   84 8568M    0     0  65.7M      0  0:02:34  0:02:10  0:00:24 64.8M\n"}
+,{"stream_name":"stdout","time":489.697634346,"data":" 84  9.9G   84 8627M    0     0  65.7M      0  0:02:34  0:02:11  0:00:23 67.1M\n"}
+,{"stream_name":"stdout","time":489.6976387,"data":" 85  9.9G   85 8693M    0     0  65.6M      0  0:02:34  0:02:12  0:00:22 69.5M\n"}
+,{"stream_name":"stdout","time":489.697642699,"data":" 86  9.9G   86 8786M    0     0  65.9M      0  0:02:34  0:02:13  0:00:21 75.2M\n"}
+,{"stream_name":"stdout","time":489.697646373,"data":" 86  9.9G   86 8805M    0     0  65.4M      0  0:02:35  0:02:14  0:00:21 63.6M\n"}
+,{"stream_name":"stdout","time":489.69765005,"data":" 86  9.9G   86 8825M    0     0  65.1M      0  0:02:35  0:02:15  0:00:20 50.1M\n"}
+,{"stream_name":"stdout","time":489.697654147,"data":" 87  9.9G   87 8864M    0     0  65.0M      0  0:02:36  0:02:16  0:00:20 48.0M\n"}
+,{"stream_name":"stdout","time":489.697658326,"data":" 88  9.9G   88 8957M    0     0  65.2M      0  0:02:35  0:02:17  0:00:18 54.9M\n"}
+,{"stream_name":"stdout","time":489.697661857,"data":" 88  9.9G   88 9030M    0     0  65.1M      0  0:02:36  0:02:18  0:00:18 45.1M\n"}
+,{"stream_name":"stdout","time":489.697665661,"data":" 89  9.9G   89 9075M    0     0  65.1M      0  0:02:35  0:02:19  0:00:16 56.1M\n"}
+,{"stream_name":"stdout","time":489.697669826,"data":" 90  9.9G   90 9162M    0     0  65.3M      0  0:02:35  0:02:20  0:00:15 69.2M\n"}
+,{"stream_name":"stdout","time":489.697673919,"data":" 90  9.9G   90 9246M    0     0  65.3M      0  0:02:35  0:02:21  0:00:14 72.4M\n"}
+,{"stream_name":"stdout","time":489.697677749,"data":" 91  9.9G   91 9314M    0     0  65.4M      0  0:02:35  0:02:22  0:00:13 71.5M\n"}
+,{"stream_name":"stdout","time":489.697681732,"data":" 91  9.9G   91 9328M    0     0  65.1M      0  0:02:36  0:02:23  0:00:13 64.8M\n"}
+,{"stream_name":"stdout","time":489.697685724,"data":" 92  9.9G   92 9387M    0     0  65.0M      0  0:02:36  0:02:24  0:00:12 61.9M\n"}
+,{"stream_name":"stdout","time":489.697689724,"data":" 93  9.9G   93 9492M    0     0  65.3M      0  0:02:35  0:02:25  0:00:10 65.8M\n"}
+,{"stream_name":"stdout","time":489.697693682,"data":" 93  9.9G   93 9534M    0     0  64.9M      0  0:02:36  0:02:26  0:00:10 54.8M\n"}
+,{"stream_name":"stdout","time":489.697703671,"data":" 94  9.9G   94 9595M    0     0  65.0M      0  0:02:36  0:02:27  0:00:09 52.4M\n"}
+,{"stream_name":"stdout","time":489.697708279,"data":" 95  9.9G   95 9685M    0     0  65.3M      0  0:02:35  0:02:28  0:00:07 71.2M\n"}
+,{"stream_name":"stdout","time":489.697712368,"data":" 96  9.9G   96 9757M    0     0  65.1M      0  0:02:35  0:02:29  0:00:06 68.1M\n"}
+,{"stream_name":"stdout","time":489.697716468,"data":" 96  9.9G   96 9805M    0     0  65.0M      0  0:02:36  0:02:30  0:00:06 58.0M\n"}
+,{"stream_name":"stdout","time":489.697720739,"data":" 97  9.9G   97 9871M    0     0  65.1M      0  0:02:35  0:02:31  0:00:04 71.3M\n"}
+,{"stream_name":"stdout","time":489.697724615,"data":" 98  9.9G   98 9978M    0     0  65.5M      0  0:02:35  0:02:32  0:00:03 82.1M\n"}
+,{"stream_name":"stdout","time":489.697728698,"data":" 98  9.9G   98  9.8G    0     0  65.6M      0  0:02:34  0:02:33  0:00:01 74.7M\n"}
+,{"stream_name":"stdout","time":489.697732724,"data":" 99  9.9G   99  9.9G    0     0  65.7M      0  0:02:34  0:02:34 --:--:-- 85.1M\n"}
+,{"stream_name":"stdout","time":489.697736955,"data":"100  9.9G  100  9.9G    0     0  65.7M      0  0:02:34  0:02:34 --:--:-- 92.7M\n"}
+,{"stream_name":"stdout","time":489.697741384,"data":"\n"}
+,{"stream_name":"stdout","time":532.494409775,"data":"+ df -h /kaggle/working\n"}
+,{"stream_name":"stdout","time":532.498383456,"data":"Filesystem      Size  Used Avail Use% Mounted on\n"}
+,{"stream_name":"stdout","time":532.498415747,"data":"/dev/loop1       20G  244K   20G   1% /kaggle/working\n"}
+,{"stream_name":"stdout","time":532.498421794,"data":"\n"}
+,{"stream_name":"stdout","time":533.873923959,"data":"\n"}
+,{"stream_name":"stdout","time":533.873982679,"data":"===== ARM eager lazy=off =====\n"}
+,{"stream_name":"stdout","time":533.874035622,"data":"+ /tmp/native-sparse-phase0/llama.cpp/build-native/bin/llama-cli -m /tmp/native-sparse-phase0/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf -ngl 0 -t 4 -c 512 -n 24 --temp 0 --seed 1234 --single-turn --no-display-prompt --no-warmup -lm mmap -lzm off -p Give one concise reason oral rehydration solution helps a child with watery diarrhoea.\n"}
+,{"stream_name":"stderr","time":550.919761012,"data":"Traceback (most recent call last):\n"}
+,{"stream_name":"stderr","time":550.919855638,"data":"  File \"/kaggle/src/script.py\", line 624, in \u003cmodule\u003e\n"}
+,{"stream_name":"stderr","time":550.920177542,"data":"    main()\n"}
+,{"stream_name":"stderr","time":550.920195233,"data":"  File \"/kaggle/src/script.py\", line 551, in main\n"}
+,{"stream_name":"stderr","time":550.920555062,"data":"    run_arm(\"eager\", \"off\"),\n"}
+,{"stream_name":"stderr","time":550.921658181,"data":"    ^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":550.921682324,"data":"  File \"/kaggle/src/script.py\", line 336, in run_arm\n"}
+,{"stream_name":"stderr","time":550.921689386,"data":"    \"decode_perf\": parse_decode_perf(err),\n"}
+,{"stream_name":"stderr","time":550.921695211,"data":"                   ^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":550.92170077,"data":"  File \"/kaggle/src/script.py\", line 260, in parse_decode_perf\n"}
+,{"stream_name":"stderr","time":550.921727986,"data":"    raise RuntimeError(\"llama-cli emitted no parseable decode timing\")\n"}
+,{"stream_name":"stderr","time":550.921733371,"data":"RuntimeError: llama-cli emitted no parseable decode timing\n"}
+,{"stream_name":"stderr","time":553.518789328,"data":"/usr/local/lib/python3.12/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":553.518831081,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":553.855496736,"data":"/usr/local/lib/python3.12/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":553.855529881,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":555.225912973,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":556.815051661,"data":"[NbConvertApp] Writing 391707 bytes to __results__.html\n"}
+]
