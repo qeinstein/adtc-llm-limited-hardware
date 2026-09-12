@@ -12,6 +12,13 @@
     "max_length": 512,
     "dev_fraction": 0.1,
     "split_seed": 3407,
+    "mcqa": {
+      "datasets": ["arc_easy", "arc_challenge", "openbookqa", "mmlu_aux", "medmcqa", "medqa", "pubmedqa", "headqa"],
+      "max_per_dataset": 2000,
+      "letter_permutations": 3,
+      "seed": 3407,
+      "splits": "train only; validation and test are forbidden"
+    },
     "sources": [
       {
         "name": "project_clinical_safety",

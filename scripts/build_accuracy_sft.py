@@ -43,6 +43,18 @@ OUT = ROOT / "output"
 LETTERS = ["A", "B", "C", "D", "E", "F"]
 RNG = random.Random(3407)  # fixed seed: reproducible augmentation
 
+SOURCE_PROVENANCE = {
+    "arc_easy": {"dataset": "allenai/ai2_arc", "config": "ARC-Easy", "split": "train"},
+    "arc_challenge": {"dataset": "allenai/ai2_arc", "config": "ARC-Challenge", "split": "train"},
+    "openbookqa": {"dataset": "allenai/openbookqa", "config": "main", "split": "train"},
+    "mmlu_aux": {"dataset": "cais/mmlu", "config": "all", "split": "auxiliary_train"},
+    "medmcqa": {"dataset": "openlifescienceai/medmcqa", "config": "default", "split": "train"},
+    "medqa": {"dataset": "GBaker/MedQA-USMLE-4-options", "config": "default", "split": "train"},
+    "pubmedqa": {"dataset": "qiaojin/PubMedQA", "config": "pqa_artificial", "split": "train"},
+    "headqa": {"dataset": "dvilares/head_qa", "config": "en", "split": "train"},
+    "sciq": {"dataset": "allenai/sciq", "config": "default", "split": "train"},
+}
+
 
 def _fulltext_item(q: str, choices: list[str], gold_idx: int) -> dict:
     return {
@@ -195,9 +207,11 @@ def main() -> int:
                     help="Cap per SOURCE ITEM (before permutation expansion)")
     ap.add_argument("--letter-permutations", type=int, default=3,
                     help="Balanced option-order variants per letter-format item (debiases A/B/C/D preference)")
+    ap.add_argument("--seed", type=int, default=3407, help="Seed for deterministic option permutation")
     ap.add_argument("--include-sciq", action="store_true", help="Add SciQ (CC-BY-NC — non-commercial)")
     ap.add_argument("--out", default=str(OUT / "accuracy_sft.jsonl"))
     args = ap.parse_args()
+    RNG.seed(args.seed)
 
     names = list(args.datasets)
     if args.include_sciq and "sciq" not in names:
@@ -241,7 +255,9 @@ def main() -> int:
         "max_per_dataset_before_permutation": args.max_per_dataset,
         "letter_permutations": args.letter_permutations,
         "include_sciq": args.include_sciq,
+        "seed": args.seed,
         "rows": total,
+        "source_provenance": {name: SOURCE_PROVENANCE[name] for name in names},
         "source_results": source_results,
         "output": str(output_path),
         "output_sha256": hashlib.sha256(output_path.read_bytes()).hexdigest(),
