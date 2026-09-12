@@ -243,7 +243,7 @@ def checkpoint_is_complete(path: Path) -> bool:
         and any(path.glob("adapter_model.*"))
         and all((path / name).is_file() for name in required)
         and (not (path / "checkpoint_manifest.json").exists()
-             or bool(json.loads((path / "checkpoint_manifest.json").read_text(encoding="utf-8")).get("complete")))
+             or json.loads((path / "checkpoint_manifest.json").read_text(encoding="utf-8")).get("complete") is True)
     )
 
 
