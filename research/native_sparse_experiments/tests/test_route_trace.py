@@ -10,7 +10,9 @@ from research.native_sparse_experiments.route_trace import (
     TraceFormatError,
     analyze_routes,
     lru_replay,
+    partitioned_lru_replay,
     read_trace,
+    static_popularity_replay,
     validate_record,
 )
 
@@ -77,3 +79,42 @@ def test_json_array_input_is_supported(tmp_path: Path) -> None:
     path = tmp_path / "trace.json"
     path.write_text(json.dumps([make_record(0)]), encoding="utf-8")
     assert len(read_trace(path)) == 1
+
+
+def test_partitioned_lru_distributes_remainder_to_low_layers() -> None:
+    route = validate_record(make_record(0))
+    sizes = {layer: 1_000 + layer for layer in range(QWEN35_LAYERS)}
+    report = partitioned_lru_replay([route], total_capacity=41, bundle_bytes=sizes)
+    assert report["per_layer_capacities_bundles"][:2] == [2, 1]
+    assert report["per_layer_capacities_bundles"][2:] == [1] * 38
+    expected_bytes = sum(
+        capacity * sizes[layer]
+        for layer, capacity in enumerate(report["per_layer_capacities_bundles"])
+    )
+    assert report["capacity_bundles"] == 41
+    assert report["capacity_bytes"] == expected_bytes
+
+
+def test_static_popularity_is_hindsight_oracle_and_uses_layer_sizes() -> None:
+    routes = [validate_record(make_record(0)), validate_record(make_record(1))]
+    sizes = {layer: 1_000 + layer for layer in range(QWEN35_LAYERS)}
+    report = static_popularity_replay(routes, total_capacity=8, bundle_bytes=sizes)
+    assert report["policy"] == "static_popularity_oracle"
+    assert report["oracle_hindsight"] is True
+    assert report["deployable_prediction"] is False
+    assert report["selected_bundle_count"] == 8
+    assert report["selected_bundle_bytes"] == 8_000
+    assert report["capacity_bytes"] == 8_000
+    # Ties are resolved by (layer, expert), so all layer-0 bundles are selected.
+    assert report["hit_count"] == 16
+    assert report["miss_count"] == 624
+
+
+def test_analyze_routes_exposes_all_three_replay_policies() -> None:
+    routes = [validate_record(make_record(0)), validate_record(make_record(1))]
+    report = analyze_routes(routes, capacities=[8], expert_bundle_bytes=100)
+    assert report["lru"][0]["policy"] == "global_lru"
+    assert report["partitioned_lru"][0]["policy"] == "partitioned_lru"
+    assert report["static_popularity_oracle"][0]["policy"] == "static_popularity_oracle"
+    assert report["partitioned_lru"][0]["capacity_bytes"] == 800
+    assert report["static_popularity_oracle"][0]["capacity_bytes"] == 800

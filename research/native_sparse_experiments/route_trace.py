@@ -17,6 +17,7 @@ import collections
 import json
 import math
 from dataclasses import dataclass
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Iterable, Iterator, Sequence
 
@@ -24,6 +25,7 @@ QWEN35_LAYERS = 40
 QWEN35_EXPERTS = 256
 QWEN35_TOP_K = 8
 DEFAULT_EXPERT_BUNDLE_BYTES = 1_700_000
+BundleBytes = int | Sequence[int] | Mapping[int, int]
 
 
 class TraceFormatError(ValueError):
@@ -164,13 +166,101 @@ def _percentile(values: Sequence[int], percentile: float) -> float:
     return ordered[low] + (ordered[high] - ordered[low]) * (rank - low)
 
 
-def lru_replay(routes: Sequence[TokenRoutes], capacity: int) -> dict[str, Any]:
-    """Replay a global bundle LRU and return request/hit/miss statistics."""
+def _normalize_bundle_bytes(bundle_bytes: BundleBytes | None) -> tuple[int, ...]:
+    """Return one positive bundle size per layer.
+
+    A scalar preserves the original API. A sequence or integer-keyed mapping
+    allows exact capacity-byte accounting when packed layer sizes differ.
+    """
+
+    if bundle_bytes is None:
+        bundle_bytes = DEFAULT_EXPERT_BUNDLE_BYTES
+    if isinstance(bundle_bytes, bool):
+        raise ValueError("bundle bytes must be positive integers")
+    if isinstance(bundle_bytes, int):
+        values = (bundle_bytes,) * QWEN35_LAYERS
+    elif isinstance(bundle_bytes, Mapping):
+        def value_for(layer: int) -> Any:
+            if layer in bundle_bytes:
+                return bundle_bytes[layer]
+            return bundle_bytes.get(str(layer))
+
+        missing = [layer for layer in range(QWEN35_LAYERS) if value_for(layer) is None]
+        if missing:
+            raise ValueError(f"bundle byte mapping is missing layers {missing}")
+        values = tuple(value_for(layer) for layer in range(QWEN35_LAYERS))
+    else:
+        values = tuple(bundle_bytes)
+        if len(values) != QWEN35_LAYERS:
+            raise ValueError(f"bundle byte sequence must have {QWEN35_LAYERS} entries")
+    if any(isinstance(value, bool) or not isinstance(value, int) or value <= 0 for value in values):
+        raise ValueError("bundle bytes must be positive integers")
+    return values
+
+
+def _replay_byte_fields(
+    *,
+    misses_by_key: collections.Counter[tuple[int, int]],
+    misses_by_token: Sequence[int],
+    bundle_bytes: Sequence[int],
+    token_count: int,
+) -> dict[str, Any]:
+    fresh_bytes = sum(count * bundle_bytes[layer] for (layer, _), count in misses_by_key.items())
+    return {
+        "fresh_expert_bytes_total": fresh_bytes,
+        "fresh_expert_bytes_per_token": fresh_bytes / token_count if token_count else 0.0,
+        "misses_by_token": list(misses_by_token),
+    }
+
+
+def _replay_summary(
+    *,
+    policy: str,
+    capacity: int,
+    requests: int,
+    hits: int,
+    misses: int,
+    misses_by_token: Sequence[int],
+    unique_pairs: set[tuple[int, int]],
+    capacity_bytes: int | None,
+    max_resident_bytes: int,
+    token_count: int,
+) -> dict[str, Any]:
+    return {
+        "policy": policy,
+        "capacity_bundles": capacity,
+        "capacity_bytes": capacity_bytes,
+        "request_count": requests,
+        "hit_count": hits,
+        "miss_count": misses,
+        "hit_rate": hits / requests if requests else 0.0,
+        "miss_rate": misses / requests if requests else 0.0,
+        "misses_by_token": list(misses_by_token),
+        "fresh_requests_per_token": misses / token_count if token_count else 0.0,
+        "max_cache_occupancy_bundles": min(capacity, len(unique_pairs)),
+        "max_resident_bytes": max_resident_bytes,
+    }
+
+
+def lru_replay(
+    routes: Sequence[TokenRoutes],
+    capacity: int,
+    *,
+    bundle_bytes: BundleBytes | None = None,
+) -> dict[str, Any]:
+    """Replay the original global bundle LRU.
+
+    With non-uniform layer sizes, ``capacity_bytes`` is ``None`` because a
+    bundle-count budget has no single fixed byte size; ``max_resident_bytes``
+    records the exact observed resident bytes instead.
+    """
 
     if capacity < 0:
         raise ValueError("LRU capacity must be non-negative")
+    sizes = _normalize_bundle_bytes(bundle_bytes)
     cache: collections.OrderedDict[tuple[int, int], None] = collections.OrderedDict()
-    requests = hits = misses = 0
+    requests = hits = misses = resident_bytes = max_resident_bytes = 0
+    misses_by_key: collections.Counter[tuple[int, int]] = collections.Counter()
     misses_by_token: list[int] = []
     for token_routes in routes:
         token_misses = 0
@@ -182,38 +272,183 @@ def lru_replay(routes: Sequence[TokenRoutes], capacity: int) -> dict[str, Any]:
                 continue
             misses += 1
             token_misses += 1
+            misses_by_key[key] += 1
             if capacity:
                 cache[key] = None
                 cache.move_to_end(key)
+                resident_bytes += sizes[key[0]]
                 if len(cache) > capacity:
-                    cache.popitem(last=False)
+                    evicted, _ = cache.popitem(last=False)
+                    resident_bytes -= sizes[evicted[0]]
+            max_resident_bytes = max(max_resident_bytes, resident_bytes)
         misses_by_token.append(token_misses)
     unique_pairs = {key for route in routes for key in route.requests}
-    return {
-        "capacity_bundles": capacity,
-        "request_count": requests,
-        "hit_count": hits,
-        "miss_count": misses,
-        "hit_rate": hits / requests if requests else 0.0,
-        "miss_rate": misses / requests if requests else 0.0,
-        "misses_by_token": misses_by_token,
-        "fresh_requests_per_token": misses / len(routes) if routes else 0.0,
-        "max_cache_occupancy_bundles": min(capacity, len(unique_pairs)),
-    }
+    capacity_bytes = capacity * sizes[0] if len(set(sizes)) == 1 else None
+    report = _replay_summary(
+        policy="global_lru",
+        capacity=capacity,
+        requests=requests,
+        hits=hits,
+        misses=misses,
+        misses_by_token=misses_by_token,
+        unique_pairs=unique_pairs,
+        capacity_bytes=capacity_bytes,
+        max_resident_bytes=max_resident_bytes,
+        token_count=len(routes),
+    )
+    report["capacity_bytes_lower_bound"] = capacity * min(sizes)
+    report["capacity_bytes_upper_bound"] = capacity * max(sizes)
+    report.update(_replay_byte_fields(
+        misses_by_key=misses_by_key,
+        misses_by_token=misses_by_token,
+        bundle_bytes=sizes,
+        token_count=len(routes),
+    ))
+    return report
+
+
+def _partition_capacities(total_capacity: int, layer_count: int = QWEN35_LAYERS) -> list[int]:
+    if total_capacity < 0:
+        raise ValueError("LRU capacity must be non-negative")
+    base, remainder = divmod(total_capacity, layer_count)
+    # Remainders go to lower layer indices, making the policy reproducible.
+    return [base + (layer < remainder) for layer in range(layer_count)]
+
+
+def partitioned_lru_replay(
+    routes: Sequence[TokenRoutes],
+    total_capacity: int,
+    *,
+    bundle_bytes: BundleBytes | None = None,
+) -> dict[str, Any]:
+    """Replay independent per-layer LRUs under one bundle budget."""
+
+    sizes = _normalize_bundle_bytes(bundle_bytes)
+    capacities = _partition_capacities(total_capacity)
+    caches = [collections.OrderedDict() for _ in range(QWEN35_LAYERS)]
+    requests = hits = misses = resident_bytes = max_resident_bytes = 0
+    misses_by_key: collections.Counter[tuple[int, int]] = collections.Counter()
+    misses_by_token: list[int] = []
+    unique_pairs = {key for route in routes for key in route.requests}
+    for token_routes in routes:
+        token_misses = 0
+        for key in token_routes.requests:
+            requests += 1
+            layer, _ = key
+            cache = caches[layer]
+            if key in cache:
+                hits += 1
+                cache.move_to_end(key)
+                continue
+            misses += 1
+            token_misses += 1
+            misses_by_key[key] += 1
+            if capacities[layer]:
+                cache[key] = None
+                cache.move_to_end(key)
+                resident_bytes += sizes[layer]
+                if len(cache) > capacities[layer]:
+                    evicted, _ = cache.popitem(last=False)
+                    resident_bytes -= sizes[evicted[0]]
+            max_resident_bytes = max(max_resident_bytes, resident_bytes)
+        misses_by_token.append(token_misses)
+    report = _replay_summary(
+        policy="partitioned_lru",
+        capacity=total_capacity,
+        requests=requests,
+        hits=hits,
+        misses=misses,
+        misses_by_token=misses_by_token,
+        unique_pairs=unique_pairs,
+        capacity_bytes=sum(capacities[layer] * sizes[layer] for layer in range(QWEN35_LAYERS)),
+        max_resident_bytes=max_resident_bytes,
+        token_count=len(routes),
+    )
+    report["per_layer_capacities_bundles"] = capacities
+    report.update(_replay_byte_fields(
+        misses_by_key=misses_by_key,
+        misses_by_token=misses_by_token,
+        bundle_bytes=sizes,
+        token_count=len(routes),
+    ))
+    return report
+
+
+def static_popularity_replay(
+    routes: Sequence[TokenRoutes],
+    total_capacity: int,
+    *,
+    bundle_bytes: BundleBytes | None = None,
+) -> dict[str, Any]:
+    """Replay a hindsight static cache ordered by per-layer popularity.
+
+    This is an offline oracle upper-control: it sees the complete trace before
+    choosing the most-requested ``(layer, expert)`` bundles, so it is not a
+    deployable predictor. Ties are deterministic by layer then expert ID.
+    """
+
+    if total_capacity < 0:
+        raise ValueError("cache capacity must be non-negative")
+    sizes = _normalize_bundle_bytes(bundle_bytes)
+    popularity: collections.Counter[tuple[int, int]] = collections.Counter(
+        key for route in routes for key in route.requests
+    )
+    selected = sorted(popularity, key=lambda key: (-popularity[key], key[0], key[1]))[:total_capacity]
+    selected_set = set(selected)
+    requests = hits = misses = 0
+    misses_by_key: collections.Counter[tuple[int, int]] = collections.Counter()
+    misses_by_token: list[int] = []
+    for token_routes in routes:
+        token_misses = 0
+        for key in token_routes.requests:
+            requests += 1
+            if key in selected_set:
+                hits += 1
+            else:
+                misses += 1
+                token_misses += 1
+                misses_by_key[key] += 1
+        misses_by_token.append(token_misses)
+    selected_bytes = sum(sizes[layer] for layer, _ in selected)
+    report = _replay_summary(
+        policy="static_popularity_oracle",
+        capacity=total_capacity,
+        requests=requests,
+        hits=hits,
+        misses=misses,
+        misses_by_token=misses_by_token,
+        unique_pairs=set(popularity),
+        capacity_bytes=selected_bytes,
+        max_resident_bytes=selected_bytes,
+        token_count=len(routes),
+    )
+    report["selected_bundle_count"] = len(selected)
+    report["selected_bundle_bytes"] = selected_bytes
+    report["selected_bundles_by_layer"] = dict(
+        sorted(collections.Counter(layer for layer, _ in selected).items())
+    )
+    report["oracle_hindsight"] = True
+    report["deployable_prediction"] = False
+    report.update(_replay_byte_fields(
+        misses_by_key=misses_by_key,
+        misses_by_token=misses_by_token,
+        bundle_bytes=sizes,
+        token_count=len(routes),
+    ))
+    return report
 
 
 def analyze_routes(
     routes: Sequence[TokenRoutes],
     *,
     capacities: Iterable[int] = (0, 64, 128, 256, 512, 1024),
-    expert_bundle_bytes: int = DEFAULT_EXPERT_BUNDLE_BYTES,
+    expert_bundle_bytes: BundleBytes = DEFAULT_EXPERT_BUNDLE_BYTES,
 ) -> dict[str, Any]:
     """Compute route popularity, temporal overlap, and cache/I/O metrics."""
 
-    if expert_bundle_bytes <= 0:
-        raise ValueError("expert_bundle_bytes must be positive")
     if not routes:
         raise ValueError("at least one token route is required")
+    bundle_sizes = _normalize_bundle_bytes(expert_bundle_bytes)
 
     popularity: collections.Counter[int] = collections.Counter()
     layer_popularity: dict[str, dict[str, int]] = {}
@@ -248,16 +483,28 @@ def analyze_routes(
 
     requests = sum(token_request_counts)
     capacities_out: list[dict[str, Any]] = []
+    capacity_values: list[int] = []
     seen_capacities: set[int] = set()
     for raw_capacity in capacities:
         capacity = int(raw_capacity)
         if capacity in seen_capacities:
             continue
         seen_capacities.add(capacity)
-        replay = lru_replay(routes, capacity)
-        replay["fresh_expert_bytes_total"] = replay["miss_count"] * expert_bundle_bytes
-        replay["fresh_expert_bytes_per_token"] = replay["fresh_expert_bytes_total"] / len(routes)
-        capacities_out.append(replay)
+        capacity_values.append(capacity)
+        capacities_out.append(lru_replay(routes, capacity, bundle_bytes=bundle_sizes))
+    partitioned_out = [
+        partitioned_lru_replay(routes, capacity, bundle_bytes=bundle_sizes)
+        for capacity in capacity_values
+    ]
+    static_out = [
+        static_popularity_replay(routes, capacity, bundle_bytes=bundle_sizes)
+        for capacity in capacity_values
+    ]
+    bundle_bytes_output: int | list[int]
+    if len(set(bundle_sizes)) == 1:
+        bundle_bytes_output = bundle_sizes[0]
+    else:
+        bundle_bytes_output = list(bundle_sizes)
 
     return {
         "shape": {
@@ -272,8 +519,11 @@ def analyze_routes(
         "requests_per_token_max": max(token_request_counts),
         "unique_layer_expert_bundles": len(unique_pairs),
         "unique_expert_ids": len(popularity),
-        "expert_bundle_bytes": expert_bundle_bytes,
-        "uncached_bytes_per_token": QWEN35_LAYERS * QWEN35_TOP_K * expert_bundle_bytes,
+        "expert_bundle_bytes": bundle_bytes_output,
+        "uncached_bytes_per_token": sum(
+            len(routes[0].layers[layer]) * bundle_sizes[layer]
+            for layer in range(len(routes[0].layers))
+        ),
         "expert_popularity": dict(sorted(popularity.items(), key=lambda item: (-item[1], item[0]))),
         "layer_expert_popularity": layer_popularity,
         "token_overlap": {
@@ -289,6 +539,8 @@ def analyze_routes(
             "p50_shared_experts": _percentile(layer_overlap_counts, 0.50),
         },
         "lru": capacities_out,
+        "partitioned_lru": partitioned_out,
+        "static_popularity_oracle": static_out,
     }
 
 
@@ -318,12 +570,20 @@ def main(argv: Sequence[str] | None = None) -> int:
         default=DEFAULT_EXPERT_BUNDLE_BYTES,
         help=f"bytes per quantized layer/expert bundle (default: {DEFAULT_EXPERT_BUNDLE_BYTES})",
     )
+    parser.add_argument(
+        "--bundle-by-layer-file",
+        type=Path,
+        help="JSON file containing a 40-item byte list or layer->byte mapping",
+    )
     args = parser.parse_args(argv)
     routes = read_trace(args.trace)
+    bundle_bytes: BundleBytes = args.expert_bundle_bytes
+    if args.bundle_by_layer_file:
+        bundle_bytes = json.loads(args.bundle_by_layer_file.read_text(encoding="utf-8"))
     report = analyze_routes(
         routes,
         capacities=args.capacities,
-        expert_bundle_bytes=args.expert_bundle_bytes,
+        expert_bundle_bytes=bundle_bytes,
     )
     encoded = json.dumps(report, indent=2, sort_keys=True)
     if args.output:
@@ -335,4 +595,3 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
