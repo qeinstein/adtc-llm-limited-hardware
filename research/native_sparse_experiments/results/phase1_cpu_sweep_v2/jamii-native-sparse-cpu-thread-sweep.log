@@ -1,0 +1,30 @@
+[{"stream_name":"stdout","time":0.909233331,"data":"+ git clone --filter=blob:none https://github.com/ggml-org/llama.cpp.git /tmp/native-sparse-cpu-sweep/llama.cpp\n"}
+,{"stream_name":"stdout","time":9.534374447,"data":"+ git fetch --depth 1 origin 3057bb66c86c46d5781e50e85462a760ba7d1feb\n"}
+,{"stream_name":"stdout","time":10.477391351,"data":"+ git checkout --detach 3057bb66c86c46d5781e50e85462a760ba7d1feb\n"}
+,{"stream_name":"stdout","time":10.789227228,"data":"+ cmake -S /tmp/native-sparse-cpu-sweep/llama.cpp -B /tmp/native-sparse-cpu-sweep/llama.cpp/build-native -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DGGML_NATIVE=ON -DGGML_CUDA=OFF -DGGML_METAL=OFF -DGGML_VULKAN=OFF -DLLAMA_CURL=OFF\n"}
+,{"stream_name":"stdout","time":13.665520421,"data":"+ cmake --build /tmp/native-sparse-cpu-sweep/llama.cpp/build-native --config Release -j4 --target llama-bench\n"}
+,{"stream_name":"stdout","time":234.676468035,"data":"+ git rev-parse HEAD\n"}
+,{"stream_name":"stdout","time":234.679103073,"data":"+ /tmp/native-sparse-cpu-sweep/llama.cpp/build-native/bin/llama-bench --help\n"}
+,{"stream_name":"stdout","time":234.701713964,"data":"+ curl -L --fail --retry 5 --retry-delay 5 -C - -o /tmp/native-sparse-cpu-sweep/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf https://huggingface.co/unsloth/Qwen3.5-35B-A3B-GGUF/resolve/bc014a17be43adabd7066b7a86075ff935c6a4e2/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf\n"}
+,{"stream_name":"stdout","time":390.612865226,"data":"+ /tmp/native-sparse-cpu-sweep/llama.cpp/build-native/bin/llama-bench -m /tmp/native-sparse-cpu-sweep/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf -p 0 -n 64 -r 3 -t 1 -ngl 0 -lm mmap -lzm off --output json\n"}
+,{"stream_name":"stdout","time":476.558893904,"data":"{\"label\": \"threads_1_default\", \"returncode\": 0, \"parse_ok\": true, \"decode_tok_s\": 2.328616, \"peak_rss_kib\": 10787896, \"parse_error\": null}\n"}
+,{"stream_name":"stdout","time":476.559103124,"data":"+ /tmp/native-sparse-cpu-sweep/llama.cpp/build-native/bin/llama-bench -m /tmp/native-sparse-cpu-sweep/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf -p 0 -n 64 -r 3 -t 2 -ngl 0 -lm mmap -lzm off --output json\n"}
+,{"stream_name":"stdout","time":534.735563344,"data":"{\"label\": \"threads_2_default\", \"returncode\": 0, \"parse_ok\": true, \"decode_tok_s\": 3.588182, \"peak_rss_kib\": 10788108, \"parse_error\": null}\n"}
+,{"stream_name":"stdout","time":534.735690526,"data":"+ /tmp/native-sparse-cpu-sweep/llama.cpp/build-native/bin/llama-bench -m /tmp/native-sparse-cpu-sweep/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf -p 0 -n 64 -r 3 -t 3 -ngl 0 -lm mmap -lzm off --output json\n"}
+,{"stream_name":"stdout","time":585.83102037,"data":"{\"label\": \"threads_3_default\", \"returncode\": 0, \"parse_ok\": true, \"decode_tok_s\": 3.998601, \"peak_rss_kib\": 10788360, \"parse_error\": null}\n"}
+,{"stream_name":"stdout","time":585.831087598,"data":"+ /tmp/native-sparse-cpu-sweep/llama.cpp/build-native/bin/llama-bench -m /tmp/native-sparse-cpu-sweep/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf -p 0 -n 64 -r 3 -t 4 -ngl 0 -lm mmap -lzm off --output json\n"}
+,{"stream_name":"stdout","time":630.296855255,"data":"{\"label\": \"threads_4_default\", \"returncode\": 0, \"parse_ok\": true, \"decode_tok_s\": 4.613778, \"peak_rss_kib\": 10788192, \"parse_error\": null}\n"}
+,{"stream_name":"stdout","time":630.296975283,"data":"+ /tmp/native-sparse-cpu-sweep/llama.cpp/build-native/bin/llama-bench -m /tmp/native-sparse-cpu-sweep/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf -p 0 -n 64 -r 3 -t 4 -ngl 0 -lm mmap -lzm off --output json --poll 0\n"}
+,{"stream_name":"stdout","time":674.182879695,"data":"{\"label\": \"best_poll_0\", \"returncode\": 0, \"parse_ok\": true, \"decode_tok_s\": 4.71616, \"peak_rss_kib\": 10788144, \"parse_error\": null}\n"}
+,{"stream_name":"stdout","time":674.182969371,"data":"+ /tmp/native-sparse-cpu-sweep/llama.cpp/build-native/bin/llama-bench -m /tmp/native-sparse-cpu-sweep/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf -p 0 -n 64 -r 3 -t 4 -ngl 0 -lm mmap -lzm off --output json --poll 100\n"}
+,{"stream_name":"stdout","time":718.186715141,"data":"{\"label\": \"best_poll_100\", \"returncode\": 0, \"parse_ok\": true, \"decode_tok_s\": 4.654954, \"peak_rss_kib\": 10788192, \"parse_error\": null}\n"}
+,{"stream_name":"stdout","time":718.187728105,"data":"+ /tmp/native-sparse-cpu-sweep/llama.cpp/build-native/bin/llama-bench -m /tmp/native-sparse-cpu-sweep/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf -p 0 -n 64 -r 3 -t 4 -ngl 0 -lm mmap -lzm off --output json --cpu-mask 0xf --cpu-strict 1\n"}
+,{"stream_name":"stdout","time":761.835454661,"data":"{\"label\": \"best_affinity_strict\", \"returncode\": 0, \"parse_ok\": true, \"decode_tok_s\": 4.691303, \"peak_rss_kib\": 10788196, \"parse_error\": null}\n"}
+,{"stream_name":"stdout","time":761.837732934,"data":"{\"status\": \"ok\", \"best\": {\"label\": \"best_poll_0\", \"threads\": 4, \"decode_tok_s\": 4.71616, \"peak_rss_kib\": 10788144, \"command\": [\"/tmp/native-sparse-cpu-sweep/llama.cpp/build-native/bin/llama-bench\", \"-m\", \"/tmp/native-sparse-cpu-sweep/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf\", \"-p\", \"0\", \"-n\", \"64\", \"-r\", \"3\", \"-t\", \"4\", \"-ngl\", \"0\", \"-lm\", \"mmap\", \"-lzm\", \"off\", \"--output\", \"json\", \"--poll\", \"0\"]}, \"error\": null}\n"}
+,{"stream_name":"stderr","time":764.485517472,"data":"/usr/local/lib/python3.12/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":764.485612401,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":764.849512217,"data":"/usr/local/lib/python3.12/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":764.849546102,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":766.37301314,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":767.893898551,"data":"[NbConvertApp] Writing 346891 bytes to __results__.html\n"}
+]
