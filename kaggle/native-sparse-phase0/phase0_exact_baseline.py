@@ -219,7 +219,8 @@ def drop_own_file_cache(path: Path) -> dict:
 
 def proc_sample(pid: int) -> dict:
     out = {"mono_ns": time.monotonic_ns(), "rss_kib": 0, "rss_anon_kib": 0,
-           "rss_file_kib": 0, "read_bytes": 0, "rchar": 0}
+           "rss_file_kib": 0, "read_bytes": 0, "rchar": 0,
+           "minor_faults": 0, "major_faults": 0, "valid": False}
     try:
         for line in Path(f"/proc/{pid}/status").read_text().splitlines():
             if line.startswith("VmRSS:"):
@@ -232,9 +233,35 @@ def proc_sample(pid: int) -> dict:
             key, value = line.split(":", 1)
             if key in ("read_bytes", "rchar"):
                 out[key] = int(value.strip())
+        # Fields 10 and 12 in proc(5), after accounting for the parenthesized
+        # comm field.  These are diagnostic companions to the I/O counters;
+        # neither is mislabeled as exact physical SSD bytes.
+        stat_tail = Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()
+        out["minor_faults"] = int(stat_tail[7])
+        out["major_faults"] = int(stat_tail[9])
+        out["valid"] = True
     except (FileNotFoundError, ProcessLookupError, PermissionError):
         pass
     return out
+
+
+PERF_RE = re.compile(
+    r"eval time\s*=\s*([0-9.]+) ms /\s*([0-9]+) runs\s*"
+    r"\(\s*([0-9.]+) ms per token,\s*([0-9.]+) tokens per second\s*\)"
+)
+
+
+def parse_decode_perf(stderr: str) -> dict:
+    matches = PERF_RE.findall(stderr)
+    if not matches:
+        raise RuntimeError("llama-cli emitted no parseable decode timing")
+    elapsed_ms, runs, ms_per_token, tokens_per_second = matches[-1]
+    return {
+        "eval_ms": float(elapsed_ms),
+        "eval_runs": int(runs),
+        "ms_per_token": float(ms_per_token),
+        "tokens_per_second": float(tokens_per_second),
+    }
 
 
 def run_arm(name: str, lazy_mode: str) -> dict:
@@ -273,7 +300,9 @@ def run_arm(name: str, lazy_mode: str) -> dict:
     out, err = proc.communicate()
     stop.set()
     thread.join(timeout=2)
-    samples.append(proc_sample(proc.pid))
+    final_sample = proc_sample(proc.pid)
+    if final_sample["valid"]:
+        samples.append(final_sample)
     t1 = time.monotonic_ns()
     stdout.write_text(out, encoding="utf-8")
     stderr.write_text(err, encoding="utf-8")
@@ -281,17 +310,27 @@ def run_arm(name: str, lazy_mode: str) -> dict:
     if proc.returncode:
         raise RuntimeError(f"{name} exited {proc.returncode}: {err[-2000:]}")
 
-    peak = max((x["rss_kib"] for x in samples), default=0)
-    read_max = max((x["read_bytes"] for x in samples), default=0)
-    rchar_max = max((x["rchar"] for x in samples), default=0)
+    valid_samples = [x for x in samples if x["valid"]]
+    peak = max((x["rss_kib"] for x in valid_samples), default=0)
+    peak_anon = max((x["rss_anon_kib"] for x in valid_samples), default=0)
+    peak_file = max((x["rss_file_kib"] for x in valid_samples), default=0)
+    read_max = max((x["read_bytes"] for x in valid_samples), default=0)
+    rchar_max = max((x["rchar"] for x in valid_samples), default=0)
+    minor_faults = max((x["minor_faults"] for x in valid_samples), default=0)
+    major_faults = max((x["major_faults"] for x in valid_samples), default=0)
     return {
         "name": name,
         "lazy_mode": lazy_mode,
         "command": cmd,
         "elapsed_sec": (t1 - t0) / 1e9,
         "peak_rss_mib": peak / 1024,
+        "peak_rss_anon_mib": peak_anon / 1024,
+        "peak_rss_file_mib": peak_file / 1024,
         "max_read_bytes": read_max,
         "max_rchar": rchar_max,
+        "minor_faults": minor_faults,
+        "major_faults": major_faults,
+        "decode_perf": parse_decode_perf(err),
         "stdout_sha256": hashlib.sha256(out.encode()).hexdigest(),
         "stdout": out,
         "cache_drop": cache_drop,
@@ -416,7 +455,10 @@ def route_metrics(tokens: list[list[list[int]]]) -> dict:
 def decode_read_bytes(samples_path: Path, first_ns: int | None, last_ns: int | None) -> int | None:
     if first_ns is None or last_ns is None:
         return None
-    samples = [json.loads(x) for x in samples_path.read_text().splitlines()]
+    samples = [
+        row for row in (json.loads(x) for x in samples_path.read_text().splitlines())
+        if row.get("valid")
+    ]
     before = [x for x in samples if x["mono_ns"] <= first_ns]
     after = [x for x in samples if x["mono_ns"] >= last_ns]
     if not before or not after:
@@ -510,8 +552,8 @@ def main() -> None:
         "routes": route_summaries,
         "compute_ceiling": compute_ceiling,
         "quality": {
-            "result": "zero observed delta",
-            "basis": "byte-identical deterministic output and identical native routes",
+            "result": "deterministic smoke equivalence only",
+            "basis": "one byte-identical output and identical native routes; not a capability evaluation",
         },
         "wall_sec": time.time() - started,
     }
