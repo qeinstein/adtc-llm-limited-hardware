@@ -82,13 +82,12 @@ def clone_and_build() -> tuple[dict, str]:
         "-j4", "--target", "llama-bench",
     ]
     run_checked(build)
-    version = run_checked([str(BENCH), "--version"])
+    source_head = run_checked(["git", "rev-parse", "HEAD"], cwd=LLAMA)
     help_result = run_checked([str(BENCH), "--help"])
     (OUT / "llama-help.txt").write_text(help_result.stdout, encoding="utf-8")
     return {
         "commit": LLAMA_COMMIT,
-        "version_stdout": version.stdout.strip(),
-        "version_stderr": version.stderr.strip(),
+        "source_head": source_head.stdout.strip(),
         "configure_command": configure,
         "build_command": build,
     }, help_result.stdout

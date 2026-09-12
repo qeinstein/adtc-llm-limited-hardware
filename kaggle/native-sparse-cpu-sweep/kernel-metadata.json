@@ -1,5 +1,5 @@
 {
-  "id": "toheebogunade/jamii-native-sparse-cpu-sweep",
+  "id": "toheebogunade/jamii-native-sparse-cpu-thread-sweep",
   "title": "Jamii Native Sparse CPU Thread Sweep",
   "code_file": "cpu_thread_sweep.py",
   "language": "python",
