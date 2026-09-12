@@ -252,19 +252,33 @@ PERF_RE = re.compile(
     r"eval time\s*=\s*([0-9.]+) ms /\s*([0-9]+) runs\s*"
     r"\(\s*([0-9.]+) ms per token,\s*([0-9.]+) tokens per second\s*\)"
 )
+SUMMARY_PERF_RE = re.compile(
+    r"\[\s*Prompt:\s*([0-9.]+) t/s\s*\|\s*Generation:\s*([0-9.]+) t/s\s*\]"
+)
 
 
-def parse_decode_perf(stderr: str) -> dict:
-    matches = PERF_RE.findall(stderr)
-    if not matches:
-        raise RuntimeError("llama-cli emitted no parseable decode timing")
-    elapsed_ms, runs, ms_per_token, tokens_per_second = matches[-1]
-    return {
-        "eval_ms": float(elapsed_ms),
-        "eval_runs": int(runs),
-        "ms_per_token": float(ms_per_token),
-        "tokens_per_second": float(tokens_per_second),
-    }
+def parse_decode_perf(output: str) -> dict:
+    detailed = PERF_RE.findall(output)
+    if detailed:
+        elapsed_ms, runs, ms_per_token, tokens_per_second = detailed[-1]
+        return {
+            "source": "llama_perf_context_print",
+            "eval_ms": float(elapsed_ms),
+            "eval_runs": int(runs),
+            "ms_per_token": float(ms_per_token),
+            "tokens_per_second": float(tokens_per_second),
+        }
+    summaries = SUMMARY_PERF_RE.findall(output)
+    if summaries:
+        prompt_tps, generation_tps = summaries[-1]
+        generation_tps_f = float(generation_tps)
+        return {
+            "source": "llama_cli_response_summary",
+            "prompt_tokens_per_second": float(prompt_tps),
+            "tokens_per_second": generation_tps_f,
+            "ms_per_token": 1000.0 / generation_tps_f,
+        }
+    raise RuntimeError("llama-cli emitted no parseable decode timing")
 
 
 def run_arm(name: str, lazy_mode: str) -> dict:
@@ -279,7 +293,7 @@ def run_arm(name: str, lazy_mode: str) -> dict:
     cmd = [
         str(CLI), "-m", str(MODEL), "-ngl", "0", "-t", str(N_THREADS),
         "-c", "512", "-n", str(N_GEN), "--temp", "0", "--seed", "1234",
-        "--single-turn", "--no-display-prompt", "--no-warmup",
+        "--single-turn", "--no-display-prompt", "--no-warmup", "--perf",
         "-lm", "mmap", "-lzm", lazy_mode, "-p", PROMPT,
     ]
     env = dict(os.environ, GGML_PHASE0_ROUTE_TRACE=str(trace))
@@ -333,7 +347,7 @@ def run_arm(name: str, lazy_mode: str) -> dict:
         "max_rchar": rchar_max,
         "minor_faults": minor_faults,
         "major_faults": major_faults,
-        "decode_perf": parse_decode_perf(err),
+        "decode_perf": parse_decode_perf(out + "\n" + err),
         "stdout_sha256": hashlib.sha256(out.encode()).hexdigest(),
         "stdout": out,
         "cache_drop": cache_drop,
