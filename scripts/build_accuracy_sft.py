@@ -204,11 +204,13 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Build MCQA choice-list training set from public TRAIN splits")
     ap.add_argument("--datasets", nargs="+", default=DEFAULT, choices=list(_sources(1)))
     ap.add_argument("--max-per-dataset", type=int, default=20000,
-                    help="Cap per SOURCE ITEM (before permutation expansion)")
+                    help="Cap emitted records per dataset (after permutation expansion)")
     ap.add_argument("--letter-permutations", type=int, default=3,
                     help="Balanced option-order variants per letter-format item (debiases A/B/C/D preference)")
     ap.add_argument("--seed", type=int, default=3407, help="Seed for deterministic option permutation")
     ap.add_argument("--include-sciq", action="store_true", help="Add SciQ (CC-BY-NC — non-commercial)")
+    ap.add_argument("--fail-on-source-error", action="store_true",
+                    help="Exit nonzero if any configured source is skipped")
     ap.add_argument("--out", default=str(OUT / "accuracy_sft.jsonl"))
     args = ap.parse_args()
     RNG.seed(args.seed)
@@ -252,7 +254,7 @@ def main() -> int:
         "schema_version": "1.0.0",
         "builder": "scripts/build_accuracy_sft.py",
         "datasets": names,
-        "max_per_dataset_before_permutation": args.max_per_dataset,
+        "max_per_dataset_emitted_records": args.max_per_dataset,
         "letter_permutations": args.letter_permutations,
         "include_sciq": args.include_sciq,
         "seed": args.seed,
@@ -268,6 +270,10 @@ def main() -> int:
     print(f"Letter-format items expanded x{args.letter_permutations} (balanced permutation, debiases A/B/C/D).")
     print("Trained via a listwise ranking loss in scripts/train_lora.py.")
     print("NOTE: train splits only — never any test/validation split; afrimmlu/mmlu_prox excluded.")
+    skipped = [item for item in source_results if item["status"] != "ok"]
+    if skipped and args.fail_on_source_error:
+        print(f"ERROR: {len(skipped)} configured MCQA source(s) were skipped; refusing incomplete production mixture.", file=sys.stderr)
+        return 2
     return 0
 
 
