@@ -106,6 +106,17 @@ def patch_runtime() -> dict:
         "\n"
         "// Same capability test without the upstream per-expert batch threshold.\n"
         "bool ggml_cpu_iqp_supports_mul_mat_id_single(const struct ggml_tensor * dst);\n")
+    replace_once(iqp_h,
+        "void ggml_compute_forward_mul_mat_id_iqp(const struct ggml_compute_params * params,\n",
+        "// Measurement-only direct raw IQ2_XXS selected-expert rows; no panel scratch.\n"
+        "void ggml_compute_forward_mul_mat_id_raw_iq2(const struct ggml_compute_params * params,\n"
+        "                                             struct ggml_tensor *               dst,\n"
+        "                                             int64_t                            cur_a,\n"
+        "                                             const int32_t *                    expert_rows);\n\n"
+        "void ggml_compute_forward_mul_mat_id_iqp(const struct ggml_compute_params * params,\n")
+    replace_once(iqp,
+        "#include \"iqp.h\"\n\n#define UNUSED GGML_UNUSED\n",
+        "#include \"iqp.h\"\n#include \"quants.h\"\n\n#define UNUSED GGML_UNUSED\n")
     replace_once(iqp,
         "bool ggml_cpu_iqp_supports_mul_mat_id(const struct ggml_tensor * dst) {\n"
         "    const struct ggml_tensor * ids = dst->src[2];\n\n"
@@ -166,6 +177,25 @@ def patch_runtime() -> dict:
     new = ("        if (iqp && (ggml_cpu_iqp_mul_mat_id_min_batch(cne1) ||\n"
            "                   (single_row_iqp && cne1 == 1))) {\n")
     replace_once(cpu, old, new)
+    replace_once(cpu,
+        "        if (iqp && (ggml_cpu_iqp_mul_mat_id_min_batch(cne1) ||\n"
+        "                   (single_row_iqp && cne1 == 1))) {\n"
+        "            ggml_compute_forward_mul_mat_id_iqp(params, dst, cur_a, cne1, (const int32_t *) &MMID_MATRIX_ROW(cur_a, 0),\n"
+        "                                                iqp_panels);\n\n"
+        "            continue;\n"
+        "        }\n",
+        "        const char * raw_iq2_env = getenv(\"GGML_RAW_SINGLE_ROW_IQ2\");\n"
+        "        const bool raw_iq2 = raw_iq2_env != NULL && atoi(raw_iq2_env) != 0;\n"
+        "        if (raw_iq2 && cne1 == 1 && src0->type == GGML_TYPE_IQ2_XXS) {\n"
+        "            ggml_compute_forward_mul_mat_id_raw_iq2(params, dst, cur_a, (const int32_t *) &MMID_MATRIX_ROW(cur_a, 0));\n"
+        "            continue;\n"
+        "        }\n\n"
+        "        if (iqp && (ggml_cpu_iqp_mul_mat_id_min_batch(cne1) ||\n"
+        "                   (single_row_iqp && cne1 == 1))) {\n"
+        "            ggml_compute_forward_mul_mat_id_iqp(params, dst, cur_a, cne1, (const int32_t *) &MMID_MATRIX_ROW(cur_a, 0),\n"
+        "                                                iqp_panels);\n\n"
+        "            continue;\n"
+        "        }\n")
 
     # Reuse the observation-only route marker to split process RSS into the
     # pre-routed floor and the pages touched by selected experts.
@@ -273,6 +303,31 @@ static void ggml_phase3_route_trace(const struct ggml_compute_params * params,
         "                phase3_gemv_calls.fetch_add(1);\n"
         "            }\n"
         "            continue;\n")
+    replace_once(iqp,
+        "    }\n}\n\nsize_t ggml_cpu_iqp_scratch_size(const struct ggml_tensor * dst) {\n",
+        "    }\n}\n\n"
+        "void ggml_compute_forward_mul_mat_id_raw_iq2(const struct ggml_compute_params * params,\n"
+        "                                               struct ggml_tensor *               dst,\n"
+        "                                               int64_t                            cur_a,\n"
+        "                                               const int32_t *                    expert_rows) {\n"
+        "    const struct ggml_tensor * src0 = dst->src[0];\n"
+        "    const struct ggml_tensor * src1 = dst->src[1];\n"
+        "    GGML_TENSOR_BINARY_OP_LOCALS\n"
+        "    const int ith = params->ith;\n"
+        "    const int nth = params->nth;\n"
+        "    const size_t nbw1 = ggml_row_size(GGML_TYPE_Q8_K, ne10);\n"
+        "    const char * src0_cur = (const char *) src0->data + cur_a * nb02;\n"
+        "    const void * src1_row = (const char *) params->wdata +\n"
+        "        ((expert_rows[0] % ne11) + expert_rows[1] * ne11) * nbw1;\n"
+        "    const int64_t r0 = (ne01 * ith) / nth;\n"
+        "    const int64_t r1 = (ne01 * (ith + 1)) / nth;\n"
+        "    for (int64_t r = r0; r < r1; ++r) {\n"
+        "        float * dst_col = (float *) ((char *) dst->data +\n"
+        "            expert_rows[0] * nb1 + expert_rows[1] * nb2);\n"
+        "        ggml_vec_dot_iq2_xxs_q8_K(ne00, dst_col + r, 0,\n"
+        "            src0_cur + r * nb01, 0, src1_row, 0, 1);\n"
+        "    }\n"
+        "}\n\nsize_t ggml_cpu_iqp_scratch_size(const struct ggml_tensor * dst) {\n")
 
     patch = run_checked(["git", "diff", "--", "ggml/src/ggml-cpu/ggml-cpu.c",
                          "ggml/src/ggml-cpu/iqp.cpp", "ggml/src/ggml-cpu/iqp.h"], cwd=LLAMA).stdout
@@ -453,7 +508,7 @@ def hardware_snapshot() -> dict:
 
 def main() -> None:
     SCRATCH.mkdir(parents=True, exist_ok=True); OUT.mkdir(parents=True, exist_ok=True)
-    result = {"schema": "native-sparse-single-row-avx2/v2", "status": "failed",
+    result = {"schema": "native-sparse-single-row-avx2/v3", "status": "failed",
               "hypothesis": "A direct exact one-activation IQ2_XXS AVX2 GEMV can raise the resident decode ceiling by removing four-row panel tail duplication.",
               "started_unix": time.time(), "research_source": {"base_commit": RESEARCH_BASE_COMMIT,
               "script_sha256": sha256(Path(__file__))}, "benchmark": {"n_prompt": 0, "n_gen": N_GEN,
@@ -463,12 +518,14 @@ def main() -> None:
               "hardware": hardware_snapshot(), "runs": []}
     try:
         result["build"] = clone_patch_build(); result["model"] = fetch_model()
-        result["runs"] = [run_benchmark("generic_control", {"GGML_SINGLE_ROW_IQP": "0"}),
+        result["runs"] = [run_benchmark("generic_control", {"GGML_SINGLE_ROW_IQP": "0", "GGML_RAW_SINGLE_ROW_IQ2": "0"}),
                            run_benchmark("single_row_iqp", {"GGML_SINGLE_ROW_IQP": "1"}),
+                           run_benchmark("raw_single_row_iq2", {"GGML_RAW_SINGLE_ROW_IQ2": "1"}),
                            run_benchmark("single_row_iqp_profile", {"GGML_SINGLE_ROW_IQP": "1"}, profile=True)]
-        correctness = [run_correctness("correctness_generic", {"GGML_SINGLE_ROW_IQP": "0"}),
-                       run_correctness("correctness_single_row_iqp", {"GGML_SINGLE_ROW_IQP": "1"})]
-        result["correctness"] = {"runs": correctness, "response_equal": all(x["returncode"] == 0 for x in correctness) and correctness[0]["response_sha256"] == correctness[1]["response_sha256"],
+        correctness = [run_correctness("correctness_generic", {"GGML_SINGLE_ROW_IQP": "0", "GGML_RAW_SINGLE_ROW_IQ2": "0"}),
+                       run_correctness("correctness_single_row_iqp", {"GGML_SINGLE_ROW_IQP": "1"}),
+                       run_correctness("correctness_raw_single_row_iq2", {"GGML_RAW_SINGLE_ROW_IQ2": "1"})]
+        result["correctness"] = {"runs": correctness, "response_equal": all(x["returncode"] == 0 for x in correctness) and len({x["response_sha256"] for x in correctness}) == 1,
                                   "native_k": 8, "layers": 40, "router_or_weights_changed": False, "no_drop_or_substitution": True}
         result["ram_floor"] = run_ram_floor()
         result["status"] = "ok" if all(x["returncode"] == 0 and x["decode_tok_s"] for x in result["runs"]) and result["correctness"]["response_equal"] else "invalid_result"
