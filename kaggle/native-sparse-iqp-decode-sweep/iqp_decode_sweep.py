@@ -260,7 +260,10 @@ def run_benchmark(label: str, env_overrides: dict[str, str]) -> dict:
 
 
 def generated_response(stdout: str) -> str:
-    tail = stdout
+    marker = stdout.find("[Start thinking]")
+    if marker < 0:
+        raise RuntimeError("cannot locate generated response marker")
+    tail = stdout[marker:]
     summary = SUMMARY_PERF_RE.search(tail)
     if summary:
         tail = tail[:summary.start()]

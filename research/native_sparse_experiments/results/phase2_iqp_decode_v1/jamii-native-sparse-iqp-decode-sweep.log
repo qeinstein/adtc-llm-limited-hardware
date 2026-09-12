@@ -1,0 +1,25 @@
+[{"stream_name":"stdout","time":1.246659161,"data":"+ git clone --filter=blob:none https://github.com/ggml-org/llama.cpp.git /tmp/native-sparse-iqp-decode/llama.cpp\n"}
+,{"stream_name":"stdout","time":9.146852598,"data":"+ git fetch --depth 1 origin 3057bb66c86c46d5781e50e85462a760ba7d1feb\n"}
+,{"stream_name":"stdout","time":9.892905638,"data":"+ git checkout --detach 3057bb66c86c46d5781e50e85462a760ba7d1feb\n"}
+,{"stream_name":"stdout","time":10.421469933000001,"data":"+ git rev-parse HEAD\n"}
+,{"stream_name":"stdout","time":10.425699044,"data":"+ git diff -- ggml/src/ggml-cpu/iqp.cpp\n"}
+,{"stream_name":"stdout","time":10.432688331,"data":"+ cmake -S /tmp/native-sparse-iqp-decode/llama.cpp -B /tmp/native-sparse-iqp-decode/llama.cpp/build-native -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DGGML_NATIVE=ON -DGGML_CUDA=OFF -DGGML_METAL=OFF -DGGML_VULKAN=OFF -DLLAMA_CURL=OFF\n"}
+,{"stream_name":"stdout","time":13.379678273,"data":"+ cmake --build /tmp/native-sparse-iqp-decode/llama.cpp/build-native --config Release -j4 --target llama-bench llama-cli\n"}
+,{"stream_name":"stdout","time":336.294821221,"data":"+ /tmp/native-sparse-iqp-decode/llama.cpp/build-native/bin/llama-bench --help\n"}
+,{"stream_name":"stdout","time":336.315705489,"data":"+ curl -L --fail --retry 5 --retry-delay 5 -C - -o /tmp/native-sparse-iqp-decode/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf https://huggingface.co/unsloth/Qwen3.5-35B-A3B-GGUF/resolve/bc014a17be43adabd7066b7a86075ff935c6a4e2/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf\n"}
+,{"stream_name":"stdout","time":510.550889525,"data":"+ /tmp/native-sparse-iqp-decode/llama.cpp/build-native/bin/llama-bench -m /tmp/native-sparse-iqp-decode/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf -p 0 -n 64 -r 3 -t 4 -ngl 0 -lm mmap -lzm off --poll 0 --output json ENV {}\n"}
+,{"stream_name":"stdout","time":550.700862049,"data":"{\"label\": \"upstream_threshold_8\", \"returncode\": 0, \"parse_ok\": true, \"decode_tok_s\": 5.167538, \"peak_rss_kib\": 10787616}\n"}
+,{"stream_name":"stdout","time":550.701141179,"data":"+ /tmp/native-sparse-iqp-decode/llama.cpp/build-native/bin/llama-bench -m /tmp/native-sparse-iqp-decode/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf -p 0 -n 64 -r 3 -t 4 -ngl 0 -lm mmap -lzm off --poll 0 --output json ENV {'GGML_IQP_MIN_BATCH_ID': '1'}\n"}
+,{"stream_name":"stdout","time":618.580138,"data":"{\"label\": \"forced_iqp_threshold_1\", \"returncode\": 0, \"parse_ok\": true, \"decode_tok_s\": 2.939827, \"peak_rss_kib\": 10787872}\n"}
+,{"stream_name":"stdout","time":618.580187651,"data":"+ /tmp/native-sparse-iqp-decode/llama.cpp/build-native/bin/llama-bench -m /tmp/native-sparse-iqp-decode/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf -p 0 -n 64 -r 3 -t 4 -ngl 0 -lm mmap -lzm off --poll 0 --output json ENV {'GGML_IQP_MIN_BATCH_ID': '1', 'GGML_NO_IQ_PANEL': '1'}\n"}
+,{"stream_name":"stdout","time":657.843011808,"data":"{\"label\": \"forced_threshold_but_iqp_disabled\", \"returncode\": 0, \"parse_ok\": true, \"decode_tok_s\": 5.195996, \"peak_rss_kib\": 10787656}\n"}
+,{"stream_name":"stdout","time":657.84316706,"data":"+ /tmp/native-sparse-iqp-decode/llama.cpp/build-native/bin/llama-cli -m /tmp/native-sparse-iqp-decode/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf -ngl 0 -t 4 -c 512 -n 24 --temp 0 --seed 1234 --single-turn --no-display-prompt --no-warmup --perf -lm mmap -lzm off --poll 0 -p Give one concise reason oral rehydration solution helps a child with watery diarrhoea. ENV {'GGML_IQP_MIN_BATCH_ID': '1', 'GGML_NO_IQ_PANEL': '1'}\n"}
+,{"stream_name":"stdout","time":669.662378567,"data":"+ /tmp/native-sparse-iqp-decode/llama.cpp/build-native/bin/llama-cli -m /tmp/native-sparse-iqp-decode/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf -ngl 0 -t 4 -c 512 -n 24 --temp 0 --seed 1234 --single-turn --no-display-prompt --no-warmup --perf -lm mmap -lzm off --poll 0 -p Give one concise reason oral rehydration solution helps a child with watery diarrhoea. ENV {'GGML_IQP_MIN_BATCH_ID': '1'}\n"}
+,{"stream_name":"stdout","time":685.626768183,"data":"{\"status\": \"invalid_result\", \"runs\": [[\"upstream_threshold_8\", 5.167538], [\"forced_iqp_threshold_1\", 2.939827], [\"forced_threshold_but_iqp_disabled\", 5.195996]], \"response_equal\": false, \"error\": null}\n"}
+,{"stream_name":"stderr","time":688.543660466,"data":"/usr/local/lib/python3.12/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":688.543754977,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":688.992360395,"data":"/usr/local/lib/python3.12/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":688.992389928,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":691.012137101,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":692.68677998,"data":"[NbConvertApp] Writing 348055 bytes to __results__.html\n"}
+]

@@ -5168,3 +5168,69 @@ Mixture-of-Experts Large Language Models. arXiv:2511.10676 (2025).
 https://arxiv.org/abs/2511.10676
 
 END OF NATIVE-SPARSE MODEL PIVOT.
+
+============================================================
+13. NATIVE-SPARSE EXPERIMENTAL RESULTS
+============================================================
+
+13.1. Exact Phase 0 control
+
+Qwen3.5-35B-A3B IQ2_XXS exact native top-8 inference was demonstrated on a
+4-logical/2-physical-core Kaggle AVX2 Xeon. Resident mmap reached 4.8 tok/s at
+10,528.7 MiB peak RSS; a separate 32-token llama-bench arm reached 4.945
+tok/s. Routed-expert lazy mmap reached 2.7 tok/s at 5,155.3 MiB. The generated
+payload and all 7,360 compared route references were identical. The exact
+logical selected payload is 280,494,080 bytes/token. Global-LRU replay gives
+177.67, 131.67 and 99.16 MB fresh/token at 512, 1,024 and 2,048 bundles.
+
+13.2. Resident CPU ceiling
+
+A three-repeat 64-token sweep measured 2.329, 3.588, 3.999 and 4.614 tok/s
+at one through four threads. Four threads with poll=0 reached 4.716 tok/s;
+strict affinity reached 4.691 tok/s. Ordinary thread, polling and affinity
+tuning therefore changes the four-thread result by only about 2%. The
+resident floor is approximately 212 ms/token. Relative to the 370 ms/token
+expert-lazy result, approximately 158 ms/token is added by lazy page-fault
+and storage-path stalls. At that measured point, resident CPU/DRAM-kernel
+execution is approximately 57% of token time and the added lazy-storage path
+approximately 43%. Storage is substantial, but cannot raise throughput above
+the below-5-tok/s resident ceiling by itself.
+
+13.3. IQ2_XXS single-token selected-expert kernel test
+
+Source inspection showed that the pinned llama.cpp runtime supports IQ2_XXS
+in its IQ panel MUL_MAT_ID path but requires eight activation rows per
+individual expert. Exact single-token top-8 decode selects eight distinct
+experts, so every selected expert has one row and uses the generic vec-dot
+path. A controlled patch made only this threshold runtime-selectable.
+
+The upstream threshold-8 arm reached 5.168 tok/s, a same-binary arm with the
+panel explicitly disabled reached 5.196 tok/s, and forcing the existing panel
+at one row/expert reached 2.940 tok/s. The forced arm is 43.42% slower than
+the same-binary generic control and changes RSS by only 0.21 MiB. Its
+generated 24-token payload is byte-identical to the generic control and Phase
+0 hash, but the current panel shape duplicates a one-row activation tail into
+four lanes and is unsuitable for decode. Lowering the threshold is rejected.
+
+CURRENT BOTTLENECK DECISION:
+
+- The exact resident CPU selected-expert/trunk path is the immediate hard
+  throughput ceiling.
+- mmap storage/page-fault behavior is a major secondary term and the lazy
+  process still exceeds the 4 GiB RAM target.
+- The next compute experiment should implement or isolate a true one-row
+  IQ2_XXS MUL_MAT_ID kernel with reduced dispatch, not force a batch panel.
+- Cache/layout/pread work remains justified after the resident kernel is
+  improved or definitively bounded.
+- A deeper expert representation change is not yet selected. It becomes
+  justified if a purpose-built single-row kernel cannot move the resident
+  ceiling materially, or if exact bounded storage cannot meet the fresh-byte
+  and RSS envelope after compute is addressed.
+
+Raw artifacts and exact commands are under:
+
+    research/native_sparse_experiments/results/phase0_kaggle_v4/
+    research/native_sparse_experiments/results/phase1_cpu_sweep_v2/
+    research/native_sparse_experiments/results/phase2_iqp_decode_v1/
+
+END OF NATIVE-SPARSE EXPERIMENTAL RESULTS.

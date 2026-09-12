@@ -54,3 +54,26 @@ python -m pytest research/native_sparse_experiments/tests -q
 For a real trace, replace the fixture path. The unit tests exercise shape
 validation, duplicate/range rejection, JSON array input, overlap, popularity,
 global/per-layer LRU behavior, static-oracle selection, and byte accounting.
+
+## Measured execution status
+
+The exact Qwen3.5-35B-A3B IQ2_XXS control and follow-up experiments are
+preserved under the results directory:
+
+- phase0_kaggle_v4: exact native top-8 output/route equality; 4.8 tok/s at
+  10,528.7 MiB resident and 2.7 tok/s at 5,155.3 MiB with routed-expert lazy
+  mmap.
+- phase1_cpu_sweep_v2: resident CPU ceiling. Four threads with poll 0 reached
+  4.716 tok/s across three repeats; thread, poll, and affinity tuning changed
+  throughput by only about 2%.
+- phase2_iqp_decode_v1: compute-kernel intervention. Forcing the existing
+  batch-oriented IQ panel at one row per expert regressed 43.42% to 2.940
+  tok/s versus a 5.196 tok/s same-binary generic control, with deterministic
+  generated-payload equality and unchanged residency/traffic.
+
+Current classification: resident CPU/DRAM-kernel execution is the larger term
+in the lazy path (about 212 ms/token resident plus about 158 ms/token added
+lazy-storage stall at the measured Phase 0 point). Storage remains a major
+secondary bottleneck, but storage optimization alone cannot reach 10 tok/s.
+The next compute experiment should target a true single-row IQ2_XXS
+MUL_MAT_ID kernel rather than lowering the existing panel threshold.
