@@ -3473,3 +3473,1252 @@ design that fails the first three experiments.
       https://arxiv.org/abs/2411.01433
 
 END OF RESEARCH NOTEBOOK CHECKPOINT.
+
+============================================================
+11. OPEN ARCHITECTURE SEARCH
+============================================================
+
+11.1. RECOMMENDATION AND SCOPE
+
+The best framing is constrained capability transfer: use the dense model as
+a teacher, and learn a deployment representation whose frequently executed
+computation fits the laptop. Preserve task performance, not the teacher's
+neuron identities, layer count, or parameter count. The important separation
+is between reusable stored capacity and the computation required to use it.
+
+My strongest research bet is a compact, resident, quantized language model
+with trainable, context-addressed neural memory on SSD. The memory supplies
+small vectors or low-dimensional rank-one transformations, rather than
+multi-megabyte FFN experts. Distill Qwen3.8-27B into BOTH the resident model
+and this memory. Keep a capable dense path in the small model; do not expect
+lookups alone to implement general reasoning.
+
+This is principally a PKM/Memory+/PEER/UltraMem direction [S23-S27], with a
+teacher-transfer objective. It is not a claim to have invented neural
+memory. Token-addressed memory and offline teacher representations
+[S28-S32] are important alternatives and controls, but I would not make
+short n-gram lookup the only route by which the model accesses its capacity.
+
+A plausible first deployment envelope is approximately 3.4 GB application
+memory, 4.2B resident backbone parameters, approximately 8.6 billion
+multiply/add-equivalent operations per token before context-dependent state
+work, and 4 MiB of cold SSD reads per token in the example below. Around
+5-10 decode tokens/s is a plausible engineering target on a sufficiently
+capable laptop CPU; it is NOT a measurement or a guarantee. The 2 GB version
+requires a smaller or natively lower-bit backbone and has a substantially
+less certain capability frontier.
+
+The decisive unknown is whether this representation can retain enough
+capability after feasible training. No examined source demonstrates the full
+combination of Qwen3.8-27B capability retention, <=4 GB total application
+memory, and interactive x86 CPU inference. Existing papers establish useful
+parts, not the desired endpoint. An ordinary well-distilled small dense
+model may still beat the proposed system.
+
+The recommendation supersedes the architecture preference and first
+experiment in Sections 5 and 9 for the NEW <=4 GB objective. Earlier
+sections are retained as the historical research checkpoint. No architecture
+or training pipeline is implemented by this appendix.
+
+Assumptions and units:
+- Text-only, one user and one decoding stream; no GPU/NPU at deployment.
+- Initial supported context: 4096 tokens. Longer context is a separate
+  operating point, not free because the checkpoint advertises it.
+- GB means 10^9 bytes; GiB means 2^30. MB and MiB follow the same convention.
+- RAM includes resident weights, recurrent/KV state, retrieval indexes,
+  cache, read buffers, scratch, runtime, and an allocation margin. All model
+  file-cache pages count, whether or not they appear as anonymous RSS.
+- A 4 GB APPLICATION budget differs from a laptop with 4 GB PHYSICAL RAM.
+  The latter needs an explicit OS/application reserve. Both cases are
+  considered below.
+- Training and teacher evaluation can use larger machines. Laptop inference
+  constraints are not a claim that teacher distillation fits on that laptop.
+- Proposed practical gates: >=5 sustained decode tokens/s, p95 token
+  latency <=300 ms, and <=10 s time to first token for a 256-token prompt.
+  These are research acceptance criteria, not inferred user requirements.
+  Also report 10 tokens/s as the stronger target and long-prompt latency.
+
+11.2. WHAT IS ACTUALLY CONSTRAINED
+
+A dense checkpoint is a program implementing a conditional distribution.
+Its abilities are distributed across representations: language fluency,
+world knowledge, compositional operations, in-context adaptation, reasoning,
+instruction following, and calibration. There is no known theorem assigning
+each of these to a disjoint set of weights. In particular, "FFN = facts,
+attention = reasoning" is too simple to justify a design.
+
+Nevertheless, the deployment cost depends on how information is accessed.
+Reading a vector of already learned features can cost kilobytes. Reading a
+matrix that computes those features can cost megabytes. A learned
+representation that changes this unit of access is more consequential here
+than optimizing the cache for the original matrices.
+
+A useful objective is:
+
+  maximize task capability Q on held-out deployment distributions
+  subject to:
+    peak charged RAM <= M,
+    sustained and tail latency <= chosen budgets,
+    disk capacity <= a stated practical allowance,
+    CPU-only execution,
+    a finite, reported training/data budget.
+
+For a conventional execution path, necessary resource bounds include:
+
+  token time >= max(B_DRAM / bandwidth_DRAM,
+                    B_SSD / bandwidth_SSD,
+                    operations / effective_compute_rate).
+
+This is an optimistic lower bound, not an additive runtime prediction.
+Dependencies, sequential I/O waves, dequantization, top-k selection, cache
+management, and OS scheduling add time. Rates must be sustained rates for
+the ACTUAL kernels and read patterns; advertising peak CPU FLOPs and SSD
+sequential bandwidth is insufficient.
+
+If R reads can run only q at a time and take service time l, a simple
+sensitivity model is ceil(R/q)*l. Apply it separately at each dependent
+layer. It is not a universal SSD law: contention, read merging and tail
+latency change the result. It does expose why bytes alone are insufficient.
+
+For the final capability evaluation, report separate domain scores and
+absolute point losses. On multiple-choice tasks, also report
+(Q_student - chance)/(Q_teacher - chance), where meaningful. Raw percentage
+retention can hide a large fraction of useful capability lost above chance.
+Report executable code pass rates, exact math answers, instruction
+compliance and long-context behavior separately. Do not average unlike
+metrics into an unexplained "92% intelligence" claim.
+
+Use two comparisons:
+1. Retention relative to the dense teacher, evaluated with the same tools,
+   prompts, sampling and output-budget policy.
+2. Improvement over the strongest fully resident model at the SAME memory
+   and wall-clock budget, including matched distillation.
+
+Evaluate both fixed generated-token budgets and fixed time-to-answer.
+A small model that needs four times as many reasoning tokens can lose its
+latency advantage despite a high displayed decode rate.
+
+11.3. RE-DERIVING THE ORIGINAL MODEL'S FLOOR
+
+The current primary configuration agrees with the notebook's main
+dimensions [S16]. The following are analytical counts of the large text
+matrices, not tensor-header measurements of a converted checkpoint.
+
+Using the output gate in full attention, the dominant matrices are:
+
+  MLP:
+    64 * 3 * 5120 * 17408                 = 17.11276032B parameters
+
+  Linear blocks:
+    48 * 5120 * (10240 + 6144 + 6144 + 96)
+                                             = 5.56007424B
+    Terms: qkv, z, output, and the two small a/b projections.
+
+  Full-attention blocks:
+    16 * 5120 * (12288 + 1024 + 1024 + 6144)
+                                             = 1.67772160B
+    Terms: gated query projection, key, value, output.
+
+  Separate embedding and output head:
+    2 * 248320 * 5120                       = 2.54279680B
+
+  Dominant non-MLP matrices                 = 9.78059264B
+
+At an ASSUMED average 4.5 stored bits/weight, including quantizer overhead,
+the non-MLP matrices alone occupy 5.5016 GB. Norms, convolution, recurrent
+state, KV, runtime, predictors and buffers are additional. This substantiates
+the earlier floor estimate and rules out that particular resident partition
+at <=4 GB. Even deleting every FFN would not make it fit.
+
+A 4096-token FP16 full-attention KV cache is approximately:
+
+  2 * 16 layers * 4096 * 4 KV heads * 256 * 2 bytes
+    = 268.4 MB.
+
+FP32 recurrent matrices alone are approximately:
+
+  48 layers * 48 value heads * 128 * 128 * 4
+    = 151.0 MB,
+
+before convolution state and implementation-dependent extras. "Linear
+attention" does not mean zero state or zero projection cost.
+
+Several tempting arithmetic shortcuts fail:
+- At exactly 2 bits/weight, 27B weights still require 6.75 GB before metadata.
+- A fixed-rate ternary code at log2(3) bits/weight needs 5.349 GB for 27B.
+  Skewed ternary distributions might entropy-code smaller; this number is
+  not an information-theoretic lower bound on all trained models.
+- Exactly one bit for every one of 27B weights is 3.375 GB before scales,
+  embeddings requiring other precision, state, and runtime. Binary
+  post-training conversion with retained capability is unestablished here.
+- A 3 GB weight allowance corresponds to only 0.889 bits per ORIGINAL 27B
+  parameter if every parameter is retained. That is a requirement imposed
+  by that representation, not a lower bound on the function's complexity.
+
+The distinctions matter:
+
+PHYSICALLY INFEASIBLE UNDER STATED RESOURCE ASSUMPTIONS:
+Moving 1 GB of fresh data per token at 10 tokens/s through an effective
+2 GB/s SSD channel. Scheduling cannot produce the missing 8 GB/s.
+Similarly, 54 billion conventional arithmetic operations per token at
+10 tokens/s exceeds a stipulated sustained 100 GOP/s execution engine.
+
+INFEASIBLE ONLY UNDER THE CHOSEN REPRESENTATION:
+Keeping the approximately 5.5 GB q4.5 non-MLP matrices resident inside 4 GB.
+The function could potentially be represented by a smaller trained network,
+shared factors, lower precision, or conditional memory.
+
+RUNTIME LIMITATIONS:
+Unbounded mmap residency, full-tensor startup touches, large temporary
+dequantized matrices, poorly batched reads, and unfused lookup operations.
+These can be changed without proving a new capability result.
+
+PLAUSIBLY CHANGEABLE THROUGH TRAINING:
+Backbone width/depth, addressability, precision robustness, output tying,
+memory utilization, and the division of work between dense computation
+and sparse capacity.
+
+NOT ESTABLISHED:
+How much teacher capability survives those interventions, the required
+training scale, and exact laptop performance. No architecture-independent
+impossibility proof for the overall goal follows from the original file size.
+
+11.4. BROAD SEARCH, WITH SIX SERIOUS ALTERNATIVES
+
+A. Whole-network compression, low-bit training, and parameter sharing
+
+This is the strongest mandatory baseline. Prune or distill the entire
+network, including its large attention projections and head, then quantize.
+Minitron [S33] shows why post-training recovery must be tested before ranking
+pruning choices. QuIP# and AQLM [S36,S37] provide strong low-bit alternatives
+to simplistic scalar rounding. Native low-bit training [S38] potentially
+moves the compute frontier as well as storage.
+
+But low-bit storage does not automatically eliminate active arithmetic.
+Codebook quantization adds decoding or lookup work; binary/ternary kernels
+need an appropriate model and instruction-efficient implementation.
+DFloat11 [S39] preserves weights losslessly but its roughly 11-bit
+representation is far outside this capacity target for 27B.
+
+Low-rank factorization [S35] can reduce both work and bytes. For one original
+MLP, replacing each matrix by rank r factors costs approximately
+3*r*(5120+17408), versus 267,386,880 original parameters. At r=1024 this
+retains about 25.9% of the matrix parameters. That impressive ratio still
+leaves the original non-MLP floor unless it too is transformed. There is no
+evidence here that the required ranks preserve Qwen3.8 reasoning.
+
+Recursive/shared layers [S34] attack unique weights, but reusing a 1 GB
+block eight times can still move about 8 GB through DRAM if the block is
+larger than cache. It also executes eight passes and retains separate state
+for logical depth. A hypernetwork that regenerates matrices substitutes
+generation compute for storage; expanding billions of weights per token
+does not solve the CPU limit. Tensor/codebook structure is valuable only
+when it supports cheaper computation directly.
+
+Verdict: use compact-model distillation and quantization as the foundation
+and control. Keep native low-bit backbones as a serious later option,
+especially for 2 GB. Do not gamble on a 27B ternary file being enough.
+
+B. Aggressive contextual sparsity or a new native fine-grained MoE
+
+The old proposal asks how much of the original 17.1B FFN pool can be skipped.
+The revised question must include the 9.8B non-MLP matrices and CPU work.
+A new narrow-backbone MoE could solve the floor, but then it is already a
+substantial architectural transfer problem rather than simple MLP partition.
+
+For the original q4.5 MLP pool, let a be selected fraction and m the
+byte-weighted miss fraction of the selected data. Ignoring overfetch,
+
+  SSD bytes/token = 9.626 GB * a * m.
+
+At a=.20 and m=.15, this is 289 MB/token; at a=.10 and m=.05 it is 48 MB.
+The latter could be viable, but the approximately 5.5 GB dense resident
+floor remains. Low-bit attention, pruning or a new backbone is needed first.
+
+The real competitor is a SMALL native computational backbone plus narrow
+experts, trained jointly to use very few active weights. It is credible,
+and should be compared if an existing checkpoint fits. Large expert
+matrices still make its cold misses more expensive than vector memory.
+Existing native-MoE throughput in Sections 1-10 is not a quality comparison
+against the exact dense teacher.
+
+Verdict: retain as a competitor, not the first bet. Unmodified dense-group
+traces can reject one conversion route; they cannot reject a trained new
+representation or discover its ultimate achievable sparsity.
+
+C. Persistent task/segment experts, adapters, or prompt-specific models
+
+Select a small specialist once per request or segment, load it, and reuse
+it for tens or hundreds of tokens. Task-level routing has direct prior art
+[S42]; compact adapters can further reduce the size of each change.
+
+If a 256 MB specialization bundle is used for 128 tokens, its amortized
+traffic is 2 MB/token. At 2 GB/s it costs a minimum 128 ms at selection.
+This is a genuine improvement in I/O timescale, independent of token-level
+activation persistence. Loading an entire 2 GB specialist costs at least
+one second under the same assumption.
+
+The hard issue is composition. A coding request can require parsing,
+planning, arithmetic, library knowledge and debugging inside one response.
+A task label does not prove that one narrow specialist can reproduce all
+those interactions. Frequent switches erase amortization. Choosing weights
+after prefill can invalidate the KV/recurrent state produced under the old
+weights; a scheme must freeze state-producing weights, train for switching,
+or explicitly repay prefix computation.
+
+Verdict: especially attractive for a declared narrow workload or product,
+but weaker evidence for broad general capability. Do not freeze routes at
+inference and silently assume training would have made them valid.
+
+D. Exact streamed teacher with speculative/block verification
+
+This deserves more attention than the previous notebook gave it. A draft
+model can propose a block, and each teacher layer can read its weights once
+to verify many positions. This can amortize SSD reads without approximating
+the chosen teacher distribution [S40]. Offloading plus speculation already
+has system prior art [S41], although its GPU resources differ from ours.
+
+For an illustrative 12 GB of nonresident weights at 2 GB/s, one scan takes
+at least 6 seconds. With 32 proposals and independent per-position acceptance
+a, expected emitted positions in the standard simplified model are
+
+  E = (1-a^33)/(1-a).
+
+Acceptance       .70     .80     .90     .95     .98
+E positions      3.33    5.00    9.69   16.32   24.33
+I/O-only tok/s    .56     .83    1.62    2.72    4.05
+
+This is optimistic: all proposal positions are still verified, including
+rejected suffixes. Approximately 54 GOP per teacher position and 32
+positions require 1.728 TOP per verification block. At 100 GOP/s that is
+17.28 seconds of compute, before draft work, state attention and sampling.
+Even perfect acceptance does not remove the dense arithmetic per accepted
+position. On an accelerator unused during I/O, this trade can be excellent;
+a small CPU is a different resource balance.
+
+Acceptance is not truly independent and may collapse precisely on difficult
+tokens. Larger trees consume more compute/state. Streaming hybrid recurrent
+verification also needs rollback or retained intermediate states. Token
+bursts every several seconds do not meet a smooth interactive-latency goal.
+An approximate quantized teacher gives exact sampling only relative to that
+quantized teacher, not the original BF16 distribution.
+
+Verdict: valuable if teacher fidelity is paramount and latency is relaxed,
+or as a quality reference. Not the best main CPU-interactive direction.
+
+E. Small reasoner plus external documents, examples or kNN predictions
+
+Ordinary retrieval provides explicit factual content with far less traffic
+than weight streaming. Teacher-generated examples and reasoning distillation
+can help. It is a valid baseline, particularly for knowledge-heavy tasks,
+not a distraction to be excluded because the original model stored facts
+in weights.
+
+However, document retrieval adds query/index work, extra context processing,
+and often extra reasoning tokens. A small model may retrieve the right fact
+but still fail to use it. Token-level kNN prediction needs a scalable query
+index and may improve memorized continuations more than novel computation.
+A retrieval corpus containing benchmark answers is not capability transfer.
+
+Verdict: run a controlled retrieval baseline; it may win for practical
+applications. Neural memory is attractive because it can inject features
+without adding hundreds of textual prompt tokens, but that advantage must
+be measured against real RAG rather than presumed.
+
+F. Compact computation plus sparse neural memory
+
+PKM separates a small address mechanism from a large value store [S23].
+PEER lets a retrieved item perform a tiny context-dependent computation
+[S25]. Memory+ and UltraMemV2 provide stronger-scale evidence for the
+family [S26,S27]. This avoids needing the original dense FFN to exhibit
+extreme sparsity before training.
+
+There are two materially different access schemes:
+
+  Deterministic input addressing:
+    MoLE, STEM, Engram, Memory Grafting [S28-S30,S32].
+    Addresses can be known at token entry; cheap to fetch early.
+    Risk: limited expressivity when the same local string has different
+    meaning or a novel reasoning state needs information absent locally.
+
+  Context addressing:
+    PKM/PEER/Memory+/UltraMem [S23-S27].
+    A compact query chooses memory using the current hidden state.
+    Addresses arrive later, but fetched objects remain small.
+    Risk: learning the address space, small random reads and extra barriers.
+
+MoLKV [S31] is an intermediate design: token-triggered loads followed by
+contextual selection over a bounded sequence cache. Its limited candidate
+set and growing history state need explicit accounting.
+
+Verdict: choose context-addressed memory as the main representation search.
+Use deterministic teacher-memory lookup as a simpler comparison and possible
+complement if it adds measured value. Do not build a many-component hybrid
+before learning which access mechanism actually closes the capability gap.
+
+11.5. PROPOSED REPRESENTATION: A CONCRETE, FALSIFIABLE POINT
+
+The resident backbone
+
+Begin from a strong existing small text model, rather than deleting 85%
+of the 27B model and expecting a short repair pass. Qwen3.5-4B is a useful
+concrete starting candidate: the primary config has hidden width 2560,
+32 hybrid blocks, intermediate width 9216 and tied embeddings [S43].
+It is a candidate for controlled tests, not a declaration that it is the
+best current small model.
+
+Use Qwen3.8-27B as the teacher and possible initialization/data donor.
+Compare a pruned teacher-derived student only if it beats this starting
+point after matched adaptation. The teacher remains central to the goal
+even when its original runtime graph is discarded.
+
+The memory path
+
+For a concrete candidate, attach a memory branch parallel to the resident
+FFN in each of 32 blocks. Let x be the post-attention normalized input:
+
+  z = resident_input_projection(x), dimension 256
+  I, alpha = product_key_topk(resident_query(x)), k=32
+  delta = resident_output_projection(
+              sum over i in I of alpha_i * (a_i dot z) * b_i)
+  block output = residual + resident_FFN(x) + gated(delta).
+
+A disk record contains a_i of dimension 256 and b_i of dimension 768.
+The sum is formed in the smaller value space before the output projection.
+The projections, query, keys, normalization and final residual gate are
+resident. The branch is nonlinear through routing/gating; it is not a
+single static low-rank approximation. It is also not identical to
+UltraMemV2's full routing formulation: this is a simpler PKM-addressed
+rank-one candidate inspired by [S23,S25,S27].
+
+Give each bank two sets of 1024 product subkeys of dimension 64. Their
+Cartesian product addresses 1,048,576 records. Exact top-32 under the
+factorized ADDITIVE key score can be selected from the top-32 subkeys on
+each side, using 1024 candidate pairs [S23,S25]. This exactness is about
+that restricted score function, not about finding the best arbitrary
+teacher feature. Factorized routing may itself limit quality.
+
+Use int8 memory vectors with group scales and fixed 2 KiB records.
+The 1024 vector bytes leave space for scale metadata and padding. Align two
+records per 4 KiB page so a record never straddles pages. For the conservative
+read estimate, every selected record lies in a different cold page.
+The row index directly determines file offset: no resident million-key
+hash map or ANN graph is required.
+
+This design has:
+- Context-dependent coefficients and selected transformations.
+- A capable dense fallback path trained together with memory.
+- Small persistent address structures.
+- An explicit finite read budget independent of total table size.
+- No requirement for 80-90% cache hits to meet the byte budget.
+
+At each layer, compute the query and issue the exact requested reads, then
+execute the independent resident FFN while reads are in flight. Combine
+when both finish. This overlap follows the chosen parallel branch
+dependency; it does not require a speculative prediction of future routes.
+If reads finish late, the token stalls. Do not silently change model outputs
+by dropping required records. Memory dropout during training can improve
+robustness, but an optional approximate deadline mode must be evaluated
+as a different inference policy.
+
+Why not only four memory layers?
+
+Four sites are a useful cheaper ablation, not an established optimum.
+UltraMemV2's layer-count ablation reports downstream gains from distributing
+memory more broadly even where validation loss looks similar [S27].
+Here 32 sites are affordable in BYTES; latency must decide whether fewer
+sites or cross-layer sharing are worthwhile. Coalescing nearby records is
+a runtime optimization, not a reason to force semantically unrelated rows
+into one large computation expert.
+
+Why this is better positioned than the previous proposal
+
+The earlier scheme preserves a large expensive computation and tries to
+avoid loading unused pieces. This scheme first learns a small computation
+and then expands capacity with a different storage primitive. The original
+9.8B non-MLP floor disappears; the output head is smaller and tied; cold
+accesses are kilobytes; and storage need not reproduce the original masks.
+
+Those are structural advantages, not demonstrated quality superiority.
+The old scheme may preserve the teacher with less training at a relaxed
+RAM budget. The new one carries a much larger learning risk but a much
+more plausible <=4 GB physical resource envelope.
+
+11.6. QUANTITATIVE FEASIBILITY AND SENSITIVITY
+
+All estimates in this subsection are derived from declared configurations.
+They are not measurements of a trained candidate or a benchmark of the host.
+An actual converter must inspect tensor headers and mixed precision.
+
+Resident memory, primary candidate
+
+The dominant matrices of the small reference configuration [S43] give:
+
+  32 * 3 * 2560 * 9216                         = 2.26492416B MLP
+  24 * 2560 * (8192+4096+4096+64)               = 1.01056512B linear
+   8 * 2560 * (8192+1024+1024+4096)             = 0.29360128B attention
+  248320 * 2560, shared embedding/head         = 0.63569920B
+  Total dominant matrices                     = 4.20478976B
+
+At 4.5 average bits/weight: 2.3652 GB. The marketed model name is not the
+parameter audit; vision and optional MTP are excluded.
+
+Allocation                                           GB decimal
+---------------------------------------------------  ----------
+Backbone quantized matrices                           2.365
+Memory queries/keys/projections/gates, reserved          .150
+KV/recurrent/conv state at 4096 tokens, reserved          .150
+Chunked prefill and decode scratch                      .180
+Bounded memory-record cache                             .128
+Runtime, tokenizer, threads, allocation overhead         .200
+Allocator/alignment/mixed-precision safety margin        .250
+---------------------------------------------------  ----------
+Planned charged application memory                     3.423
+
+The state reservation has an arithmetic basis: int8 full-attention KV is
+67.1 MB before scales; FP32 recurrent matrices are 50.3 MB before convolution
+state. Keeping FP16 KV instead adds about 67 MB. These choices need quality
+validation. The .150 GB module allowance accommodates quantized resident
+projections and higher-precision keys/query processing; retaining every
+projection in FP16 can exceed it.
+
+Do not allocate the disk table as a dense tensor. Do not expand all q4
+backbone weights into FP16. A persistent low-bit kernel and bounded scratch
+are part of the target representation. Count buffered file-cache residency
+inside the budget, or use explicitly bounded read buffers.
+
+A 4 GB physical laptop with 1 GB reserved for OS/other processes has only
+3 GB for the application. The above point does NOT satisfy that stricter
+case. A roughly 3B backbone with the same style of allowances is about
+2.75 GB and is a better initial point there. Conversely, a larger physical
+machine with a hard 4 GB application cap can evaluate the 4.2B candidate
+fairly if the cap also charges file cache and swap is not hiding overflow.
+
+Stretch point
+
+An approximately 2B backbone at q4.5 consumes 1.125 GB. For illustration,
+reserve .100 GB for memory modules, .080 for state, .100 for scratch,
+.064 for record cache, .180 for runtime and .150 margin: total 1.799 GB.
+That is a <=2 GB APPLICATION design budget, not established quality or a
+claim of comfortable desktop operation on 2 GB physical RAM.
+
+A physical 2 GB machine with a 0.7 GB reserve leaves only 1.3 GB. It likely
+requires an approximately 1B q4 backbone or a well-trained native low-bit
+backbone, reduced context and a lean runtime. BitNet [S38] makes that
+direction credible computationally, but does not establish 27B-class
+capability. Do not present 2 GB as a trivial quantizer switch on the main
+candidate.
+
+Storage capacity and bytes
+
+For 32 banks, 2^20 rows per bank and 2 KiB fixed records:
+
+  disk allocation = 32 * 2^20 * 2048 = 64 GiB.
+  useful vector payload = 32 GiB; remaining space is scales/padding.
+  rows/token = 32 * 32 = 1024.
+  useful vector bytes/token = 1024 * 1024 = 1 MiB.
+  record bytes/token = 2 MiB.
+  worst distinct 4 KiB page bytes/token = 4 MiB.
+  at 10 tokens/s = 40 MiB/s and 10,240 page reads/s.
+
+This includes ZERO cache benefit. It is therefore a more robust byte
+envelope than one depending on extreme temporal persistence.
+It does not make 1024 small reads free. The relevant bottleneck becomes
+request latency/concurrency and CPU dispatch, not sequential SSD bandwidth.
+
+A 64 GiB table is a practical but nontrivial disk commitment, not a required
+minimum. One quarter as many rows per bank reduces it to 16 GiB without
+changing selected rows/token. Memory capacity should be expanded only when
+held-out capability improves; inactive or untrained rows add no value.
+
+Latency sensitivity at k=32, assuming independent reads and QD=8:
+
+  sites     cold pages/token    traffic       100 us/read    300 us/read
+      4             128         0.5 MiB           1.6 ms         4.8 ms
+     16             512         2.0 MiB           6.4 ms        19.2 ms
+     32            1024         4.0 MiB          12.8 ms        38.4 ms
+
+These are sums of ideal per-layer I/O waves before compute overlap.
+At QD=1 the 32-site point becomes 102.4 or 307.2 ms. Therefore a synchronous
+one-read-at-a-time implementation can fail despite tiny byte volume.
+QD=8 requires concurrent requests WITHIN each layer, not eight unrelated
+future layers whose hidden-state-dependent addresses are not known.
+
+There is an important adverse sensitivity: the literature's successful
+large models can activate far more than 32 memory items [S27].
+At 32 sites, k=256 would mean 8192 pages/token, 32 MiB/token and ideal
+QD=8 I/O of 102.4-307.2 ms before overlap. At k=768 it becomes 96 MiB/token
+and 307.2-921.6 ms under those same service-time assumptions.
+If high quality requires those operating points, our initial advantage
+shrinks dramatically. Do not borrow large-memory-model quality while
+quietly using a much smaller active budget.
+
+Active computation
+
+The backbone has approximately 4.2B large-matrix parameters executed per
+token when the tied head is scanned once. The input embedding is just a
+row lookup, not a second full embedding matmul. Matrix work is therefore
+approximately 8.4 GOP/token, counting a multiply and addition separately.
+
+The 32 memory branches add approximately:
+- 10.49M MAC for 2560-to-128 query projections;
+- 4.19M MAC for two 1024-by-64 key searches;
+- 83.89M MAC for 2560-to-256 and 768-to-2560 projections;
+- 1.05M MAC for 1024 selected rank-one vector operations.
+
+Total: about 99.6M MAC or .20 GOP, plus top-k, gates and quantization.
+Approximately 8.6 GOP/token is consequently a useful matrix-work budget.
+It excludes full-attention score/value work, recurrent updates, softmax,
+normalization and memory-management operations. This is not native binary
+operation counting or a claim that FP16 FLOPs predict q4 CPU speed.
+
+At the 4096-token context point, QK and attention-value products add about
+.537 GOP/token: the reference has 16 actual query heads, not 32. Its doubled
+query projection also produces the output gate. Recurrent matrix-vector
+work adds at least another .025 GOP, with updates and nonlinear operations
+additional. Thus roughly 9.2 GOP is a more complete short-context budget,
+while 8.6 GOP denotes the large-matrix-plus-memory calculation above.
+
+The resident keys occupy only
+32 * 2 * 1024 * 64 * 2 = 8.39 MB.
+The paired 1024-candidate selection per layer is small enough to avoid
+querying a disk-resident ANN index. Kernel and sorting overhead still need
+measurement; Python callbacks per record are not part of the intended
+runtime envelope.
+
+Conservative throughput interpretation
+
+For approximately 2.44 GB/token of scanned quantized backbone plus module
+weights, and 8.6 GOP/token, illustrative necessary time bounds are:
+
+  effective DRAM BW   effective compute   max(resource times)
+       10 GB/s             40 GOP/s              244 ms
+       20 GB/s             80 GOP/s              122 ms
+       35 GB/s            150 GOP/s               70 ms
+
+These rates are assumptions spanning weaker to stronger sustained kernels.
+The maximum is an optimistic overlap bound; the sum is a more conservative
+sensitivity when traffic and work fail to overlap well. Extra state work,
+retrieval, dequantization not included in the assumed effective rate, and
+synchronization increase observed time. Thus approximately 3-10 tokens/s
+is a reasonable envelope to TEST, with >=5 the initial useful-speed gate.
+Twenty tokens/s is not supported for this reference point by the model.
+
+The capability frontier could favor a faster 2-3B backbone with more useful
+memory, or a larger low-bit backbone with less memory. Optimize the joint
+curve rather than insisting that the 4B point must win.
+
+Prefill and time to first token
+
+For 4096 prompt tokens, conventional matrix work is about
+4096 * 8.6 GOP = 35.2 TOP before attention/state extras. At hypothetical
+sustained prefill rates of .2-1 TOP/s, this is roughly 176-35 seconds.
+For 256 prompt tokens, the same optimistic arithmetic is 11-2.2 seconds.
+These are sensitivity calculations, not measured x86 prefill rates.
+
+Prompt positions expose more parallel lookup requests and reuse, but they
+also execute more model work. Chunked prefill must preserve the RAM bound;
+one cannot allocate all memory rows for a long prompt. Warm caches,
+conversation state reuse and prefix caching improve repeated interactions,
+not the cold-start result. A useful decode rate alone is insufficient if
+ordinary prompts take minutes.
+
+11.7. WHAT TRAINING MUST ACCOMPLISH
+
+There is no exact conversion that simply deposits the original weights
+into these rows. The representation changes. Learning must determine what
+the small backbone can do cheaply and what benefits from sparse external
+capacity. Distill the joint system, rather than first distilling all
+knowledge into a small model and assuming a later memory attachment will
+recover everything else.
+
+A defensible training sequence is:
+1. Establish the strongest resident student and teacher baselines. Keep
+   the student's tokenizer if compatible; verify token IDs and templates,
+   not merely vocabulary size. If tokenizers differ, use sequence-level
+   supervision or an explicitly aligned objective.
+2. Add memory branches with initially small output gates. Fit addresses,
+   projections and memory values on training-only teacher traces while
+   allowing a controlled adaptation of the resident backbone.
+3. Train on language modeling plus teacher distribution matching and
+   verified teacher solutions. Include student-generated prefixes so
+   memory is learned on the states encountered during deployment.
+4. Introduce the target q4/int8 representation during recovery, preserving
+   sensitive state operations at higher precision when justified.
+5. Evaluate instruction behavior, calibration and reasoning after the
+   representation is trained. A base-model PPL gain does not preserve an
+   instruction model's behavior automatically.
+
+A possible objective is:
+
+  L = L_language + lambda_KD * KL(p_teacher || p_student_memory)
+      + lambda_budget * measured_or_surrogate_resource_cost
+      + optional intermediate-transfer terms.
+
+Hard limits on selected records, record precision and resident dimensions
+are preferable to an unconstrained sparsity penalty followed by discovering
+that the result misses the budget. A cost term can choose how to distribute
+reads among layers, but training cannot violate the hardware envelope.
+
+Intermediate matching requires learned alignment between unequal widths and
+depths. An original teacher hidden state is not automatically a meaningful
+student residual. Do not require a narrow student to reconstruct every
+teacher feature in Euclidean norm; optimize task-relevant behavior and use
+intermediate losses as interventions with ablations.
+
+Teacher-derived initialization has several possibilities, none guaranteed:
+- Factor/cluster teacher-conditioned residual targets in student coordinates.
+- Fit small rank-one local maps within clusters of training states.
+- Initialize an input-addressed comparison with frozen teacher n-gram
+  representations, following the closest transfer precedent [S30].
+- Initialize values conventionally and let end-to-end distillation organize
+  them if forcing teacher coordinates proves harmful.
+
+The first two are hypotheses about learning an addressable residual
+dictionary, not validated extraction algorithms. Selecting an initialization
+must not be mistaken for having transferred capability.
+
+A large table creates a learning-coverage problem. At 1B training tokens and
+32 selections per bank, uniform use would give about 30,500 selections per
+row of a million-row bank. Actual use is very nonuniform. Measure distinct
+updated rows, stale rows, route entropy and quality on infrequent patterns.
+Forcefully uniform routing can waste capacity; complete route collapse
+can make the SSD bank equivalent to a tiny resident module. Both need tests.
+
+The strongest failure mechanism is representational, not storage:
+the teacher's advantage may require context-dependent computation that the
+small backbone cannot reproduce. Memory then improves lexical/factual
+completion while leaving planning, code synthesis and novel reasoning near
+the small-model ceiling. Alternatively, it may take pretraining-scale
+optimization to build the necessary division of labor. Neither failure can
+be repaired by a better read scheduler.
+
+11.8. CLOSEST PRIOR WORK AND EVIDENCE LIMITS
+
+The following short source records identify what the new evidence actually
+supports. Their measurements are not transferred into our laptop estimates.
+
+[S23] Large Memory Layers with Product Keys, Lample et al., NeurIPS 2019.
+Two small key codebooks address a much larger value table. This is the
+closest foundation for a small resident retrieval index. Exact selection
+under the factorized score is not arbitrary semantic nearest-neighbor
+retrieval. It is prior art for the address mechanism, not proof of a
+4 GB dense-teacher replacement.
+
+[S24] Large Product Key Memory for Pretrained Language Models, Kim and
+Jung, Findings of EMNLP 2020.
+Studies attaching PKM to pretrained models, including stale memory usage.
+Pretrained initialization and adding memory alongside an FFN improve
+utilization and performance. This directly limits any novelty claim for
+"add external neural memory to a pretrained small model." Its models and
+tasks differ from modern autoregressive reasoning.
+
+[S25] Mixture of A Million Experts, He, 2024.
+PEER uses product-key retrieval over tiny single-neuron experts and reports
+language-model performance/compute improvements. This is close to the
+proposed rank-one retrieval primitive. It does not supply an SSD CPU
+deployment or a dense Qwen conversion.
+
+[S26] Memory Layers at Scale, Berges et al., 2024 / ICML 2025.
+Memory+ combines lookup with context-dependent gating. Experiments scale
+memory to 128B parameters, with substantial factual-task gains and
+comparisons against dense and sparse baselines. The paper reports
+outperforming dense models with more than twice its computation budget.
+Its comparison MoE routing and GPU implementation must not be conflated
+with every modern MoE or a laptop. It shows useful memory capacity, not
+that all reasoning capacity can be externalized.
+
+[S27] UltraMemV2, Huang et al., 2025.
+The closest large-scale architectural evidence: compact computation plus
+large sparse memory, compressed pre/value spaces, and memory in every
+block. Reported configurations include 2.5B activated parameters with
+120B sparse parameters at top256 and 60B at top768. More active values
+can matter more than a larger table. Training extends to trillions of
+tokens; some comparisons improve materially only after continued training.
+These are serious warnings against assuming top32 and a short adaptation
+run inherit its capability. The authors' public repository exposes model,
+memory-layer and training code; it is not evidence of our proposed bounded
+x86 SSD runtime.
+
+[S28] Mixture of Lookup Experts, Jie et al., ICML 2025.
+Experts consume fixed token embeddings during training, so their outputs
+can be precomputed into token-indexed tables for inference. Experiments
+cover 160M, 410M and 1B active-model scales. This is direct prior art for
+replacing transferred matrices with transferred outputs. It changes the
+expert input semantics; an arbitrary contextual dense FFN cannot simply
+be tabulated by token ID.
+
+[S29] Conditional Memory via Scalable Lookup (Engram), Cheng et al., 2026.
+Combines deterministic n-gram lookup with contextual gating. The
+27B-total model improves over an iso-parameter/iso-FLOPs MoE baseline,
+including reasoning measures; this is not a 27B dense-model equivalence
+claim. Its offload demonstration moves tables to host RAM over PCIe,
+reporting less than 3% overhead for a 100B table. The paper discusses
+NVMe hierarchy, but that is not our measured SSD result. Exact token-based
+addresses and the ability to fetch them early are useful properties.
+
+[S30] Memory Grafting, Cheng et al., May 2026.
+Builds frozen conditional memory from pretrained donor hidden states and
+retrieves through longest matching n-grams. Its 2.8B-trainable,
+0.55B-active recipient, trained on 100B tokens, averages 53.86 versus
+51.95 for its MoE baseline and 52.43 for vanilla Engram. A 0.92B setting
+uses 50B training tokens. The appendix explicitly lacks a full matched
+knowledge-distillation comparison. Thus this is the closest donor-to-memory
+precedent, but the modest gain does not establish preservation of most
+donor capability or cheap post-training conversion. It is a preprint.
+
+[S31] Mixture of Lookup Key-Value Experts, Wang, December 2025.
+Adds context-dependent access over cached token-associated key/value
+experts. The shown experiment uses 197M active parameters, with validation
+loss 2.9985 versus 3.0180 for gated MoLE. A sliding history bounds the
+candidate set. This is relevant prior art for sequence-cache selection,
+but small-scale validation loss is weak evidence for general reasoning
+retention or hard memory-cap latency. It is a preprint.
+
+[S32] STEM, Sadhukhan et al., January 2026.
+Replaces the FFN up-projection with token-indexed embeddings, retaining
+contextual gate and down projections. It demonstrates another useful
+compute/memory separation. In the original Qwen geometry, replacing only
+one of three MLP projections still leaves too much dense computation and
+the non-MLP floor; use it on a compact backbone if tested.
+
+[S33-S39] Compression and backbone alternatives.
+Minitron [S33] provides whole-network structured pruning plus distillation.
+Relaxed Recursive Transformers [S34] provide pretrained layer tying with
+depth-specific low-rank adaptations. SVD-LLM [S35] supplies
+activation-aware low-rank reconstruction. QuIP# [S36] and AQLM [S37]
+improve very-low-bit weight representations.
+
+BitNet b1.58 2B4T [S38] reports 29 ms/token on an i7-13800H with eight
+threads, generating 128 tokens using bitnet.cpp. Its headline .4 GB
+memory number EXCLUDES embeddings. It was trained on 4T tokens and has
+small-model-scale capability; neither its memory number nor its speed
+should be assigned to a post-hoc 27B conversion.
+
+DFloat11 [S39] preserves original weights with lossless compression to
+approximately 70% of BF16 size. Useful for other capacity regimes, it
+cannot reach this RAM target for an intact 27B model.
+
+[S40-S43] Controls and concrete configurations.
+Speculative decoding [S40] motivates the exact-output control;
+SpecOffload [S41] combines speculation with GPU/CPU offloading.
+Task-level MoE [S42] establishes coarse routing as prior art, especially
+in translation. Qwen's small-model configuration [S43] supplies the
+concrete resident-backbone dimensions used above.
+
+11.9. WHAT COULD ACTUALLY BE NEW
+
+Already established, and NOT new:
+- Sparse key/value memory, product keys, and tiny retrieved experts.
+- Context gating and dense-plus-memory branches.
+- Adding memory to pretrained models.
+- Token/n-gram lookup, offline expert outputs and teacher-hidden-state memory.
+- Quantized backbones, distillation, SSD caches, prefetch or asynchronous reads.
+- The general idea that memory and computation should be separated.
+
+A potentially publishable contribution would be an experimentally validated
+way to transfer a strong modern dense teacher into a small CPU-resident
+backbone plus an SSD memory representation, with a hard bound on both
+resident bytes and dependent cold-read cost. The comparison must show
+improvement over matched distillation, low-bit dense models, ordinary
+retrieval and suitable small sparse models.
+
+A more specific unvalidated research hypothesis is that jointly learning
+the residual representation, factorized addresses, active memory width and
+bit precision under a measured latency budget can transfer capability more
+efficiently than either teacher-logit distillation alone or frozen lexical
+memory. Its success, training efficiency and novelty are not established.
+
+The combination "small student + teacher memory" is too close to [S24,S30]
+to claim by itself. Even if the system works, novelty may reside only in
+the demonstrated Pareto frontier, training recipe and careful experimental
+negative results. The search supports identifying close prior art; it is
+not an exhaustive legal or academic novelty certification.
+
+11.10. SINGLE FIRST EXPERIMENT: DOES FINITE MEMORY CLOSE THE GAP?
+
+Run one controlled DISTILLATION-AND-MEMORY experiment before building an
+SSD inference engine. Use an existing small pretrained backbone and the
+actual Qwen3.8-27B teacher. The principal test is whether a finite, bounded
+memory interface transfers useful capability beyond matched small-model
+training. Pure activation-mask tracing tests the old representation instead.
+
+This experiment is a prospective model-quality test. Analytical arithmetic
+checks in this appendix do not substitute for it. It needs larger training
+resources and does not require a working laptop storage implementation.
+
+Pre-register the dataset split, capability suite and budgets
+
+Use a mixed training corpus covering text, code, math, multilingual inputs
+and instruction behavior, plus verified teacher demonstrations. Freeze
+held-out documents, problem families and evaluation prompts before creating
+any memory. Deduplicate train/evaluation material. Evaluate unfamiliar
+combinations, entity substitutions and new algorithmic instances, not just
+near-duplicate continuations.
+
+Use a 4096 context limit and fixed answer-time/token budgets. For reasoning,
+report math exact match, executable code pass@1 and held-out compositional
+tests. Include instruction compliance and factual QA, but do not let those
+mask failure on reasoning. Measure teacher scores directly under this
+protocol; vendor benchmark numbers are not the denominator.
+
+Main arms
+
+  A: strongest resident student, ordinary matched distillation.
+  B: same student with the proposed contextual memory, same teacher data
+     and optimization budget, evaluated at deployment precision.
+  C: the best resource-matched resident-only control, allowed to spend
+     B's resident module/cache budget on useful model capacity instead.
+  D: token/n-gram-addressed teacher memory as a simpler memory control.
+
+A versus B measures value beyond ordinary distillation. B versus C tests
+the actual memory/latency frontier. B versus D tests whether contextual
+access earns its complexity. At fixed training tokens, also report actual
+training FLOPs; at fixed training FLOPs, allow the simpler controls more
+updates. Do not call unequal resources "matched."
+
+Start with a modest table and grow to the declared 64 GiB ceiling only if
+the smaller bank is used and helps. Primary inference budget:
+32 sites, top32, 2 KiB records, <=4 MiB cold pages/token. Predeclare one
+resource-relaxed diagnostic, such as top128, to tell whether the active
+budget is strangling quality; this is not a valid result for the original
+budget unless its measured CPU latency also passes.
+
+Train all useful backbone parameters or a documented sufficient recovery
+subset after a short stabilization phase. A frozen student that cannot
+learn to use a new channel is not a fair rejection of the architecture.
+Compare a small number of sensible gate/learning-rate choices using
+validation data; do not tune on the final tests.
+
+Use 100M tokens as a pilot checkpoint and a predeclared approximately
+1B-token cap for the first decision. These are experimental budget choices,
+not a claim that 1B tokens suffices. Track learning curves, memory usage
+and at least two seeds at the decision point when variance is material.
+A still-improving curve at the cap implies budget-limited uncertainty,
+not a mathematical impossibility result.
+
+Oracle control to separate addressing from representation
+
+For B, retain a diagnostic mode in which a training-fitted teacher-assisted
+selector chooses rows from the SAME finite, frozen bank, subject to the
+same row and precision budget. Teacher access at evaluation is permitted
+ONLY in this explicitly nondeployable diagnostic. It must never supply
+new per-example values, next-token answers or future tokens. Bank contents
+come exclusively from the training split.
+
+A strong finite-bank selector can distinguish poor learned addressing from
+an inadequate value channel. It is not a true global optimum over all
+possible banks, and failing to find good rows is not a proof that none
+exist. Fitting a new row to each test prompt would instead be an online
+teacher service and invalidates this diagnostic.
+
+The most informative result patterns are:
+- B and oracle both fail: little evidence this finite representation closes
+  the gap at the chosen backbone and training budget.
+- Oracle succeeds but B fails: address learning is the bottleneck; work on
+  routing only if a causal cheap selector has a plausible path.
+- B succeeds only on familiar strings: memorization/coverage benefit,
+  insufficient evidence for the broad goal.
+- B improves novel reasoning and survives quantization: proceed to laptop
+  storage and kernel validation.
+
+Causal ablations
+
+After training, disable memory, shuffle row-to-value assignments, and
+replace cold rows with the trained no-memory policy. Real benefit should
+depend on the correctly addressed values. The shuffled test must keep
+shapes, norms and read counts comparable. Log held-out route coverage,
+active rows, retrieved-byte budgets and layer-specific gains.
+
+Compare PPL and KL as diagnostics; give KL units in nats/token and report
+the full-token distribution or the precise approximation used. A percentage
+of "local KL" is not a well-defined capability criterion.
+
+Decision criteria
+
+Let Q0 be the best matched resident-only control, QT the teacher, and QM
+the memory system on a predeclared aggregate of comparable domain metrics.
+For a material positive teacher gap, define gap closure:
+
+  G = (QM - Q0) / (QT - Q0).
+
+Report per-domain G as well; exclude near-zero denominators rather than
+letting them dominate.
+
+Proceed to systems work if the deployment-precision, causal-memory arm:
+- closes at least 25% of the material teacher gap;
+- improves at least two of math, code and novel compositional reasoning,
+  with paired confidence intervals supporting the improvement;
+- does not incur a material instruction/long-context regression;
+- respects the representation budget, and a conservative latency estimate
+  remains compatible with >=5 tokens/s.
+
+The 25% gate is evidence of research traction, NOT the final goal.
+For example, teacher .80, control .60, memory .65 closes 25% of the gap,
+yet retains only 81.25% of raw teacher accuracy. Final success should aim
+for approximately >=90% chance-adjusted teacher performance where defined,
+with no major domain collapse, under the hardware/time limits.
+
+Abandon this direction as the PRIMARY near-term bet if, after the
+predeclared cap and reasonable training stabilization, the upper confidence
+bound on gap closure is below 10%, or the gains are confined to familiar
+factual completions while math/code/composition show no meaningful gain.
+If even the finite-bank oracle fails similarly, stop optimizing retrieval
+and storage. If only the oracle works, abandon this particular routing
+recipe rather than claiming a usable inference architecture.
+
+Also abandon this operating point if:
+- gains disappear at q4/int8 deployment precision;
+- closing the gap requires read concurrency, active rows or backbone size
+  that fails the latency/RAM limits even with favorable scheduling;
+- the memory system is dominated by the resource-matched resident control.
+
+A null result after 1B tokens rejects the practical post-training thesis
+at that budget. It does not refute memory networks trained on trillions of
+tokens. Extending to that much larger program should be justified by clear
+learning curves and an explicit resource decision, not indefinite hope.
+
+Training cost is material
+
+For a 4.2B student, the conventional 6PN estimate at 1B tokens is about
+25.2 EFLOP; a dense 27B teacher forward adds roughly 54 EFLOP if evaluated
+on every token. Approximately 79 EFLOP excludes attention extras, memory
+updates, data work and additional arms. At a sustained aggregate
+100 TFLOP/s this alone is about 9.2 days for one such arm. Batched teacher
+targets can be reused across arms on identical prefixes; on-policy traces
+cannot all be reused. Storing complete 248k-way logits is itself costly.
+
+Frozen donor-memory construction can reduce some teacher cost, but must
+not be sold as free. Offline model access, representative data and recovery
+compute are necessary resources. Nothing in this notebook authorizes
+silently launching a pretraining-scale run.
+
+The full table also has training-state costs far larger than its inference
+working set: 32 * 2^20 * 1024 = 34.36B scalar memory values. BF16 values
+alone occupy 68.7 GB; FP32 master values and two Adam moments would add
+412.3 GB, before gradients, backbone and activations. Sparse, sharded or
+offloaded optimization can change residency, but cannot be assumed free.
+A pilot with 256-by-256 addresses per bank instead has 2.15B scalar values
+and a 4 GiB padded inference table. Start there if necessary, explicitly
+label the capacity difference, and account for the larger experiment's
+training resources before scaling it. This is another reason to compare
+frozen donor-memory and compact dense controls seriously.
+
+11.11. FINAL ANSWERS TO THE TEN DECISION QUESTIONS
+
+1. BEST FRAMING
+   Maximize retained capability per unit of resident computation, memory and
+   answer latency. Treat the dense checkpoint as a teacher and reusable
+   source of learned information, not a mandatory execution graph.
+
+2. BEST DIRECTION
+   A strong compact quantized backbone with context-addressed, small-record
+   neural memory on SSD, jointly distilled from the teacher. Start with
+   product-key retrieval and low-dimensional rank-one memory records;
+   compare deterministic teacher-memory lookup and plain distillation.
+
+3. WHY BETTER THAN THE CURRENT PROPOSAL
+   It removes the original non-MLP memory/compute floor and reduces the
+   cold access unit before optimizing storage. The example meets a byte
+   envelope with no cache hits. Quality superiority remains unproven.
+
+4. ROUGH FEASIBILITY
+   Primary point: about 3.42 GB charged application RAM, about 8.6 GOP/token
+   plus state work, 64 GiB memory-table allocation and 4 MiB worst distinct
+   page reads/token. CPU matrix execution and dependent random-read latency
+   dominate. Target >=5 tokens/s; approximately 3-10 is a sensitivity
+   envelope, not measured performance. Stretch: approximately 1.8 GB with
+   a 2B core, with greater quality risk and separate OS accounting.
+
+5. WHAT MUST CHANGE
+   Train a smaller state/computation path, usable memory values and
+   addresses, their interaction with the dense path, and robustness to
+   deployment precision. Teacher hidden coordinates and neuron groups
+   cannot simply be copied without learning an interface.
+
+6. CLOSEST PRIOR WORK
+   PKM, pretrained-PKM, PEER, Memory+ and UltraMemV2 for the architecture;
+   Memory Grafting for donor-to-memory transfer; MoLE/Engram/STEM/MoLKV
+   for alternative addressing. Minitron and low-bit models are controls.
+
+7. WHAT MAY BE NEW
+   A demonstrated modern dense-teacher transfer and capability/latency
+   frontier under a fully charged <=4 GB x86 CPU/SSD budget. The core
+   ingredients and generic combination are already close to prior art.
+
+8. STRONGEST FAILURE REASON
+   The missing capability is computation that the small backbone cannot
+   perform, rather than information that small memory records can supply;
+   or learning that separation takes an unaffordable training program.
+
+9. HIGHEST-INFORMATION FIRST EXPERIMENT
+   Matched student distillation with and without finite contextual memory,
+   an input-addressed control, and a finite-bank teacher-assisted routing
+   diagnostic. Measure held-out capability at the intended precision and
+   resource budget before building the storage engine.
+
+10. ABANDONMENT RESULT
+    Less than 10% credible gap closure after the declared decision budget,
+    especially when even the finite-bank diagnostic fails on novel
+    reasoning; or domination by a resident-only control after accounting
+    for real RAM, CPU latency and extra reasoning tokens.
+
+The defensible conclusion is not that this goal is solved. It is that a
+small computation engine with a different learned storage representation
+has a better plausible resource frontier than paging fragments of the
+original dense network. The research should now try to falsify its
+capability-transfer advantage.
+
+11.12. ADDITIONAL PRIMARY-SOURCE REFERENCES
+
+The numbered source keys continue Section 10. Links identify the primary
+papers/configuration and, where relevant, author repositories. Paper
+versions are stated where this appendix relies on version-specific results.
+
+[S23] Lample et al. Large Memory Layers with Product Keys. NeurIPS 2019.
+      https://arxiv.org/abs/1907.05242
+
+[S24] Kim and Jung. Large Product Key Memory for Pretrained Language Models.
+      Findings of EMNLP 2020, pp. 4060-4069.
+      https://aclanthology.org/2020.findings-emnlp.362/
+      https://github.com/clovaai/pkm-transformers
+
+[S25] Xu Owen He. Mixture of A Million Experts. 2024, v1.
+      https://arxiv.org/html/2407.04153v1
+
+[S26] Berges et al. Memory Layers at Scale. 2024, v2; ICML 2025.
+      https://arxiv.org/html/2412.09764v2
+      https://proceedings.mlr.press/v267/berges25a.html
+
+[S27] Huang et al. UltraMemV2: Memory Networks Scaling to 120B Parameters
+      with Superior Long-Context Learning. 2025, v1.
+      https://arxiv.org/html/2508.18756v1
+      https://github.com/ZihaoHuang-notabot/Ultra-Sparse-Memory-Network
+
+[S28] Jie et al. Mixture of Lookup Experts. ICML 2025; paper v1.
+      https://arxiv.org/html/2503.15798v1
+      https://github.com/JieShibo/MoLE
+
+[S29] Xin Cheng et al. Conditional Memory via Scalable Lookup: A New Axis
+      of Sparsity for Large Language Models. January 2026, v1.
+      https://arxiv.org/html/2601.07372v1
+      https://github.com/deepseek-ai/Engram
+
+[S30] Runxi Cheng et al. Memory Grafting: Scaling Language Model
+      Pre-training via Offline Conditional Memory. May 2026, v1.
+      https://arxiv.org/html/2605.20948v1
+
+[S31] Zongcheng Wang. Mixture of Lookup Key-Value Experts.
+      December 2025, v1.
+      https://arxiv.org/html/2512.09723v1
+
+[S32] Sadhukhan et al. STEM: Scaling Transformers with Embedding Modules.
+      January 2026.
+      https://arxiv.org/abs/2601.10639
+      https://infini-ai-lab.github.io/STEM/
+
+[S33] Muralidharan et al. Compact Language Models via Pruning and
+      Knowledge Distillation. 2024, v1.
+      https://arxiv.org/html/2407.14679v1
+      https://github.com/NVlabs/Minitron
+
+[S34] Bae et al. Relaxed Recursive Transformers: Effective Parameter Sharing with
+      Layer-wise LoRA. 2024, v1; ICLR 2025.
+      https://arxiv.org/html/2410.20672v1
+
+[S35] Wang et al. SVD-LLM: Truncation-aware Singular Value Decomposition
+      for Large Language Model Compression. 2024, v1.
+      https://arxiv.org/html/2403.07378v1
+
+[S36] Tseng et al. QuIP#: Even Better LLM Quantization with Hadamard
+      Incoherence and Lattice Codebooks. ICML 2024.
+      https://arxiv.org/abs/2402.04396
+
+[S37] Egiazarian et al. Extreme Compression of Large Language Models
+      via Additive Quantization. 2024.
+      https://arxiv.org/abs/2401.06118
+
+[S38] Ma et al. BitNet b1.58 2B4T Technical Report. April 2025, v1.
+      https://arxiv.org/html/2504.12285v1
+      https://github.com/microsoft/BitNet
+
+[S39] Zhang et al. 70% Size, 100% Accuracy: Lossless LLM Compression
+      for Efficient GPU Inference via Dynamic-Length Float (DFloat11).
+      2025; NeurIPS 2025.
+      https://arxiv.org/abs/2504.11651
+      https://github.com/LeanModels/DFloat11
+
+[S40] Leviathan, Kalman and Matias. Fast Inference from Transformers
+      via Speculative Decoding. ICML 2023.
+      https://arxiv.org/abs/2211.17192
+      https://proceedings.mlr.press/v202/leviathan23a/leviathan23a.pdf
+
+[S41] Zhuge et al. SpecOffload: Unlocking Latent GPU Capacity for LLM
+      Inference on Resource-Constrained Devices. May 2025.
+      https://arxiv.org/abs/2505.10259
+
+[S42] Kudugunta et al. Beyond Distillation: Task-level Mixture-of-Experts
+      for Efficient Inference. 2021 preprint.
+      https://arxiv.org/abs/2110.03742
+
+[S43] Qwen team. Qwen3.5-4B primary model configuration.
+      https://huggingface.co/Qwen/Qwen3.5-4B/raw/main/config.json
+      Teacher configuration rechecked for the arithmetic in 11.3:
+      https://huggingface.co/Qwen/Qwen3.8-27B/raw/main/config.json
+
+11.13. NUMERICAL EXPERIMENTS AND EXECUTION STATUS
+
+Numerical sensitivity checks were run with Luna using in-memory arithmetic,
+then reconciled against the formulas in this appendix. No model architecture,
+checkpoint or runtime was implemented. Checked quantities include the
+large/small matrix counts, q4.5 bytes, record padding, page amplification,
+state memory, resident index/projection replication, CPU/DRAM bounds and
+speculative acceptance. The inputs and formulas above specify the checks.
+
+Additional Luna sweep results for 32 memory sites:
+
+  selected rows/site   cold MiB/token    QD8 I/O at 100/300 us per page
+          32                  4                      12.8 / 38.4 ms
+         128                 16                      51.2 / 153.6 ms
+         256                 32                     102.4 / 307.2 ms
+
+These are analytic layer-wave service models, NOT measured SSD timings.
+They assume concurrency within each layer. The experiment's main insight
+is that increasing active rows can destroy latency before exhausting
+sequential bandwidth.
+
+For the speculative control, using the full 32*54 GOP verification cost:
+
+  CPU rate       compute/block    serial with 6 s I/O    ideal overlap
+   40 GOP/s          43.20 s              49.20 s            43.20 s
+   80 GOP/s          21.60 s              27.60 s            21.60 s
+  150 GOP/s          11.52 s              17.52 s            11.52 s
+
+At .90 acceptance, even the 150 GOP/s point emits only approximately
+.55 tokens/s serially or .84 tokens/s with ideal overlap. At .98 it is
+approximately 1.39 or 2.11 tokens/s. Draft execution and any extra bonus
+position work are excluded, favoring this competitor. Faster batched CPU
+kernels can change the compute assumption, but must be measured rather
+than inferred from GPU speculation results.
+
+Two accounting details are especially important:
+- The 5 MiB FP16 input/output projections are PER MEMORY BANK. Across
+  32 banks they occupy 160 MiB before query projections and codebooks.
+  Their q4.5 representation is 47.2 MB; higher-precision query weights
+  and 8.39 MB codebooks fit within the reserved module budget.
+- The tied vocabulary head is still a full output computation. It is
+  included once in the 8.4 GOP backbone estimate; neither omit it nor
+  count the shared input table as another full matmul.
+
+Luna's local asset inspection found model/ containing only .gitkeep, no
+teacher/student checkpoints, and no local llama inference binaries. The
+configured model reference in metadata.json is an unrelated 0.6B model.
+Available local storage is also insufficient for the required assets.
+Consequently, no teacher/student quality result, measured SSD trace,
+trained memory utilization, or end-to-end laptop throughput is reported.
+Running the first quality experiment requires provisioned teacher/student
+assets, a suitable training/evaluation environment and an explicit finite
+training budget. The numerical checks support choosing what to test;
+they do not establish capability retention.
+
+END OF OPEN ARCHITECTURE SEARCH.
