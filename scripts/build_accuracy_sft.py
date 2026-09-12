@@ -32,6 +32,7 @@ Two scoring regimes, handled differently per real lm-eval task configs:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import random
 import sys
@@ -204,11 +205,13 @@ def main() -> int:
     if not args.include_sciq and "sciq" in names:
         names.remove("sciq")
 
-    OUT.mkdir(exist_ok=True)
+    output_path = Path(args.out)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     sources = _sources(args.letter_permutations)
     seen: set[str] = set()
     total = 0
-    with open(args.out, "w", encoding="utf-8") as f:
+    source_results: list[dict[str, object]] = []
+    with output_path.open("w", encoding="utf-8") as f:
         for name in names:
             try:
                 n_rows = 0
@@ -225,11 +228,27 @@ def main() -> int:
                     f.write(json.dumps(rec, ensure_ascii=False) + "\n")
                     n_rows += 1
                     total += 1
+                source_results.append({"name": name, "status": "ok", "rows": n_rows})
                 print(f"  {name:14s}: {n_rows} rows")
             except Exception as e:  # dataset renamed / offline / schema drift
+                source_results.append({"name": name, "status": "skipped", "rows": 0, "error_type": type(e).__name__, "error": str(e)})
                 print(f"  {name:14s}: SKIPPED ({type(e).__name__}: {e})")
 
-    print(f"\nWrote {total} MCQA rows (choice-list format) -> {args.out}")
+    manifest = {
+        "schema_version": "1.0.0",
+        "builder": "scripts/build_accuracy_sft.py",
+        "datasets": names,
+        "max_per_dataset_before_permutation": args.max_per_dataset,
+        "letter_permutations": args.letter_permutations,
+        "include_sciq": args.include_sciq,
+        "rows": total,
+        "source_results": source_results,
+        "output": str(output_path),
+        "output_sha256": hashlib.sha256(output_path.read_bytes()).hexdigest(),
+        "contamination_policy": "public train splits only; no validation/test splits; afrimmlu and mmlu_prox excluded",
+    }
+    output_path.with_name(output_path.stem + ".manifest.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(f"\nWrote {total} MCQA rows (choice-list format) -> {output_path}")
     print(f"Letter-format items expanded x{args.letter_permutations} (balanced permutation, debiases A/B/C/D).")
     print("Trained via a listwise ranking loss in scripts/train_lora.py.")
     print("NOTE: train splits only — never any test/validation split; afrimmlu/mmlu_prox excluded.")

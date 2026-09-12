@@ -39,7 +39,15 @@ def main(argv: list[str] | None = None) -> int:
     checkpoints = []
     for state_path in trainer_states:
         state = json.loads(state_path.read_text(encoding="utf-8"))
-        checkpoints.append({"path": str(state_path), "global_step": state.get("global_step")})
+        checkpoint = state_path.parent
+        required = ["optimizer.pt", "scheduler.pt", "rng_state.pth"]
+        missing = [name for name in required if not (checkpoint / name).is_file()]
+        adapter_files = list(checkpoint.glob("adapter_model.*"))
+        manifest_path = checkpoint / "checkpoint_manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.is_file() else {}
+        if missing or not adapter_files or manifest.get("complete") is not True:
+            raise SystemExit(f"incomplete persisted checkpoint: {checkpoint}; missing={missing}")
+        checkpoints.append({"path": str(state_path), "global_step": state.get("global_step"), "files": sorted(x.name for x in checkpoint.iterdir() if x.is_file())})
     summary = {"dataset": args.dataset, "checkpoint_count": len(checkpoints), "checkpoints": checkpoints}
     (out / "persistence-verification.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(summary, indent=2))

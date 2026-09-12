@@ -20,9 +20,10 @@ target. Prompts are left-truncated only after verifying the complete answer fits
 within `max_length`; MCQA rows are rejected instead of partially truncating a
 choice. MCQA ranking uses the same character-normalized continuation score as
 the ADTC `acc_norm` objective, with a small gold-token NLL auxiliary term. The
-sampler has a separate per-stage token-share target and divides each row's
-sampling weight by its measured token mass, so long MCQA rows cannot dominate
-because they are fewer in number.
+sampler has a separate per-stage token-share target. Each row receives its
+objective share divided by that objective's total loss-token mass, so the
+expected sampled loss-token exposure matches the configured share rather than
+silently becoming row-balanced or favoring short rows.
 
 Falcon-H1 is hybrid attention/SSM. The LoRA target list therefore includes its
 attention projections (`q/k/v/o`), Mamba projections (`in_proj/out_proj`), and
@@ -43,9 +44,11 @@ the frozen final batteries, not the last checkpoint or training loss alone.
 ## Observability and resume
 
 The trainer writes timestamped `events.jsonl`, `training_metrics.jsonl`,
-`heartbeat.jsonl`, `environment.json`, `run_manifest.json`, checkpoint
-manifests, and `final_summary.json`. A background heartbeat reports even when a
-single forward/backward step is slow. Hugging Face Trainer checkpoints retain
+`heartbeat.jsonl`, streamed persistence logs, `environment.json`,
+`run_manifest.json`, checkpoint manifests, and `final_summary.json`. Training
+metrics include component losses, optimizer step, learning rate, gradient norm,
+loss-token/example throughput, GPU memory, elapsed time, and ETA. A background
+heartbeat reports even when a single forward/backward step is slow. Hugging Face Trainer checkpoints retain
 adapter weights, optimizer, scheduler, scaler/RNG state, and global step; the
 `latest` resume path passes the checkpoint to `trainer.train(resume_from_checkpoint=...)`.
 

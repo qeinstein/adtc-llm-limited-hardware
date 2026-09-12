@@ -130,7 +130,10 @@ class FalconDataset:
                     self.items.append({
                         "kind": "sft", "input_ids": ids,
                         "labels": [-100] * len(prompt) + target,
-                        "tokens": len(target), "sample_tokens": int(row.get("total_tokens", len(ids))), "example_id": row["example_id"],
+                        # ``tokens`` is the number of tokens that contribute to
+                        # the objective.  Prompt tokens are intentionally not
+                        # used for token-share sampling.
+                        "tokens": len(target), "sample_tokens": int(row.get("loss_tokens", len(target))), "example_id": row["example_id"],
                         "source": row.get("source", ""),
                     })
                 elif fmt == "mcqa":
@@ -142,7 +145,7 @@ class FalconDataset:
                         "kind": "mcqa", "context_ids": context_ids,
                         "choice_ids": choice_ids, "choices": row["choices"],
                         "gold": int(row["gold"]),
-                        "tokens": sum(len(x) for x in choice_ids), "sample_tokens": int(row.get("total_tokens", sum(len(x) for x in choice_ids))),
+                        "tokens": sum(len(x) for x in choice_ids), "sample_tokens": int(row.get("loss_tokens", sum(len(x) for x in choice_ids))),
                         "example_id": row["example_id"], "source": row.get("source", ""),
                     })
                 else:
@@ -174,6 +177,9 @@ class Progress:
         self.microstep = 0
         self.last_loss = None
         self.last_tokens = 0
+        self.seen_tokens = 0
+        self.seen_examples = 0
+        self.total_steps: int | None = None
         self.thread = threading.Thread(target=self._loop, name="heartbeat", daemon=True)
 
     def start(self) -> None:
@@ -183,7 +189,7 @@ class Progress:
         self.stop_event.set()
         self.thread.join(timeout=2)
 
-    def update(self, *, microstep: int | None = None, step: int | None = None, loss: float | None = None, tokens: int | None = None) -> None:
+    def update(self, *, microstep: int | None = None, step: int | None = None, loss: float | None = None, tokens: int | None = None, examples: int | None = None) -> None:
         with self.lock:
             if microstep is not None:
                 self.microstep = microstep
@@ -193,6 +199,9 @@ class Progress:
                 self.last_loss = loss
             if tokens is not None:
                 self.last_tokens = tokens
+                self.seen_tokens += tokens
+            if examples is not None:
+                self.seen_examples += examples
 
     def _loop(self) -> None:
         while not self.stop_event.wait(self.interval):
@@ -202,9 +211,39 @@ class Progress:
                     "elapsed_seconds": round(time.monotonic() - self.started, 1),
                     "optimizer_step": self.last_step, "microstep": self.microstep,
                     "last_loss": self.last_loss, "last_batch_tokens": self.last_tokens,
+                    "seen_tokens": self.seen_tokens, "seen_examples": self.seen_examples,
                 }
+                elapsed = max(1e-6, time.monotonic() - self.started)
+                record["tokens_per_second"] = round(self.seen_tokens / elapsed, 3)
+                record["examples_per_second"] = round(self.seen_examples / elapsed, 3)
+                if self.total_steps and self.last_step:
+                    record["eta_seconds"] = round(max(0, self.total_steps - self.last_step) * elapsed / self.last_step, 1)
+                try:
+                    import torch
+                    if torch.cuda.is_available():
+                        record["gpu_memory_allocated_mb"] = round(torch.cuda.memory_allocated() / 1024**2, 1)
+                        record["gpu_memory_reserved_mb"] = round(torch.cuda.memory_reserved() / 1024**2, 1)
+                except Exception:  # noqa: BLE001 - heartbeat must never kill training
+                    pass
             print("[{}] HEARTBEAT {}".format(record["timestamp_utc"], json.dumps({k: v for k, v in record.items() if k not in {"timestamp_utc", "event"}}, sort_keys=True)), flush=True)
             append_jsonl(self.path, record)
+
+
+def checkpoint_is_complete(path: Path) -> bool:
+    """Return true only for a checkpoint that can actually be resumed.
+
+    ``trainer_state.json`` alone is not enough: an interrupted save can leave
+    that file behind before optimizer/scheduler/RNG state is durable.  Keep the
+    resume selector conservative and fail closed.
+    """
+    required = ["trainer_state.json", "optimizer.pt", "scheduler.pt", "rng_state.pth"]
+    return (
+        path.is_dir()
+        and any(path.glob("adapter_model.*"))
+        and all((path / name).is_file() for name in required)
+        and (not (path / "checkpoint_manifest.json").exists()
+             or bool(json.loads((path / "checkpoint_manifest.json").read_text(encoding="utf-8")).get("complete")))
+    )
 
 
 def latest_checkpoint(directory: Path) -> Path | None:
@@ -214,9 +253,57 @@ def latest_checkpoint(directory: Path) -> Path | None:
             step = int(path.name.split("-")[-1])
         except ValueError:
             continue
-        if (path / "trainer_state.json").exists():
+        try:
+            complete = checkpoint_is_complete(path)
+        except (OSError, ValueError, json.JSONDecodeError):
+            complete = False
+        if complete:
             candidates.append((step, path))
     return max(candidates, default=(0, None))[1]
+
+
+def token_share_sampling_weights(items: list[dict[str, Any]], shares: dict[str, float]) -> list[float]:
+    """Return row weights whose expected *loss-token* exposure matches shares.
+
+    For objective ``k``, each row receives ``share[k] / total_loss_tokens[k]``.
+    The sum of ``weight * loss_tokens`` is therefore exactly the requested
+    share before sampling variance.  Using ``1 / row_tokens`` here would
+    accidentally make the result depend on row count and favor short rows.
+    """
+    totals: Counter[str] = Counter()
+    for item in items:
+        totals[item["kind"]] += max(1, int(item.get("tokens", 1)))
+    return [
+        float(shares.get(item["kind"], 0.0)) / max(1, totals[item["kind"]])
+        for item in items
+    ]
+
+
+def run_streamed(command: list[str], log_path: Path) -> int:
+    """Run a potentially slow child process with line-buffered timestamped output."""
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    merged = os.environ.copy()
+    merged["PYTHONUNBUFFERED"] = "1"
+    print("STREAM " + " ".join(command), flush=True)
+    with log_path.open("a", encoding="utf-8", buffering=1) as handle:
+        proc = subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
+            env=merged,
+        )
+        assert proc.stdout is not None
+        for line in proc.stdout:
+            rendered = f"[{now()}] {line}"
+            print(rendered, end="", flush=True)
+            handle.write(rendered)
+        code = proc.wait()
+        handle.write(f"[{now()}] EXIT={code}\n")
+        handle.flush()
+    print(f"[{now()}] EXIT={code}", flush=True)
+    return code
 
 
 def package_versions() -> dict[str, str]:
@@ -229,6 +316,20 @@ def package_versions() -> dict[str, str]:
         except Exception as exc:  # noqa: BLE001 - environment report must continue
             result[name] = f"unavailable:{type(exc).__name__}"
     return result
+
+
+def git_revision(directory: Path) -> str:
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=directory,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        return result.stdout.strip() or f"unavailable:{result.returncode}"
+    except OSError as exc:
+        return f"unavailable:{type(exc).__name__}"
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -309,7 +410,18 @@ def main(argv: list[str] | None = None) -> int:
     event(event_path, "environment", python=platform.python_version(), platform=platform.platform(), packages=package_versions(), cuda=use_cuda, cuda_capability=cap, dtype=dtype_name, load_mode=load_mode)
     atomic_json(stage_dir / "environment.json", {"timestamp_utc": now(), "python": platform.python_version(), "platform": platform.platform(), "packages": package_versions(), "cuda": use_cuda, "cuda_capability": cap, "dtype": dtype_name, "load_mode": load_mode})
     data_manifest_path = data_dir / "data_manifest.json"
-    atomic_json(stage_dir / "run_manifest.json", {"experiment_id": config["experiment_id"], "stage": args.stage, "config_sha256": hashlib.sha256(config_path.read_bytes()).hexdigest(), "model": config["model"], "seed": seed, "stage_config": stage_cfg, "data_manifest": str(data_manifest_path), "data_manifest_sha256": sha256_file(data_manifest_path), "init_adapter": args.init_adapter, "started_utc": now()})
+    atomic_json(stage_dir / "run_manifest.json", {
+        "experiment_id": config["experiment_id"], "stage": args.stage,
+        "git_sha": git_revision(ROOT),
+        "command": sys.argv,
+        "config_sha256": hashlib.sha256(config_path.read_bytes()).hexdigest(),
+        "model": config["model"], "seed": seed, "stage_config": stage_cfg,
+        "data_manifest": str(data_manifest_path),
+        "data_manifest_sha256": sha256_file(data_manifest_path),
+        "init_adapter": args.init_adapter,
+        "resume_from_checkpoint": args.resume_from_checkpoint,
+        "quantize": args.quantize, "started_utc": now(),
+    })
 
     event(event_path, "model_load_start", model=model_id, revision=revision)
     load_kwargs = {"revision": revision, "trust_remote_code": True, "torch_dtype": dtype}
@@ -326,6 +438,7 @@ def main(argv: list[str] | None = None) -> int:
     elif config["training"].get("gradient_checkpointing", True):
         model.gradient_checkpointing_enable()
         model.enable_input_require_grads()
+    event(event_path, "model_load_complete", model=model_id, revision=revision, load_mode=load_mode, dtype=dtype_name)
 
     targets = list(config["training"]["lora_target_modules"])
     linear_suffixes = {name.rsplit(".", 1)[-1] for name, module in model.named_modules() if isinstance(module, torch.nn.Linear)}
@@ -356,6 +469,9 @@ def main(argv: list[str] | None = None) -> int:
             self._component_sum = Counter()
             self._component_count = Counter()
             self._microstep = 0
+            self._seen_tokens = 0
+            self._seen_examples = 0
+            self._training_started = time.monotonic()
             super().__init__(*trainer_args, **trainer_kwargs)
 
         def _pad(self, sequences: list[list[int]], value: int) -> tuple[torch.Tensor, torch.Tensor]:
@@ -440,7 +556,9 @@ def main(argv: list[str] | None = None) -> int:
                 for name, value in losses.items():
                     self._component_sum[name] += float(value.detach().cpu())
                     self._component_count[name] += 1
-                progress.update(microstep=self._microstep, loss=float(loss.detach().cpu()), tokens=token_count)
+                self._seen_tokens += token_count
+                self._seen_examples += len(inputs)
+                progress.update(microstep=self._microstep, loss=float(loss.detach().cpu()), tokens=token_count, examples=len(inputs))
             if not torch.isfinite(loss):
                 raise FloatingPointError(f"non-finite training loss at microstep {self._microstep}")
             return (loss, None) if return_outputs else loss
@@ -454,20 +572,31 @@ def main(argv: list[str] | None = None) -> int:
             # the timestamp in our JSONL artifact, but never pass it to Trainer
             # as a pseudo-metric (which breaks some older Transformers versions).
             timestamp = now()
+            elapsed = max(1e-6, time.monotonic() - self._training_started)
+            enriched["elapsed_seconds"] = round(elapsed, 3)
+            enriched["tokens_per_second"] = round(self._seen_tokens / elapsed, 3)
+            enriched["examples_per_second"] = round(self._seen_examples / elapsed, 3)
+            if estimated_steps and self.state.global_step:
+                enriched["eta_seconds"] = round(max(0, estimated_steps - self.state.global_step) * elapsed / self.state.global_step, 1)
+            if torch.cuda.is_available():
+                enriched["gpu_memory_allocated_mb"] = round(torch.cuda.memory_allocated() / 1024**2, 1)
+                enriched["gpu_memory_reserved_mb"] = round(torch.cuda.memory_reserved() / 1024**2, 1)
+            # Keep both the human log and Trainer's log history JSON-safe.
+            enriched = {
+                key: (float(value) if hasattr(value, "item") else value)
+                for key, value in enriched.items()
+            }
+            print(f"[{timestamp}] METRICS {json.dumps(enriched, sort_keys=True)}", flush=True)
             append_jsonl(metrics_path, {"event": "train_log", "timestamp_utc": timestamp, "global_step": int(self.state.global_step), **enriched})
             super().log(enriched, *log_args, **log_kwargs)
             self._component_sum.clear(); self._component_count.clear()
 
         def _get_train_sampler(self):
             from torch.utils.data import WeightedRandomSampler
-            # Objective weights describe desired *token* exposure, not merely
-            # row frequency.  Dividing by each item's token mass prevents long
-            # MCQA contexts from dominating a row-balanced sampler unnoticed.
-            weights = [
-                float(self.sampling_token_share.get(item["kind"], 0.0))
-                / max(1.0, float(item.get("sample_tokens", item.get("tokens", 1))))
-                for item in self.train_dataset.items
-            ]
+            # Objective weights describe desired *loss-token* exposure, not
+            # row frequency.  The helper gives every objective a total
+            # expected token mass equal to its configured share.
+            weights = token_share_sampling_weights(self.train_dataset.items, self.sampling_token_share)
             if not any(weight > 0 for weight in weights):
                 raise RuntimeError("all sampler weights are zero")
             return WeightedRandomSampler(torch.tensor(weights, dtype=torch.double), num_samples=len(weights), replacement=True)
@@ -485,9 +614,9 @@ def main(argv: list[str] | None = None) -> int:
                 return
             command = [sys.executable, str(ROOT / "scripts" / "persist_checkpoint.py"), "--checkpoint", str(path), "--dataset", persistence_dataset, "--message", f"{config['experiment_id']} {args.stage} step {step}"]
             event(event_path, "checkpoint_persist_start", checkpoint=str(path), dataset=persistence_dataset)
-            result = subprocess.run(command, check=False)
-            if result.returncode:
-                raise RuntimeError(f"checkpoint persistence failed with exit {result.returncode}")
+            result = run_streamed(command, event_path.parent / "persistence.log")
+            if result:
+                raise RuntimeError(f"checkpoint persistence failed with exit {result}")
             self.persisted_steps.add(step)
             event(event_path, "checkpoint_persist_complete", checkpoint=str(path), dataset=persistence_dataset)
 
@@ -500,6 +629,8 @@ def main(argv: list[str] | None = None) -> int:
             del control, kwargs
             path = Path(args_.output_dir) / f"checkpoint-{state.global_step}"
             if path.exists():
+                if not checkpoint_is_complete(path):
+                    raise RuntimeError(f"Trainer produced an incomplete checkpoint: {path}")
                 files = [str(x.relative_to(path)) for x in path.rglob("*") if x.is_file()]
                 atomic_json(path / "checkpoint_manifest.json", {"timestamp_utc": now(), "global_step": int(state.global_step), "files": files, "complete": True})
                 event(event_path, "checkpoint_saved", path=str(path), global_step=int(state.global_step), file_count=len(files))
@@ -530,6 +661,7 @@ def main(argv: list[str] | None = None) -> int:
     grad_accum = int(training["gradient_accumulation_steps"])
     steps_per_epoch = max(1, math.ceil(len(train_data) / max(1, per_device * grad_accum)))
     estimated_steps = int(args.max_steps) if args.max_steps > 0 else math.ceil(steps_per_epoch * float(stage_cfg["epochs"]))
+    progress.total_steps = estimated_steps
     kwargs = dict(
         output_dir=str(checkpoint_dir), num_train_epochs=float(stage_cfg["epochs"]),
         per_device_train_batch_size=int(training["per_device_batch_size"]),
@@ -559,6 +691,8 @@ def main(argv: list[str] | None = None) -> int:
         """Create a complete resumable checkpoint even off the save interval."""
         step = int(trainer.state.global_step)
         path = checkpoint_dir / f"checkpoint-{step}"
+        if path.exists() and not checkpoint_is_complete(path):
+            raise RuntimeError(f"terminal checkpoint path exists but is incomplete: {path}")
         if not path.exists():
             path.mkdir(parents=True, exist_ok=True)
             trainer.save_model(str(path))
@@ -567,6 +701,9 @@ def main(argv: list[str] | None = None) -> int:
                 torch.save(trainer.optimizer.state_dict(), path / "optimizer.pt")
             if trainer.lr_scheduler is not None:
                 torch.save(trainer.lr_scheduler.state_dict(), path / "scheduler.pt")
+            scaler = getattr(getattr(trainer, "accelerator", None), "scaler", None)
+            if scaler is not None:
+                torch.save(scaler.state_dict(), path / "scaler.pt")
             rng = {"python": random.getstate(), "torch": torch.get_rng_state()}
             try:
                 import numpy as np
@@ -578,6 +715,8 @@ def main(argv: list[str] | None = None) -> int:
             torch.save(rng, path / "rng_state.pth")
         files = [str(x.relative_to(path)) for x in path.rglob("*") if x.is_file()]
         atomic_json(path / "checkpoint_manifest.json", {"timestamp_utc": now(), "global_step": step, "files": files, "complete": True, "terminal": True})
+        if not checkpoint_is_complete(path):
+            raise RuntimeError(f"terminal checkpoint failed completeness validation: {path}")
         return path
     resume = args.resume_from_checkpoint
     if resume == "latest":
@@ -587,6 +726,8 @@ def main(argv: list[str] | None = None) -> int:
         if not Path(resume).exists():
             raise FileNotFoundError(f"resume checkpoint does not exist: {resume}")
         event(event_path, "resume_start", checkpoint=resume)
+    trainer._training_started = time.monotonic()
+    progress.started = trainer._training_started
     progress.start()
     event(event_path, "train_start", optimizer_steps_estimate=estimated_steps, steps_per_epoch=steps_per_epoch, effective_batch_size=per_device * grad_accum, objective_weights=stage_cfg["objective_weights"], sampling_token_share=stage_cfg.get("sampling_token_share", stage_cfg["objective_weights"]), resume=resume, init_adapter=args.init_adapter)
     try:
@@ -595,9 +736,9 @@ def main(argv: list[str] | None = None) -> int:
         event(event_path, "terminal_checkpoint_saved", path=str(terminal_checkpoint), global_step=int(trainer.state.global_step))
         if persistence_dataset and int(trainer.state.global_step) not in production_callback.persisted_steps:
             event(event_path, "checkpoint_persist_start", checkpoint=str(terminal_checkpoint), dataset=persistence_dataset, terminal=True)
-            result = subprocess.run([sys.executable, str(ROOT / "scripts" / "persist_checkpoint.py"), "--checkpoint", str(terminal_checkpoint), "--dataset", persistence_dataset, "--message", f"{config['experiment_id']} {args.stage} terminal step {trainer.state.global_step}"], check=False)
-            if result.returncode:
-                raise RuntimeError(f"terminal checkpoint persistence failed with exit {result.returncode}")
+            result = run_streamed([sys.executable, str(ROOT / "scripts" / "persist_checkpoint.py"), "--checkpoint", str(terminal_checkpoint), "--dataset", persistence_dataset, "--message", f"{config['experiment_id']} {args.stage} terminal step {trainer.state.global_step}"], event_path.parent / "persistence-terminal.log")
+            if result:
+                raise RuntimeError(f"terminal checkpoint persistence failed with exit {result}")
             event(event_path, "checkpoint_persist_complete", checkpoint=str(terminal_checkpoint), dataset=persistence_dataset, terminal=True)
         trainer.save_model(str(checkpoint_dir / "final-adapter"))
         tokenizer.save_pretrained(str(checkpoint_dir / "final-adapter"))

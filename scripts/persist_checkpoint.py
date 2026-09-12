@@ -15,7 +15,29 @@ import os
 import shutil
 import subprocess
 import tempfile
+import time
 from pathlib import Path
+
+
+def now() -> str:
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+
+def run_streamed(command: list[str]) -> int:
+    """Stream remote-upload output; never hide a slow Kaggle API call."""
+    print("STREAM " + " ".join(command), flush=True)
+    process = subprocess.Popen(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        bufsize=1,
+        env={**os.environ, "PYTHONUNBUFFERED": "1"},
+    )
+    assert process.stdout is not None
+    for line in process.stdout:
+        print(f"[{now()}] {line}", end="", flush=True)
+    return process.wait()
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -32,6 +54,12 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit(f"checkpoint directory does not exist: {checkpoint}")
     if not (checkpoint / "trainer_state.json").exists():
         raise SystemExit(f"checkpoint has no trainer_state.json: {checkpoint}")
+    try:
+        trainer_state = json.loads((checkpoint / "trainer_state.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise SystemExit(f"checkpoint trainer_state.json is invalid: {exc}") from exc
+    if not isinstance(trainer_state.get("global_step"), int):
+        raise SystemExit("checkpoint trainer_state.json has no integer global_step")
     adapter_files = list(checkpoint.glob("adapter_model.*"))
     required_state = [checkpoint / "optimizer.pt", checkpoint / "scheduler.pt", checkpoint / "rng_state.pth"]
     if not adapter_files:
@@ -39,6 +67,14 @@ def main(argv: list[str] | None = None) -> int:
     missing_state = [str(path.name) for path in required_state if not path.exists()]
     if missing_state:
         raise SystemExit(f"checkpoint is not resumable; missing: {', '.join(missing_state)}")
+    manifest_path = checkpoint / "checkpoint_manifest.json"
+    if manifest_path.exists():
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            raise SystemExit(f"checkpoint_manifest.json is invalid: {exc}") from exc
+        if manifest.get("complete") is not True or int(manifest.get("global_step", -1)) != trainer_state["global_step"]:
+            raise SystemExit("checkpoint manifest is not marked complete or disagrees with trainer_state global_step")
     with tempfile.TemporaryDirectory(prefix="falcon-persist-") as tmp:
         staging = Path(tmp) / "checkpoint"
         shutil.copytree(checkpoint, staging)
@@ -53,7 +89,7 @@ def main(argv: list[str] | None = None) -> int:
         print("PERSIST:", " ".join(command), flush=True)
         if args.dry_run:
             return 0
-        return subprocess.run(command, check=False).returncode
+        return run_streamed(command)
 
 
 if __name__ == "__main__":

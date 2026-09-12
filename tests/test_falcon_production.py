@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from scripts.build_falcon_dataset import canonical, near_holdout
-from scripts.train_falcon_production import FalconDataset, latest_checkpoint
+from scripts.train_falcon_production import FalconDataset, latest_checkpoint, token_share_sampling_weights
 
 
 class FakeTokenizer:
@@ -63,7 +63,22 @@ def test_holdout_gate_catches_exact_and_near_duplicates():
 def test_latest_checkpoint_ignores_incomplete_directories(tmp_path: Path):
     complete = tmp_path / "checkpoint-25"
     complete.mkdir()
-    (complete / "trainer_state.json").write_text("{}")
+    for name in ("trainer_state.json", "optimizer.pt", "scheduler.pt", "rng_state.pth", "adapter_model.safetensors"):
+        (complete / name).write_text("{}")
     incomplete = tmp_path / "checkpoint-50"
     incomplete.mkdir()
+    (incomplete / "trainer_state.json").write_text("{}")
     assert latest_checkpoint(tmp_path) == complete
+
+
+def test_token_share_weights_match_expected_loss_token_mass():
+    items = [
+        {"kind": "sft", "tokens": 10},
+        {"kind": "sft", "tokens": 30},
+        {"kind": "mcqa", "tokens": 5},
+    ]
+    weights = token_share_sampling_weights(items, {"sft": 0.75, "mcqa": 0.25})
+    sft_mass = sum(w * item["tokens"] for w, item in zip(weights, items) if item["kind"] == "sft")
+    mcqa_mass = sum(w * item["tokens"] for w, item in zip(weights, items) if item["kind"] == "mcqa")
+    assert sft_mass == pytest.approx(0.75)
+    assert mcqa_mass == pytest.approx(0.25)

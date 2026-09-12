@@ -137,6 +137,7 @@ def normalize_row(spec: dict[str, Any], row: dict[str, Any], tokenizer: Any, max
             "output": answer,
             "prompt_tokens": len(prompt_ids),
             "target_tokens": len(target_ids),
+            "loss_tokens": len(target_ids),
             "total_tokens": len(prompt_ids) + len(target_ids),
         })
         identity = content + "\n" + base["input"] + "\n" + answer
@@ -159,6 +160,7 @@ def normalize_row(spec: dict[str, Any], row: dict[str, Any], tokenizer: Any, max
             "gold": gold,
             "prompt_tokens": len(ctx_ids) * len(choice_ids),
             "target_tokens": sum(len(x) for x in choice_ids),
+            "loss_tokens": sum(len(x) for x in choice_ids),
             "total_tokens": len(ctx_ids) * len(choice_ids) + sum(len(x) for x in choice_ids),
         })
         identity = context + "\n" + "\n".join(map(str, choices)) + f"\n{gold}"
@@ -240,10 +242,21 @@ def main(argv: list[str] | None = None) -> int:
 
     facets: dict[str, Counter[str]] = {key: Counter() for key in ("objective", "source", "category", "language", "split", "provenance")}
     tokens = Counter()
+    loss_tokens = Counter()
     for row in rows:
         for key, counter in facets.items():
             counter[row[key]] += 1
         tokens[row["objective"]] += int(row["total_tokens"])
+        loss_tokens[row["objective"]] += int(row["loss_tokens"])
+    source_files = []
+    for spec in config["data"]["sources"]:
+        path = ROOT / spec["path"]
+        entry = {"name": spec["name"], "path": spec["path"], "required": spec.get("required", True), "sha256": digest(path.read_text(encoding="utf-8")) if path.exists() else None}
+        companion = path.with_name(path.stem + ".manifest.json")
+        if companion.exists():
+            entry["manifest_path"] = str(companion.relative_to(ROOT))
+            entry["manifest_sha256"] = digest(companion.read_text(encoding="utf-8"))
+        source_files.append(entry)
     manifest = {
         "schema_version": "1.0.0",
         "experiment_id": config["experiment_id"],
@@ -254,13 +267,15 @@ def main(argv: list[str] | None = None) -> int:
         "counts": {"accepted": len(rows), "train": sum(x["split"] == "train" for x in rows), "dev": sum(x["split"] == "dev" for x in rows), "rejected": len(rejected), "exact_duplicates_dropped": len(duplicates)},
         "token_totals": dict(tokens),
         "token_shares_percent": {key: round(100 * value / max(1, sum(tokens.values())), 4) for key, value in tokens.items()},
+        "loss_token_totals": dict(loss_tokens),
+        "loss_token_shares_percent": {key: round(100 * value / max(1, sum(loss_tokens.values())), 4) for key, value in loss_tokens.items()},
         "facets": {key: dict(sorted(value.items())) for key, value in facets.items()},
         "missing_sources": missing,
         "rejected_examples": rejected,
         "duplicate_examples": duplicates[:100],
         "final_holdout_count": len(holdouts),
         "final_holdout_sha256": digest("\n".join(sorted(holdouts))),
-        "source_files": [{"name": x["name"], "path": x["path"], "required": x.get("required", True), "sha256": digest((ROOT / x["path"]).read_bytes().decode("utf-8")) if (ROOT / x["path"]).exists() else None} for x in config["data"]["sources"]],
+        "source_files": source_files,
     }
     (out_dir / "data_manifest.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps({"out_dir": str(out_dir), "counts": manifest["counts"], "token_totals": manifest["token_totals"], "facets": manifest["facets"], "missing_sources": missing}, indent=2))
