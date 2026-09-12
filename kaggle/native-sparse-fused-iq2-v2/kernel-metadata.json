@@ -1,0 +1,13 @@
+{
+  "id": "toheebogunade/jamii-fused-iq2-v2",
+  "title": "Jamii Native Sparse Fused IQ2 AVX2 v2",
+  "code_file": "fused_iq2_v2.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_internet": true,
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": []
+}
