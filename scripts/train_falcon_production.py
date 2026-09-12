@@ -720,7 +720,12 @@ def main(argv: list[str] | None = None) -> int:
     per_device = int(training["per_device_batch_size"])
     grad_accum = int(training["gradient_accumulation_steps"])
     steps_per_epoch = max(1, math.ceil(len(train_data) / max(1, per_device * grad_accum)))
-    estimated_steps = int(args.max_steps) if args.max_steps > 0 else math.ceil(steps_per_epoch * float(stage_cfg["epochs"]))
+    configured_max_steps = int(stage_cfg.get("max_steps", 0))
+    effective_max_steps = int(args.max_steps) if args.max_steps > 0 else configured_max_steps
+    estimated_steps = effective_max_steps if effective_max_steps > 0 else math.ceil(steps_per_epoch * float(stage_cfg["epochs"]))
+    run_manifest = json.loads((stage_dir / "run_manifest.json").read_text(encoding="utf-8"))
+    run_manifest["effective_max_steps"] = effective_max_steps
+    atomic_json(stage_dir / "run_manifest.json", run_manifest)
     progress.total_steps = estimated_steps
     kwargs = dict(
         output_dir=str(checkpoint_dir), num_train_epochs=float(stage_cfg["epochs"]),
@@ -732,7 +737,7 @@ def main(argv: list[str] | None = None) -> int:
         max_grad_norm=float(training["max_grad_norm"]), gradient_checkpointing=bool(training["gradient_checkpointing"]),
         report_to="none", remove_unused_columns=False, dataloader_num_workers=0, seed=seed,
         bf16=(use_cuda and dtype_name == "bf16"), fp16=(use_cuda and dtype_name == "fp16"),
-        max_steps=int(args.max_steps) if args.max_steps > 0 else -1,
+        max_steps=effective_max_steps if effective_max_steps > 0 else -1,
     )
     import inspect
     if "eval_strategy" in inspect.signature(TrainingArguments.__init__).parameters:
@@ -789,7 +794,7 @@ def main(argv: list[str] | None = None) -> int:
     trainer._training_started = time.monotonic()
     progress.started = trainer._training_started
     progress.start()
-    event(event_path, "train_start", optimizer_steps_estimate=estimated_steps, steps_per_epoch=steps_per_epoch, effective_batch_size=per_device * grad_accum, objective_weights=stage_cfg["objective_weights"], sampling_token_share=stage_cfg.get("sampling_token_share", stage_cfg["objective_weights"]), resume=resume, init_adapter=args.init_adapter)
+    event(event_path, "train_start", optimizer_steps_estimate=estimated_steps, configured_max_steps=configured_max_steps, effective_max_steps=effective_max_steps, steps_per_epoch=steps_per_epoch, effective_batch_size=per_device * grad_accum, objective_weights=stage_cfg["objective_weights"], sampling_token_share=stage_cfg.get("sampling_token_share", stage_cfg["objective_weights"]), resume=resume, init_adapter=args.init_adapter)
     try:
         trainer.train(resume_from_checkpoint=resume)
         terminal_checkpoint = save_terminal_checkpoint()

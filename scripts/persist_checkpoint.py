@@ -40,12 +40,41 @@ def run_streamed(command: list[str]) -> int:
     return process.wait()
 
 
+def wait_for_dataset_files(dataset: str, timeout_seconds: int = 600,
+                           retry_seconds: int = 15) -> None:
+    """Wait until the newly-created version exposes resumable trainer state."""
+    deadline = time.monotonic() + timeout_seconds
+    command = ["kaggle", "datasets", "files", "-d", dataset]
+    attempt = 0
+    while True:
+        attempt += 1
+        result = subprocess.run(command, check=False, capture_output=True, text=True)
+        listing = (result.stdout or "") + (result.stderr or "")
+        ready = result.returncode == 0 and all(
+            name in listing for name in ("trainer_state.json", "optimizer.pt", "scheduler.pt")
+        )
+        if ready:
+            print(f"PERSISTENCE_READY dataset={dataset} attempt={attempt}", flush=True)
+            return
+        remaining = int(deadline - time.monotonic())
+        if remaining <= 0:
+            raise RuntimeError(
+                f"Kaggle dataset version did not expose resumable files within {timeout_seconds}s; "
+                f"last listing: {listing[-1000:]}"
+            )
+        delay = min(max(1, retry_seconds), remaining)
+        print(f"PERSISTENCE_WAIT dataset={dataset} attempt={attempt} retry_in={delay}s", flush=True)
+        time.sleep(delay)
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--checkpoint", required=True)
     ap.add_argument("--dataset", default=os.environ.get("FALCON_CHECKPOINT_DATASET"))
     ap.add_argument("--message", required=True)
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--wait-seconds", type=int, default=600)
+    ap.add_argument("--retry-seconds", type=int, default=15)
     args = ap.parse_args(argv)
     if not args.dataset:
         raise SystemExit("FALCON_CHECKPOINT_DATASET/--dataset is required; refusing ephemeral-only persistence")
@@ -91,7 +120,11 @@ def main(argv: list[str] | None = None) -> int:
         print("PERSIST:", " ".join(command), flush=True)
         if args.dry_run:
             return 0
-        return run_streamed(command)
+        code = run_streamed(command)
+        if code:
+            return code
+        wait_for_dataset_files(args.dataset, args.wait_seconds, args.retry_seconds)
+        return 0
 
 
 if __name__ == "__main__":
