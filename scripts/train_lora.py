@@ -368,6 +368,17 @@ def main() -> int:
     dtype = _dtypes[dtype_name]
     print(f"Precision: load_mode={load_mode} dtype={dtype_name} cuda_cap={cap}")
 
+    # Transformers' generic AutoModel registry imports every optional model
+    # family when resolving a class. On the Kaggle P100 image that reaches an
+    # unrelated Gemma3n/torchvision dependency. Falcon-H1 has a first-class
+    # direct class, so use it here; the existing AutoModel path remains the
+    # default for Qwen and other supported bases.
+    model_cls = AutoModelForCausalLM
+    if "falcon-h1" in args.base_model.lower():
+        from transformers.models.falcon_h1.modeling_falcon_h1 import FalconH1ForCausalLM
+
+        model_cls = FalconH1ForCausalLM
+
     if load_mode == "bnb4":
         bnb = BitsAndBytesConfig(
             load_in_4bit=True,
@@ -375,13 +386,13 @@ def main() -> int:
             bnb_4bit_compute_dtype=dtype,
             bnb_4bit_use_double_quant=True,
         )
-        model = AutoModelForCausalLM.from_pretrained(
+        model = model_cls.from_pretrained(
             args.base_model, quantization_config=bnb, device_map="auto",
             trust_remote_code=True, torch_dtype=dtype,
         )
     else:
         print(f"Loading unquantized ({dtype_name}).")
-        model = AutoModelForCausalLM.from_pretrained(
+        model = model_cls.from_pretrained(
             args.base_model, trust_remote_code=True, torch_dtype=dtype,
         )
         if use_cuda:
