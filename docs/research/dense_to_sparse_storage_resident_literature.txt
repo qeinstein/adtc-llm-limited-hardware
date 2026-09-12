@@ -30,7 +30,7 @@ conditions where the source reports them. A FLOP claim is not treated as a
 wall-clock claim. “Not reported” is intentional where a source or public
 repository does not expose the required measurement.
 
-Evidence status: 18 source records are included below. The source set contains
+Evidence status: 22 source records are included below. The source set contains
 papers, implementation repositories, primary model/configuration files, and a
 storage-energy analysis. Edge0, DejaVu and PowerInfer code were inspected from
 the repositories; Edge0 was inspected at commit 03a5a15, DejaVu at ee902c1.
@@ -73,6 +73,12 @@ now combined most of them:
   achieves only roughly 1.7-3.7 tok/s under 9-13.2 GiB caps on its reported
   workload. This substantially narrows any claim that delta prefetching or
   neuron-centric SSD layout is new by itself.
+- A late implementation audit found direct llama.cpp prior art: Swap-MoE
+  provides a CPU-only mmap/demand-paging patch with LRU, fixation and previous-
+  pass prefetch; a llama.cpp RFC reports compact expert slot pools with
+  `pread`; FlashMoE learns cache eviction; and HOBBIT combines mixed precision,
+  prefetch and cache policies. These systems make a Qwen-specific sparse
+  conversion and x86/GGUF measurement more clearly the remaining gap.
 
 WHAT PRIOR ART ALREADY ESTABLISHES
 
@@ -567,7 +573,7 @@ set. Row-column bundling stores the ith up column with the ith down row. The
 paper notes that naive hot-neuron bundling can be negative when a row/column
 has high degree, so coactivation and layout must be measured.
 
-IMPORTANT EQUATIONS / COST MODEL:
+IMPORTANT EQUATIONS:
 For a token, a useful first-order latency decomposition is:
 `T_token = T_I/O + T_memory_management + T_compute`.
 
@@ -1270,6 +1276,12 @@ ARCHITECTURE:
 Layerwise pruning treats each linear weight matrix independently. It is not
 contextual and does not create experts.
 
+IMPORTANT EQUATIONS:
+`min_{M,W} ||W X - (M * W_hat) X||_2^2` is the layer reconstruction
+objective; OBS-style deletion uses
+`delta_m = -w_m/[H^-1]_{mm} * H^-1_{:,m}` and estimated error
+`epsilon_m = w_m^2/[H^-1]_{mm}`.
+
 ALGORITHM:
 The layer objective is approximately
 `min_{M,W} ||W X - (M * W_hat) X||_2^2`.
@@ -1388,6 +1400,12 @@ INFERENCE MECHANISM:
 Top-1 route with fixed capacity. This makes active compute predictable at
 batch scale, but a single-token decode cannot exploit capacity balancing in
 the same way as large-batch training.
+
+IMPORTANT EQUATIONS:
+`h = W_r x`, `p_i=softmax(h)_i`, and the capacity constraint is approximately
+`capacity = tokens_per_batch / num_experts * capacity_factor`. The balance loss
+is `L_aux = alpha * N * sum_i f_i P_i`; overflow/drop behavior is part of the
+runtime semantics.
 
 MEMORY BEHAVIOR:
 Only selected expert weights need to be active in principle, making the
@@ -1561,6 +1579,11 @@ Only MLPs are changed. For E experts and dense width H, expert e has nested
 width `H_e = floor((e+1)/E * H)`; the final expert is full width. The same
 prefix rows/columns are used, so storage can naturally be prefix/range based.
 The reported 4-expert sizes are 0.25H, 0.5H, 0.75H and H.
+
+IMPORTANT EQUATIONS:
+`S_{b,e}=<Y_e,Y_full>/<Y_full,Y_full>` labels the smallest nested expert
+whose output is sufficiently close to the full dense output. The router loss
+must be combined with language-model loss to avoid route collapse.
 
 ALGORITHM:
 Run all nested experts and the full dense output on calibration data. Define
@@ -1746,6 +1769,11 @@ The method modifies only ReGLU/dReLU FFNs. For
 low-rank approximation of W_gate. Gate and up are executed sequentially:
 predicted positives are checked by the real gate, then false positives are
 removed before up/down.
+
+IMPORTANT EQUATIONS:
+`P(x)=H(A B x+b)` with whitened rank-r factors `A,B`; sequential sparse work
+is `r(d+D) + d(1-s)D + 2d(1-s')D` versus dense `3dD`. The damage proxy is
+`w_i^t=|ReLU(gate_i)*up_i|^2 ||down_:,i||^2`.
 
 ALGORITHM:
 Given calibration X, form a Cholesky whitening S from `X X^T`, factor
@@ -2242,6 +2270,406 @@ records reduce the 24.5 KiB/neuron equivalent enough? Can CPU execution and
 NVMe overlap without a GPU scheduler? What dense-prefix size leaves useful
 cache under 8 GB?
 
+[S19] SWAP-MOE
+
+TITLE: Swap-MoE: On-Demand SSD Loading for Inference of Massive MoE Models in Low-RAM Environments
+AUTHORS: ek15072809 repository author
+YEAR: 2026
+VENUE: Open-source llama.cpp patch and technical report
+URL: https://github.com/ek15072809/Swap-MoE
+CODE: Single patch `llama.cpp-expert-streaming.patch`, targeting llama.cpp
+      commit f5e85d43a (2026-08-28)
+RELEVANCE: very high for implementation prior art
+
+PROBLEM:
+Make very large native MoE GGUF models run on a 16 GB RAM CPU-only PC when
+the routed expert tensors alone exceed physical memory.
+
+KEY IDEA:
+Leave routed expert tensors mmap-backed on SSD, prevent the normal loader from
+touching them, and let OS demand paging fetch selected experts. Add optional
+per-layer keep-recent eviction, expert-fixation windows, and previous-pass
+expert prefetch.
+
+ARCHITECTURE:
+The patch recognizes `blk.<layer>.ffn_gate_exps.weight`, `ffn_up_exps`,
+`ffn_down_exps` and fused variants, while keeping the router, shared experts
+and tiny scale tensors resident. It applies Linux `madvise` to make routed
+pages nonresident after mapping. It targets CPU-only llama.cpp and standard
+native MoE routing; it is not a dense-to-sparse converter.
+
+ALGORITHM:
+Streaming leaves selected expert pages to page faults. `--expert-keep-recent N`
+tracks a per-layer LRU and calls `MADV_DONTNEED`/Windows equivalent outside
+the window. `--expert-fixation N` repeats the first route for N passes to make
+page-cache reuse explicit, at a quality cost. `--expert-prefetch` uses the
+previous forward pass's expert IDs and `madvise(WILLNEED)` in a background
+thread. Fixation is inserted as a graph node so graph shape remains stable.
+
+IMPORTANT EQUATIONS:
+The useful accounting is direct:
+`resident = nonexpert + shared + router + keep_recent experts`;
+`fresh SSD bytes/token = sum(selected expert regions not in page cache)`.
+There is no learned predictor equation; previous-route reuse is the predictor.
+
+TRAINING REQUIRED:
+None for streaming/prefetch. Fixation changes the route and can harm quality.
+
+INFERENCE MECHANISM:
+CPU-only llama.cpp; mmap/demand paging or explicit page hints. The normal
+loader's validation/upload touches all tensors, so the patch changes that
+specific path. This is a critical distinction from merely passing `--mmap`.
+
+MEMORY BEHAVIOR:
+README benchmark: 13th-generation Intel Core i7, 16 GB RAM, NVMe, CPU-only.
+Routed weights are outside the resident set until selected. Explicit LRU
+eviction is available for a hard RAM cap, although OS page-cache management
+was faster in the author's measurements.
+
+I/O BEHAVIOR:
+Page faults are layout-blind at page granularity. Expert fixation reuses the
+same pages but changes routing. Prefetch warms the next pass and carries no
+intentional route-quality cost. It does not coalesce dense-derived groups.
+
+THROUGHPUT RESULTS:
+At decode token 400, reported CPU-only values include Qwen3.5-35B-A3B Q4_K_M
+7.01 tok/s streaming, 7.28 with fixation N=2, and 5.89 with keep-recent 12;
+Qwen3.5-122B-A10B Q2_K about 2.00 streaming; DeepSeek-V4-Flash 0.39/0.55
+streaming/prefetch; Qwen3.8-Flash-Next IQ1_M 0.63. These are instantaneous
+decode values on one machine, not the dense Qwen3.8 target.
+
+QUALITY RESULTS:
+Streaming/prefetch are intended to preserve exact routing. Fixation can cause
+severe repetitive/incoherent output on larger or low-bit models despite a
+higher raw tok/s number. It is not a free temporal-locality optimization.
+
+HARDWARE:
+13th-gen Intel Core i7, 16 GB physical RAM, NVMe SSD, CPU-only. This is the
+closest public x86 implementation result found, though it uses native MoE.
+
+WHAT ACTUALLY CAUSED THE SPEEDUP:
+Skipping initial expert reads, demand paging only routed tensors, page-cache
+reuse and prior-pass prefetch. The high-level mechanism is directly relevant;
+the measured bytes are not published as a clean per-token table.
+
+WHAT DID NOT WORK:
+Explicit eviction often ran slower than the OS page cache. Fixation trades
+quality for I/O and fails on input-token/hash routing. Qwen3.8-Flash-Next at
+0.63 tok/s demonstrates that running does not imply the desired rate.
+
+LIMITATIONS:
+Native MoE only; page-fault granularity; no dense-to-group conversion; no
+8 GB target; patch must be ported as llama.cpp changes. The README says
+Qwen3.8-Flash-Next is a separate qwen4exp MoE model, not the Qwen3.8-27B
+dense checkpoint in this notebook.
+
+ASSUMPTIONS:
+The OS page cache can manage selected expert pages; selected expert tensors
+are already laid out in standard GGUF tensors; native routing is accurate.
+
+TRANSFER TO QWEN3.8-27B:
+Copy the loader bypass, resident/nonresident tensor classification, optional
+hard-cap eviction and previous-pass prefetch experiment. Do not use page
+faults as the final dense-derived group layout; explicit aligned ranges and
+delta reads should be compared against it.
+
+TRANSFER TO LLAMA.CPP:
+This is direct implementation prior art. A dense-derived sparse MLP would
+need new tensor naming/metadata and an operator, but the loader and memory
+budget lessons apply.
+
+WHAT WE SHOULD COPY:
+[PRIOR ART] Keep router/shared/non-routed tensors resident; prevent startup
+touches; compare OS page cache with explicit eviction; benchmark prefetch
+without route mutation; test CPU-only first.
+
+WHAT WE SHOULD NOT COPY:
+[PRIOR ART LIMIT] Expert fixation as a general solution, page-fault I/O as
+the only layout, or native MoE throughput as dense Qwen evidence.
+
+OPEN QUESTIONS:
+How does explicit group-range `pread` compare with mmap page faults for Qwen
+gated groups? Can a dense-derived tensor family use the same loader bypass?
+
+[S20] LLAMA.CPP DISK-OFFLOAD RFC AND X86/CUDA FIELD REPORT
+
+TITLE: RFC+PoC: MoE offload to disk with on-demand paging; plus independent
+       expert-streaming-win measurements
+AUTHORS: llama.cpp discussion participants, including kisasexypantera94 and
+         koren1712
+YEAR: 2026
+VENUE: llama.cpp Discussion #23324 / implementation field report
+URL: https://github.com/ggml-org/llama.cpp/discussions/23324
+     https://github.com/koren1712/llama.cpp/tree/expert-streaming-win
+CODE: Prototype compact pool/sidecar and Windows/CUDA branch
+RELEVANCE: very high
+
+PROBLEM:
+Avoid wiring all native MoE expert weights in Metal/GPU memory by loading only
+selected experts into a compact pool, with an explicit CPU sidecar.
+
+ARCHITECTURE:
+Each MoE layer has a compact N-slot expert pool, a route-ID sidecar and an
+asynchronous storage path. The M1 prototype is Metal/CPU; the linked field
+report is Windows/CUDA with an NVMe tier.
+
+KEY IDEA:
+Each MoE layer has N slots. A GPU/Metal interceptor publishes selected expert
+IDs; a CPU sidecar resolves IDs with an LRU, loads missing GGUF regions using
+`pread`, updates slot IDs and signals a shared event. The main MoE matmul runs
+against the compact pool. The discussion reports Qwen3-30B-A3B Q6_K at 13
+tok/s on M1 Pro 16 GB with 8-80 slots, with 12 tok/s at 8 slots.
+
+ALGORITHM:
+The slot constraint is `ub * n_expert_used <= n_slots`. The prototype requires
+`--no-mmap` to avoid allocating all expert tensors and `--no-warmup` because
+the default 2048-token warmup can OOM. Replies report simple LRU; layer-wise
+streaming with readahead is an alternative. The Windows/CUDA report measured
+async read pools, in-op overlap, pinned early blocks and a zero-copy slab.
+
+IMPORTANT EQUATIONS:
+The independent report measured 2.98 GB/s sequential NVMe and 16 MiB expert
+reads at about 2.80 GB/s during live generation versus 377 MB/s mmap paging.
+On a GLM-4.5-Air Q4_K_M 73.5 GB model, baseline mmap was 0.43 tok/s,
+persistent async read 0.66, overlap 0.68, and four early VRAM blocks 0.75.
+A 16 GiB slab reduced total reads from 132 to 76 GB but was slower from copy/
+eviction overhead; 24 GiB of RAM tier on a 32 GB machine collapsed to 0.12.
+The report calls out 4.13 GB/token pure streaming and 3.82 GB/token with
+four VRAM blocks as the bytes/token wall.
+
+TRAINING REQUIRED: None for storage prototype; native MoE route is retained.
+INFERENCE MECHANISM: Compact fixed slots, sidecar `pread`, synchronization.
+MEMORY BEHAVIOR: Explicit slots make a hard cap possible; cache metadata and
+warmup allocation matter.
+I/O BEHAVIOR: Large explicit reads outperform page-fault paging in the report;
+copy/eviction can outweigh fewer SSD bytes.
+THROUGHPUT RESULTS: 12-13 tok/s M1 prototype; 0.43-0.75 tok/s Windows/CUDA
+field report for a much larger GLM model.
+QUALITY RESULTS: Exact inference claimed for the M1 prototype; no dense-derived
+quality result.
+HARDWARE: M1/M3 Apple and i7-8700K + RTX4080 + PCIe3 NVMe in the field report.
+
+WHAT ACTUALLY CAUSED THE SPEEDUP: Fixed slots, direct large reads, overlap and
+not touching all expert tensors at startup.
+WHAT DID NOT WORK: A large RAM slab can be slower despite less I/O; memory
+pressure can collapse throughput; mmap page faults can sustain only 377 MB/s
+in the reported live pattern.
+
+LIMITATIONS:
+Discussion/field-report numbers are not peer-reviewed and use native MoE,
+different hardware and incomplete methodology. The M1 prototype uses Metal;
+the x86 report uses GPU compute and does not establish CPU-only Qwen3.8.
+
+ASSUMPTIONS:
+Expert tensors can be read contiguously; compact slots fit the backend;
+sidecar synchronization is cheaper than page faults.
+
+TRANSFER TO QWEN3.8-27B:
+This is an important baseline for the future storage experiment: compare
+explicit aligned `pread`/io_uring group reads against mmap page faults and
+measure copy/eviction cost. The reported 3.82-4.13 GB/token figures reinforce
+that bytes/token, not model file size, decides throughput.
+
+TRANSFER TO LLAMA.CPP:
+The compact-pool integration point, `--no-mmap`/warmup caveat, and sidecar
+request protocol are useful prior art. For CPU-only dense-derived groups,
+replace GPU event synchronization with a bounded asynchronous read queue.
+
+WHAT WE SHOULD COPY:
+[PRIOR ART] Fixed slot pool; explicit `pread`/large-range baseline; direct
+comparison to mmap; startup/warmup audit; bytes/token wall analysis.
+
+WHAT WE SHOULD NOT COPY:
+[PRIOR ART LIMIT] Assume Metal shared events or GPU graph nodes transfer to
+x86 CPU; assume fewer bytes automatically means faster execution.
+
+OPEN QUESTIONS:
+Can Qwen3.8 group records be read at 16 MiB-sized coalesced ranges without
+overfetching most omitted groups? What is the CPU-only crossover between
+copy/dequant and page-fault traffic?
+
+[S21] FLASHMOE
+
+TITLE: FlashMoE: Reducing SSD I/O Bottlenecks via ML-Based Cache Replacement for Mixture-of-Experts Inference on Edge Devices
+AUTHORS: Byeongju Kim, Jungwan Lee, Donghyeon Han, Hoi-Jun Yoo and Sangyeob Kim
+YEAR: 2026
+VENUE: arXiv preprint
+URL: https://arxiv.org/abs/2601.17063
+CODE: No public implementation verified during this pass.
+RELEVANCE: high
+
+PROBLEM:
+LRU/LFU expert caches evict experts that remain hot for several future steps,
+causing SSD loading to dominate decode under tight RAM.
+
+KEY IDEA:
+Train a lightweight eviction model using recency and frequency signals and
+oracle/Belady-derived labels. Load routed experts once per inference iteration
+and replace cache entries asynchronously while loading.
+
+ARCHITECTURE:
+SSD-backed expert files, limited DRAM, GPU/edge execution and a learned cache
+policy. The system is native MoE, not dense-to-sparse conversion.
+
+ALGORITHM:
+For each candidate expert, normalize recency/frequency features and predict
+which entries to evict. During decode, expert loading can be about 3 ms while
+FFN computation is about 158 microseconds in the paper's comparison, so cache
+policy computation can be overlapped and is justified by hit rate.
+
+IMPORTANT EQUATIONS:
+The cache model consumes recency `r_t` and frequency `f_t`; labels identify
+the least useful expert under an oracle future reference trace. The practical
+objective is maximize hit rate / minimize `fresh SSD bytes = misses * expert
+bytes`.
+
+TRAINING REQUIRED:
+Offline cache-policy training from routing traces; no model fine-tuning.
+INFERENCE MECHANISM: Prefetch/load routed experts, async replacement.
+MEMORY BEHAVIOR: Evaluation deliberately leaves about 1 GB system DRAM free.
+I/O BEHAVIOR: Cache hit rate is the primary I/O lever; expert loading is over
+70% of total decode time in the reported setup.
+
+THROUGHPUT RESULTS:
+On a user-grade desktop, FlashMoE reports up to 2.6x over existing systems;
+its Qwen3-30B-A3B comparison improves about 7% over LRU. The abstract reports
+up to 51% cache-hit improvement over LRU/LFU; exact hardware/model tables must
+be retained when comparing.
+
+QUALITY RESULTS: Native MoE quality is preserved; no route mutation.
+HARDWARE: Desktop/edge system with approximately 1 GB available DRAM in the
+stress evaluation; not Qwen3.8 dense or CPU-only proof.
+
+WHAT ACTUALLY CAUSED THE SPEEDUP: Learned cache replacement and asynchronous
+overlap, not fewer model FLOPs.
+WHAT DID NOT WORK: Pure LRU can evict experts that remain hot for 4-5 steps;
+cache misses dominate. The paper does not solve group layout or predictor
+false negatives.
+
+LIMITATIONS: Native MoE, cache policy needs routing traces, no dense Qwen3.8,
+no exact x86 CPU target or 8 GB total RSS result.
+ASSUMPTIONS: Recency/frequency predict future expert reuse and cache policy
+overhead is hideable.
+
+TRANSFER TO QWEN3.8-27B:
+Use learned eviction only after basic LRU/global-cache traces are collected.
+For dense-derived groups, recency/frequency should be augmented with group
+contribution and predicted delta cost; a cache model cannot repair bad route
+prediction.
+
+TRANSFER TO LLAMA.CPP:
+Potentially implement as an optional cache policy; first expose trace/replay
+interfaces rather than hard-coding a learned policy.
+
+WHAT WE SHOULD COPY:
+[PRIOR ART] Recency+frequency replacement, oracle replay evaluation, async
+policy execution, and the observation that cache policy matters after SSD
+loading dominates.
+
+WHAT WE SHOULD NOT COPY:
+[PRIOR ART LIMIT] Claim a better cache policy solves the dense-derived group
+selection or resident-floor problem.
+
+OPEN QUESTIONS:
+Does a learned cache policy beat LRU for Qwen3.8 group deltas under one stream,
+or does fixed slot/delta ordering dominate? What is the memory/CPU cost of the
+policy under 8 GB?
+
+[S22] HOBBIT
+
+TITLE: HOBBIT: A Mixed Precision Expert Offloading System for Fast MoE Inference
+AUTHORS: Peng Tang, Jiacheng Liu, Xiaofeng Hou, Yifei Pu, Jing Wang,
+         Pheng-Ann Heng, Chao Li and Minyi Guo
+YEAR: 2024
+VENUE: arXiv preprint
+URL: https://arxiv.org/abs/2411.01433
+CODE: Implemented on top of llama.cpp; public paper was inspected.
+RELEVANCE: high
+
+PROBLEM:
+Expert loading dominates MoE offloading, while skipping cache-miss experts
+harms quality.
+
+KEY IDEA:
+Replace less critical cache-miss experts with lower-precision versions,
+prefetch next-layer experts, and use a multidimensional sequence-aware cache.
+Mixed precision is used to make wrong prefetch/cache choices less expensive.
+
+ARCHITECTURE:
+Dynamic expert loader, adaptive expert predictor and multidimensional cache
+manager. It assumes non-expert weights and a hot expert cache in faster memory;
+cold experts are CPU/SSD-loaded.
+
+ALGORITHM:
+Expert contribution is scored from `G(x)_e E_e(x)`. For Mixtral-8x7B, one
+reported setting assigns 67% experts high precision, 30% low precision and 3%
+skip at thresholds T1=.6/T2=.9. Consecutive-layer gating inputs have high
+cosine similarity; next-layer top-1 prediction accuracy averages about 96%.
+Sequence-level cache policy accounts for high/low-precision usage and route
+preferences.
+
+IMPORTANT EQUATIONS:
+The central tradeoff is not only route probability but contribution magnitude:
+`importance_e(x) ~= ||G(x)_e E_e(x)||`. This is closer to our gated-group
+contribution score than raw router logits.
+
+TRAINING REQUIRED:
+Cache/predictor training; no base-model conversion. Low-precision expert
+variants must be prepared.
+INFERENCE MECHANISM: On cache miss, score expert, enqueue read of high/low
+precision variant or skip; prefetch next layers; replace cache entries.
+MEMORY BEHAVIOR: GPU/CPU/SSD tiers with hot cache.
+I/O BEHAVIOR: Expert loading is reported as 85.5% of time on RTX4090 and
+94.5% on Jetson Orin in motivation; prefetch benefits are limited when wrong.
+
+THROUGHPUT RESULTS:
+The abstract reports up to 9.93x over prior offloading systems; evaluations
+include Jetson AGX Orin and RTX4090/CPU cooperative modes. The paper does not
+establish x86 CPU-only dense Qwen3.8.
+
+QUALITY RESULTS:
+Skipping 10% experts increases PPL by more than 1% in the motivation; low
+precision replacement preserves quality better. The point is that approximate
+wrong experts are safer than silently dropping them.
+
+HARDWARE: RTX4090, Jetson Orin, llama.cpp and edge systems.
+
+WHAT ACTUALLY CAUSED THE SPEEDUP: Reduced bytes/latency for lower-priority
+experts, layer lookahead, and cache policy—not only predictor accuracy.
+WHAT DID NOT WORK: Prefetch with low prediction accuracy can be slower because
+wrong reads are expensive; expert skip causes quality loss.
+
+LIMITATIONS: Native MoE, mixed-precision expert copies, GPU-centric kernels,
+no dense-to-sparse Qwen3.8 conversion or SSD bytes/token under 8 GB.
+ASSUMPTIONS: Expert importance can be scored after a miss; low-precision
+variants are acceptable; adjacent-layer inputs are similar.
+
+TRANSFER TO QWEN3.8-27B:
+Borrow contribution-aware fallback: if a predicted cold group is uncertain,
+load a lower-cost approximation or a conservative group rather than zero.
+Use adjacent-layer similarity as a predictor feature, but test Qwen's hybrid
+linear/full pattern. Mixed precision may apply to cold groups after quality
+traces, though it increases disk/layout variants.
+
+TRANSFER TO LLAMA.CPP:
+Use the existing llama.cpp integration as implementation prior art for a
+layer-aware loader/cache. Keep sparse-group CPU work separate from GPU-centric
+precision selection.
+
+WHAT WE SHOULD COPY:
+[PRIOR ART] Contribution-based miss scoring, mixed-precision fallback,
+next-layer prediction, sequence-aware cache and predictor-accuracy penalty
+analysis.
+
+WHAT WE SHOULD NOT COPY:
+[PRIOR ART LIMIT] Skip experts as a quality-neutral miss policy or use GPU
+latency results as CPU evidence.
+
+OPEN QUESTIONS:
+Can a cheap low-bit approximation of a missing Qwen group protect quality
+under an SSD miss without increasing the resident floor? Is this better than
+an exact synchronous read at 10-20 tok/s?
+
 ------------------------------------------------------------
 3. CROSS-PAPER COMPARISON
 ------------------------------------------------------------
@@ -2260,6 +2688,10 @@ DynaMoE [S12]          dense       nested MLP prefixes     10B-token fine-tune  
 SVDP [S14]              sparse/ReGLU low-rank gate masks   calibration only         40-70% target in tests; <~1-1.4%     1.6-1.86x GPU
 NeuroPrefetcher [S18]  sparse LLM  clustered MLP masks    mask/predictor training  31-69% active caps                   1.7-3.7 tok/s Jetson
 Edge0 [S01]            native MoE  expert bundles         adapters/prerouter        top4/256 or top8/128; quality -3-4    14.9-25.3 tok/s Apple
+Swap-MoE [S19]         native MoE  expert pages            none                     native route; exact stream              0.39-7.28 tok/s CPU
+RFC/field [S20]        native MoE  fixed expert slots      none                     exact native route                      0.43-13 tok/s mixed hw
+FlashMoE [S21]         native MoE  SSD expert cache        cache-policy training     native route; cache +51%               up to 2.6x desktop
+HOBBIT [S22]            native MoE  mixed-precision experts cache/predictor         skip hurts PPL; low-bit fallback        up to 9.93x edge
 
 Interpretation: “active %” is not comparable across rows. Some are active
 neurons, some selected experts, some target sparsity, and some memory caps.
@@ -2275,6 +2707,10 @@ Flash [S03]           flash ranged reads       table-specific    about half mode
 PowerInfer [S08]      PCIe CPU/GPU weights    not SSD           GPU hot + CPU cold    hot placement      online prediction     2.0-13.2 hybrid GPU
 PowerInfer-2 [S04]    UFS clustered neurons   not one universal 7-19 GB setups         segmented hot/cold pipeline              2.13-11.68 phone
 NeuroPrefetcher [S18]NVMe O_DIRECT records    103 MiB to <1 GB 9-14.8 GiB caps       fixed slots        delta lookahead       1.7-3.7 Jetson
+Swap-MoE [S19]        mmap/page faults        not published     16 GB RAM CPU         OS page cache/LRU  prior-pass hints      0.39-7.28 Intel i7
+RFC/field [S20]       GGUF pread slot pool   3.82-4.13 GB/token 16 GB/32 GB tiers   fixed slots/LRU     async read pool       0.43-13 mixed hw
+FlashMoE [S21]        SSD expert files       cache-miss driven  ~1 GB free stress    learned LRU/LFU     async replacement     up to 2.6x desktop
+HOBBIT [S22]          CPU/SSD/GPU experts    not universal     edge cache tiers      multidimensional   next-layer predictor  up to 9.93x edge
 Target hypothesis     NVMe/GGUF groups        <=200-400 MB at  8 GB total RAM        hot core + LRU    cross-layer delta      10-20 x86 CPU (unproven)
                                               20/10 tok/s budget
 
@@ -2291,6 +2727,10 @@ PowerInfer [S08]      online activation pred   current cold neurons   mismatch e
 DynaMoE [S12]         2-linear difficulty      current MLP width      threshold/neighbor errors 0.51% base router      collapse without aux loss
 SVDP [S14]            low-rank SVD + bias       current FFN gate       tested benchmark drops    r(d+D), calibration   false negatives / overread
 NeuroPrefetcher [S18]one predictor + centroids all downstream layers   centroid ~99% decisions    2.86% base            delta grows; I/O dominates
+Swap-MoE [S19]        previous-pass IDs       next decode pass       route reused, no predictor    background thread      fixation can corrupt quality
+RFC/field [S20]       router IDs + LRU        current selected set   exact native route          sidecar/read pool      slot overflow / stalls
+FlashMoE [S21]        recency+frequency MLP   cache eviction         hit +51% vs LRU/LFU        async policy          miss load dominates
+HOBBIT [S22]          contribution + next-layer next 1-3 layers      next-layer top1 ~96%       cache/predictor        wrong prefetch penalty
 Target hypothesis     early group predictor    >=1 layer lookahead    >=99% recall more useful  resident CPU cost      emergency read/fallback
 
 ------------------------------------------------------------
@@ -2565,6 +3005,13 @@ ALREADY DONE:
 - Training-free low-rank gate prediction for ReGLU/dReLU: SVDP [S14].
 - Delta-prefetch, fixed slots, clustered masks and storage-aware sparse
   records for over-memory inference: NeuroPrefetcher [S18].
+- CPU-only llama.cpp mmap/demand-paged expert streaming, previous-pass
+  prefetch and route fixation: Swap-MoE [S19].
+- Compact expert slot pools with explicit `pread`, plus x86/CUDA read-pool and
+  overlap measurements: llama.cpp RFC/field report [S20].
+- Learned recency/frequency cache replacement for SSD experts: FlashMoE [S21].
+- Mixed-precision expert fallback, next-layer prefetch and sequence cache on
+  llama.cpp: HOBBIT [S22].
 - Standard top-1 router, capacity and balance mechanics: Switch [S10].
 - Expert-choice balancing: [S11].
 - Dense-to-MoE copied initialization and virtual-group scaling: [S05], [S06].
@@ -2579,6 +3026,10 @@ PARTIALLY DONE:
   dense-Qwen sparse-group/delta scheduler was not found in this pass.
 - Predictor plus storage layout: NeuroPrefetcher and Edge0 establish the
   system pattern, but their hardware/model/activation assumptions differ.
+- The OS-page-cache versus explicit-read choice is partially explored by
+  Swap-MoE and the llama.cpp RFC, but not for dense-derived Qwen3.8 groups.
+- Cache-policy learning and mixed-precision miss handling exist for native
+  MoE, but their value for dense-derived gated groups is not established.
 
 NOT FOUND IN THIS PASS (NOT A NOVELTY CLAIM):
 
@@ -2589,6 +3040,9 @@ NOT FOUND IN THIS PASS (NOT A NOVELTY CLAIM):
 - An apples-to-apples comparison of MoEfication, DejaVu, SVD-like prediction,
   NeuroPrefetcher-style delta reads and Edge0-style staging on one Qwen
   SwiGLU checkpoint.
+- A public conversion of the dense Qwen3.8-27B MLP into the standard
+  `ffn_*_exps` native-MoE tensor schema; Swap-MoE's Qwen3.8-Flash-Next support
+  is a different native sparse model.
 
 POTENTIALLY NOVEL COMBINATION:
 
@@ -2606,6 +3060,8 @@ DO NOT CLAIM NOVELTY FOR:
 - hot/cold neuron placement;
 - row/column bundling;
 - delta prefetch or mask persistence;
+- CPU-only mmap expert streaming, explicit `pread` slot pools, learned cache
+  replacement, or mixed-precision expert fallback;
 - dense-to-MoE initialization;
 - neuron grouping.
 
@@ -2646,6 +3102,13 @@ DO NOT CLAIM NOVELTY FOR:
   is advisory, and accidental page faults can serialize execution.
 - Linux readahead mismatch: sequential readahead can help ranges or read too
   much; O_DIRECT may be necessary but increases alignment/implementation work.
+- OS demand paging is layout-blind and can sustain much less live throughput
+  than explicit large reads. Swap-MoE/RFC evidence requires a direct mmap vs
+  `pread` comparison, not an assumption that one always wins.
+- Explicit eviction can cost more memcpy/syscall time than it saves in SSD
+  reads; a hard RSS cap and peak throughput may require different policies.
+- Route fixation can turn high apparent tok/s into unusable output. Temporal
+  reuse must be measured with quality, not imposed by freezing the route.
 - mmap accidentally becoming resident: virtual address size is not RAM use;
   measure RSS/PSS and major faults, not mapped bytes.
 - SSD endurance and energy: high reads/token can consume energy and device
@@ -2727,6 +3190,20 @@ the gated groups and measured separately from dynamic sparsity.
 histogram, major faults, queue depth, overlap and stall time. Edge0 exposes
 several counters; Flash/NeuroPrefetcher show why these measurements matter.
 
+[PRIOR ART] Benchmark two storage paths before choosing one: OS mmap/page
+faults with `madvise`, and explicit aligned `pread`/io_uring into fixed slots.
+Swap-MoE [S19] and the llama.cpp RFC/field report [S20] show that their
+relative performance is hardware/layout dependent.
+
+[PRIOR ART] Evaluate learned cache replacement only after an LRU trace exists.
+FlashMoE [S21] uses recency/frequency and oracle replay; HOBBIT [S22] adds
+sequence-aware multidimensional cache state.
+
+[MODIFICATION] Add a quality-aware emergency path inspired by HOBBIT [S22]:
+when a predicted group is uncertain, choose exact synchronous read, a cheaper
+low-bit approximation, or a conservative resident group. Never silently drop
+the group in quality measurements.
+
 [MODIFICATION] Define emergency miss policy: first try a bounded synchronous
 read; if latency exceeds a threshold, use a quality-preserving dense fallback
 or conservative resident group, never silent zero/drop in quality benchmarks.
@@ -2794,6 +3271,12 @@ threads, read alignment and thermals.
 metric:
 MiB/s, p50/p95/p99 read latency, IOPS, CPU copy/dequant time, ranges/request,
 bytes overfetched, queue depth, read amplification and energy if available.
+
+baseline variants:
+Include ordinary mmap/page-fault reads, Swap-MoE-style `madvise` streaming,
+explicit `pread`/io_uring, and the compact fixed-slot approach from the
+llama.cpp RFC [S19] [S20]. This comparison is required before selecting a
+GGUF storage format.
 
 success threshold:
 Sustained candidate delta reads at >=50% of the device's realistic sequential
@@ -2969,5 +3452,24 @@ design that fails the first three experiments.
       https://arxiv.org/html/2608.22643v1
       https://doi.org/10.1145/3832810.3832862
       https://github.com/nobeldhar/llm-activation-sparsity
+
+[S19] ek15072809. “Swap-MoE: On-Demand SSD Loading for Inference of Massive
+      MoE Models in Low-RAM Environments.” Open-source llama.cpp patch, 2026.
+      https://github.com/ek15072809/Swap-MoE
+      Target patch commit: llama.cpp f5e85d43a.
+
+[S20] llama.cpp Discussion #23324. “RFC+PoC: MoE offload to disk with
+      on-demand paging,” plus the linked independent Windows/CUDA report.
+      https://github.com/ggml-org/llama.cpp/discussions/23324
+      https://github.com/koren1712/llama.cpp/tree/expert-streaming-win
+
+[S21] Kim, Lee, Han, Yoo and Kim. “FlashMoE: Reducing SSD I/O Bottlenecks via
+      ML-Based Cache Replacement for Mixture-of-Experts Inference on Edge
+      Devices.” arXiv 2026.
+      https://arxiv.org/abs/2601.17063
+
+[S22] Tang et al. “HOBBIT: A Mixed Precision Expert Offloading System for Fast
+      MoE Inference.” arXiv 2024.
+      https://arxiv.org/abs/2411.01433
 
 END OF RESEARCH NOTEBOOK CHECKPOINT.
