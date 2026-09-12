@@ -244,7 +244,13 @@ def main(argv: list[str] | None = None) -> int:
                 rows.append(record)
                 source_counts[record["source"]] += 1
             except (TypeError, ValueError, KeyError) as exc:
-                rejected.append({"source": spec["name"], "index": str(index), "reason": str(exc)})
+                reason = str(exc)
+                rejection_type = "length" if (
+                    "exceeds max_len" in reason
+                    or "would be truncated" in reason
+                    or "packing exceeded max_len" in reason
+                ) else "invalid"
+                rejected.append({"source": spec["name"], "index": str(index), "reason": reason, "type": rejection_type})
             if (index + 1) % 1000 == 0:
                 print(
                     f"processed source={spec['name']} rows={index + 1} accepted={len(rows)} rejected={len(rejected)}",
@@ -297,7 +303,15 @@ def main(argv: list[str] | None = None) -> int:
         "model": config["model"],
         "tokenizer": {"id": args.tokenizer or model, "revision": revision},
         "max_length": max_len,
-        "counts": {"accepted": len(rows), "train": sum(x["split"] == "train" for x in rows), "dev": sum(x["split"] == "dev" for x in rows), "rejected": len(rejected), "exact_duplicates_dropped": len(duplicates)},
+        "counts": {
+            "accepted": len(rows),
+            "train": sum(x["split"] == "train" for x in rows),
+            "dev": sum(x["split"] == "dev" for x in rows),
+            "rejected": len(rejected),
+            "rejected_length": sum(x.get("type") == "length" for x in rejected),
+            "rejected_invalid": sum(x.get("type") == "invalid" for x in rejected),
+            "exact_duplicates_dropped": len(duplicates),
+        },
         "token_totals": dict(tokens),
         "token_shares_percent": {key: round(100 * value / max(1, sum(tokens.values())), 4) for key, value in tokens.items()},
         "loss_token_totals": dict(loss_tokens),
@@ -313,7 +327,8 @@ def main(argv: list[str] | None = None) -> int:
     (out_dir / "data_manifest.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps({"out_dir": str(out_dir), "counts": manifest["counts"], "token_totals": manifest["token_totals"], "facets": manifest["facets"], "missing_sources": missing}, indent=2))
     required_missing = [x for x in missing if x["required"]]
-    return 2 if required_missing or rejected else 0
+    hard_rejected = [x for x in rejected if x.get("type") != "length"]
+    return 2 if required_missing or hard_rejected else 0
 
 
 if __name__ == "__main__":
