@@ -167,14 +167,17 @@ def patch_peft_transformers_compat() -> bool:
 
     Falcon-H1 first appears in Transformers 4.53, while PEFT releases used by
     this probe still import ``BloomPreTrainedModel`` from the Transformers
-    top-level namespace.  Transformers moved that lazy export, so install the
-    same class at the old name before importing PEFT.  Return whether a patch
-    was needed; callers can log it without hiding other import failures.
+    top-level namespace. Transformers moved that lazy export. PEFT only uses
+    the symbol for an import-time Bloom prefix-tuning check, so a placeholder
+    is sufficient for a Falcon run and avoids importing optional vision/quant
+    dependencies just to recover an unrelated legacy export. Return whether a
+    patch was needed; callers can log it without hiding other import failures.
     """
     import transformers
 
     if getattr(transformers, "BloomPreTrainedModel", None) is None:
-        from transformers.models.bloom.modeling_bloom import BloomPreTrainedModel
+        class BloomPreTrainedModel:  # noqa: N801 - preserve PEFT's old symbol
+            pass
 
         transformers.BloomPreTrainedModel = BloomPreTrainedModel
         return True
