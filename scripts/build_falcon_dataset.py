@@ -66,16 +66,43 @@ def holdout_texts(path: Path) -> list[str]:
     return [canonical(x) for x in out if canonical(x)]
 
 
-def near_holdout(text: str, holdouts: list[str]) -> str | None:
+def near_holdout_index(holdouts: list[str]) -> dict[str, Any]:
+    """Build a reusable index for the conservative holdout similarity gate.
+
+    The old implementation rebuilt a set and compared every record with every
+    holdout.  That made a 15k-row MCQA build spend minutes in quadratic
+    SequenceMatcher work even though the holdout set is tiny.  Length is a
+    lossless first filter for the ratio threshold: if the strings' lengths
+    cannot achieve the threshold even with a perfect shorter-string match,
+    SequenceMatcher cannot possibly accept them.
+    """
+    values = sorted({value for value in holdouts if value})
+    return {"exact": frozenset(values), "by_length": [(len(value), value) for value in values]}
+
+
+def near_holdout(text: str, holdouts: list[str] | dict[str, Any]) -> str | None:
     value = canonical(text)
     if not value:
         return None
-    if value in set(holdouts):
+    if isinstance(holdouts, dict):
+        exact = holdouts["exact"]
+        by_length = holdouts["by_length"]
+    else:
+        exact = frozenset(holdouts)
+        by_length = [(len(other), other) for other in holdouts]
+    if value in exact:
         return "exact"
     # The final holdouts are small; a high ratio is a useful conservative gate
     # against trivial paraphrase leakage, not a semantic similarity claim.
-    for other in holdouts:
-        if min(len(value), len(other)) >= 35 and SequenceMatcher(None, value, other).ratio() >= 0.94:
+    value_len = len(value)
+    for other_len, other in by_length:
+        if min(value_len, other_len) < 35:
+            continue
+        # 2*min/(a+b) is the maximum possible SequenceMatcher ratio.  This
+        # filter cannot discard a candidate that could reach 0.94.
+        if 2.0 * min(value_len, other_len) < 0.94 * (value_len + other_len):
+            continue
+        if SequenceMatcher(None, value, other).ratio() >= 0.94:
             return "near"
     return None
 
@@ -196,6 +223,7 @@ def main(argv: list[str] | None = None) -> int:
         path = ROOT / rel
         if path.exists():
             holdouts.extend(holdout_texts(path))
+    holdout_index = near_holdout_index(holdouts)
     rows: list[dict[str, Any]] = []
     source_counts: Counter[str] = Counter()
     rejected: list[dict[str, str]] = []
@@ -209,7 +237,7 @@ def main(argv: list[str] | None = None) -> int:
             try:
                 record = normalize_row(spec, raw, tokenizer, max_len, config["data"]["system_prompt"])
                 text_for_holdout = str(record.get("instruction") or record.get("context") or "")
-                leak = near_holdout(text_for_holdout, holdouts)
+                leak = near_holdout(text_for_holdout, holdout_index)
                 if leak:
                     raise ValueError(f"{leak} match against frozen final holdout")
                 record["source_index"] = index
@@ -217,6 +245,11 @@ def main(argv: list[str] | None = None) -> int:
                 source_counts[record["source"]] += 1
             except (TypeError, ValueError, KeyError) as exc:
                 rejected.append({"source": spec["name"], "index": str(index), "reason": str(exc)})
+            if (index + 1) % 1000 == 0:
+                print(
+                    f"processed source={spec['name']} rows={index + 1} accepted={len(rows)} rejected={len(rejected)}",
+                    flush=True,
+                )
 
     # Global exact deduplication is performed before splitting so a duplicate
     # cannot land in train and dev under different source names.
