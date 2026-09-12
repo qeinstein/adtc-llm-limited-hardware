@@ -693,7 +693,7 @@ def main(argv: list[str] | None = None) -> int:
                     raise RuntimeError(f"Trainer produced an incomplete checkpoint: {path}")
                 files = [str(x.relative_to(path)) for x in path.rglob("*") if x.is_file()]
                 atomic_json(path / "checkpoint_manifest.json", {"timestamp_utc": now(), "global_step": int(state.global_step), "files": files, "complete": True, "scaler_required": bool(args_.fp16), "scaler_present": (path / "scaler.pt").is_file()})
-                event(event_path, "checkpoint_saved", path=str(path), global_step=int(state.global_step), file_count=len(files))
+                event(event_path, "checkpoint_saved", checkpoint_path=str(path), global_step=int(state.global_step), file_count=len(files))
                 self._persist(path, int(state.global_step), args_)
 
         def on_train_end(self, args_, state, control, **kwargs):
@@ -793,7 +793,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         trainer.train(resume_from_checkpoint=resume)
         terminal_checkpoint = save_terminal_checkpoint()
-        event(event_path, "terminal_checkpoint_saved", path=str(terminal_checkpoint), global_step=int(trainer.state.global_step))
+        event(event_path, "terminal_checkpoint_saved", checkpoint_path=str(terminal_checkpoint), global_step=int(trainer.state.global_step))
         if persistence_dataset and int(trainer.state.global_step) not in production_callback.persisted_steps:
             event(event_path, "checkpoint_persist_start", checkpoint=str(terminal_checkpoint), dataset=persistence_dataset, terminal=True)
             result = run_streamed([sys.executable, str(ROOT / "scripts" / "persist_checkpoint.py"), "--checkpoint", str(terminal_checkpoint), "--dataset", persistence_dataset, "--message", f"{config['experiment_id']} {args.stage} terminal step {trainer.state.global_step}"], event_path.parent / "persistence-terminal.log")
