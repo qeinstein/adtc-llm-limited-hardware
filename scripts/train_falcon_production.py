@@ -16,6 +16,7 @@ import math
 import os
 import platform
 import random
+import selectors
 import subprocess
 import sys
 import threading
@@ -295,10 +296,35 @@ def run_streamed(command: list[str], log_path: Path) -> int:
             env=merged,
         )
         assert proc.stdout is not None
-        for line in proc.stdout:
-            rendered = f"[{now()}] {line}"
-            print(rendered, end="", flush=True)
-            handle.write(rendered)
+        selector = selectors.DefaultSelector()
+        selector.register(proc.stdout, selectors.EVENT_READ)
+        started = time.monotonic()
+        try:
+            while True:
+                ready = selector.select(timeout=30)
+                if ready:
+                    line = proc.stdout.readline()
+                    if line:
+                        rendered = f"[{now()}] {line}"
+                        print(rendered, end="", flush=True)
+                        handle.write(rendered)
+                        handle.flush()
+                    elif proc.poll() is not None:
+                        break
+                else:
+                    heartbeat = f"[{now()}] HEARTBEAT child=persistence elapsed={time.monotonic() - started:.1f}s\n"
+                    print(heartbeat, end="", flush=True)
+                    handle.write(heartbeat)
+                    handle.flush()
+                if proc.poll() is not None:
+                    for line in proc.stdout:
+                        rendered = f"[{now()}] {line}"
+                        print(rendered, end="", flush=True)
+                        handle.write(rendered)
+                        handle.flush()
+                    break
+        finally:
+            selector.close()
         code = proc.wait()
         handle.write(f"[{now()}] EXIT={code}\n")
         handle.flush()
