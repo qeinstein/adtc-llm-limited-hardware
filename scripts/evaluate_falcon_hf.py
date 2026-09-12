@@ -41,6 +41,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     ap.add_argument("--data-dir", required=True)
     ap.add_argument("--output-dir", required=True)
     ap.add_argument("--adapter", default=None, help="LoRA adapter directory; omit to evaluate stock base")
+    ap.add_argument("--merged-model", default=None, help="merged HF directory; mutually exclusive with --adapter")
     ap.add_argument("--max-dev", type=int, default=0)
     ap.add_argument("--battery", action="append", default=[])
     ap.add_argument("--max-new-tokens", type=int, default=256)
@@ -76,13 +77,20 @@ def main(argv: list[str] | None = None) -> int:
 
     model_id = config["model"]["id"]
     revision = config["model"]["revision"]
-    tokenizer = AutoTokenizer.from_pretrained(model_id, revision=config["model"].get("tokenizer_revision", revision), trust_remote_code=True)
+    if args.merged_model and args.adapter:
+        raise ValueError("--merged-model and --adapter are mutually exclusive")
+    load_id = str(Path(args.merged_model).resolve()) if args.merged_model else model_id
+    load_revision = None if args.merged_model else config["model"].get("tokenizer_revision", revision)
+    tokenizer = AutoTokenizer.from_pretrained(load_id, revision=load_revision, trust_remote_code=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     dtype = torch.float16 if device.type == "cuda" else torch.float32
-    emit(events, "model_load_start", device=str(device), dtype=str(dtype))
-    model = FalconH1ForCausalLM.from_pretrained(model_id, revision=revision, trust_remote_code=True, torch_dtype=dtype)
+    emit(events, "model_load_start", device=str(device), dtype=str(dtype), model=load_id, revision=load_revision)
+    model_kwargs = {"trust_remote_code": True, "torch_dtype": dtype}
+    if load_revision:
+        model_kwargs["revision"] = load_revision
+    model = FalconH1ForCausalLM.from_pretrained(load_id, **model_kwargs)
     if args.adapter:
         adapter = Path(args.adapter).resolve()
         if not adapter.is_dir():
@@ -90,7 +98,7 @@ def main(argv: list[str] | None = None) -> int:
         model = PeftModel.from_pretrained(model, str(adapter), is_trainable=False)
     model.to(device)
     model.eval()
-    emit(events, "model_load_complete")
+    emit(events, "model_load_complete", model=load_id, merged_model=bool(args.merged_model), adapter=args.adapter)
 
     max_len = int(config["data"]["max_length"])
     system = config["data"]["system_prompt"]
@@ -163,10 +171,14 @@ def main(argv: list[str] | None = None) -> int:
         destination.mkdir(parents=True, exist_ok=True)
         emit(events, "generation_start", battery=str(battery), count=len(prompts))
         index: list[dict[str, Any]] = []
-        for prompt in prompts:
+        for prompt_index, prompt in enumerate(prompts):
+            prompt_text = str(prompt.get("text") or prompt.get("query") or prompt.get("instruction") or "")
+            if not prompt_text:
+                raise ValueError(f"{battery}:{prompt_index}: battery item has no text/query/instruction")
+            prompt_id = str(prompt.get("id") or f"item-{prompt_index:04d}")
             messages = [
                 {"role": "system", "content": system},
-                {"role": "user", "content": str(prompt["text"])},
+                {"role": "user", "content": prompt_text},
             ]
             try:
                 encoded = tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=True, enable_thinking=False, return_tensors="pt")
@@ -181,9 +193,9 @@ def main(argv: list[str] | None = None) -> int:
             with torch.no_grad():
                 output = model.generate(**inputs, max_new_tokens=min(args.max_new_tokens, int(prompt.get("max_tokens", args.max_new_tokens))), do_sample=False, eos_token_id=tokenizer.eos_token_id, pad_token_id=tokenizer.pad_token_id)
             text = tokenizer.decode(output[0][prompt_len:], skip_special_tokens=True)
-            (destination / f"{prompt['id']}.txt").write_text(text, encoding="utf-8")
-            index.append({"id": prompt["id"], "chars": len(text), "words": len(text.split()), "section": prompt.get("section", ""), "check": prompt.get("check", "")})
-            emit(events, "generation_item", battery=battery.stem, id=prompt["id"], chars=len(text))
+            (destination / f"{prompt_id}.txt").write_text(text, encoding="utf-8")
+            index.append({"id": prompt_id, "chars": len(text), "words": len(text.split()), "section": prompt.get("section", ""), "check": prompt.get("check", ""), "source_text": prompt_text})
+            emit(events, "generation_item", battery=battery.stem, id=prompt_id, chars=len(text))
         (destination / "_index.json").write_text(json.dumps(index, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         emit(events, "generation_complete", battery=battery.stem, count=len(index))
 

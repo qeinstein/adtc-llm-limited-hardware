@@ -56,16 +56,22 @@ Long runs refuse to start unless `FALCON_CHECKPOINT_DATASET` names an existing
 private Kaggle Dataset. Every configured persistence interval uploads the
 checkpoint state through `scripts/persist_checkpoint.py`. `--allow-ephemeral`
 is reserved for the tiny resume test. The reserved private destination is
-`toheebogunade/jamii-afya-falcon-production-checkpoints`; it was created with
-metadata only and must receive a real tiny-resume checkpoint before any long
-stage is authorized. `scripts/verify_persisted_checkpoint.py` downloads and
-checks the uploaded Trainer state.
+`toheebogunade/jamii-afya-falcon-production-checkpoints`. The infrastructure
+gate passed on 2026-09-12: a two-step checkpoint resumed at step 2, completed
+through step 4, uploaded to the Dataset, and was retrieved with optimizer,
+scheduler, RNG, scaler, adapter, and Trainer state intact. The uploader and
+verifier wait for Kaggle's asynchronous Dataset version creation, so an upload
+cannot be mistaken for durable storage before the new files are visible.
 
 ## Current gate
 
 The tracked raw-data audit found 118 clean project SFT rows and no exact or
-high-similarity leakage against the 63 frozen final prompts, but no local MCQA
-train artifact or general replay artifact. Exact tokenizer counts and the
-balanced production mixture remain a clean-worker gate. Do not launch Stage A
-until the exact builder audit, persistence proof, two-step resume test, and
-short measured throughput test pass.
+high-similarity leakage against the 63 frozen final prompts. The clean-worker
+build currently yields 13,542 train and 1,470 dev rows after the capped
+train-only MCQA sources, with the exact token/facet manifest written by the
+builder. Training now uses a deterministic 64-row fast-dev subset during
+stage runs; larger frozen batteries remain separate final evaluations. The
+P100 resume gate measured roughly 8--13 loss tokens/sec and about 145 seconds
+per optimizer step at effective batch 16, so one full epoch is not an
+acceptable production schedule. A bounded pilot must establish the stage
+step budget and quality curve before any long run.

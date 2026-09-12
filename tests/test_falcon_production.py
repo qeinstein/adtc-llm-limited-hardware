@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from scripts.build_falcon_dataset import canonical, near_holdout
-from scripts.train_falcon_production import FalconDataset, checkpoint_is_complete, latest_checkpoint, token_share_sampling_weights
+from scripts.build_falcon_dataset import canonical, distribution, near_holdout
+from scripts.train_falcon_production import FalconDataset, checkpoint_is_complete, latest_checkpoint, stable_eval_subset, token_share_sampling_weights
 
 
 class FakeTokenizer:
@@ -82,6 +82,22 @@ def test_token_share_weights_match_expected_loss_token_mass():
     mcqa_mass = sum(w * item["tokens"] for w, item in zip(weights, items) if item["kind"] == "mcqa")
     assert sft_mass == pytest.approx(0.75)
     assert mcqa_mass == pytest.approx(0.25)
+
+
+def test_fast_eval_subset_is_deterministic_and_bounded():
+    rows = [{"example_id": f"row-{i}"} for i in range(20)]
+    selected = stable_eval_subset(rows, 5)
+    assert len(selected) == 5
+    assert selected == stable_eval_subset(list(reversed(rows)), 5)
+
+
+def test_exact_length_distribution_reports_response_shape():
+    result = distribution([1, 2, 10, 20])
+    assert result["count"] == 4
+    assert result["min"] == 1
+    assert result["p50"] == 2
+    assert result["p95"] == 10
+    assert result["max"] == 20
 
 
 def test_checkpoint_manifest_can_require_fp16_scaler(tmp_path: Path):

@@ -34,7 +34,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--offset", type=int, default=0)
     ap.add_argument("--battery", action="append", default=[])
     ap.add_argument("--threads", type=int, default=4)
-    ap.add_argument("--n-ctx", type=int, default=4096)
+    ap.add_argument("--n-ctx", type=int, default=2048,
+                    help="match the ADTC accuracy context; increase only for a separate experiment")
     ap.add_argument("--seed", type=int, default=42)
     args = ap.parse_args(argv)
     model = Path(args.model).resolve()
@@ -82,12 +83,15 @@ def main(argv: list[str] | None = None) -> int:
         destination.mkdir(parents=True, exist_ok=True)
         index = []
         emit("generation_start", battery=str(battery_file), count=len(prompts))
-        for prompt in prompts:
-            pid = prompt["id"]
-            result = llm.create_completion(prompt=prompt["text"], max_tokens=int(prompt.get("max_tokens", 256)), temperature=0.0, seed=args.seed)
+        for prompt_index, prompt in enumerate(prompts):
+            pid = str(prompt.get("id") or f"item-{prompt_index:04d}")
+            prompt_text = str(prompt.get("text") or prompt.get("query") or prompt.get("instruction") or "")
+            if not prompt_text:
+                raise ValueError(f"{battery_file}:{prompt_index}: battery item has no text/query/instruction")
+            result = llm.create_completion(prompt=prompt_text, max_tokens=int(prompt.get("max_tokens", 256)), temperature=0.0, seed=args.seed)
             text = result["choices"][0]["text"]
             (destination / f"{pid}.txt").write_text(text, encoding="utf-8")
-            index.append({"id": pid, "chars": len(text), "section": prompt.get("section", ""), "check": prompt.get("check", "")})
+            index.append({"id": pid, "chars": len(text), "section": prompt.get("section", ""), "check": prompt.get("check", ""), "source_text": prompt_text})
             emit("generation_item", battery=name, id=pid, chars=len(text))
         (destination / "_index.json").write_text(json.dumps(index, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         metrics["batteries"].append({"name": name, "count": len(index), "raw_dir": str(destination)})

@@ -129,6 +129,8 @@
     "save_total_limit": 3,
     "eval_steps": 25,
     "finite_loss_policy": "fail_fast",
+    "per_device_eval_batch_size": 4,
+    "fast_eval_max_rows": 64,
     "precision_policy": "auto; P100 uses plain fp16 LoRA, sm80+ may use 4-bit QLoRA",
     "lora_target_modules": [
       "q_proj",

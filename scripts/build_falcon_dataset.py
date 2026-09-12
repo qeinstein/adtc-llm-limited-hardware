@@ -32,6 +32,22 @@ def digest(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
+def distribution(values: list[int]) -> dict[str, Any]:
+    """Describe exact-token lengths without retaining row-level payloads."""
+    if not values:
+        return {"count": 0}
+    ordered = sorted(int(value) for value in values)
+    percentile = lambda fraction: ordered[min(len(ordered) - 1, int(fraction * (len(ordered) - 1)))]
+    return {
+        "count": len(ordered),
+        "min": ordered[0],
+        "mean": round(sum(ordered) / len(ordered), 3),
+        "p50": percentile(0.50),
+        "p95": percentile(0.95),
+        "max": ordered[-1],
+    }
+
+
 def read_records(path: Path) -> list[dict[str, Any]]:
     if path.suffix == ".jsonl":
         rows = []
@@ -282,11 +298,20 @@ def main(argv: list[str] | None = None) -> int:
     facets: dict[str, Counter[str]] = {key: Counter() for key in ("objective", "source", "category", "language", "split", "provenance")}
     tokens = Counter()
     loss_tokens = Counter()
+    facet_token_totals: dict[str, Counter[str]] = {key: Counter() for key in facets}
+    total_length_values: list[int] = []
+    response_length_values: list[int] = []
+    length_by_objective: dict[str, list[int]] = defaultdict(list)
     for row in rows:
         for key, counter in facets.items():
             counter[row[key]] += 1
+            facet_token_totals[key][row[key]] += int(row["total_tokens"])
         tokens[row["objective"]] += int(row["total_tokens"])
         loss_tokens[row["objective"]] += int(row["loss_tokens"])
+        total_length_values.append(int(row["total_tokens"]))
+        length_by_objective[row["objective"]].append(int(row["total_tokens"]))
+        if row["format"] == "sft":
+            response_length_values.append(int(row["target_tokens"]))
     source_files = []
     for spec in config["data"]["sources"]:
         path = ROOT / spec["path"]
@@ -317,6 +342,12 @@ def main(argv: list[str] | None = None) -> int:
         "loss_token_totals": dict(loss_tokens),
         "loss_token_shares_percent": {key: round(100 * value / max(1, sum(loss_tokens.values())), 4) for key, value in loss_tokens.items()},
         "facets": {key: dict(sorted(value.items())) for key, value in facets.items()},
+        "facet_token_totals": {key: dict(sorted(value.items())) for key, value in facet_token_totals.items()},
+        "length_stats": {
+            "all_total_tokens": distribution(total_length_values),
+            "sft_response_tokens": distribution(response_length_values),
+            "by_objective_total_tokens": {key: distribution(value) for key, value in sorted(length_by_objective.items())},
+        },
         "missing_sources": missing,
         "rejected_examples": rejected,
         "duplicate_examples": duplicates[:100],

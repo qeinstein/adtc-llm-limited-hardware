@@ -90,6 +90,16 @@ def load_jsonl(path: Path) -> list[dict[str, Any]]:
     return rows
 
 
+def stable_eval_subset(rows: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
+    """Select a deterministic, order-independent fast-dev subset."""
+    if limit <= 0 or len(rows) <= limit:
+        return rows
+    ranked = sorted(rows, key=lambda row: hashlib.sha256(
+        str(row.get("example_id", "")).encode("utf-8")
+    ).hexdigest())
+    return ranked[:limit]
+
+
 def render_sft(tokenizer: Any, row: dict[str, Any], system: str) -> tuple[list[int], list[int]]:
     instruction = str(row.get("instruction") or "").strip()
     answer = str(row.get("output") or "").strip()
@@ -442,10 +452,12 @@ def main(argv: list[str] | None = None) -> int:
         tokenizer.pad_token = tokenizer.eos_token
     max_len = int(config["data"]["max_length"])
     train_data = FalconDataset(train_rows, tokenizer, max_len, config["data"]["system_prompt"])
-    dev_data = FalconDataset(dev_rows, tokenizer, max_len, config["data"]["system_prompt"])
+    fast_eval_limit = int(config["training"].get("fast_eval_max_rows", 0))
+    eval_rows = stable_eval_subset(dev_rows, fast_eval_limit)
+    dev_data = FalconDataset(eval_rows, tokenizer, max_len, config["data"]["system_prompt"])
     objective_counts = Counter(item["kind"] for item in train_data.items)
     total_tokens = sum(item["tokens"] for item in train_data.items)
-    event(event_path, "dataset_ready", train_items=len(train_data), dev_items=len(dev_data), objective_counts=dict(objective_counts), train_tokens=total_tokens, max_len=max_len)
+    event(event_path, "dataset_ready", train_items=len(train_data), dev_items=len(dev_data), dev_rows_available=len(dev_rows), fast_eval_max_rows=fast_eval_limit, objective_counts=dict(objective_counts), train_tokens=total_tokens, max_len=max_len)
 
     use_cuda = torch.cuda.is_available()
     cap = get_cuda_capability(torch) if use_cuda else None
@@ -564,7 +576,6 @@ def main(argv: list[str] | None = None) -> int:
             selected = selected - selected.max(dim=-1, keepdim=True).values
             token_logp = selected.log_softmax(dim=-1).gather(1, torch.tensor(targets, device=model_arg.device).unsqueeze(1)).squeeze(1)
             losses = []
-            offset = 0
             for item, item_spans in zip(batch, choices_per_item):
                 sums = [token_logp[a:b].sum() for a, b in item_spans]
                 norms = [value / max(1, len(str(choice))) for value, choice in zip(sums, item["choices"])]
@@ -572,7 +583,6 @@ def main(argv: list[str] | None = None) -> int:
                 gold_a, gold_b = item_spans[item["gold"]]
                 aux = -(token_logp[gold_a:gold_b].mean())
                 losses.append(ranking + 0.2 * aux)
-                offset += sum(b - a for a, b in item_spans)
             return torch.stack(losses).mean(), sum(x["tokens"] for x in batch)
 
         def compute_loss(self, model_arg, inputs, return_outputs=False, num_items_in_batch=None):
@@ -613,9 +623,14 @@ def main(argv: list[str] | None = None) -> int:
         def prediction_step(self, model_arg, inputs, prediction_loss_only, ignore_keys=None):
             """Evaluate this list-based dataset without asking Trainer to collate labels/logits."""
             del prediction_loss_only, ignore_keys
+            was_training = model_arg.training
             model_arg.eval()
-            with torch.no_grad():
-                loss = self.compute_loss(model_arg, inputs)
+            try:
+                with torch.no_grad():
+                    loss = self.compute_loss(model_arg, inputs)
+            finally:
+                if was_training:
+                    model_arg.train()
             return loss.detach(), None, None
 
         def log(self, logs: dict[str, float], *log_args, **log_kwargs):
@@ -730,6 +745,7 @@ def main(argv: list[str] | None = None) -> int:
     kwargs = dict(
         output_dir=str(checkpoint_dir), num_train_epochs=float(stage_cfg["epochs"]),
         per_device_train_batch_size=int(training["per_device_batch_size"]),
+        per_device_eval_batch_size=int(training.get("per_device_eval_batch_size", 4)),
         gradient_accumulation_steps=int(training["gradient_accumulation_steps"]),
         learning_rate=float(stage_cfg["learning_rate"]), lr_scheduler_type=training["scheduler"],
         warmup_ratio=float(training["warmup_ratio"]), logging_steps=int(training["logging_steps"]),
