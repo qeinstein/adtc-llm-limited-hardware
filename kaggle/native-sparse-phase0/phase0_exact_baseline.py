@@ -99,8 +99,8 @@ def clone_and_patch() -> dict:
     anchor = "static struct ggml_state g_state = {0};\n"
     helper = r'''
 
-// Observation-only Phase-0 hook.  Log the exact IDs consumed by the down
-// expert matmul once per layer evaluation.  This does not alter routing/math.
+// Observation-only Phase-0 hook. Log IDs and packed tensor sizes for routed
+// expert matmuls. This does not alter routing or math.
 static void ggml_phase0_trace_moe_ids(
         const struct ggml_compute_params * params,
         const struct ggml_tensor * tensor) {
@@ -114,7 +114,8 @@ static void ggml_phase0_trace_moe_ids(
     const struct ggml_tensor * weights = tensor->src[0];
     const struct ggml_tensor * ids = tensor->src[2];
     if (weights == NULL || ids == NULL ||
-            strstr(weights->name, "ffn_down_exps") == NULL ||
+            strstr(weights->name, "ffn_") == NULL ||
+            strstr(weights->name, "_exps") == NULL ||
             ids->type != GGML_TYPE_I32 || !ggml_is_contiguous(ids)) {
         return;
     }
@@ -133,10 +134,10 @@ static void ggml_phase0_trace_moe_ids(
     const int32_t * values = (const int32_t *) ids->data;
     fprintf(fp,
         "{\"event\":%" PRIu64 ",\"mono_ns\":%" PRIu64
-        ",\"weight\":\"%s\",\"shape\":[%" PRId64 ",%" PRId64
+        ",\"weight\":\"%s\",\"weight_nbytes\":%zu,\"shape\":[%" PRId64 ",%" PRId64
         ",%" PRId64 ",%" PRId64 "],\"ids\":[",
         event_id++, (uint64_t) ts.tv_sec*1000000000ULL + (uint64_t) ts.tv_nsec,
-        weights->name, ids->ne[0], ids->ne[1], ids->ne[2], ids->ne[3]);
+        weights->name, ggml_nbytes(weights), ids->ne[0], ids->ne[1], ids->ne[2], ids->ne[3]);
     for (int64_t i = 0; i < n; ++i) {
         fprintf(fp, "%s%d", i ? "," : "", values[i]);
     }
@@ -346,6 +347,8 @@ def load_decode_routes(path: Path) -> tuple[list[list[list[int]]], dict]:
     events = []
     for line in path.read_text(encoding="utf-8").splitlines():
         row = json.loads(line)
+        if "ffn_down_exps" not in row["weight"]:
+            continue
         m = LAYER_RE.search(row["weight"])
         if not m:
             continue
@@ -360,8 +363,11 @@ def load_decode_routes(path: Path) -> tuple[list[list[list[int]]], dict]:
     expected_layer = 0
     first_decode_ns = None
     last_decode_ns = None
+    token_start_ns: list[int] = []
     for row in events:
         layer = row["layer"]
+        if layer == 0:
+            token_start_ns.append(row["mono_ns"])
         if layer == 0 and current:
             if len(current) != 40:
                 raise AssertionError(f"decode token has {len(current)} layers")
@@ -381,17 +387,48 @@ def load_decode_routes(path: Path) -> tuple[list[list[list[int]]], dict]:
         if len(current) != 40:
             raise AssertionError(f"final decode token has {len(current)} layers")
         tokens.append(current)
+    token_latency_ms = [
+        (right - left) / 1e6 for left, right in zip(token_start_ns, token_start_ns[1:])
+    ]
+    ordered_latency = sorted(token_latency_ms)
+
+    def nearest_percentile(values: list[float], q: float) -> float | None:
+        if not values:
+            return None
+        return values[round((len(values) - 1) * q)]
+
     return tokens, {
         "decode_events": len(events),
         "decode_tokens": len(tokens),
         "first_decode_mono_ns": first_decode_ns,
         "last_decode_mono_ns": last_decode_ns,
+        "inter_token_latency_count": len(token_latency_ms),
+        "inter_token_latency_p50_ms": nearest_percentile(ordered_latency, 0.50),
+        "inter_token_latency_p95_ms": nearest_percentile(ordered_latency, 0.95),
     }
 
 
-def replay_lru(tokens: list[list[list[int]]], capacity: int) -> dict:
+def routed_bundle_sizes(path: Path) -> dict[int, int]:
+    tensors: dict[str, tuple[int, int]] = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        row = json.loads(line)
+        match = LAYER_RE.search(row["weight"])
+        if match and "weight_nbytes" in row:
+            tensors[row["weight"]] = (int(match.group(1)), int(row["weight_nbytes"]))
+    by_layer: dict[int, int] = {layer: 0 for layer in range(40)}
+    for layer, tensor_nbytes in tensors.values():
+        if tensor_nbytes % 256:
+            raise AssertionError(f"routed tensor bytes {tensor_nbytes} not divisible by 256")
+        by_layer[layer] += tensor_nbytes // 256
+    if any(size == 0 for size in by_layer.values()):
+        raise AssertionError(f"missing routed tensor size for layers: {[k for k, v in by_layer.items() if not v]}")
+    return by_layer
+
+
+def replay_lru(tokens: list[list[list[int]]], capacity: int,
+               bundle_bytes_by_layer: dict[int, int]) -> dict:
     cache: OrderedDict[tuple[int, int], None] = OrderedDict()
-    hits = misses = 0
+    hits = misses = fresh_bytes = 0
     per_token = []
     for token in tokens:
         tm = th = 0
@@ -405,6 +442,7 @@ def replay_lru(tokens: list[list[list[int]]], capacity: int) -> dict:
                 else:
                     misses += 1
                     tm += 1
+                    fresh_bytes += bundle_bytes_by_layer[layer]
                     if capacity:
                         cache[key] = None
                         if len(cache) > capacity:
@@ -417,11 +455,13 @@ def replay_lru(tokens: list[list[list[int]]], capacity: int) -> dict:
         "misses": misses,
         "hit_rate": hits / total if total else 0.0,
         "mean_fresh_bundles_per_token": misses / len(tokens) if tokens else None,
+        "fresh_expert_bytes": fresh_bytes,
+        "fresh_expert_bytes_per_token": fresh_bytes / len(tokens) if tokens else None,
         "per_token": per_token,
     }
 
 
-def route_metrics(tokens: list[list[list[int]]]) -> dict:
+def route_metrics(tokens: list[list[list[int]]], bundle_bytes_by_layer: dict[int, int]) -> dict:
     popularity = Counter()
     overlaps = []
     for token in tokens:
@@ -438,6 +478,11 @@ def route_metrics(tokens: list[list[list[int]]]) -> dict:
         "decode_tokens": len(tokens),
         "route_references": len(tokens) * 40 * 8,
         "unique_layer_experts": len(popularity),
+        "routed_bundle_bytes_by_layer": bundle_bytes_by_layer,
+        "mean_routed_bundle_bytes": sum(bundle_bytes_by_layer.values()) / len(bundle_bytes_by_layer),
+        "uncached_selected_expert_bytes_per_token": (
+            sum(bundle_bytes_by_layer.values()) * 8
+        ),
         "mean_previous_token_intersection": (
             sum(x["intersection"] for x in overlaps) / len(overlaps) if overlaps else None
         ),
@@ -448,7 +493,10 @@ def route_metrics(tokens: list[list[list[int]]]) -> dict:
             {"layer": key[0], "expert": key[1], "count": count}
             for key, count in popularity.most_common(30)
         ],
-        "lru": [replay_lru(tokens, c) for c in (0, 64, 128, 256, 512)],
+        "lru": [
+            replay_lru(tokens, c, bundle_bytes_by_layer)
+            for c in (0, 64, 128, 256, 512, 1024, 2048)
+        ],
     }
 
 
@@ -506,11 +554,13 @@ def main() -> None:
     normalized_routes = {}
     for arm in arms:
         name = arm["name"]
-        tokens, validation = load_decode_routes(OUT / f"{name}.routes.jsonl")
+        trace_path = OUT / f"{name}.routes.jsonl"
+        tokens, validation = load_decode_routes(trace_path)
+        bundle_bytes_by_layer = routed_bundle_sizes(trace_path)
         normalized_routes[name] = tokens
         route_summaries[name] = {
             "validation": validation,
-            "metrics": route_metrics(tokens),
+            "metrics": route_metrics(tokens, bundle_bytes_by_layer),
         }
         arm["decode_read_bytes"] = decode_read_bytes(
             OUT / f"{name}.process.jsonl",
