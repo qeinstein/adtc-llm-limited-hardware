@@ -1,0 +1,53 @@
+{
+  "schema": "native-sparse-single-row-avx2-analysis/v1",
+  "kaggle_kernel": "toheebogunade/jamii-native-sparse-single-row-avx2",
+  "kaggle_version": 1,
+  "research_commit": "26ca4b9",
+  "runtime_commit": "3057bb66c86c46d5781e50e85462a760ba7d1feb",
+  "model_sha256": "2a809de317cfd49ac9130b95619ee6ac039a855e467015b3e996eb61af84718b",
+  "correctness": {
+    "status": "byte_identical",
+    "response_sha256": "a3c3c73a067cbb5fab9e68bd7d06c03d3c488e74467d33c40fae339836006c8c",
+    "scope": "deterministic 24-token smoke",
+    "native_k": 8,
+    "layers": 40,
+    "router_or_weights_changed": false
+  },
+  "benchmark": {
+    "threads": 4,
+    "poll": 0,
+    "n_gen": 64,
+    "repeats": 3,
+    "resident": true,
+    "fresh_expert_bytes_per_token": 0,
+    "logical_selected_expert_bytes_per_token": 280494080,
+    "arms": [
+      {"label": "generic_control", "samples_tok_s": [4.91731, 4.99572, 5.0053], "mean_tok_s": 4.972779, "ms_per_token": 201.09480031185782, "peak_rss_mib": 10527.65625},
+      {"label": "single_row_iqp", "samples_tok_s": [3.01232, 3.03432, 3.01451], "mean_tok_s": 3.020383, "ms_per_token": 331.08383936739153, "peak_rss_mib": 10532.25390625},
+      {"label": "single_row_iqp_profile", "samples_tok_s": [2.87979, 2.93398, 2.88147], "mean_tok_s": 2.898412, "ms_per_token": 345.01651249028777, "peak_rss_mib": 10526.33984375}
+    ],
+    "single_row_vs_generic_percent": -39.261668374966995
+  },
+  "profile": {
+    "decode_cycles": 290594682999,
+    "gemv_cycles": 37467195558,
+    "decode_calls": 23715840,
+    "gemv_calls": 23715840,
+    "decode_fraction_percent": 88.57922910068011,
+    "gemv_fraction_percent": 11.420770899319885,
+    "aggregate_cycles_per_token_decode": 1513513973.953125,
+    "aggregate_cycles_per_token_gemv": 195141643.53125
+  },
+  "ram_floor_attempt": {
+    "logical_model_bytes": 10656955008,
+    "logical_routed_expert_bytes": 8975810560,
+    "logical_non_routed_file_bytes": 1681144448,
+    "runs": [
+      {"label": "lazy_floor_ctx64", "pre_first_route_rss_mib": 629.16796875, "pre_first_route_anon_mib": 446.15625, "pre_first_route_file_mib": 274.7578125, "peak_rss_mib": 4847.43359375},
+      {"label": "lazy_floor_ctx512", "pre_first_route_rss_mib": 635.49609375, "pre_first_route_anon_mib": 456.15625, "pre_first_route_file_mib": 277.89453125, "peak_rss_mib": 4868.90234375},
+      {"label": "lazy_steady_ctx512", "pre_first_route_rss_mib": 642.84375, "pre_first_route_anon_mib": 456.15625, "pre_first_route_file_mib": 281.65625, "peak_rss_mib": 6538.87890625}
+    ],
+    "status": "boundary_measured_true_non_routed_floor_pending_skip_moe_arm"
+  },
+  "conclusion": "Reject panel-backed single-row dispatch. Panel decode is 88.58% of instrumented IQP cycles; implement a raw one-row fused IQ2_XXS decoder and run the non-MoE resident-floor arm."
+}

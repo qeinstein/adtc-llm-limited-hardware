@@ -205,6 +205,18 @@ static void ggml_phase3_route_trace(const struct ggml_compute_params * params,
         "        return;\n"
         "    }\n\n"
         "    ggml_phase3_route_trace(params, tensor);\n\n"
+        "    // RAM-floor arm: retain the graph and all non-MoE work, but replace\n"
+        "    // selected-expert output with zeros before any routed weight access.\n"
+        "    // This arm is measurement-only and is never used for correctness.\n"
+        "    const char * skip_moe = getenv(\"GGML_PHASE3_SKIP_MOE\");\n"
+        "    if (tensor->op == GGML_OP_MUL_MAT_ID && skip_moe != NULL &&\n"
+        "            atoi(skip_moe) != 0) {\n"
+        "        if (params->ith == 0) {\n"
+        "            memset(tensor->data, 0, ggml_nbytes(tensor));\n"
+        "        }\n"
+        "        ggml_barrier(params->threadpool);\n"
+        "        return;\n"
+        "    }\n\n"
         "    // extra_buffer op?\n")
 
     # Low-overhead aggregate TSC counters for the dedicated arm.  The counters
@@ -385,14 +397,18 @@ def run_ram_floor() -> dict:
     peaks to expose page residency growth.
     """
     results = []
-    for label, n_gen, ctx in (("lazy_floor_ctx64", 1, 64), ("lazy_floor_ctx512", 1, 512),
-                              ("lazy_steady_ctx512", 64, 512)):
+    for label, n_gen, ctx, skip_moe in (("lazy_floor_ctx64", 1, 64, False),
+                                        ("lazy_floor_ctx512", 1, 512, False),
+                                        ("lazy_steady_ctx512", 64, 512, False),
+                                        ("non_moe_floor_ctx512", 64, 512, True)):
         trace = OUT / f"{label}.routes.jsonl"; trace.unlink(missing_ok=True)
         cmd = [str(CLI), "-m", str(MODEL), "-ngl", "0", "-t", str(THREADS), "-c", str(ctx),
                "-n", str(n_gen), "--temp", "0", "--seed", "1234", "--single-turn",
                "--no-display-prompt", "--no-warmup", "--perf", "-lm", "mmap", "-lzm", "on",
                "--poll", "0", "-p", PROMPT]
         env = dict(os.environ, GGML_PHASE0_ROUTE_TRACE=str(trace))
+        if skip_moe:
+            env["GGML_PHASE3_SKIP_MOE"] = "1"
         p = subprocess.Popen(cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
         samples = []
         while p.poll() is None:
@@ -416,7 +432,11 @@ def run_ram_floor() -> dict:
                         "major_faults": max((x["major_faults"] for x in valid), default=0),
                         "trace_events": sum(1 for _ in trace.open()) if trace.exists() else 0,
                         "stderr_tail": stderr[-1000:]})
-    return {"description": "lazy mmap RSS before first routed expert and after short decode", "runs": results}
+    return {"description": "lazy mmap RSS before first routed expert and after short decode",
+            "logical_model_bytes": MODEL_SIZE,
+            "logical_routed_expert_bytes": 8_975_810_560,
+            "logical_non_routed_file_bytes": MODEL_SIZE - 8_975_810_560,
+            "runs": results}
 
 
 def hardware_snapshot() -> dict:
@@ -433,7 +453,7 @@ def hardware_snapshot() -> dict:
 
 def main() -> None:
     SCRATCH.mkdir(parents=True, exist_ok=True); OUT.mkdir(parents=True, exist_ok=True)
-    result = {"schema": "native-sparse-single-row-avx2/v1", "status": "failed",
+    result = {"schema": "native-sparse-single-row-avx2/v2", "status": "failed",
               "hypothesis": "A direct exact one-activation IQ2_XXS AVX2 GEMV can raise the resident decode ceiling by removing four-row panel tail duplication.",
               "started_unix": time.time(), "research_source": {"base_commit": RESEARCH_BASE_COMMIT,
               "script_sha256": sha256(Path(__file__))}, "benchmark": {"n_prompt": 0, "n_gen": N_GEN,
