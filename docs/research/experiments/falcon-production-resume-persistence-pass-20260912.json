@@ -1,0 +1,52 @@
+{
+  "experiment_id": "falcon-production-resume-persistence-pass-20260912",
+  "status": "passed",
+  "model": "tiiuae/Falcon-H1-1.5B-Deep-Instruct",
+  "model_revision": "b6648636ddc906688974282de6e7a243395f5423",
+  "training_git_sha": "b9051b2",
+  "persistence_code_git_sha": "6c0dc5c",
+  "hardware": "Tesla P100-PCIE-16GB / sm_60",
+  "stack": {
+    "torch": "2.6.0+cu118",
+    "transformers": "4.53.3",
+    "peft": "0.15.2",
+    "accelerate": "1.7.0",
+    "precision": "plain fp16 LoRA"
+  },
+  "dataset": {
+    "train_items": 13542,
+    "dev_items": 1470,
+    "train_tokens": 216318,
+    "objective_counts": {"mcqa": 13436, "sft": 106}
+  },
+  "resume_test": {
+    "first_run_max_steps": 2,
+    "resume_requested_max_steps": 4,
+    "first_checkpoint_global_step": 2,
+    "resumed_checkpoint_global_step": 4,
+    "optimizer_scheduler_rng_restored": true,
+    "checkpoint_files_verified": [
+      "adapter_model.safetensors",
+      "optimizer.pt",
+      "scheduler.pt",
+      "rng_state.pth",
+      "scaler.pt",
+      "trainer_state.json"
+    ]
+  },
+  "persistence": {
+    "backend": "Kaggle Dataset version",
+    "dataset": "toheebogunade/jamii-afya-falcon-production-checkpoints",
+    "upload_completed": true,
+    "retrieval_completed": true,
+    "remote_resumable_state_verified": true,
+    "eventual_consistency_race_fixed": true
+  },
+  "kaggle_kernel_versions": [2, 3],
+  "recorded_utc": "2026-09-12T21:56:00Z",
+  "notes": [
+    "Version 2 proved training resume after upgrading the P100 stack to Torch 2.6.0.",
+    "Version 2's immediate verifier raced Kaggle Dataset version creation; version 3 verified the already-uploaded state with bounded retry logic.",
+    "This is an infrastructure gate only, not a quality result or valid production checkpoint."
+  ]
+}
