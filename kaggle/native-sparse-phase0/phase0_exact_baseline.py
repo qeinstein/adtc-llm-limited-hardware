@@ -21,12 +21,13 @@ from pathlib import Path
 
 
 WORK = Path("/kaggle/working")
+SCRATCH = Path("/tmp/native-sparse-phase0")
 OUT = WORK / "native-sparse-phase0-results"
-LLAMA = WORK / "llama.cpp"
+LLAMA = SCRATCH / "llama.cpp"
 BUILD = LLAMA / "build-native"
 CLI = BUILD / "bin" / "llama-cli"
 BENCH = BUILD / "bin" / "llama-bench"
-MODEL = WORK / "Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf"
+MODEL = SCRATCH / "Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf"
 
 LLAMA_COMMIT = "3057bb66c86c46d5781e50e85462a760ba7d1feb"
 MODEL_REPO_COMMIT = "bc014a17be43adabd7066b7a86075ff935c6a4e2"
@@ -41,6 +42,7 @@ PROMPT = "Give one concise reason oral rehydration solution helps a child with w
 N_GEN = 24
 
 OUT.mkdir(parents=True, exist_ok=True)
+SCRATCH.mkdir(parents=True, exist_ok=True)
 
 
 def run(cmd: list[str], cwd: Path | None = None, env: dict | None = None,
