@@ -1,6 +1,6 @@
 # Pinned user-space stack for Falcon-H1 production training/evaluation.
 # Torch is installed separately from the CUDA wheel index selected by the
-# worker (P100 uses torch 2.2.2+cu118; newer GPUs use the image-compatible
+# worker (P100 uses torch 2.6.0+cu118; newer GPUs use the image-compatible
 # wheel), so this file intentionally does not pin torch.
 transformers==4.53.3
 tokenizers==0.21.4

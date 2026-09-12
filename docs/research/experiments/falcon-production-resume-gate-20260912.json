@@ -1,0 +1,37 @@
+{
+  "experiment_id": "falcon-production-resume-gate-20260912",
+  "status": "failed_infrastructure_gate",
+  "model": "tiiuae/Falcon-H1-1.5B-Deep-Instruct",
+  "model_revision": "b6648636ddc906688974282de6e7a243395f5423",
+  "git_sha": "38bf7d6fb138f984e5ad041ccaf8830e75b08b3f",
+  "hardware": "Tesla P100-PCIE-16GB / sm_60",
+  "stack": {
+    "torch": "2.2.2+cu118",
+    "transformers": "4.53.3",
+    "peft": "0.15.2",
+    "accelerate": "1.7.0",
+    "precision": "plain fp16 LoRA"
+  },
+  "dataset": {
+    "train_items": 13542,
+    "dev_items": 1470,
+    "train_tokens": 216318,
+    "objective_counts": {"mcqa": 13436, "sft": 106}
+  },
+  "first_run": {
+    "max_steps": 2,
+    "effective_batch_size": 16,
+    "global_step": 2,
+    "checkpoint": "checkpoint-2",
+    "checkpoint_state": "complete; optimizer, scheduler and RNG files present",
+    "observed_seconds": 294.98
+  },
+  "resume_attempt": {
+    "requested_max_steps": 4,
+    "failure": "Transformers 4.53.3 refused torch.load for optimizer/scheduler restoration because Torch was below 2.6 (CVE-2025-32434 guard).",
+    "training_state_corrupted": false,
+    "partial_weights_accepted": false
+  },
+  "corrective_action": "Use torch 2.6.0+cu118 on P100 before rerunning the gate; do not bypass the safety check.",
+  "recorded_utc": "2026-09-12T21:17:25Z"
+}
