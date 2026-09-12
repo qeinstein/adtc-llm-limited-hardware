@@ -70,10 +70,23 @@ preserved under the results directory:
   batch-oriented IQ panel at one row per expert regressed 43.42% to 2.940
   tok/s versus a 5.196 tok/s same-binary generic control, with deterministic
   generated-payload equality and unchanged residency/traffic.
+- phase3_single_row_avx2_v1: a purpose-built `cne1 == 1` path using the
+  existing IQP decoder plus one-row AVX2 GEMV remained exact but regressed
+  39.26% to 3.020 tok/s versus a 4.973 tok/s control. Profiling attributed
+  88.58% of the instrumented IQP cycles to decoding/materializing the eight
+  weight rows.
+- phase3_single_row_avx2_v3: direct raw IQ2_XXS row-dot dispatch was neutral
+  at 4.184 tok/s versus a 4.168 tok/s same-run control (+0.40%). The
+  measurement-only non-MoE arm measured a 1,612.9 MiB operational resident
+  floor (539.7 MiB anonymous, 1,073.2 MiB file-backed) against 6,538.9 MiB
+  for the lazy 64-token inference arm.
 
 Current classification: resident CPU/DRAM-kernel execution is the larger term
 in the lazy path (about 212 ms/token resident plus about 158 ms/token added
-lazy-storage stall at the measured Phase 0 point). Storage remains a major
+lazy-storage stall at the measured Phase 0 point). The single-row experiments
+show that panel-backed specialization and dispatch isolation do not improve
+the ceiling; raw IQ2 dequantization remains dominant. Storage remains a major
 secondary bottleneck, but storage optimization alone cannot reach 10 tok/s.
-The next compute experiment should target a true single-row IQ2_XXS
-MUL_MAT_ID kernel rather than lowering the existing panel threshold.
+The next compute experiment should implement a true fused multi-row raw
+IQ2_XXS kernel with shared activation loads, then move to a bounded expert
+cache sized against the measured 1.61 GiB non-routed floor.
