@@ -1,4 +1,4 @@
-# Falcon-H1-1.5B-Deep-Instruct stock baseline — measured results (uncommitted notes)
+# Falcon-H1-1.5B-Deep-Instruct stock baseline — measured results
 
 Model: unsloth/Falcon-H1-1.5B-Deep-Instruct-GGUF @ fe88d4e94f0f,
 Falcon-H1-1.5B-Deep-Instruct-Q4_K_M.gguf, 938466368 bytes.

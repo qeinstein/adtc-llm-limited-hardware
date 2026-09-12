@@ -157,6 +157,11 @@ def compile_supported(*, use_cuda, cuda_capability=None):
     return (cuda_capability or (0, 0)) >= (7, 0)
 
 
+def get_cuda_capability(torch_module):
+    """Return the active CUDA device capability using PyTorch's public API."""
+    return torch_module.cuda.get_device_capability(0)
+
+
 # --------------------------------------------------------------------------- #
 # Dataset: unifies MCQA choice-list rows and clinical chat rows into one schema
 # --------------------------------------------------------------------------- #
@@ -331,7 +336,7 @@ def main() -> int:
     # Defaults (4bit + auto dtype) reproduce the locked recipe exactly.
     use_cuda = torch.cuda.is_available()
     mps = (not use_cuda) and torch.backends.mps.is_available()
-    cap = torch.cuda.get_capability() if use_cuda else None
+    cap = get_cuda_capability(torch) if use_cuda else None
     load_mode, dtype_name = resolve_precision(
         use_cuda=use_cuda, cuda_capability=cap, mps=mps,
         quantize=args.quantize, compute_dtype=args.compute_dtype,

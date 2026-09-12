@@ -1,6 +1,21 @@
 """Precision/compile routing for train_lora (pure logic, no torch/GPU needed)."""
 
-from scripts.train_lora import compile_supported, parse_args, resolve_precision
+from scripts.train_lora import compile_supported, get_cuda_capability, parse_args, resolve_precision
+
+
+class _FakeCuda:
+    @staticmethod
+    def get_device_capability(index):
+        assert index == 0
+        return (6, 0)
+
+
+class _FakeTorch:
+    cuda = _FakeCuda()
+
+
+def test_cuda_capability_uses_public_pytorch_api():
+    assert get_cuda_capability(_FakeTorch) == (6, 0)
 
 
 def test_defaults_preserve_locked_recipe():
