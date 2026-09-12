@@ -35,10 +35,7 @@ MODEL_URL = (
 N_GEN = 64
 N_REPEATS = 3
 THREADS = (1, 2, 3, 4)
-
-SCRATCH.mkdir(parents=True, exist_ok=True)
-OUT.mkdir(parents=True, exist_ok=True)
-
+RESEARCH_BASE_COMMIT = "58594d2d8f53ad7628ece93c17b636fb153e812f"
 
 def command_text(cmd: list[str]) -> str:
     return " ".join(str(x) for x in cmd)
@@ -218,9 +215,52 @@ def run_benchmark(label: str, extra: list[str], threads: int) -> dict:
 def supported_options(help_text: str) -> dict[str, bool]:
     return {
         "poll": bool(re.search(r"(?:^|\s)--poll(?:\s|$)", help_text, re.MULTILINE)),
+        "cpu_mask": "--cpu-mask" in help_text,
         "cpu_range": "--cpu-range" in help_text,
         "cpu_strict": "--cpu-strict" in help_text,
     }
+
+
+def allowed_cpu_ids() -> list[int]:
+    try:
+        return sorted(os.sched_getaffinity(0))
+    except (AttributeError, OSError):
+        return list(range(os.cpu_count() or 0))
+
+
+def physical_first_cpu_ids(cpu_ids: list[int]) -> list[int]:
+    """Prefer one logical CPU per physical core before SMT siblings."""
+    by_core: dict[tuple[str, str], list[int]] = {}
+    unknown: list[int] = []
+    for cpu in cpu_ids:
+        topology = Path(f"/sys/devices/system/cpu/cpu{cpu}/topology")
+        try:
+            package = (topology / "physical_package_id").read_text().strip()
+            core = (topology / "core_id").read_text().strip()
+        except OSError:
+            unknown.append(cpu)
+            continue
+        by_core.setdefault((package, core), []).append(cpu)
+    ordered: list[int] = []
+    max_siblings = max((len(ids) for ids in by_core.values()), default=0)
+    for sibling_index in range(max_siblings):
+        for key in sorted(by_core):
+            ids = sorted(by_core[key])
+            if sibling_index < len(ids):
+                ordered.append(ids[sibling_index])
+    return ordered + [cpu for cpu in unknown if cpu not in ordered]
+
+
+def strict_affinity_args(cpu_ids: list[int], options: dict[str, bool]) -> list[str] | None:
+    if not cpu_ids or not options["cpu_strict"]:
+        return None
+    contiguous = cpu_ids == list(range(cpu_ids[0], cpu_ids[-1] + 1))
+    if contiguous and options["cpu_range"]:
+        return ["--cpu-range", f"{cpu_ids[0]}-{cpu_ids[-1]}", "--cpu-strict", "1"]
+    if options["cpu_mask"]:
+        mask = sum(1 << cpu for cpu in cpu_ids)
+        return ["--cpu-mask", hex(mask), "--cpu-strict", "1"]
+    return None
 
 
 def hardware_snapshot() -> dict:
@@ -233,6 +273,7 @@ def hardware_snapshot() -> dict:
         "platform": platform.platform(),
         "python": platform.python_version(),
         "cpu_count": os.cpu_count(),
+        "allowed_cpu_ids": allowed_cpu_ids(),
         "cpuinfo": read("/proc/cpuinfo"),
         "meminfo": read("/proc/meminfo"),
         "lscpu": subprocess.run(["lscpu"], text=True, stdout=subprocess.PIPE,
@@ -256,6 +297,8 @@ def best_of(runs: list[dict]) -> dict | None:
 
 
 def main() -> None:
+    SCRATCH.mkdir(parents=True, exist_ok=True)
+    OUT.mkdir(parents=True, exist_ok=True)
     result: dict = {
         "schema": "native-sparse-cpu-sweep/v1",
         "status": "failed",
@@ -264,6 +307,10 @@ def main() -> None:
             "n_prompt": 0, "n_gen": N_GEN, "repeats": N_REPEATS,
             "load_mode": "mmap", "lazy_mode": "off", "gpu_layers": 0,
             "description": "unmodified llama.cpp exact native router/top-K resident decode",
+        },
+        "research_source": {
+            "base_commit": RESEARCH_BASE_COMMIT,
+            "script_sha256": sha256(Path(__file__)),
         },
         "hardware": hardware_snapshot(),
         "runs": [],
@@ -285,10 +332,18 @@ def main() -> None:
             if options["poll"]:
                 result["runs"].append(run_benchmark("best_poll_0", ["--poll", "0"], best_threads))
                 result["runs"].append(run_benchmark("best_poll_100", ["--poll", "100"], best_threads))
-            if options["cpu_range"] and options["cpu_strict"] and (os.cpu_count() or 0) >= best_threads:
+            affinity_order = physical_first_cpu_ids(allowed_cpu_ids())
+            selected_cpus = affinity_order[:best_threads]
+            affinity_args = strict_affinity_args(selected_cpus, options)
+            result["affinity_selection"] = {
+                "order": affinity_order,
+                "selected_cpu_ids": selected_cpus,
+                "args": affinity_args,
+            }
+            if len(selected_cpus) == best_threads and affinity_args is not None:
                 result["runs"].append(run_benchmark(
                     "best_affinity_strict",
-                    ["--cpu-range", f"0-{best_threads - 1}", "--cpu-strict", "1"],
+                    affinity_args,
                     best_threads,
                 ))
         result["best"] = best_of(result["runs"])
