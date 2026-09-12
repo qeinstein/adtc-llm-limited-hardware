@@ -4722,3 +4722,449 @@ training budget. The numerical checks support choosing what to test;
 they do not establish capability retention.
 
 END OF OPEN ARCHITECTURE SEARCH.
++
+============================================================
+12. NATIVE-SPARSE MODEL PIVOT
+============================================================
+
+12.1. The problem changes when sparsity is native
+
+The previous sections treated sparsity as something that had to be created
+from a dense Qwen3.8-27B teacher. That is no longer the right default. A
+native sparse model already contains three valuable properties:
+
+1. Its router has learned which computation is useful for the current hidden
+   state.
+2. Most expert weights are provably inactive for that token.
+3. The model was trained to combine the active experts, rather than asking a
+   post-hoc pruning procedure to discover a new computation graph.
+
+The research problem is consequently not "compress a 27B dense function until
+it becomes sparse." It is:
+
+    execute a native sparse conditional computation graph on a CPU when its
+    non-expert trunk is resident, its routed experts are mostly on SSD, and
+    the router is allowed to remain exact.
+
+This distinction matters because the limiting resource is no longer just
+resident parameter bytes. It is the product of:
+
+    active CPU work
+    + expert bytes that must cross SSD -> RAM per token
+    + request and dispatch overhead
+    + the resident non-expert floor
+    + quality loss if a missing expert is dropped, replaced, or rerouted.
+
+There are four different claims that must not be conflated:
+
+- It is physically impossible to keep all routed pools resident under 4 GB.
+- It may be possible to execute exact selected experts from a larger file.
+- A current runtime may be unable to bound page faults, request count, or RSS.
+- Training may change expert representation, route locality, precision, or
+  active K, but it cannot remove the CPU and storage work for free.
+
+The primary direction below therefore starts with exact native routing and
+makes approximation a separately measured post-training branch.
+
+12.2. Candidate comparison from the verified configurations
+
+The official configurations are [S44] and [S45]. Both use hidden size 2048
+and routed expert intermediate size 512. A routed expert with gate, up, and
+down matrices contains:
+
+    3 * 2048 * 512 = 3,145,728 weights.
+
+At four bits, the packed payload is about 1.57 MB. Scales, zero points,
+alignment, and tensor headers make a practical contiguous bundle roughly
+1.7--1.8 MB in the accounting below. This is an estimate, not a substitute
+for measuring the actual GGUF/safetensors bundle. Edge0 reports about 310 MB
+per Qwen3.5 layer after its particular quantization and packing, so the
+actual file format must be measured before an implementation decision.
+
++-------------------------------+------------------+------------------+
+|                               | Qwen3.5-35B-A3B | Qwen3-Next-80B-A3B|
++-------------------------------+------------------+------------------+
+| layers                        | 40               | 48               |
+| routed experts/layer          | 256              | 512              |
+| native routed K               | 8                | 10               |
+| routed expert bundles/token  | 320              | 480              |
+| routed pool, rough Q4        | 18 GB            | 43 GB            |
+| routed bytes/token, no hit   | 0.48--0.57 GB    | 0.72--0.86 GB    |
+| routed expert MACs/token     | 1.01B            | 1.51B            |
+| routed+shared expert MACs    | 1.13B            | 1.66B            |
++-------------------------------+------------------+------------------+
+
+The "3B active" labels therefore conceal an important systems difference.
+Qwen3-Next has about 1.47 times as much routed expert compute and 1.5 times
+as much cold routed traffic in this decode accounting. It may have more
+capability per active parameter, but that is not a hardware advantage.
+
+Qwen3.5 is the only candidate with an already demonstrated SSD-resident
+deployment in the target family. Edge0 documents Qwen3.5's 40 layers and 256
+experts, and its edge0-35b profile uses staged K=4 routing with a prerouter,
+LRU/cache, fixed slots, and SSD-backed tensors [S46]. That result is a
+valuable baseline, but it is not proof of exact native top-8 execution on
+Linux/x86: K=4 changes the active computation and the measured device is an
+Apple M4 Pro with MLX. Edge0's reported approximately 2.9 GiB active memory
+and 14.9--17.7 decode tok/s should be treated as an Apple/MLX reference,
+not an x86 guarantee.
+
+Qwen3-Next is a serious second candidate rather than a discarded model. Its
+larger total capacity at similar advertised active size makes it an excellent
+capability-density hypothesis. It is, however, the wrong first engineering
+target unless a route trace shows that its higher quality compensates for 48
+layers, 10 routed experts per layer, 512 expert identities, and substantially
+higher request pressure.
+
+12.3. What cannot work without changing the representation
+
+The following are hard negative results, not tuning opportunities:
+
+- Loading either complete routed pool into RAM violates the budget by a wide
+  margin: about 18 GB for Qwen3.5 and 43 GB for Qwen3-Next before KV/state.
+- Reading every selected Qwen3.5 expert synchronously at 10 tok/s requires
+  roughly 5.7 GB/s of fresh payload. Qwen3-Next needs roughly 8.5 GB/s.
+  Ordinary consumer SSD paths, especially random/range reads with filesystem
+  and queue overhead, cannot promise this.
+- At an effective 4 GB/s, the bandwidth-only lower bound is about 142 ms per
+  no-hit Qwen3.5 token and 212 ms for Qwen3-Next. CPU compute and first-byte
+  latency are additional.
+- Native mmap is not a memory budget. Every touched page can contribute to
+  RSS/page-cache pressure, and the kernel does not know that a research
+  runtime requires a strict expert working set.
+
+The following are representation/runtime limitations, not laws of the model:
+
+- A single contiguous bundle per expert can replace nine small reads
+  (weight/scale/bias for each of gate/up/down).
+- Layer-major storage, expert-ID reordering, explicit fixed-size buffers, and
+  asynchronous pread/io_uring can make the request stream schedulable.
+- A bounded global cache can exploit hot experts, but a generic LRU is not
+  enough. SpecMD reports that expert access is sequential in layer position
+  and that least-stale policies can reduce collision misses [S48].
+- A transfer-only predictor can hide reads without changing the native route.
+  Edge0's prerouter and recent SpecPrefetch work already establish this
+  pattern [S46, S47]. A predictor which silently changes the selected experts
+  is a different, approximate model.
+
+12.4. The direction to pursue
+
+The strongest direction is a native-route-preserving, storage-aware MoE
+runtime paired with storage-aware post-training. The stages are deliberately
+ordered so that model quality is not spent before the physical bottleneck is
+measured.
+
+Resident path:
+
+- Keep attention/linear layers, routers, norms, embeddings/output head, and
+  the shared expert resident in quantized form.
+- Treat the shared expert as a first-class resident path, not as a fallback
+  approximation for missing routed experts.
+- Reserve an explicit RSS budget for KV/state, staging, and a global routed
+  expert cache. Do not depend on an accidental OS page cache.
+
+Routed path:
+
+- Store each routed expert's gate/up/down tensors as one aligned contiguous
+  bundle, preferably layer-major.
+- Use fixed slots and double buffering. Sort selected IDs before reads and
+  coalesce only ranges that are physically adjacent.
+- Compare mmap/page faults against explicit pread and io_uring. The latter
+  makes queue depth, cancellation, read completion, and eviction measurable.
+- Use a cache policy aware of layer position and upcoming work (least-stale,
+  next-layer protected), rather than LRU alone.
+- Implement a fused CPU kernel that gathers selected IDs, consumes Q4
+  weights directly, fuses gate/up where possible, applies the gated
+  activation, and accumulates down projections. Hundreds of tiny independent
+  GEMMs will otherwise dominate even if SSD bandwidth is sufficient.
+
+Prediction path:
+
+- Train a very small next-layer or pre-attention predictor solely to submit
+  asynchronous reads. It must never alter the native router in the exact
+  mode.
+- Score precision, recall, wasted bytes, synchronous misses, and p95 lead
+  time. A 99% prediction recall with 70% precision can be worse than a
+  smaller, more precise prefetch set.
+- Treat speculative decoding as a later option. SP-MoE shows that drafting
+  can create a prefetch window, but it also increases the number of expert
+  requests and has GPU/verification assumptions [S49].
+
+The model-side research contribution should be a storage-aware expert
+representation, not another generic prefetch paper. The most promising
+candidate is a cross-expert shared-basis representation:
+
+    expert_e = resident shared basis + SSD-resident expert coefficients/residual
+
+For example, gate/up/down matrices can be factorized across experts, with
+shared basis matrices resident and small per-expert low-rank coefficients or
+residuals on SSD. A factorized representation can reduce the cold transfer
+unit from approximately 1.7 MB to a few hundred KB at moderate rank. It
+also creates a new compute tradeoff: the shared nonlinear SwiGLU path cannot
+always be reused by simple linear algebra, so the factorized kernel may do
+extra small projections. This must be learned and distilled, not assumed
+from an SVD reconstruction error.
+
+This is a research hypothesis, not a novelty claim. SPICE already combines
+low-rank expert surrogates with speculative prefetch and CPU residual work
+[S50]. Low-rank compression, mixed precision, expert clustering, and
+cache-aware routing also have prior art [S48, S51 and the earlier notebook
+sources]. The defensible contribution would be a route-exact CPU/SSD format
+and a storage-aware fine-tuning objective for Qwen3.5/Qwen3-Next, evaluated
+under a hard RSS cap with quality and bytes/token reported together.
+
+The post-training ladder should be:
+
+1. Exact native top-8 Qwen3.5 with ordinary Q4 expert bundles.
+2. Exact native top-8 with layout, cache, prefetch, and fused CPU kernels.
+3. Per-expert mixed precision selected by contribution and measured against
+   all-Q4.
+4. Shared-basis/residual experts trained with output/logit distillation and
+   a byte/latency penalty.
+5. Only then, an adaptive-K or cache-aware router fine-tune that can reduce
+   routed K. Any K reduction is an explicit quality trade, not a runtime
+   detail.
+6. Optional route-locality regularization, constrained by teacher KL and
+   load-balance losses. It is useful only if it improves reuse without
+   collapsing specialization.
+
+This sequence keeps the previous small-backbone plus SSD neural-memory
+proposal in Section 11 as a valid alternative. That branch attacks the
+resident floor by changing the model family. The native-sparse branch is
+stronger when an existing MoE can retain more high-end capability, but it
+cannot honestly promise a 2 GB deployment without more aggressive
+factorization or a smaller resident trunk.
+
+12.5. Quantitative budget
+
+A reasonable first Qwen3.5 planning envelope is:
+
++-----------------------------+------------------+
+| component                   | charged RAM      |
++-----------------------------+------------------+
+| non-expert trunk and head  | 2.2--2.8 GiB     |
+| routers, shared experts,   | 0.15--0.30 GiB   |
+| KV/state at 4k context     | 0.10--0.30 GiB   |
+| expert cache               | 0.25--0.60 GiB   |
+| staging, buffers, runtime  | 0.15--0.30 GiB   |
++-----------------------------+------------------+
+| total target               | 2.85--4.30 GiB   |
++-----------------------------+------------------+
+
+The broad range is intentional. Edge0's approximately 2.9 GiB active figure
+suggests the lower part is attainable with a carefully bounded runtime, but
+a Linux/x86 process, longer context, allocator behavior, and quantization
+format can push it beyond 4 GiB. A 64/128/256 expert cache is approximately
+113/226/453 MB using the conservative bundle estimate. A strict 2 GiB target
+is not credible for an unmodified Qwen3.5 path; it requires a smaller
+resident trunk, more aggressive quantization, and/or factorized experts.
+
+For Qwen3-Next, a provisional planning range is 3.1--4.4 GiB. Its exact
+linear-attention state and output/runtime accounting must be measured from
+the official configuration, not inferred from the marketing active count.
+It should not be selected because it has 80B total parameters; it should be
+selected only if a capability evaluation justifies its larger I/O and compute
+budget.
+
+Active work is approximately 6--10 GFLOP/token for Qwen3.5 once the
+non-expert path, router, attention/linear state, dequantization, and output
+head are included. Qwen3-Next has about 1.47 times the routed expert MACs,
+although its overall advertised active count remains near 3B. A 10 tok/s
+target therefore needs roughly 60--100 GFLOP/s of sustained batch-1
+effective CPU work, plus hidden I/O and dispatch. On a strong AVX2/AVX-512
+laptop, 6--10 tok/s is a realistic initial target and 10--12 tok/s is an
+optimistic target after fused kernels and cache/prefetch tuning. On a weak
+four-core scalar path, 2--5 tok/s is more plausible. The M4/MLX Edge0 number
+must not be extrapolated directly to x86.
+
+The storage target should be expressed as fresh bytes per token, not just
+model-file size:
+
+- 500--850 MB/token is the no-cache exact baseline.
+- At 10 tok/s, an optimistic 4 GB/s SSD requires at least 29% Qwen3.5 hit
+  rate and 53% Qwen3-Next hit rate; slower 2--3 GB/s paths need substantially
+  higher hit rates.
+- A robust design target is below 100--150 MB fresh/token, with p95 token
+  latency below 100 ms. This leaves headroom for filesystem, CPU, and queue
+  overhead.
+- Such a target is plausible only if routes have strong reuse or if the
+  transferred representation is smaller. Previous-token route reuse must be
+  measured; uniform-random routing would yield only about 2--3% immediate
+  overlap.
+
+12.6. What is already prior art
+
+The following claims are not new by themselves:
+
+- SSD/mmap expert streaming, fixed slots, global caches, and a learned
+  prerouter: Edge0 [S46].
+- CPU mmap expert paging and route fixation: Swap-MoE (earlier notebook
+  sources and [S52]).
+- Compact pools with explicit pread: the llama.cpp RFC/PoC (earlier sources).
+- io_uring/O_DIRECT-style delta reads and fixed slots: NeuroPrefetcher
+  (earlier sources).
+- Mixed-precision expert offloading: HOBBIT [S51].
+- Learned prefetching and scheduling: Edge0, SpecPrefetch [S47],
+  SP-MoE [S49], pre-attention prediction [S53], and SpecMD [S48].
+- Low-rank expert surrogates and confidence-aware fallback: SPICE [S50].
+- Cache-aware routing, expert substitution, and drop-on-miss policies:
+  SpecMD [S48]. SpecMD's Qwen results warn that aggressive drop/substitution
+  can cost roughly 25--30% task performance, so they are not acceptable
+  defaults for a high-capability target.
+
+The potentially new result is narrower and more credible:
+
+    an apples-to-apples, exact-native Qwen3.5 (then Qwen3-Next) CPU study
+    under a measured 4 GiB RSS cap, comparing mmap/page faults with
+    pread/io_uring, coactivation-reordered bundles, fused selected-expert
+    kernels, and a storage-aware post-training expert representation.
+
+The novelty would be the integrated constraint and the measurements, not a
+claim to have invented SSD streaming or expert prediction. If the
+shared-basis/residual model survives distillation and improves bytes/token
+without unacceptable CPU overhead, that representation is the most
+interesting architecture contribution. If it does not, the exact runtime
+study still has value and the Section 11 branch remains the fallback.
+
+12.7. First experiment with the highest information gain
+
+Do not begin by training an 80B model or by implementing a full engine. Run
+one trace/replay experiment on a provisioned Linux/x86 machine with both
+official model checkpoints (or an instrumented equivalent):
+
+1. Execute exact native decode on representative chat, code, reasoning, and
+   long-context prompts. Record, for every token and layer, selected IDs,
+   router weights, physical tensor offsets, and hidden-state timing.
+2. Replay the trace with Qwen3.5 first, then Qwen3-Next if assets permit,
+   under:
+   - mmap/page faults;
+   - contiguous one-bundle pread;
+   - io_uring queue depths 1, 8, 32, and 64;
+   - global caches of 0, 64, 128, 256, and 512 bundles;
+   - previous-token, one-layer oracle, and learned prefetch;
+   - original and coactivation-reordered expert layouts.
+3. Measure fresh bytes/token, total bytes including overfetch, requests/token,
+   read-size distribution, hit rate, prefetch precision/recall, wasted
+   bytes, synchronous misses, p50/p95/p99 I/O, CPU cycles/token, and charged
+   RSS. Verify byte-identical output in every non-speculative mode.
+4. Separately benchmark the selected-expert Q4 kernel with storage disabled.
+   This distinguishes a storage failure from a compute/dispatch failure.
+5. Only if the exact trace is promising, train a small shared-basis/residual
+   representation and compare output KL/NLL, bytes/token, CPU cycles, and
+   cache behavior against exact Q4.
+
+The trace should be considered a go/no-go gate:
+
+- Continue if Qwen3.5 can sustain a measured fresh-traffic envelope below
+  roughly 100--150 MB/token, charged memory below 3.5 GiB, and fused-kernel
+  compute leaves a plausible path to 8--10 tok/s before speculative
+  approximation.
+- Prefer Qwen3-Next only if its capability gain is large and its trace
+  remains inside the same memory/latency envelope after the 1.5x traffic
+  penalty.
+- Abandon this native-sparse direction if exact Qwen3.5 shows no cache/layout
+  regime below roughly 250--300 MB fresh/token, if the resident floor
+  already exceeds 3.5 GiB, or if storage-disabled selected-expert CPU
+  kernels are below about 5 tok/s. Those results mean that a representation
+  change or a smaller model family is required; more prefetch tuning will
+  not rescue the target.
+
+12.8. Final decision
+
+1. Base model: start with Qwen3.5-35B-A3B. It has the strongest evidence,
+   fewer layers and selected experts, and approximately 1.5x lower cold
+   traffic than Qwen3-Next. Keep Qwen3-Next as the capability-density
+   challenger in the first trace, not as the first runtime commitment.
+
+2. Architecture/runtime: exact native routing; resident quantized trunk and
+   shared expert; SSD routed experts in contiguous layer-major bundles;
+   bounded global cache with least-stale/next-layer protection; explicit
+   pread/io_uring and fused AVX2/AVX-512 selected-expert kernels; a
+   transfer-only learned prefetcher. Then test storage-aware shared-basis
+   residual experts as the model-side research branch.
+
+3. Expected RAM: 3.0--3.8 GiB for a carefully bounded Qwen3.5 short-context
+   process; 3.2--4.4 GiB provisional for Qwen3-Next. The 2 GiB stretch target
+   requires a changed/factorized resident representation and is not a
+   baseline promise.
+
+4. Expected active compute: roughly 6--10 GFLOP/token Qwen3.5 end to end,
+   including approximately 2.3 GFLOP/token in routed plus shared experts.
+   Qwen3-Next has approximately 1.47x the routed expert MACs.
+
+5. Expected SSD traffic: exact cold baseline about 0.5--0.6 GB/token for
+   Qwen3.5 and 0.7--0.9 GB/token for Qwen3-Next; the viable target is
+   below 100--150 MB fresh/token after cache, layout, prefetch, and/or
+   factorization.
+
+6. Realistic x86 speed: initially 6--10 tok/s on a strong AVX laptop;
+   10--12 tok/s is an optimistic success case. A weak four-core/scalar
+   machine may deliver only 2--5 tok/s.
+
+7. Novelty versus Edge0: not SSD streaming or prefetching. The credible
+   novelty is a reproducible exact-native Linux/x86 4 GiB study plus
+   storage-aware expert representation/fine-tuning and coactivation-aware
+   physical layout, with bytes/token, p95 latency, CPU cycles, and quality
+   reported jointly.
+
+8. Training/post-training: first none beyond quantization/runtime adapters;
+   then train the transfer-only predictor; next learn mixed-precision or
+   shared-basis/residual experts with teacher logit/output distillation,
+   load-balance preservation, and an explicit byte/latency penalty; only
+   later consider adaptive K or route-locality regularization.
+
+9. Strongest failure reason: native routes may have low reuse exactly when
+   difficult reasoning matters, while the resident trunk and hundreds of
+   small CPU expert kernels already consume the token budget. If so, SSD
+   bandwidth and compute fail simultaneously, and neither a better cache nor
+   an approximate predictor can preserve high capability at >10 tok/s.
+
+10. First distinguishing experiment: the exact route-trace/replay plus
+    storage-disabled CPU-kernel benchmark described in 12.7. It distinguishes
+    model capability from cache/layout/runtime accidents before any expensive
+    training. Abandon the path on the explicit traffic, RSS, or compute
+    thresholds above.
+
+Additional primary sources for this pivot:
+
+[S44] Qwen team. Qwen3.5-35B-A3B official configuration.
+https://huggingface.co/Qwen/Qwen3.5-35B-A3B/raw/main/config.json
+
+[S45] Qwen team. Qwen3-Next-80B-A3B-Instruct official configuration.
+https://huggingface.co/Qwen/Qwen3-Next-80B-A3B-Instruct/raw/main/config.json
+
+[S46] Edge0-AI. Edge0 architecture and streaming documentation.
+https://github.com/Edge0-AI/Edge0
+https://github.com/Edge0-AI/Edge0/blob/main/docs/architecture.md
+https://github.com/Edge0-AI/Edge0/blob/main/docs/streaming.md
+
+[S47] Kong et al. SpecPrefetch: Parameter-Efficient Expert Prefetching for
+Sparse MoE Foundation Models. arXiv:2607.24787 (2026).
+https://arxiv.org/abs/2607.24787
+https://github.com/wei390/SpecPrefetch
+
+[S48] Hoang et al. SpecMD: A Comprehensive Study On Speculative Expert
+Prefetching. arXiv:2602.03921 (2026).
+https://arxiv.org/abs/2602.03921
+
+[S49] Chen et al. SP-MoE: Speculative Decoding and Prefetching for
+Accelerating MoE-based Model Inference. arXiv:2510.10302 (2025).
+https://arxiv.org/abs/2510.10302
+
+[S50] Lyu, Li and Jia. SPICE: Speculative Prefetching with Low-Rank Expert
+Surrogates and Heterogeneous Orchestration for MoE Inference Acceleration.
+arXiv:2608.21240 (2026).
+https://arxiv.org/abs/2608.21240
+
+[S51] Tang et al. HOBBIT: A Mixed Precision Expert Offloading System for
+Fast MoE Inference. arXiv:2411.01433 (2024).
+https://arxiv.org/abs/2411.01433
+
+[S52] Swap-MoE. MoE LLM Expert SSD On-Demand Inference.
+https://github.com/ek15072809/Swap-MoE
+
+[S53] Zhu et al. Pre-Attention Expert Prediction and Prefetching for
+Mixture-of-Experts Large Language Models. arXiv:2511.10676 (2025).
+https://arxiv.org/abs/2511.10676
+
+END OF NATIVE-SPARSE MODEL PIVOT.
