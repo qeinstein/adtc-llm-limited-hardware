@@ -64,10 +64,10 @@ def test_latest_checkpoint_ignores_incomplete_directories(tmp_path: Path):
     complete = tmp_path / "checkpoint-25"
     complete.mkdir()
     for name in ("trainer_state.json", "optimizer.pt", "scheduler.pt", "rng_state.pth", "adapter_model.safetensors"):
-        (complete / name).write_text("{}")
+        (complete / name).write_text('{"global_step": 25}' if name == "trainer_state.json" else "{}")
     incomplete = tmp_path / "checkpoint-50"
     incomplete.mkdir()
-    (incomplete / "trainer_state.json").write_text("{}")
+    (incomplete / "trainer_state.json").write_text('{"global_step": 50}')
     assert latest_checkpoint(tmp_path) == complete
 
 
@@ -89,7 +89,8 @@ def test_checkpoint_manifest_can_require_fp16_scaler(tmp_path: Path):
     checkpoint.mkdir()
     for name in ("trainer_state.json", "optimizer.pt", "scheduler.pt", "rng_state.pth", "adapter_model.safetensors"):
         (checkpoint / name).write_text("{}")
-    (checkpoint / "checkpoint_manifest.json").write_text('{"complete": true, "scaler_required": true}')
+    (checkpoint / "trainer_state.json").write_text('{"global_step": 1}')
+    (checkpoint / "checkpoint_manifest.json").write_text('{"complete": true, "global_step": 1, "scaler_required": true}')
     assert not checkpoint_is_complete(checkpoint)
     (checkpoint / "scaler.pt").write_text("{}")
     assert checkpoint_is_complete(checkpoint)

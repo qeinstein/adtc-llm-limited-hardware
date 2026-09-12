@@ -251,10 +251,18 @@ def checkpoint_is_complete(path: Path, *, require_scaler: bool = False) -> bool:
         return False
     if not all((path / name).is_file() for name in required):
         return False
+    try:
+        state = json.loads((path / "trainer_state.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError, json.JSONDecodeError):
+        return False
+    if not isinstance(state.get("global_step"), int):
+        return False
     manifest_path = path / "checkpoint_manifest.json"
     if manifest_path.exists():
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         if manifest.get("complete") is not True:
+            return False
+        if manifest.get("global_step") != state["global_step"]:
             return False
         require_scaler = require_scaler or manifest.get("scaler_required") is True
     return not require_scaler or (path / "scaler.pt").is_file()
