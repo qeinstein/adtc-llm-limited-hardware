@@ -646,7 +646,12 @@ def main(argv: list[str] | None = None) -> int:
             super().log(enriched, *log_args, **log_kwargs)
             self._component_sum.clear(); self._component_count.clear()
 
-        def _get_train_sampler(self):
+        def _get_train_sampler(self, train_dataset=None):
+            # Transformers versions differ: newer Trainer passes the dataset
+            # explicitly, while older releases call this hook without args.
+            # The production sampler must use the pre-tokenized dataset bound
+            # to this trainer in either case.
+            del train_dataset
             from torch.utils.data import WeightedRandomSampler
             # Objective weights describe desired *loss-token* exposure, not
             # row frequency.  The helper gives every objective a total
