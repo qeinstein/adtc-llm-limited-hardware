@@ -65,7 +65,7 @@ def main(argv: list[str] | None = None) -> int:
         inputs = {"input_ids": encoded.to(device), "attention_mask": torch.ones_like(encoded).to(device)}
         prompt_len = int(encoded.shape[-1])
     stop_ids = generation_stop_ids(tokenizer, model.generation_config)
-    print(json.dumps({"timestamp_utc": stamp(), "event": "smoke_generation_start", "prompt_tokens": prompt_len, "stop_ids": stop_ids}), flush=True)
+    print(json.dumps({"timestamp_utc": stamp(), "event": "smoke_generation_start", "prompt_tokens": prompt_len, "stop_ids": stop_ids, "tokenizer_eos_token_id": tokenizer.eos_token_id, "tokenizer_pad_token_id": tokenizer.pad_token_id, "model_eos_token_id": getattr(model.generation_config, "eos_token_id", None), "model_pad_token_id": getattr(model.generation_config, "pad_token_id", None)}), flush=True)
     with torch.no_grad():
         output = model.generate(
             **inputs,
@@ -73,11 +73,19 @@ def main(argv: list[str] | None = None) -> int:
             do_sample=False,
             eos_token_id=stop_ids,
             pad_token_id=tokenizer.pad_token_id,
+            return_dict_in_generate=True,
+            output_scores=True,
         )
-    ids = [int(x) for x in output[0][prompt_len:].detach().cpu().tolist()]
-    text = tokenizer.decode(output[0][prompt_len:], skip_special_tokens=True)
+    raw_ids = [int(x) for x in output.sequences[0][prompt_len:].detach().cpu().tolist()]
+    score_steps = len(output.scores)
+    ids = raw_ids[:score_steps] if score_steps else raw_ids
+    topk = []
+    for scores in output.scores:
+        values, indices = scores[0].float().topk(min(5, scores.shape[-1]))
+        topk.append({"ids": [int(x) for x in indices.cpu().tolist()], "scores": [round(float(x), 4) for x in values.cpu().tolist()]})
+    text = tokenizer.decode(torch.tensor(ids, device=output.sequences.device), skip_special_tokens=True)
     stopped_on = ids[-1] if ids and ids[-1] in stop_ids else None
-    result = {"timestamp_utc": stamp(), "event": "smoke_generation_complete", "prompt": prompt, "new_tokens": len(ids), "token_ids": ids, "stopped_on": stopped_on, "visible_chars": len(text), "text": text}
+    result = {"timestamp_utc": stamp(), "event": "smoke_generation_complete", "prompt": prompt, "new_tokens": len(ids), "raw_new_tokens": len(raw_ids), "score_steps": score_steps, "token_ids": ids, "raw_token_ids": raw_ids, "stopped_on": stopped_on, "topk_each_step": topk, "visible_chars": len(text), "text": text}
     print(json.dumps(result, ensure_ascii=False), flush=True)
     Path(args.output).write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     return 0

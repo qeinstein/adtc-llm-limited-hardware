@@ -107,3 +107,10 @@ failed before model loading because the standalone smoke script lacked the
 repository root on `sys.path` (`ModuleNotFoundError: scripts`). It is recorded
 in `falcon-generation-smoke-v7-20260913.json`; this is an infrastructure
 failure, not a model result.
+
+Version 8 fixed that import boundary and loaded the model, but its generation
+trace still decoded to `As` with raw IDs `[4638, 0, 0, 0, 0, 0, 0, 0]` despite
+the correct stop set `[11, 228]`. It is recorded in
+`falcon-generation-smoke-v8-20260913.json` and is not a valid baseline. The
+next smoke records generation score steps so padding after an early stop can
+be distinguished from the model actually selecting PAD.
