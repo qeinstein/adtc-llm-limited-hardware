@@ -61,7 +61,9 @@ adapter weights, optimizer, scheduler, scaler/RNG state, and global step; the
 
 Long runs refuse to start unless `FALCON_CHECKPOINT_DATASET` names an existing
 private Kaggle Dataset. Every configured persistence interval uploads the
-checkpoint state through `scripts/persist_checkpoint.py`. `--allow-ephemeral`
+checkpoint state through `scripts/persist_checkpoint.py`; the Trainer callback
+requests an additional save at the persistence boundary when ordinary
+`save_steps` would be slower. `--allow-ephemeral`
 is reserved for the tiny resume test. The reserved private destination is
 `toheebogunade/jamii-afya-falcon-production-checkpoints`. The infrastructure
 gate passed on 2026-09-12: a two-step checkpoint resumed at step 2, completed
