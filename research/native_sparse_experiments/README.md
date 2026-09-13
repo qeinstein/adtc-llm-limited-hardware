@@ -231,12 +231,20 @@ yet.
   but this is a representation challenger rather than an exact bytewise
   control; the initial held-out quality gate is running.
 - `phase7c_selective_q4_quality_v1`: the frozen clinical/safety,
-  English/Kiswahili instruction, and basic MCQ gate is running on Kaggle.
-- `phase7d_selective_q4_bounded_v1`: a composition A/B is prepared to test
-  whether the resident Q4 win survives the real 2 GB byte-bounded executor.
+  English/Kiswahili instruction, and basic MCQ gate ended inconclusively
+  because 48 tokens stopped inside automatic reasoning. It is preserved and
+  explicitly superseded by the reasoning-disabled v2 gate.
+- `phase7c_selective_q4_quality_v2`: the corrected held-out gate with
+  `--reasoning off` is running on Kaggle.
+- `phase7d_selective_q4_bounded_v1`: the selective-Q4 candidate reached a
+  rounded 2.733 tok/s mean / 2.8 median against 2.233 / 2.5 for the bounded
+  control, but control repetition 1 had a large storage stall. The candidate
+  remained below 4 GiB at 3,947.6 MiB, yet used 430.3 MiB more RSS than the
+  control and changed route trace SHA. Treat it as a <=4-GiB challenger only;
+  it is not a 2.5-GiB point.
 
 The machine-readable canonical points and experiment decisions are in
 `frontier.json`.  The staged storage result is a qualified process-time win,
-not a new rounded raw decode point.  The next decision is whether selective Q4
-passes quality and retains a bounded-RSS advantage; if so, the strongest path
-is the Q4 bounded composition followed by a worker-pool/pipeline follow-up.
+not a new rounded raw decode point. The next decision is whether selective Q4
+passes the completed-answer quality gate and whether its extra anonymous RSS
+can be removed; only then should it be promoted into the bounded frontier.

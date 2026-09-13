@@ -1,0 +1,39 @@
+
+
+Loading model... |-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/ 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b1-3057bb66c
+model      : /tmp/native-sparse-selective-q4-quality-v1/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf
+ftype      : IQ2_XXS - 2.0625 bpw
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> MCQ. Malaria is commonly transmitted to people by the bite of an infected: A) female Anopheles mosquito B) housefly C) tick only D) freshwater fish. Reply at the end as FINAL: one letter.
+
+[Start thinking]
+
+The user wants to identify the vector that transmits malaria to humans.
+
+1.  **Analyze the options:**
+    *   A) female Anopheles mosquito: Malaria is caused by Plasmodium parasites. These parasites
+
+[ Prompt: 7.9 t/s | Generation: 4.6 t/s ]
+
+
+Exiting...

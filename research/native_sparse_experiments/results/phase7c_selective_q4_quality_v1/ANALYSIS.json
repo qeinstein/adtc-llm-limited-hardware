@@ -1,0 +1,30 @@
+{
+  "schema": "native-sparse-selective-q4-quality/v1",
+  "status": "inconclusive_short_generation",
+  "decision": "INCONCLUSIVE / FOLLOW-UP ONCE",
+  "model_sha256": "2a809de317cfd49ac9130b95619ee6ac039a855e467015b3e996eb61af84718b",
+  "candidate_sha256": "86f27f69e0cea7f8cd0420452f1b600c57cedce6589f60c2cfee06a8c0395d39",
+  "llama_commit": "3057bb66c86c46d5781e50e85462a760ba7d1feb",
+  "hardware": "Kaggle 4-vCPU Intel Xeon AVX2",
+  "probes": 14,
+  "automatic_reasoning": true,
+  "n_gen": 48,
+  "control_scores": {
+    "clinical_pass": 2,
+    "clinical_total": 8,
+    "safety_pass": 1,
+    "safety_total": 7,
+    "mcq_correct": 0,
+    "mcq_total": 6
+  },
+  "candidate_scores": {
+    "clinical_pass": 2,
+    "clinical_total": 8,
+    "safety_pass": 1,
+    "safety_total": 7,
+    "mcq_correct": 0,
+    "mcq_total": 6
+  },
+  "raw": "raw/attempt_v1_inconclusive/",
+  "follow_up": "phase7c selective-Q4 quality v2 with --reasoning off"
+}

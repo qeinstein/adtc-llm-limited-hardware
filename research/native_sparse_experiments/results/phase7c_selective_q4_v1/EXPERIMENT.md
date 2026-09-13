@@ -60,8 +60,9 @@ requantized. No model binary is stored in this repository.
 ## Decision
 
 `QUALITY GATE RUNNING`: the corrected A/B exceeds the 3% keep threshold, but
-the selective-Q4 branch is not accepted until the held-out clinical/safety,
-English/Kiswahili instruction, and basic MCQ gate is complete. If that gate
+the selective-Q4 branch is not accepted until the reasoning-disabled held-out
+clinical/safety, English/Kiswahili instruction, and basic MCQ gate is complete.
+The first automatic-reasoning gate was inconclusive; if the corrected gate
 shows a material capability or safety regression, kill the branch despite the
 speed/RSS win. The quality gate is a small initial screen, not a broad model
 quality claim.
@@ -72,4 +73,6 @@ quality claim.
 - Raw attempt 2: `raw/attempt_v2_source_imatrix_failure/`
 - Valid third attempt: `raw/attempt_v3_valid/`
 - Corrected harness: `kaggle/native-sparse-selective-q4-v1/`
-- Quality gate harness: `kaggle/native-sparse-selective-q4-quality-v1/`
+- Quality gate harnesses: `kaggle/native-sparse-selective-q4-quality-v1/` and
+  the corrected `kaggle/native-sparse-selective-q4-quality-v2/`
+- Initial gate result: `research/native_sparse_experiments/results/phase7c_selective_q4_quality_v1/`

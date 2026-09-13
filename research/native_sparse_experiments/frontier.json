@@ -31,7 +31,7 @@
   },
   "challengers": {
     "selective_attention_q4": {
-      "status": "quality_gate_pending",
+      "status": "quality_gate_v2_pending",
       "resident_tok_s": 4.5,
       "resident_rss_mib": 10307.8,
       "control_tok_s": 4.2,
@@ -39,7 +39,17 @@
       "storage_bytes": 10528504448,
       "storage_delta_fraction": -0.0120532141,
       "deterministic_smoke_hash": "a3c3c73a067cbb5fab9e68bd7d06c03d3c488e74467d33c40fae339836006c8c",
-      "source": "phase7c_selective_q4_v1"
+      "source": "phase7c_selective_q4_v1",
+      "bounded_probe": {
+        "tok_s_mean": 2.7333333333,
+        "tok_s_median": 2.8,
+        "rss_mib": 3947.6,
+        "control_tok_s_mean": 2.2333333333,
+        "control_tok_s_median": 2.5,
+        "control_rss_mib": 3517.3,
+        "route_trace_changed": true,
+        "source": "phase7d_selective_q4_bounded_v1"
+      }
     }
   },
   "quality": {
@@ -48,7 +58,7 @@
     "routes_exact": true
   },
   "active_experiments": [
-    "phase7c_selective_q4_quality_v1",
-    "phase7d_selective_q4_bounded_v1"
+    "phase7c_selective_q4_quality_v2",
+    "phase7b_bounded_worker_pool_v1"
   ]
 }

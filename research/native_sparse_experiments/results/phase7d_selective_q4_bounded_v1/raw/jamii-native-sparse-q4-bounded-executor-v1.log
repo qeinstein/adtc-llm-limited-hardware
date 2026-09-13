@@ -1,0 +1,873 @@
+[{"stream_name":"stdout","time":0.790617063,"data":"+ git clone --filter=blob:none https://github.com/ggml-org/llama.cpp.git /tmp/native-sparse-q4-bounded-v1/llama.cpp\n"}
+,{"stream_name":"stdout","time":10.531044358,"data":"Cloning into '/tmp/native-sparse-q4-bounded-v1/llama.cpp'...\n"}
+,{"stream_name":"stdout","time":10.531081526,"data":"Updating files:   0% (2/3583)\n"}
+,{"stream_name":"stdout","time":10.531088538,"data":"Updating files:   1% (36/3583)\n"}
+,{"stream_name":"stdout","time":10.531094483,"data":"Updating files:   2% (72/3583)\n"}
+,{"stream_name":"stdout","time":10.531100113,"data":"Updating files:   3% (108/3583)\n"}
+,{"stream_name":"stdout","time":10.531106293,"data":"Updating files:   4% (144/3583)\n"}
+,{"stream_name":"stdout","time":10.531111763,"data":"Updating files:   5% (180/3583)\n"}
+,{"stream_name":"stdout","time":10.53120278,"data":"Updating files:   6% (215/3583)\n"}
+,{"stream_name":"stdout","time":10.531213221,"data":"Updating files:   7% (251/3583)\n"}
+,{"stream_name":"stdout","time":10.531219133,"data":"Updating files:   8% (287/3583)\n"}
+,{"stream_name":"stdout","time":10.531224704,"data":"Updating files:   9% (323/3583)\n"}
+,{"stream_name":"stdout","time":10.531230185,"data":"Updating files:  10% (359/3583)\n"}
+,{"stream_name":"stdout","time":10.531235769,"data":"Updating files:  11% (395/3583)\n"}
+,{"stream_name":"stdout","time":10.531241233,"data":"Updating files:  12% (430/3583)\n"}
+,{"stream_name":"stdout","time":10.531246735,"data":"Updating files:  13% (466/3583)\n"}
+,{"stream_name":"stdout","time":10.531252537,"data":"Updating files:  14% (502/3583)\n"}
+,{"stream_name":"stdout","time":10.531256558,"data":"Updating files:  15% (538/3583)\n"}
+,{"stream_name":"stdout","time":10.531260203,"data":"Updating files:  16% (574/3583)\n"}
+,{"stream_name":"stdout","time":10.531263771,"data":"Updating files:  17% (610/3583)\n"}
+,{"stream_name":"stdout","time":10.531269044,"data":"Updating files:  18% (645/3583)\n"}
+,{"stream_name":"stdout","time":10.53127442,"data":"Updating files:  19% (681/3583)\n"}
+,{"stream_name":"stdout","time":10.53128018,"data":"Updating files:  20% (717/3583)\n"}
+,{"stream_name":"stdout","time":10.531285645,"data":"Updating files:  21% (753/3583)\n"}
+,{"stream_name":"stdout","time":10.531291183,"data":"Updating files:  22% (789/3583)\n"}
+,{"stream_name":"stdout","time":10.531296204,"data":"Updating files:  23% (825/3583)\n"}
+,{"stream_name":"stdout","time":10.531301859,"data":"Updating files:  24% (860/3583)\n"}
+,{"stream_name":"stdout","time":10.531307594,"data":"Updating files:  25% (896/3583)\n"}
+,{"stream_name":"stdout","time":10.5313131,"data":"Updating files:  26% (932/3583)\n"}
+,{"stream_name":"stdout","time":10.531318613,"data":"Updating files:  27% (968/3583)\n"}
+,{"stream_name":"stdout","time":10.531324127,"data":"Updating files:  28% (1004/3583)\n"}
+,{"stream_name":"stdout","time":10.531329706,"data":"Updating files:  29% (1040/3583)\n"}
+,{"stream_name":"stdout","time":10.531335206,"data":"Updating files:  30% (1075/3583)\n"}
+,{"stream_name":"stdout","time":10.531340694,"data":"Updating files:  31% (1111/3583)\n"}
+,{"stream_name":"stdout","time":10.531346289,"data":"Updating files:  32% (1147/3583)\n"}
+,{"stream_name":"stdout","time":10.531351736,"data":"Updating files:  33% (1183/3583)\n"}
+,{"stream_name":"stdout","time":10.531357335,"data":"Updating files:  34% (1219/3583)\n"}
+,{"stream_name":"stdout","time":10.531363283,"data":"Updating files:  35% (1255/3583)\n"}
+,{"stream_name":"stdout","time":10.531368897,"data":"Updating files:  36% (1290/3583)\n"}
+,{"stream_name":"stdout","time":10.531374596,"data":"Updating files:  36% (1306/3583)\n"}
+,{"stream_name":"stdout","time":10.531390126,"data":"Updating files:  37% (1326/3583)\n"}
+,{"stream_name":"stdout","time":10.53139515,"data":"Updating files:  38% (1362/3583)\n"}
+,{"stream_name":"stdout","time":10.531399618,"data":"Updating files:  39% (1398/3583)\n"}
+,{"stream_name":"stdout","time":10.531404091,"data":"Updating files:  40% (1434/3583)\n"}
+,{"stream_name":"stdout","time":10.531408529,"data":"Updating files:  41% (1470/3583)\n"}
+,{"stream_name":"stdout","time":10.531412981,"data":"Updating files:  42% (1505/3583)\n"}
+,{"stream_name":"stdout","time":10.531417398,"data":"Updating files:  43% (1541/3583)\n"}
+,{"stream_name":"stdout","time":10.531421762,"data":"Updating files:  44% (1577/3583)\n"}
+,{"stream_name":"stdout","time":10.531426287,"data":"Updating files:  45% (1613/3583)\n"}
+,{"stream_name":"stdout","time":10.53143073,"data":"Updating files:  46% (1649/3583)\n"}
+,{"stream_name":"stdout","time":10.531435237,"data":"Updating files:  47% (1685/3583)\n"}
+,{"stream_name":"stdout","time":10.531439634,"data":"Updating files:  48% (1720/3583)\n"}
+,{"stream_name":"stdout","time":10.531444011,"data":"Updating files:  49% (1756/3583)\n"}
+,{"stream_name":"stdout","time":10.531448469,"data":"Updating files:  50% (1792/3583)\n"}
+,{"stream_name":"stdout","time":10.531453003,"data":"Updating files:  51% (1828/3583)\n"}
+,{"stream_name":"stdout","time":10.53145733,"data":"Updating files:  52% (1864/3583)\n"}
+,{"stream_name":"stdout","time":10.531461504,"data":"Updating files:  53% (1899/3583)\n"}
+,{"stream_name":"stdout","time":10.531466083,"data":"Updating files:  54% (1935/3583)\n"}
+,{"stream_name":"stdout","time":10.531470587,"data":"Updating files:  55% (1971/3583)\n"}
+,{"stream_name":"stdout","time":10.53147478,"data":"Updating files:  56% (2007/3583)\n"}
+,{"stream_name":"stdout","time":10.531478891,"data":"Updating files:  57% (2043/3583)\n"}
+,{"stream_name":"stdout","time":10.531483303,"data":"Updating files:  58% (2079/3583)\n"}
+,{"stream_name":"stdout","time":10.531487636,"data":"Updating files:  59% (2114/3583)\n"}
+,{"stream_name":"stdout","time":10.53149363,"data":"Updating files:  60% (2150/3583)\n"}
+,{"stream_name":"stdout","time":10.531498304,"data":"Updating files:  61% (2186/3583)\n"}
+,{"stream_name":"stdout","time":10.531502715,"data":"Updating files:  62% (2222/3583)\n"}
+,{"stream_name":"stdout","time":10.531507172,"data":"Updating files:  63% (2258/3583)\n"}
+,{"stream_name":"stdout","time":10.531511578,"data":"Updating files:  64% (2294/3583)\n"}
+,{"stream_name":"stdout","time":10.531515959,"data":"Updating files:  65% (2329/3583)\n"}
+,{"stream_name":"stdout","time":10.53152034,"data":"Updating files:  66% (2365/3583)\n"}
+,{"stream_name":"stdout","time":10.531524833,"data":"Updating files:  67% (2401/3583)\n"}
+,{"stream_name":"stdout","time":10.531532097,"data":"Updating files:  68% (2437/3583)\n"}
+,{"stream_name":"stdout","time":10.53153694,"data":"Updating files:  69% (2473/3583)\n"}
+,{"stream_name":"stdout","time":10.531541421,"data":"Updating files:  70% (2509/3583)\n"}
+,{"stream_name":"stdout","time":10.531545921,"data":"Updating files:  71% (2544/3583)\n"}
+,{"stream_name":"stdout","time":10.531550754,"data":"Updating files:  72% (2580/3583)\n"}
+,{"stream_name":"stdout","time":10.531553809,"data":"Updating files:  73% (2616/3583)\n"}
+,{"stream_name":"stdout","time":10.53155806,"data":"Updating files:  74% (2652/3583)\n"}
+,{"stream_name":"stdout","time":10.531562423,"data":"Updating files:  75% (2688/3583)\n"}
+,{"stream_name":"stdout","time":10.531570572,"data":"Updating files:  76% (2724/3583)\n"}
+,{"stream_name":"stdout","time":10.53157511,"data":"Updating files:  77% (2759/3583)\n"}
+,{"stream_name":"stdout","time":10.53157936,"data":"Updating files:  78% (2795/3583)\n"}
+,{"stream_name":"stdout","time":10.531583959,"data":"Updating files:  79% (2831/3583)\n"}
+,{"stream_name":"stdout","time":10.531588436,"data":"Updating files:  80% (2867/3583)\n"}
+,{"stream_name":"stdout","time":10.531593019,"data":"Updating files:  81% (2903/3583)\n"}
+,{"stream_name":"stdout","time":10.531597429,"data":"Updating files:  82% (2939/3583)\n"}
+,{"stream_name":"stdout","time":10.531601898,"data":"Updating files:  83% (2974/3583)\n"}
+,{"stream_name":"stdout","time":10.531606376,"data":"Updating files:  84% (3010/3583)\n"}
+,{"stream_name":"stdout","time":10.531610815,"data":"Updating files:  85% (3046/3583)\n"}
+,{"stream_name":"stdout","time":10.531615193,"data":"Updating files:  86% (3082/3583)\n"}
+,{"stream_name":"stdout","time":10.531619613,"data":"Updating files:  87% (3118/3583)\n"}
+,{"stream_name":"stdout","time":10.531624065,"data":"Updating files:  88% (3154/3583)\n"}
+,{"stream_name":"stdout","time":10.531628463,"data":"Updating files:  89% (3189/3583)\n"}
+,{"stream_name":"stdout","time":10.531632973,"data":"Updating files:  90% (3225/3583)\n"}
+,{"stream_name":"stdout","time":10.531637414,"data":"Updating files:  91% (3261/3583)\n"}
+,{"stream_name":"stdout","time":10.531641915,"data":"Updating files:  92% (3297/3583)\n"}
+,{"stream_name":"stdout","time":10.531646752,"data":"Updating files:  93% (3333/3583)\n"}
+,{"stream_name":"stdout","time":10.531649838,"data":"Updating files:  94% (3369/3583)\n"}
+,{"stream_name":"stdout","time":10.531654351,"data":"Updating files:  95% (3404/3583)\n"}
+,{"stream_name":"stdout","time":10.531658657,"data":"Updating files:  96% (3440/3583)\n"}
+,{"stream_name":"stdout","time":10.531663129,"data":"Updating files:  97% (3476/3583)\n"}
+,{"stream_name":"stdout","time":10.531667732,"data":"Updating files:  98% (3512/3583)\n"}
+,{"stream_name":"stdout","time":10.53167188,"data":"Updating files:  99% (3548/3583)\n"}
+,{"stream_name":"stdout","time":10.531676127,"data":"Updating files: 100% (3583/3583)\n"}
+,{"stream_name":"stdout","time":10.531680461,"data":"Updating files: 100% (3583/3583), done.\n"}
+,{"stream_name":"stdout","time":10.531685,"data":"\n"}
+,{"stream_name":"stdout","time":10.531689529,"data":"+ git fetch --depth 1 origin 3057bb66c86c46d5781e50e85462a760ba7d1feb\n"}
+,{"stream_name":"stdout","time":11.800581087,"data":"From https://github.com/ggml-org/llama.cpp\n"}
+,{"stream_name":"stdout","time":11.80061357,"data":" * branch                3057bb66c86c46d5781e50e85462a760ba7d1feb -\u003e FETCH_HEAD\n"}
+,{"stream_name":"stdout","time":11.800620257,"data":"\n"}
+,{"stream_name":"stdout","time":11.800624891,"data":"+ git checkout --detach 3057bb66c86c46d5781e50e85462a760ba7d1feb\n"}
+,{"stream_name":"stdout","time":13.134624237,"data":"HEAD is now at 3057bb66c ui : add cache (#28802)\n"}
+,{"stream_name":"stdout","time":13.134653862,"data":"\n"}
+,{"stream_name":"stdout","time":13.144882921,"data":"+ git diff -- src/models/qwen35moe.cpp src/llama-model-loader.cpp ggml/src/ggml-cpu/ggml-cpu.c ggml/src/ggml-cpu/iqp.cpp\n"}
+,{"stream_name":"stdout","time":13.15777883,"data":"+    static uint64_t event_id = 0;\n"}
+,{"stream_name":"stdout","time":13.157802539,"data":"+    if (fp == NULL) {\n"}
+,{"stream_name":"stdout","time":13.157807469,"data":"+        fp = fopen(path, \"a\");\n"}
+,{"stream_name":"stdout","time":13.157811734,"data":"+        if (fp == NULL) return;\n"}
+,{"stream_name":"stdout","time":13.157824253,"data":"+        setvbuf(fp, NULL, _IOLBF, 0);\n"}
+,{"stream_name":"stdout","time":13.157828544,"data":"+    }\n"}
+,{"stream_name":"stdout","time":13.157833095,"data":"+    const int64_t n = ggml_nelements(ids);\n"}
+,{"stream_name":"stdout","time":13.157838028,"data":"+    const int32_t * values = (const int32_t *) ids-\u003edata;\n"}
+,{"stream_name":"stdout","time":13.157843629,"data":"+    fprintf(fp, \"{\\\"event\\\":%\" PRIu64 \",\\\"weight\\\":\\\"%s\\\",\\\"shape\\\":[%\" PRId64 \",%\" PRId64 \"],\\\"ids\\\":[\",\n"}
+,{"stream_name":"stdout","time":13.157850628,"data":"+        event_id++, weights-\u003ename, ids-\u003ene[0], ids-\u003ene[1]);\n"}
+,{"stream_name":"stdout","time":13.157855977,"data":"+    for (int64_t i = 0; i \u003c n; ++i) fprintf(fp, \"%s%d\", i ? \",\" : \"\", values[i]);\n"}
+,{"stream_name":"stdout","time":13.157862117,"data":"+    fprintf(fp, \"]}\\n\");\n"}
+,{"stream_name":"stdout","time":13.157867484,"data":"+}\n"}
+,{"stream_name":"stdout","time":13.157872108,"data":"+\n"}
+,{"stream_name":"stdout","time":13.157876824,"data":" static struct ggml_state g_state = {0};\n"}
+,{"stream_name":"stdout","time":13.157881855,"data":" \n"}
+,{"stream_name":"stdout","time":13.157886498,"data":" void ggml_barrier(struct ggml_threadpool * tp) {\n"}
+,{"stream_name":"stdout","time":13.157891484,"data":"@@ -1555,6 +1973,7 @@ static void ggml_compute_forward_mul_mat_id(\n"}
+,{"stream_name":"stdout","time":13.157896602,"data":"     const enum ggml_type type = src0-\u003etype;\n"}
+,{"stream_name":"stdout","time":13.157901705,"data":" \n"}
+,{"stream_name":"stdout","time":13.157906471,"data":"     const bool src1_cont = ggml_is_contiguous(src1);\n"}
+,{"stream_name":"stdout","time":13.157911419,"data":"+    const bool phase6 = phase6_enabled();\n"}
+,{"stream_name":"stdout","time":13.157916278,"data":" \n"}
+,{"stream_name":"stdout","time":13.157920862,"data":"     enum ggml_type    const vec_dot_type    = type_traits_cpu[type].vec_dot_type;\n"}
+,{"stream_name":"stdout","time":13.157926017,"data":"     ggml_from_float_t const from_float      = type_traits_cpu[vec_dot_type].from_float;\n"}
+,{"stream_name":"stdout","time":13.157931095,"data":"@@ -1662,6 +2081,9 @@ static void ggml_compute_forward_mul_mat_id(\n"}
+,{"stream_name":"stdout","time":13.157936285,"data":" \n"}
+,{"stream_name":"stdout","time":13.157940924,"data":"     ggml_barrier(params-\u003ethreadpool);\n"}
+,{"stream_name":"stdout","time":13.157945924,"data":" \n"}
+,{"stream_name":"stdout","time":13.157950593,"data":"+    if (phase6 \u0026\u0026 ith == 0) phase6_prepare(src0, ids);\n"}
+,{"stream_name":"stdout","time":13.157955885,"data":"+    ggml_barrier(params-\u003ethreadpool);\n"}
+,{"stream_name":"stdout","time":13.157960848,"data":"+\n"}
+,{"stream_name":"stdout","time":13.157964985,"data":"     for (int cur_a = 0; cur_a \u003c n_as; ++cur_a) {\n"}
+,{"stream_name":"stdout","time":13.157969447,"data":"         const int64_t cne1 = matrix_row_counts[cur_a];\n"}
+,{"stream_name":"stdout","time":13.157974098,"data":" \n"}
+,{"stream_name":"stdout","time":13.15797805,"data":"@@ -1676,7 +2098,8 @@ static void ggml_compute_forward_mul_mat_id(\n"}
+,{"stream_name":"stdout","time":13.157982725,"data":"             continue;\n"}
+,{"stream_name":"stdout","time":13.157987113,"data":"         }\n"}
+,{"stream_name":"stdout","time":13.157991473,"data":" \n"}
+,{"stream_name":"stdout","time":13.157995805,"data":"-        const char * src0_cur = (const char *) src0-\u003edata + cur_a * nb02;\n"}
+,{"stream_name":"stdout","time":13.158000854,"data":"+        const char * src0_cur = phase6 ? phase6_tensor_ptr(src0, cur_a)\n"}
+,{"stream_name":"stdout","time":13.158009807,"data":"+            : (const char *) src0-\u003edata + cur_a * nb02;\n"}
+,{"stream_name":"stdout","time":13.158014505,"data":"         const void * wdata = (src1-\u003etype == vec_dot_type) ? src1-\u003edata : params-\u003ewdata;\n"}
+,{"stream_name":"stdout","time":13.158019705,"data":"         const size_t row_size = ggml_row_size(vec_dot_type, ne10);\n"}
+,{"stream_name":"stdout","time":13.158024541,"data":" \n"}
+,{"stream_name":"stdout","time":13.158029088,"data":"@@ -1740,6 +2163,8 @@ static void ggml_compute_forward(struct ggml_compute_params * params, struct ggm\n"}
+,{"stream_name":"stdout","time":13.158034106,"data":"         return;\n"}
+,{"stream_name":"stdout","time":13.158038591,"data":"     }\n"}
+,{"stream_name":"stdout","time":13.158043149,"data":" \n"}
+,{"stream_name":"stdout","time":13.158047507,"data":"+    ggml_phase6_route_trace(params, tensor);\n"}
+,{"stream_name":"stdout","time":13.158052111,"data":"+\n"}
+,{"stream_name":"stdout","time":13.158056367,"data":"     // extra_buffer op?\n"}
+,{"stream_name":"stdout","time":13.158062591,"data":"     if (ggml_cpu_extra_compute_forward(params, tensor)) {\n"}
+,{"stream_name":"stdout","time":13.15806737,"data":"         return;\n"}
+,{"stream_name":"stdout","time":13.158071732,"data":"diff --git a/ggml/src/ggml-cpu/iqp.cpp b/ggml/src/ggml-cpu/iqp.cpp\n"}
+,{"stream_name":"stdout","time":13.158076631,"data":"index b9201db38..eab08b1aa 100644\n"}
+,{"stream_name":"stdout","time":13.158081113,"data":"--- a/ggml/src/ggml-cpu/iqp.cpp\n"}
+,{"stream_name":"stdout","time":13.158085629,"data":"+++ b/ggml/src/ggml-cpu/iqp.cpp\n"}
+,{"stream_name":"stdout","time":13.158089867,"data":"@@ -14,6 +14,8 @@\n"}
+,{"stream_name":"stdout","time":13.158094087,"data":" \n"}
+,{"stream_name":"stdout","time":13.158098971,"data":" #include \"iqp.h\"\n"}
+,{"stream_name":"stdout","time":13.158104132,"data":" \n"}
+,{"stream_name":"stdout","time":13.158108806,"data":"+extern \"C\" const char * ggml_cpu_phase6_iqp_source(const struct ggml_tensor *, int64_t);\n"}
+,{"stream_name":"stdout","time":13.158113707,"data":"+\n"}
+,{"stream_name":"stdout","time":13.158118057,"data":" #define UNUSED GGML_UNUSED\n"}
+,{"stream_name":"stdout","time":13.158122705,"data":" \n"}
+,{"stream_name":"stdout","time":13.158127125,"data":" // smallest src1 batch for which the decode pays for itself\n"}
+,{"stream_name":"stdout","time":13.158132565,"data":"@@ -1148,6 +1150,8 @@ void ggml_compute_forward_mul_mat_id_iqp(const struct ggml_compute_params * para\n"}
+,{"stream_name":"stdout","time":13.158137699,"data":"     block_iqp_x8 * panel = (block_iqp_x8 *) ((char *) panels + (size_t) ith * ggml_cpu_iqp_scratch_size(dst));\n"}
+,{"stream_name":"stdout","time":13.158142487,"data":" \n"}
+,{"stream_name":"stdout","time":13.158167254,"data":"     const char * src0_cur = (const char *) src0-\u003edata + cur_a * nb02;\n"}
+,{"stream_name":"stdout","time":13.158172426,"data":"+    const char * phase6_src0_cur = ggml_cpu_phase6_iqp_source(src0, cur_a);\n"}
+,{"stream_name":"stdout","time":13.158177073,"data":"+    if (phase6_src0_cur != NULL) src0_cur = phase6_src0_cur;\n"}
+,{"stream_name":"stdout","time":13.158181313,"data":" \n"}
+,{"stream_name":"stdout","time":13.158185549,"data":"     const int64_t ngroups = ne01 / IQP_NB_ROWS;\n"}
+,{"stream_name":"stdout","time":13.158192634,"data":" \n"}
+,{"stream_name":"stdout","time":13.158196915,"data":"diff --git a/src/llama-model-loader.cpp b/src/llama-model-loader.cpp\n"}
+,{"stream_name":"stdout","time":13.158205273,"data":"index 91bb5e7cc..bab8461a2 100644\n"}
+,{"stream_name":"stdout","time":13.158209497,"data":"--- a/src/llama-model-loader.cpp\n"}
+,{"stream_name":"stdout","time":13.158213687,"data":"+++ b/src/llama-model-loader.cpp\n"}
+,{"stream_name":"stdout","time":13.158217817,"data":"@@ -11,9 +11,12 @@\n"}
+,{"stream_name":"stdout","time":13.158221895,"data":" #include \u003ccinttypes\u003e\n"}
+,{"stream_name":"stdout","time":13.158226249,"data":" #include \u003ccstdint\u003e\n"}
+,{"stream_name":"stdout","time":13.158230492,"data":" #include \u003ccstring\u003e\n"}
+,{"stream_name":"stdout","time":13.158234819,"data":"+#include \u003ccstdlib\u003e\n"}
+,{"stream_name":"stdout","time":13.158238974,"data":" #include \u003cfuture\u003e\n"}
+,{"stream_name":"stdout","time":13.158243229,"data":" #include \u003cregex\u003e\n"}
+,{"stream_name":"stdout","time":13.158247996,"data":" \n"}
+,{"stream_name":"stdout","time":13.158252488,"data":"+extern \"C\" void ggml_cpu_phase6_register_lazy_tensor(const struct ggml_tensor *, int, size_t, size_t, size_t);\n"}
+,{"stream_name":"stdout","time":13.158273067,"data":"+\n"}
+,{"stream_name":"stdout","time":13.158277524,"data":" static const size_t kiB = 1024;\n"}
+,{"stream_name":"stdout","time":13.15828217,"data":" static const size_t MiB = 1024*kiB;\n"}
+,{"stream_name":"stdout","time":13.158286808,"data":" static const size_t GiB = 1024*MiB;\n"}
+,{"stream_name":"stdout","time":13.158291558,"data":"@@ -1630,6 +1633,11 @@ bool llama_model_loader::load_all_data(\n"}
+,{"stream_name":"stdout","time":13.158296417,"data":" \n"}
+,{"stream_name":"stdout","time":13.15830088,"data":"         size_t n_size = ggml_nbytes(cur);\n"}
+,{"stream_name":"stdout","time":13.158305529,"data":" \n"}
+,{"stream_name":"stdout","time":13.158309944,"data":"+        if (lazy.has(cur) \u0026\u0026 std::getenv(\"GGML_PHASE6_BOUNDED_CACHE\") != nullptr) {\n"}
+,{"stream_name":"stdout","time":13.158315601,"data":"+            const auto \u0026 file = files.at(weight-\u003eidx);\n"}
+,{"stream_name":"stdout","time":13.158320635,"data":"+            ggml_cpu_phase6_register_lazy_tensor(cur, file-\u003efile_id(), weight-\u003eoffs, n_size, cur-\u003enb[2]);\n"}
+,{"stream_name":"stdout","time":13.158325726,"data":"+        }\n"}
+,{"stream_name":"stdout","time":13.15833016,"data":"+\n"}
+,{"stream_name":"stdout","time":13.158334486,"data":"         const bool from_mapping = use_mmap || lazy.has(cur);\n"}
+,{"stream_name":"stdout","time":13.158339404,"data":" \n"}
+,{"stream_name":"stdout","time":13.158345575,"data":"         if (from_mapping) {\n"}
+,{"stream_name":"stdout","time":13.158350044,"data":"diff --git a/src/models/qwen35moe.cpp b/src/models/qwen35moe.cpp\n"}
+,{"stream_name":"stdout","time":13.158354734,"data":"index bdf772625..c7fcd5ec6 100644\n"}
+,{"stream_name":"stdout","time":13.158359567,"data":"--- a/src/models/qwen35moe.cpp\n"}
+,{"stream_name":"stdout","time":13.15836623,"data":"+++ b/src/models/qwen35moe.cpp\n"}
+,{"stream_name":"stdout","time":13.15837128,"data":"@@ -93,8 +93,9 @@ void llama_model_qwen35moe::load_arch_tensors(llama_model_loader \u0026 ml) {\n"}
+,{"stream_name":"stdout","time":13.158376894,"data":" \n"}
+,{"stream_name":"stdout","time":13.158381838,"data":"         // Routed experts\n"}
+,{"stream_name":"stdout","time":13.158386732,"data":"         layer.ffn_gate_inp  = create_tensor(tn(LLM_TENSOR_FFN_GATE_INP,  \"weight\", il), { n_embd, n_expert }, flags);\n"}
+,{"stream_name":"stdout","time":13.158392629,"data":"-        layer.ffn_down_exps = create_tensor(tn(LLM_TENSOR_FFN_DOWN_EXPS, \"weight\", il), { n_ff_exp, n_embd, n_expert }, flags);\n"}
+,{"stream_name":"stdout","time":13.158401906,"data":"-        create_tensor_gate_up_exps(layer, il, n_embd, n_ff_exp, n_expert, flags);\n"}
+,{"stream_name":"stdout","time":13.158406692,"data":"+        const int expert_flags = flags | TENSOR_READ_LAZY;\n"}
+,{"stream_name":"stdout","time":13.15841152,"data":"+        layer.ffn_down_exps = create_tensor(tn(LLM_TENSOR_FFN_DOWN_EXPS, \"weight\", il), { n_ff_exp, n_embd, n_expert }, expert_flags);\n"}
+,{"stream_name":"stdout","time":13.158416566,"data":"+        create_tensor_gate_up_exps(layer, il, n_embd, n_ff_exp, n_expert, expert_flags);\n"}
+,{"stream_name":"stdout","time":13.158421004,"data":" \n"}
+,{"stream_name":"stdout","time":13.158425387,"data":"         // Shared experts\n"}
+,{"stream_name":"stdout","time":13.158429783,"data":"         layer.ffn_gate_inp_shexp = create_tensor(tn(LLM_TENSOR_FFN_GATE_INP_SHEXP, \"weight\", il), { n_embd }, flags);\n"}
+,{"stream_name":"stdout","time":13.158434931,"data":"\n"}
+,{"stream_name":"stdout","time":13.160575064,"data":"+ git diff -- src/llama-quant.cpp\n"}
+,{"stream_name":"stdout","time":13.166854647,"data":"diff --git a/src/llama-quant.cpp b/src/llama-quant.cpp\n"}
+,{"stream_name":"stdout","time":13.166874715,"data":"index 34ff25db5..a497c8bae 100644\n"}
+,{"stream_name":"stdout","time":13.166879855,"data":"--- a/src/llama-quant.cpp\n"}
+,{"stream_name":"stdout","time":13.166884584,"data":"+++ b/src/llama-quant.cpp\n"}
+,{"stream_name":"stdout","time":13.166889123,"data":"@@ -7,6 +7,7 @@\n"}
+,{"stream_name":"stdout","time":13.166893639,"data":" #include \u003calgorithm\u003e\n"}
+,{"stream_name":"stdout","time":13.166898477,"data":" #include \u003ccmath\u003e\n"}
+,{"stream_name":"stdout","time":13.166903508,"data":" #include \u003ccstring\u003e\n"}
+,{"stream_name":"stdout","time":13.166908174,"data":"+#include \u003ccstdlib\u003e\n"}
+,{"stream_name":"stdout","time":13.166912774,"data":" #include \u003ccinttypes\u003e\n"}
+,{"stream_name":"stdout","time":13.166917256,"data":" #include \u003cfstream\u003e\n"}
+,{"stream_name":"stdout","time":13.16692134,"data":" #include \u003cmutex\u003e\n"}
+,{"stream_name":"stdout","time":13.166925386,"data":"@@ -726,6 +727,12 @@ static ggml_type llama_tensor_get_type(quantize_state_impl \u0026 qs, const llama_mod\n"}
+,{"stream_name":"stdout","time":13.166930144,"data":"             }\n"}
+,{"stream_name":"stdout","time":13.166935096,"data":"         }\n"}
+,{"stream_name":"stdout","time":13.166939598999999,"data":" \n"}
+,{"stream_name":"stdout","time":13.166944064,"data":"+        // Controlled selective arm: explicit --tensor-type overrides\n"}
+,{"stream_name":"stdout","time":13.166954122,"data":"+        // selected projections; unmatched tensors keep source type.\n"}
+,{"stream_name":"stdout","time":13.166959185,"data":"+        if (!manual \u0026\u0026 std::getenv(\"JAMII_SELECTIVE_REQUANT_ONLY\") != nullptr) {\n"}
+,{"stream_name":"stdout","time":13.166964462,"data":"+            return tensor-\u003etype;\n"}
+,{"stream_name":"stdout","time":13.166969267,"data":"+        }\n"}
+,{"stream_name":"stdout","time":13.166974105,"data":"+\n"}
+,{"stream_name":"stdout","time":13.166978689,"data":"         // if not manual - use the standard logic for choosing the quantization type based on the selected mixture\n"}
+,{"stream_name":"stdout","time":13.166983953,"data":"         if (!manual \u0026\u0026 !params-\u003epure) {\n"}
+,{"stream_name":"stdout","time":13.166988897,"data":"             new_type = llama_tensor_get_type_impl(qs, new_type, tensor, params-\u003eftype, tm.category);\n"}
+,{"stream_name":"stdout","time":13.166994281,"data":"@@ -1094,6 +1101,11 @@ static void llama_model_quantize_impl(const std::string \u0026 fname_inp, const std::\n"}
+,{"stream_name":"stdout","time":13.167008142,"data":" \n"}
+,{"stream_name":"stdout","time":13.167012597,"data":"         metadata[i].requires_imatrix = tensor_requires_imatrix(tensor-\u003ename, metadata[i].target_type, ftype);\n"}
+,{"stream_name":"stdout","time":13.167017574,"data":" \n"}
+,{"stream_name":"stdout","time":13.167022016,"data":"+        if (std::getenv(\"JAMII_SELECTIVE_REQUANT_ONLY\") != nullptr \u0026\u0026\n"}
+,{"stream_name":"stdout","time":13.167026971,"data":"+                metadata[i].target_type == tensor-\u003etype) {\n"}
+,{"stream_name":"stdout","time":13.167031834,"data":"+            metadata[i].requires_imatrix = false;\n"}
+,{"stream_name":"stdout","time":13.167036241,"data":"+        }\n"}
+,{"stream_name":"stdout","time":13.167040296,"data":"+\n"}
+,{"stream_name":"stdout","time":13.167044699,"data":"         if (params-\u003eimatrix) {\n"}
+,{"stream_name":"stdout","time":13.167049338,"data":"             metadata[i].remapped_imatrix_name = remap_imatrix(tensor-\u003ename, mapped);\n"}
+,{"stream_name":"stdout","time":13.167054243,"data":"         } else if (metadata[i].allows_quantization \u0026\u0026 metadata[i].requires_imatrix) {\n"}
+,{"stream_name":"stdout","time":13.167059403,"data":"\n"}
+,{"stream_name":"stdout","time":13.167093675,"data":"+ cmake -S /tmp/native-sparse-q4-bounded-v1/llama.cpp -B /tmp/native-sparse-q4-bounded-v1/llama.cpp/build-native -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DGGML_NATIVE=ON -DGGML_CUDA=OFF -DGGML_METAL=OFF -DGGML_VULKAN=OFF -DLLAMA_CURL=OFF\n"}
+,{"stream_name":"stdout","time":15.937414993,"data":"-- The C compiler identification is GNU 11.4.0\n"}
+,{"stream_name":"stdout","time":15.937447751,"data":"-- The CXX compiler identification is GNU 11.4.0\n"}
+,{"stream_name":"stdout","time":15.937453628,"data":"-- Detecting C compiler ABI info\n"}
+,{"stream_name":"stdout","time":15.937458578,"data":"-- Detecting C compiler ABI info - done\n"}
+,{"stream_name":"stdout","time":15.937463356,"data":"-- Check for working C compiler: /usr/bin/cc - skipped\n"}
+,{"stream_name":"stdout","time":15.93746815,"data":"-- Detecting C compile features\n"}
+,{"stream_name":"stdout","time":15.937473196,"data":"-- Detecting C compile features - done\n"}
+,{"stream_name":"stdout","time":15.937478004,"data":"-- Detecting CXX compiler ABI info\n"}
+,{"stream_name":"stdout","time":15.937482673,"data":"-- Detecting CXX compiler ABI info - done\n"}
+,{"stream_name":"stdout","time":15.937487606,"data":"-- Check for working CXX compiler: /usr/bin/c++ - skipped\n"}
+,{"stream_name":"stdout","time":15.937491813,"data":"-- Detecting CXX compile features\n"}
+,{"stream_name":"stdout","time":15.937494726,"data":"-- Detecting CXX compile features - done\n"}
+,{"stream_name":"stdout","time":15.937497715,"data":"-- llama.cpp version: 0.4.0-dev\n"}
+,{"stream_name":"stdout","time":15.937500655000001,"data":"CMAKE_BUILD_TYPE=Release\n"}
+,{"stream_name":"stdout","time":15.937503713,"data":"-- Found Git: /usr/bin/git (found version \"2.34.1\")\n"}
+,{"stream_name":"stdout","time":15.937507301,"data":"-- The ASM compiler identification is GNU\n"}
+,{"stream_name":"stdout","time":15.937510293999999,"data":"-- Found assembler: /usr/bin/cc\n"}
+,{"stream_name":"stdout","time":15.93751319,"data":"-- Performing Test CMAKE_HAVE_LIBC_PTHREAD\n"}
+,{"stream_name":"stdout","time":15.937516145,"data":"-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success\n"}
+,{"stream_name":"stdout","time":15.937519106,"data":"-- Found Threads: TRUE\n"}
+,{"stream_name":"stdout","time":15.937522267,"data":"-- Warning: ccache not found - consider installing it for faster compilation or disable this warning with GGML_CCACHE=OFF\n"}
+,{"stream_name":"stdout","time":15.937539595,"data":"-- CMAKE_SYSTEM_PROCESSOR: x86_64\n"}
+,{"stream_name":"stdout","time":15.937544603,"data":"-- GGML_SYSTEM_ARCH: x86\n"}
+,{"stream_name":"stdout","time":15.93754872,"data":"-- Found OpenMP_C: -fopenmp (found version \"4.5\")\n"}
+,{"stream_name":"stdout","time":15.93755305,"data":"-- Found OpenMP_CXX: -fopenmp (found version \"4.5\")\n"}
+,{"stream_name":"stdout","time":15.937557266,"data":"-- Found OpenMP: TRUE (found version \"4.5\")\n"}
+,{"stream_name":"stdout","time":15.93756171,"data":"-- Including CPU backend\n"}
+,{"stream_name":"stdout","time":15.93756604,"data":"-- x86 detected\n"}
+,{"stream_name":"stdout","time":15.937570106,"data":"-- Adding CPU backend variant ggml-cpu: -march=native \n"}
+,{"stream_name":"stdout","time":15.937574756,"data":"-- ggml version: 0.23.0\n"}
+,{"stream_name":"stdout","time":15.937579456,"data":"-- ggml commit:  3057bb66c-dirty\n"}
+,{"stream_name":"stdout","time":15.937583576,"data":"-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version \"3.0.2\")\n"}
+,{"stream_name":"stdout","time":15.937588108,"data":"-- Performing Test OPENSSL_VERSION_SUPPORTED\n"}
+,{"stream_name":"stdout","time":15.937592178,"data":"-- Performing Test OPENSSL_VERSION_SUPPORTED - Success\n"}
+,{"stream_name":"stdout","time":15.937596631,"data":"-- OpenSSL found: 3.0.2\n"}
+,{"stream_name":"stdout","time":15.937601186,"data":"-- Generating embedded license file for target: llama-app\n"}
+,{"stream_name":"stdout","time":15.937605857,"data":"-- Configuring done (1.8s)\n"}
+,{"stream_name":"stdout","time":15.93761021,"data":"-- Generating done (0.6s)\n"}
+,{"stream_name":"stdout","time":15.937614947,"data":"-- Build files have been written to: /tmp/native-sparse-q4-bounded-v1/llama.cpp/build-native\n"}
+,{"stream_name":"stdout","time":15.937619873,"data":"\n"}
+,{"stream_name":"stdout","time":15.937627048,"data":"+ cmake --build /tmp/native-sparse-q4-bounded-v1/llama.cpp/build-native --config Release -j4 --target llama-cli llama-quantize\n"}
+,{"stream_name":"stdout","time":347.672851683,"data":"tools/mtmd/CMakeFiles/mtmd.dir/models/deepseekocr.cpp.o\n"}
+,{"stream_name":"stdout","time":347.672889783,"data":"[ 75%] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/deepseekocr2.cpp.o\n"}
+,{"stream_name":"stdout","time":347.672895144,"data":"[ 75%] Building CXX object common/CMakeFiles/llama-common.dir/fit.cpp.o\n"}
+,{"stream_name":"stdout","time":347.6728993,"data":"[ 77%] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/mobilenetv5.cpp.o\n"}
+,{"stream_name":"stdout","time":347.672903649,"data":"[ 77%] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/youtuvl.cpp.o\n"}
+,{"stream_name":"stdout","time":347.672907812,"data":"[ 77%] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/yasa2.cpp.o\n"}
+,{"stream_name":"stdout","time":347.672911657,"data":"[ 77%] Building CXX object tools/mtmd/CMakeFiles/mtmd.dir/models/parakeet.cpp.o\n"}
+,{"stream_name":"stdout","time":347.672915503,"data":"[ 79%] Linking CXX static library libmtmd.a\n"}
+,{"stream_name":"stdout","time":347.672919297,"data":"[ 79%] Built target mtmd\n"}
+,{"stream_name":"stdout","time":347.672923112,"data":"[ 81%] Building CXX object common/CMakeFiles/llama-common.dir/hf-cache.cpp.o\n"}
+,{"stream_name":"stdout","time":347.672926974,"data":"[ 81%] Building CXX object common/CMakeFiles/llama-common.dir/imatrix-loader.cpp.o\n"}
+,{"stream_name":"stdout","time":347.672930757,"data":"[ 81%] Building CXX object common/CMakeFiles/llama-common.dir/json-schema-to-grammar.cpp.o\n"}
+,{"stream_name":"stdout","time":347.672944022,"data":"[ 81%] Building CXX object common/CMakeFiles/llama-common.dir/json.cpp.o\n"}
+,{"stream_name":"stdout","time":347.672947475,"data":"[ 81%] Building CXX object common/CMakeFiles/llama-common.dir/llguidance.cpp.o\n"}
+,{"stream_name":"stdout","time":347.672950636,"data":"[ 83%] Building CXX object common/CMakeFiles/llama-common.dir/log.cpp.o\n"}
+,{"stream_name":"stdout","time":347.67295372,"data":"[ 83%] Building CXX object common/CMakeFiles/llama-common.dir/ngram-cache.cpp.o\n"}
+,{"stream_name":"stdout","time":347.672956772,"data":"[ 83%] Building CXX object common/CMakeFiles/llama-common.dir/ngram-map.cpp.o\n"}
+,{"stream_name":"stdout","time":347.672959897,"data":"[ 83%] Building CXX object common/CMakeFiles/llama-common.dir/ngram-mod.cpp.o\n"}
+,{"stream_name":"stdout","time":347.672962992,"data":"[ 85%] Building CXX object common/CMakeFiles/llama-common.dir/peg-parser.cpp.o\n"}
+,{"stream_name":"stdout","time":347.67296616,"data":"[ 85%] Building CXX object common/CMakeFiles/llama-common.dir/preset.cpp.o\n"}
+,{"stream_name":"stdout","time":347.672969417,"data":"[ 85%] Building CXX object common/CMakeFiles/llama-common.dir/reasoning-budget.cpp.o\n"}
+,{"stream_name":"stdout","time":347.672972625,"data":"[ 85%] Building CXX object common/CMakeFiles/llama-common.dir/sampling.cpp.o\n"}
+,{"stream_name":"stdout","time":347.672975627,"data":"[ 87%] Building CXX object common/CMakeFiles/llama-common.dir/speculative.cpp.o\n"}
+,{"stream_name":"stdout","time":347.672978626,"data":"[ 87%] Building CXX object common/CMakeFiles/llama-common.dir/subproc.cpp.o\n"}
+,{"stream_name":"stdout","time":347.67298162,"data":"[ 87%] Building CXX object common/CMakeFiles/llama-common.dir/trie.cpp.o\n"}
+,{"stream_name":"stdout","time":347.672984607,"data":"[ 87%] Building CXX object common/CMakeFiles/llama-common.dir/unicode.cpp.o\n"}
+,{"stream_name":"stdout","time":347.672987579,"data":"[ 89%] Building CXX object common/CMakeFiles/llama-common.dir/jinja/lexer.cpp.o\n"}
+,{"stream_name":"stdout","time":347.672993605,"data":"[ 89%] Building CXX object common/CMakeFiles/llama-common.dir/jinja/parser.cpp.o\n"}
+,{"stream_name":"stdout","time":347.672998322,"data":"[ 89%] Building CXX object common/CMakeFiles/llama-common.dir/jinja/runtime.cpp.o\n"}
+,{"stream_name":"stdout","time":347.673002894,"data":"[ 89%] Building CXX object common/CMakeFiles/llama-common.dir/jinja/value.cpp.o\n"}
+,{"stream_name":"stdout","time":347.673007365,"data":"[ 89%] Building CXX object common/CMakeFiles/llama-common.dir/jinja/string.cpp.o\n"}
+,{"stream_name":"stdout","time":347.673011882,"data":"[ 91%] Building CXX object common/CMakeFiles/llama-common.dir/jinja/caps.cpp.o\n"}
+,{"stream_name":"stdout","time":347.673016414,"data":"[ 91%] Linking CXX static library libllama-common.a\n"}
+,{"stream_name":"stdout","time":347.673020727,"data":"[ 91%] Built target llama-common\n"}
+,{"stream_name":"stdout","time":347.673025313,"data":"[ 91%] Building CXX object tools/server/CMakeFiles/server-context.dir/cmake_pch.hxx.gch\n"}
+,{"stream_name":"stdout","time":347.673030026,"data":"[ 91%] Building CXX object tools/server/CMakeFiles/server-context.dir/server-chat.cpp.o\n"}
+,{"stream_name":"stdout","time":347.673034772,"data":"[ 91%] Building CXX object tools/server/CMakeFiles/server-context.dir/server-task.cpp.o\n"}
+,{"stream_name":"stdout","time":347.673039892,"data":"[ 93%] Building CXX object tools/server/CMakeFiles/server-context.dir/server-queue.cpp.o\n"}
+,{"stream_name":"stdout","time":347.673044562,"data":"[ 93%] Building CXX object tools/server/CMakeFiles/server-context.dir/server-common.cpp.o\n"}
+,{"stream_name":"stdout","time":347.673049485,"data":"[ 93%] Building CXX object tools/server/CMakeFiles/server-context.dir/server-context.cpp.o\n"}
+,{"stream_name":"stdout","time":347.673058385,"data":"[ 93%] Building CXX object tools/server/CMakeFiles/server-context.dir/server-stream.cpp.o\n"}
+,{"stream_name":"stdout","time":347.673063483,"data":"[ 93%] Building CXX object tools/server/CMakeFiles/server-context.dir/server-tools.cpp.o\n"}
+,{"stream_name":"stdout","time":347.673068262,"data":"[ 95%] Building CXX object tools/server/CMakeFiles/server-context.dir/server-mcp.cpp.o\n"}
+,{"stream_name":"stdout","time":347.673073644,"data":"[ 95%] Building CXX object tools/server/CMakeFiles/server-context.dir/server-schema.cpp.o\n"}
+,{"stream_name":"stdout","time":347.673077237,"data":"[ 95%] Linking CXX static library libserver-context.a\n"}
+,{"stream_name":"stdout","time":347.673080341,"data":"[ 95%] Built target server-context\n"}
+,{"stream_name":"stdout","time":347.673083339,"data":"[ 95%] Building CXX object tools/server/CMakeFiles/llama-server-impl.dir/cmake_pch.hxx.gch\n"}
+,{"stream_name":"stdout","time":347.67308647,"data":"[ 95%] Building CXX object tools/server/CMakeFiles/llama-server-impl.dir/server-http.cpp.o\n"}
+,{"stream_name":"stdout","time":347.673089507,"data":"[ 97%] Building CXX object tools/server/CMakeFiles/llama-server-impl.dir/server.cpp.o\n"}
+,{"stream_name":"stdout","time":347.67309316,"data":"[ 97%] Building CXX object tools/server/CMakeFiles/llama-server-impl.dir/server-models.cpp.o\n"}
+,{"stream_name":"stdout","time":347.673097682,"data":"[ 97%] Linking CXX static library libllama-server-impl.a\n"}
+,{"stream_name":"stdout","time":347.673102092,"data":"[ 97%] Built target llama-server-impl\n"}
+,{"stream_name":"stdout","time":347.673106735,"data":"[100%] Building CXX object tools/cli/CMakeFiles/llama-cli-impl.dir/cli-client.cpp.o\n"}
+,{"stream_name":"stdout","time":347.673111999,"data":"[100%] Building CXX object tools/cli/CMakeFiles/llama-cli-impl.dir/cli.cpp.o\n"}
+,{"stream_name":"stdout","time":347.673116967,"data":"[100%] Building CXX object tools/cli/CMakeFiles/llama-cli-impl.dir/cli-context.cpp.o\n"}
+,{"stream_name":"stdout","time":347.673121689,"data":"[100%] Linking CXX static library libllama-cli-impl.a\n"}
+,{"stream_name":"stdout","time":347.673126159,"data":"[100%] Built target llama-cli-impl\n"}
+,{"stream_name":"stdout","time":347.673130799,"data":"[100%] Building CXX object tools/cli/CMakeFiles/llama-cli.dir/main.cpp.o\n"}
+,{"stream_name":"stdout","time":347.673135497,"data":"[100%] Linking CXX executable ../../bin/llama-cli\n"}
+,{"stream_name":"stdout","time":347.673140129,"data":"[100%] Built target llama-cli\n"}
+,{"stream_name":"stdout","time":347.673144576,"data":"[  0%] Built target llama-common-base\n"}
+,{"stream_name":"stdout","time":347.673175597,"data":"[  0%] Built target cpp-httplib\n"}
+,{"stream_name":"stdout","time":347.673180809,"data":"[  6%] Built target ggml-base\n"}
+,{"stream_name":"stdout","time":347.673185382,"data":"[ 20%] Built target ggml-cpu\n"}
+,{"stream_name":"stdout","time":347.673189386,"data":"[ 23%] Built target ggml\n"}
+,{"stream_name":"stdout","time":347.673193243,"data":"[ 56%] Built target llama\n"}
+,{"stream_name":"stdout","time":347.673197627,"data":"[ 96%] Built target llama-common\n"}
+,{"stream_name":"stdout","time":347.673201897,"data":"[ 96%] Building CXX object tools/quantize/CMakeFiles/llama-quantize-impl.dir/quantize.cpp.o\n"}
+,{"stream_name":"stdout","time":347.673206127,"data":"[ 96%] Linking CXX static library libllama-quantize-impl.a\n"}
+,{"stream_name":"stdout","time":347.67321026,"data":"[ 96%] Built target llama-quantize-impl\n"}
+,{"stream_name":"stdout","time":347.673214445,"data":"[100%] Building CXX object tools/quantize/CMakeFiles/llama-quantize.dir/main.cpp.o\n"}
+,{"stream_name":"stdout","time":347.673222666,"data":"[100%] Linking CXX executable ../../bin/llama-quantize\n"}
+,{"stream_name":"stdout","time":347.673226875,"data":"[100%] Built target llama-quantize\n"}
+,{"stream_name":"stdout","time":347.673231012,"data":"\n"}
+,{"stream_name":"stdout","time":347.67323488,"data":"+ /tmp/native-sparse-q4-bounded-v1/llama.cpp/build-native/bin/llama-cli --version\n"}
+,{"stream_name":"stdout","time":347.687902019,"data":"version: 0.4.0-dev (build 1, commit 3057bb66c)\n"}
+,{"stream_name":"stdout","time":347.687931594,"data":"built with GNU 11.4.0 for Linux x86_64\n"}
+,{"stream_name":"stdout","time":347.687937269,"data":"\n"}
+,{"stream_name":"stdout","time":347.688194007,"data":"+ curl -L --fail --retry 5 --retry-delay 5 -C - -o /tmp/native-sparse-q4-bounded-v1/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf https://huggingface.co/unsloth/Qwen3.5-35B-A3B-GGUF/resolve/bc014a17be43adabd7066b7a86075ff935c6a4e2/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf\n"}
+,{"stream_name":"stdout","time":442.561946293,"data":"0:00:31  0:01:09  116M\n"}
+,{"stream_name":"stdout","time":442.562075265,"data":" 32  9.9G   32 3306M    0     0  99.7M      0  0:01:41  0:00:33  0:01:08  100M\n"}
+,{"stream_name":"stdout","time":442.562084743,"data":" 33  9.9G   33 3442M    0     0   101M      0  0:01:40  0:00:33  0:01:07  113M\n"}
+,{"stream_name":"stdout","time":442.562091002,"data":" 34  9.9G   34 3550M    0     0   101M      0  0:01:40  0:00:34  0:01:06  106M\n"}
+,{"stream_name":"stdout","time":442.562097215,"data":" 35  9.9G   35 3646M    0     0   101M      0  0:01:40  0:00:36  0:01:04  108M\n"}
+,{"stream_name":"stdout","time":442.562102874,"data":" 36  9.9G   36 3758M    0     0   101M      0  0:01:40  0:00:37  0:01:03  102M\n"}
+,{"stream_name":"stdout","time":442.562106703,"data":" 37  9.9G   37 3841M    0     0   101M      0  0:01:40  0:00:37  0:01:03  111M\n"}
+,{"stream_name":"stdout","time":442.562110452,"data":" 38  9.9G   38 3950M    0     0   101M      0  0:01:40  0:00:38  0:01:02  102M\n"}
+,{"stream_name":"stdout","time":442.562116203,"data":" 39  9.9G   39 4064M    0     0   101M      0  0:01:40  0:00:40  0:01:00 98.4M\n"}
+,{"stream_name":"stdout","time":442.562122109,"data":" 41  9.9G   41 4167M    0     0   101M      0  0:01:39  0:00:40  0:00:59  105M\n"}
+,{"stream_name":"stdout","time":442.562127887,"data":" 42  9.9G   42 4274M    0     0   101M      0  0:01:40  0:00:42  0:00:58  102M\n"}
+,{"stream_name":"stdout","time":442.562132856,"data":" 43  9.9G   43 4405M    0     0   102M      0  0:01:39  0:00:42  0:00:57  112M\n"}
+,{"stream_name":"stdout","time":442.562139255,"data":" 44  9.9G   44 4504M    0     0   102M      0  0:01:39  0:00:43  0:00:56  110M\n"}
+,{"stream_name":"stdout","time":442.562144553,"data":" 45  9.9G   45 4609M    0     0   102M      0  0:01:39  0:00:44  0:00:55  114M\n"}
+,{"stream_name":"stdout","time":442.562170833,"data":" 46  9.9G   46 4723M    0     0   102M      0  0:01:38  0:00:45  0:00:53  111M\n"}
+,{"stream_name":"stdout","time":442.562177202,"data":" 47  9.9G   47 4823M    0     0   102M      0  0:01:39  0:00:47  0:00:52  110M\n"}
+,{"stream_name":"stdout","time":442.562183218,"data":" 48  9.9G   48 4933M    0     0   102M      0  0:01:38  0:00:47  0:00:51  105M\n"}
+,{"stream_name":"stdout","time":442.562189096,"data":" 49  9.9G   49 5046M    0     0   103M      0  0:01:38  0:00:48  0:00:50  108M\n"}
+,{"stream_name":"stdout","time":442.562194932,"data":" 51  9.9G   51 5194M    0     0   103M      0  0:01:37  0:00:49  0:00:48  116M\n"}
+,{"stream_name":"stdout","time":442.562200799,"data":" 51  9.9G   51 5242M    0     0   102M      0  0:01:38  0:00:50  0:00:48  103M\n"}
+,{"stream_name":"stdout","time":442.562206872,"data":" 53  9.9G   53 5417M    0     0   104M      0  0:01:37  0:00:51  0:00:46  122M\n"}
+,{"stream_name":"stdout","time":442.562228101,"data":" 54  9.9G   54 5515M    0     0   104M      0  0:01:37  0:00:52  0:00:45  116M\n"}
+,{"stream_name":"stdout","time":442.562233023,"data":" 55  9.9G   55 5661M    0     0   104M      0  0:01:37  0:00:54  0:00:43  119M\n"}
+,{"stream_name":"stdout","time":442.562237952,"data":" 56  9.9G   56 5730M    0     0   104M      0  0:01:37  0:00:54  0:00:43  107M\n"}
+,{"stream_name":"stdout","time":442.562242129,"data":" 57  9.9G   57 5848M    0     0   104M      0  0:01:37  0:00:55  0:00:42  121M\n"}
+,{"stream_name":"stdout","time":442.562246876,"data":" 58  9.9G   58 5975M    0     0   104M      0  0:01:36  0:00:56  0:00:40  111M\n"}
+,{"stream_name":"stdout","time":442.562253135,"data":" 59  9.9G   59 6080M    0     0   104M      0  0:01:36  0:00:57  0:00:39  113M\n"}
+,{"stream_name":"stdout","time":442.562257946,"data":" 61  9.9G   61 6209M    0     0   105M      0  0:01:36  0:00:58  0:00:38  112M\n"}
+,{"stream_name":"stdout","time":442.562262732,"data":" 61  9.9G   61 6292M    0     0   104M      0  0:01:36  0:00:59  0:00:37  112M\n"}
+,{"stream_name":"stdout","time":442.562267422,"data":" 63  9.9G   63 6421M    0     0   105M      0  0:01:36  0:01:00  0:00:36  114M\n"}
+,{"stream_name":"stdout","time":442.562271932,"data":" 64  9.9G   64 6548M    0     0   105M      0  0:01:36  0:01:02  0:00:34  110M\n"}
+,{"stream_name":"stdout","time":442.562276952,"data":" 65  9.9G   65 6639M    0     0   105M      0  0:01:36  0:01:02  0:00:34  111M\n"}
+,{"stream_name":"stdout","time":442.562281647,"data":" 66  9.9G   66 6756M    0     0   105M      0  0:01:36  0:01:03  0:00:33  109M\n"}
+,{"stream_name":"stdout","time":442.562286556,"data":" 67  9.9G   67 6874M    0     0   105M      0  0:01:36  0:01:04  0:00:32  116M\n"}
+,{"stream_name":"stdout","time":442.562291382,"data":" 68  9.9G   68 6966M    0     0   105M      0  0:01:36  0:01:06  0:00:30  105M\n"}
+,{"stream_name":"stdout","time":442.56229617,"data":" 69  9.9G   69 7100M    0     0   106M      0  0:01:35  0:01:06  0:00:29  115M\n"}
+,{"stream_name":"stdout","time":442.562300906,"data":" 70  9.9G   70 7177M    0     0   105M      0  0:01:36  0:01:08  0:00:28  105M\n"}
+,{"stream_name":"stdout","time":442.562305691,"data":" 72  9.9G   72 7318M    0     0   106M      0  0:01:35  0:01:08  0:00:27  112M\n"}
+,{"stream_name":"stdout","time":442.562310472,"data":" 72  9.9G   72 7410M    0     0   105M      0  0:01:35  0:01:09  0:00:26  107M\n"}
+,{"stream_name":"stdout","time":442.562315322,"data":" 74  9.9G   74 7534M    0     0   106M      0  0:01:35  0:01:10  0:00:25  116M\n"}
+,{"stream_name":"stdout","time":442.56232008,"data":" 75  9.9G   75 7651M    0     0   106M      0  0:01:35  0:01:11  0:00:24  110M\n"}
+,{"stream_name":"stdout","time":442.562324879,"data":" 76  9.9G   76 7747M    0     0   106M      0  0:01:35  0:01:12  0:00:23  116M\n"}
+,{"stream_name":"stdout","time":442.562329632,"data":" 77  9.9G   77 7868M    0     0   106M      0  0:01:35  0:01:13  0:00:22  110M\n"}
+,{"stream_name":"stdout","time":442.562334115,"data":" 78  9.9G   78 7936M    0     0   105M      0  0:01:36  0:01:15  0:00:21  101M\n"}
+,{"stream_name":"stdout","time":442.562339073,"data":" 79  9.9G   79 8074M    0     0   106M      0  0:01:35  0:01:15  0:00:20  107M\n"}
+,{"stream_name":"stdout","time":442.562344609,"data":" 80  9.9G   80 8202M    0     0   106M      0  0:01:35  0:01:16  0:00:19  110M\n"}
+,{"stream_name":"stdout","time":442.562349229,"data":" 81  9.9G   81 8320M    0     0   106M      0  0:01:35  0:01:17  0:00:18  114M\n"}
+,{"stream_name":"stdout","time":442.562353738,"data":" 82  9.9G   82 8419M    0     0   106M      0  0:01:35  0:01:18  0:00:17  109M\n"}
+,{"stream_name":"stdout","time":442.562363413,"data":" 83  9.9G   83 8532M    0     0   106M      0  0:01:35  0:01:19  0:00:16  123M\n"}
+,{"stream_name":"stdout","time":442.56236784,"data":" 85  9.9G   85 8689M    0     0   107M      0  0:01:34  0:01:20  0:00:14  123M\n"}
+,{"stream_name":"stdout","time":442.562372533,"data":" 86  9.9G   86 8805M    0     0   107M      0  0:01:34  0:01:22  0:00:12  116M\n"}
+,{"stream_name":"stdout","time":442.562377283,"data":" 87  9.9G   87 8866M    0     0   106M      0  0:01:35  0:01:22  0:00:13  109M\n"}
+,{"stream_name":"stdout","time":442.562382856,"data":" 87  9.9G   87 8939M    0     0   106M      0  0:01:35  0:01:23  0:00:12  104M\n"}
+,{"stream_name":"stdout","time":442.56238766,"data":" 89  9.9G   89 9065M    0     0   106M      0  0:01:35  0:01:24  0:00:11  106M\n"}
+,{"stream_name":"stdout","time":442.562392397,"data":" 90  9.9G   90 9200M    0     0   107M      0  0:01:34  0:01:25  0:00:09  102M\n"}
+,{"stream_name":"stdout","time":442.562397144,"data":" 91  9.9G   91 9314M    0     0   107M      0  0:01:34  0:01:26  0:00:08  105M\n"}
+,{"stream_name":"stdout","time":442.562401893,"data":" 92  9.9G   92 9387M    0     0   106M      0  0:01:35  0:01:28  0:00:07 97.1M\n"}
+,{"stream_name":"stdout","time":442.562406566,"data":" 93  9.9G   93 9480M    0     0   106M      0  0:01:35  0:01:28  0:00:07  108M\n"}
+,{"stream_name":"stdout","time":442.562411335,"data":" 94  9.9G   94 9595M    0     0   106M      0  0:01:35  0:01:30  0:00:05  102M\n"}
+,{"stream_name":"stdout","time":442.562415965,"data":" 95  9.9G   95 9746M    0     0   107M      0  0:01:34  0:01:30  0:00:04  109M\n"}
+,{"stream_name":"stdout","time":442.562420639,"data":" 96  9.9G   96 9817M    0     0   106M      0  0:01:35  0:01:31  0:00:04  100M\n"}
+,{"stream_name":"stdout","time":442.562425279,"data":" 97  9.9G   97 9931M    0     0   106M      0  0:01:35  0:01:32  0:00:03  117M\n"}
+,{"stream_name":"stdout","time":442.562429914,"data":" 99  9.9G   99  9.8G    0     0   107M      0  0:01:34  0:01:33  0:00:01  117M\n"}
+,{"stream_name":"stdout","time":442.562434327,"data":"100  9.9G  100  9.9G    0     0   107M      0  0:01:34  0:01:34 --:--:--  120M\n"}
+,{"stream_name":"stdout","time":442.562439604,"data":"\n"}
+,{"stream_name":"stdout","time":501.366642418,"data":"+ /tmp/native-sparse-q4-bounded-v1/llama.cpp/build-native/bin/llama-quantize --allow-requantize --tensor-type attn_(qkv|gate|q|k|v|output)\\.weight=q4_k /tmp/native-sparse-q4-bounded-v1/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf /tmp/native-sparse-q4-bounded-v1/Qwen3.5-35B-A3B-selective-attn-Q4_K.gguf Q5_K_M 4\n"}
+,{"stream_name":"stdout","time":597.919211069,"data":" blk.37.ssm_dt.bias                   - [    32,      1,      1,      1], type =    f32, size =    0.000 MiB\n"}
+,{"stream_name":"stdout","time":597.919258793,"data":"[ 697/ 733] blk.37.ssm_norm.weight               - [   128,      1,      1,      1], type =    f32, size =    0.000 MiB\n"}
+,{"stream_name":"stdout","time":597.919266113,"data":"[ 698/ 733] blk.37.ssm_out.weight                - [  4096,   2048,      1,      1], type =   q6_K, size =    6.562 MiB\n"}
+,{"stream_name":"stdout","time":597.919272142,"data":"[ 699/ 733] blk.38.attn_gate.weight              - [  2048,   4096,      1,      1], type =   q5_K, converting to q4_K .. size =     5.50 MiB -\u003e     4.50 MiB\n"}
+,{"stream_name":"stdout","time":597.919279166,"data":"[ 700/ 733] blk.38.attn_norm.weight              - [  2048,      1,      1,      1], type =    f32, size =    0.008 MiB\n"}
+,{"stream_name":"stdout","time":597.919285179,"data":"[ 701/ 733] blk.38.attn_qkv.weight               - [  2048,   8192,      1,      1], type =   q5_K, converting to q4_K .. size =    11.00 MiB -\u003e     9.00 MiB\n"}
+,{"stream_name":"stdout","time":597.919291871,"data":"[ 702/ 733] blk.38.ffn_down_exps.weight          - [   512,   2048,    256,      1], type =  iq2_s, size =   82.000 MiB\n"}
+,{"stream_name":"stdout","time":597.91931143,"data":"[ 703/ 733] blk.38.ffn_down_shexp.weight         - [   512,   2048,      1,      1], type =   q6_K, size =    0.820 MiB\n"}
+,{"stream_name":"stdout","time":597.919316393,"data":"[ 704/ 733] blk.38.ffn_gate_exps.weight          - [  2048,    512,    256,      1], type = iq2_xxs, size =   66.000 MiB\n"}
+,{"stream_name":"stdout","time":597.919321057,"data":"[ 705/ 733] blk.38.ffn_gate_inp.weight           - [  2048,    256,      1,      1], type =    f32, size =    2.000 MiB\n"}
+,{"stream_name":"stdout","time":597.919325872,"data":"[ 706/ 733] blk.38.ffn_gate_inp_shexp.weight     - [  2048,      1,      1,      1], type =    f32, size =    0.008 MiB\n"}
+,{"stream_name":"stdout","time":597.919330586,"data":"[ 707/ 733] blk.38.ffn_gate_shexp.weight         - [  2048,    512,      1,      1], type =   q5_K, size =    0.688 MiB\n"}
+,{"stream_name":"stdout","time":597.919335264,"data":"[ 708/ 733] blk.38.ffn_up_exps.weight            - [  2048,    512,    256,      1], type = iq2_xxs, size =   66.000 MiB\n"}
+,{"stream_name":"stdout","time":597.919340049,"data":"[ 709/ 733] blk.38.ffn_up_shexp.weight           - [  2048,    512,      1,      1], type =   q5_K, size =    0.688 MiB\n"}
+,{"stream_name":"stdout","time":597.919344816,"data":"[ 710/ 733] blk.38.post_attention_norm.weight    - [  2048,      1,      1,      1], type =    f32, size =    0.008 MiB\n"}
+,{"stream_name":"stdout","time":597.919349714,"data":"[ 711/ 733] blk.38.ssm_a                         - [    32,      1,      1,      1], type =    f32, size =    0.000 MiB\n"}
+,{"stream_name":"stdout","time":597.919355819,"data":"[ 712/ 733] blk.38.ssm_alpha.weight              - [  2048,     32,      1,      1], type =   q8_0, size =    0.066 MiB\n"}
+,{"stream_name":"stdout","time":597.919360514,"data":"[ 713/ 733] blk.38.ssm_beta.weight               - [  2048,     32,      1,      1], type =   q8_0, size =    0.066 MiB\n"}
+,{"stream_name":"stdout","time":597.919365273,"data":"[ 714/ 733] blk.38.ssm_conv1d.weight             - [     4,   8192,      1,      1], type =    f32, size =    0.125 MiB\n"}
+,{"stream_name":"stdout","time":597.919370001,"data":"[ 715/ 733] blk.38.ssm_dt.bias                   - [    32,      1,      1,      1], type =    f32, size =    0.000 MiB\n"}
+,{"stream_name":"stdout","time":597.919374678,"data":"[ 716/ 733] blk.38.ssm_norm.weight               - [   128,      1,      1,      1], type =    f32, size =    0.000 MiB\n"}
+,{"stream_name":"stdout","time":597.919379398,"data":"[ 717/ 733] blk.38.ssm_out.weight                - [  4096,   2048,      1,      1], type =   q6_K, size =    6.562 MiB\n"}
+,{"stream_name":"stdout","time":597.919384245,"data":"[ 718/ 733] blk.39.attn_k.weight                 - [  2048,    512,      1,      1], type =   q5_K, converting to q4_K .. size =     0.69 MiB -\u003e     0.56 MiB\n"}
+,{"stream_name":"stdout","time":597.919389403,"data":"[ 719/ 733] blk.39.attn_k_norm.weight            - [   256,      1,      1,      1], type =    f32, size =    0.001 MiB\n"}
+,{"stream_name":"stdout","time":597.919394156,"data":"[ 720/ 733] blk.39.attn_norm.weight              - [  2048,      1,      1,      1], type =    f32, size =    0.008 MiB\n"}
+,{"stream_name":"stdout","time":597.91939892,"data":"[ 721/ 733] blk.39.attn_output.weight            - [  4096,   2048,      1,      1], type =   q5_K, converting to q4_K .. size =     5.50 MiB -\u003e     4.50 MiB\n"}
+,{"stream_name":"stdout","time":597.919403875,"data":"[ 722/ 733] blk.39.attn_q.weight                 - [  2048,   8192,      1,      1], type =   q5_K, converting to q4_K .. size =    11.00 MiB -\u003e     9.00 MiB\n"}
+,{"stream_name":"stdout","time":597.919408815,"data":"[ 723/ 733] blk.39.attn_q_norm.weight            - [   256,      1,      1,      1], type =    f32, size =    0.001 MiB\n"}
+,{"stream_name":"stdout","time":597.919417333,"data":"[ 724/ 733] blk.39.attn_v.weight                 - [  2048,    512,      1,      1], type =   q5_K, converting to q4_K .. size =     0.69 MiB -\u003e     0.56 MiB\n"}
+,{"stream_name":"stdout","time":597.919422873,"data":"[ 725/ 733] blk.39.ffn_down_exps.weight          - [   512,   2048,    256,      1], type =  iq2_s, size =   82.000 MiB\n"}
+,{"stream_name":"stdout","time":597.919427694,"data":"[ 726/ 733] blk.39.ffn_down_shexp.weight         - [   512,   2048,      1,      1], type =   q6_K, size =    0.820 MiB\n"}
+,{"stream_name":"stdout","time":597.919432401,"data":"[ 727/ 733] blk.39.ffn_gate_exps.weight          - [  2048,    512,    256,      1], type = iq2_xxs, size =   66.000 MiB\n"}
+,{"stream_name":"stdout","time":597.919437719,"data":"[ 728/ 733] blk.39.ffn_gate_inp.weight           - [  2048,    256,      1,      1], type =    f32, size =    2.000 MiB\n"}
+,{"stream_name":"stdout","time":597.919442358,"data":"[ 729/ 733] blk.39.ffn_gate_inp_shexp.weight     - [  2048,      1,      1,      1], type =    f32, size =    0.008 MiB\n"}
+,{"stream_name":"stdout","time":597.919447133,"data":"[ 730/ 733] blk.39.ffn_gate_shexp.weight         - [  2048,    512,      1,      1], type =   q5_K, size =    0.688 MiB\n"}
+,{"stream_name":"stdout","time":597.91945172,"data":"[ 731/ 733] blk.39.ffn_up_exps.weight            - [  2048,    512,    256,      1], type = iq2_xxs, size =   66.000 MiB\n"}
+,{"stream_name":"stdout","time":597.919456453,"data":"[ 732/ 733] blk.39.ffn_up_shexp.weight           - [  2048,    512,      1,      1], type =   q5_K, size =    0.688 MiB\n"}
+,{"stream_name":"stdout","time":597.919461209,"data":"[ 733/ 733] blk.39.post_attention_norm.weight    - [  2048,      1,      1,      1], type =    f32, size =    0.008 MiB\n"}
+,{"stream_name":"stdout","time":597.919465933,"data":"llama_model_quantize_impl: model size  = 10152.78 MiB (2.46 BPW)\n"}
+,{"stream_name":"stdout","time":597.919470505,"data":"llama_model_quantize_impl: quant size  = 10030.28 MiB (2.43 BPW)\n"}
+,{"stream_name":"stdout","time":597.919475061,"data":"\n"}
+,{"stream_name":"stdout","time":597.919479251,"data":"llama_quantize: quantize time = 96485.40 ms\n"}
+,{"stream_name":"stdout","time":597.919483708,"data":"llama_quantize:    total time = 96485.40 ms\n"}
+,{"stream_name":"stdout","time":597.919488165,"data":"\n"}
+,{"stream_name":"stdout","time":667.363777872,"data":"+ df -h /kaggle/working\n"}
+,{"stream_name":"stdout","time":667.381465173,"data":"Filesystem      Size  Used Avail Use% Mounted on\n"}
+,{"stream_name":"stdout","time":667.381500553,"data":"/dev/loop1       20G  352K   20G   1% /kaggle/working\n"}
+,{"stream_name":"stdout","time":667.381507243,"data":"\n"}
+,{"stream_name":"stdout","time":667.383242551,"data":"\n"}
+,{"stream_name":"stdout","time":667.383276411,"data":"===== control_bounded_serial_rep1 bounded=True =====\n"}
+,{"stream_name":"stdout","time":748.718003486,"data":"\n"}
+,{"stream_name":"stdout","time":748.718144701,"data":"===== q4_bounded_serial_rep1 bounded=True =====\n"}
+,{"stream_name":"stdout","time":794.104902272,"data":"\n"}
+,{"stream_name":"stdout","time":794.104954842,"data":"===== control_bounded_serial_rep2 bounded=True =====\n"}
+,{"stream_name":"stdout","time":842.186415968,"data":"\n"}
+,{"stream_name":"stdout","time":842.186548027,"data":"===== q4_bounded_serial_rep2 bounded=True =====\n"}
+,{"stream_name":"stdout","time":885.919636674,"data":"\n"}
+,{"stream_name":"stdout","time":885.919701997,"data":"===== control_bounded_serial_rep3 bounded=True =====\n"}
+,{"stream_name":"stdout","time":931.635881042,"data":"\n"}
+,{"stream_name":"stdout","time":931.635919144,"data":"===== q4_bounded_serial_rep3 bounded=True =====\n"}
+,{"stream_name":"stdout","time":972.389626038,"data":"{\n"}
+,{"stream_name":"stdout","time":972.389786711,"data":"  \"exactness\": {\n"}
+,{"stream_name":"stdout","time":972.389796551,"data":"    \"control_response_hashes\": [\n"}
+,{"stream_name":"stdout","time":972.389800897,"data":"      \"5804c970f14ce9902178660a5262689f2ffb3518619336403244933d85cafca1\"\n"}
+,{"stream_name":"stdout","time":972.389806204,"data":"    ],\n"}
+,{"stream_name":"stdout","time":972.389811762,"data":"    \"candidate_response_hashes\": [\n"}
+,{"stream_name":"stdout","time":972.389817662,"data":"      \"5804c970f14ce9902178660a5262689f2ffb3518619336403244933d85cafca1\"\n"}
+,{"stream_name":"stdout","time":972.389823404,"data":"    ],\n"}
+,{"stream_name":"stdout","time":972.389829107,"data":"    \"control_matches_established_smoke\": true,\n"}
+,{"stream_name":"stdout","time":972.389835172,"data":"    \"native_k\": 8,\n"}
+,{"stream_name":"stdout","time":972.389840679,"data":"    \"layers\": 40,\n"}
+,{"stream_name":"stdout","time":972.389846578,"data":"    \"router_and_experts_unchanged\": true,\n"}
+,{"stream_name":"stdout","time":972.389852478,"data":"    \"candidate_projection_weights_requantized\": true\n"}
+,{"stream_name":"stdout","time":972.389858523,"data":"  },\n"}
+,{"stream_name":"stdout","time":972.389864093,"data":"  \"control_bounded_serial\": [\n"}
+,{"stream_name":"stdout","time":972.389870118,"data":"    {\n"}
+,{"stream_name":"stdout","time":972.389874251,"data":"      \"name\": \"control_bounded_serial\",\n"}
+,{"stream_name":"stdout","time":972.389878265,"data":"      \"model\": \"/tmp/native-sparse-q4-bounded-v1/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf\",\n"}
+,{"stream_name":"stdout","time":972.389882396,"data":"      \"bounded\": true,\n"}
+,{"stream_name":"stdout","time":972.38988617,"data":"      \"async_reads\": false,\n"}
+,{"stream_name":"stdout","time":972.389890121,"data":"      \"command\": [\n"}
+,{"stream_name":"stdout","time":972.389893858,"data":"        \"/tmp/native-sparse-q4-bounded-v1/llama.cpp/build-native/bin/llama-cli\",\n"}
+,{"stream_name":"stdout","time":972.389897928,"data":"        \"-m\",\n"}
+,{"stream_name":"stdout","time":972.389901667,"data":"        \"/tmp/native-sparse-q4-bounded-v1/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf\",\n"}
+,{"stream_name":"stdout","time":972.389905791,"data":"        \"-ngl\",\n"}
+,{"stream_name":"stdout","time":972.389909853,"data":"        \"0\",\n"}
+,{"stream_name":"stdout","time":972.38991555,"data":"        \"-t\",\n"}
+,{"stream_name":"stdout","time":972.389921338,"data":"        \"4\",\n"}
+,{"stream_name":"stdout","time":972.389926816,"data":"        \"-c\",\n"}
+,{"stream_name":"stdout","time":972.389932178,"data":"        \"512\",\n"}
+,{"stream_name":"stdout","time":972.389937484,"data":"        \"-n\",\n"}
+,{"stream_name":"stdout","time":972.389942978,"data":"        \"64\",\n"}
+,{"stream_name":"stdout","time":972.389948543,"data":"        \"--temp\",\n"}
+,{"stream_name":"stdout","time":972.389954462,"data":"        \"0\",\n"}
+,{"stream_name":"stdout","time":972.389960267,"data":"        \"--seed\",\n"}
+,{"stream_name":"stdout","time":972.389965976,"data":"        \"1234\",\n"}
+,{"stream_name":"stdout","time":972.389972124,"data":"        \"--single-turn\",\n"}
+,{"stream_name":"stdout","time":972.389976744,"data":"        \"--no-display-prompt\",\n"}
+,{"stream_name":"stdout","time":972.38998054,"data":"        \"--no-warmup\",\n"}
+,{"stream_name":"stdout","time":972.389992411,"data":"        \"--perf\",\n"}
+,{"stream_name":"stdout","time":972.389995683,"data":"        \"-lm\",\n"}
+,{"stream_name":"stdout","time":972.389998747,"data":"        \"mmap\",\n"}
+,{"stream_name":"stdout","time":972.390001724,"data":"        \"-lzm\",\n"}
+,{"stream_name":"stdout","time":972.390004649,"data":"        \"on\",\n"}
+,{"stream_name":"stdout","time":972.390008591,"data":"        \"-p\",\n"}
+,{"stream_name":"stdout","time":972.390013504,"data":"        \"Give one concise reason oral rehydration solution helps a child with watery diarrhoea.\"\n"}
+,{"stream_name":"stdout","time":972.390018479,"data":"      ],\n"}
+,{"stream_name":"stdout","time":972.390022743,"data":"      \"elapsed_sec\": 80.449270781,\n"}
+,{"stream_name":"stdout","time":972.39002724,"data":"      \"cache_drop\": {\n"}
+,{"stream_name":"stdout","time":972.390032643,"data":"        \"available\": true,\n"}
+,{"stream_name":"stdout","time":972.390037289,"data":"        \"called\": true\n"}
+,{"stream_name":"stdout","time":972.390041961,"data":"      },\n"}
+,{"stream_name":"stdout","time":972.390046486,"data":"      \"peak_rss_mib\": 3510.72265625,\n"}
+,{"stream_name":"stdout","time":972.390051302,"data":"      \"peak_rss_anon_mib\": 2446.58203125,\n"}
+,{"stream_name":"stdout","time":972.390056112,"data":"      \"peak_rss_file_mib\": 1069.515625,\n"}
+,{"stream_name":"stdout","time":972.390060648,"data":"      \"read_bytes_max\": 14421098496,\n"}
+,{"stream_name":"stdout","time":972.390065221,"data":"      \"rchar_max\": 8151954139,\n"}
+,{"stream_name":"stdout","time":972.390069594,"data":"      \"decode_perf\": {\n"}
+,{"stream_name":"stdout","time":972.390073933,"data":"        \"prompt_tokens_per_second\": 1.1,\n"}
+,{"stream_name":"stdout","time":972.390078214,"data":"        \"tokens_per_second\": 1.5,\n"}
+,{"stream_name":"stdout","time":972.390082679,"data":"        \"ms_per_token\": 666.6666666666666\n"}
+,{"stream_name":"stdout","time":972.390087113,"data":"      },\n"}
+,{"stream_name":"stdout","time":972.390091281,"data":"      \"stdout_sha256\": \"b28e06d0ea65071a6f427523fd6d1cfaa891546e2e4bb017fed55ea379b0fffe\",\n"}
+,{"stream_name":"stdout","time":972.390096253,"data":"      \"response_sha256\": \"5804c970f14ce9902178660a5262689f2ffb3518619336403244933d85cafca1\",\n"}
+,{"stream_name":"stdout","time":972.390104871,"data":"      \"response\": \"[Start thinking]\\n\\nThinking Process:\\n\\n1.  **Analyze the Request:**\\n    *   Topic: Oral Rehydration Solution (ORS).\\n    *   Target: Child with watery diarrhoea.\\n    *   Constraint: Give *one* concise reason.\\n\\n2.  **Identify the Mechanism of\",\n"}
+,{"stream_name":"stdout","time":972.390112881,"data":"      \"bounded_cache_stats\": \"PHASE6_BOUNDED_CACHE slot_bytes=876544 slots=2281 reserved_bytes=1999396864 requests=89280 hits=80005 misses=9275 evictions=6994 read_calls=83475 read_bytes=8129945600 read_ns=48565163410 async_tasks=0 async_wait_ns=0 ready_wait_ns=0 ready_wait_events=0\",\n"}
+,{"stream_name":"stdout","time":972.390118906,"data":"      \"sample_count\": 3890,\n"}
+,{"stream_name":"stdout","time":972.390123521,"data":"      \"trace\": \"/kaggle/working/native-sparse-q4-bounded-v1-results/control_bounded_serial_rep1.routes.jsonl\"\n"}
+,{"stream_name":"stdout","time":972.390128764,"data":"    },\n"}
+,{"stream_name":"stdout","time":972.390133318,"data":"    {\n"}
+,{"stream_name":"stdout","time":972.390137609,"data":"      \"name\": \"control_bounded_serial\",\n"}
+,{"stream_name":"stdout","time":972.390142488,"data":"      \"model\": \"/tmp/native-sparse-q4-bounded-v1/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf\",\n"}
+,{"stream_name":"stdout","time":972.390172163,"data":"      \"bounded\": true,\n"}
+,{"stream_name":"stdout","time":972.390182956,"data":"      \"async_reads\": false,\n"}
+,{"stream_name":"stdout","time":972.390188061,"data":"      \"command\": [\n"}
+,{"stream_name":"stdout","time":972.390192569,"data":"        \"/tmp/native-sparse-q4-bounded-v1/llama.cpp/build-native/bin/llama-cli\",\n"}
+,{"stream_name":"stdout","time":972.390197608,"data":"        \"-m\",\n"}
+,{"stream_name":"stdout","time":972.390202163,"data":"        \"/tmp/native-sparse-q4-bounded-v1/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf\",\n"}
+,{"stream_name":"stdout","time":972.390207118,"data":"        \"-ngl\",\n"}
+,{"stream_name":"stdout","time":972.390211612,"data":"        \"0\",\n"}
+,{"stream_name":"stdout","time":972.390216148,"data":"        \"-t\",\n"}
+,{"stream_name":"stdout","time":972.390220689,"data":"        \"4\",\n"}
+,{"stream_name":"stdout","time":972.390225496,"data":"        \"-c\",\n"}
+,{"stream_name":"stdout","time":972.390230281,"data":"        \"512\",\n"}
+,{"stream_name":"stdout","time":972.390233725,"data":"        \"-n\",\n"}
+,{"stream_name":"stdout","time":972.390236669,"data":"        \"64\",\n"}
+,{"stream_name":"stdout","time":972.390246835,"data":"        \"--temp\",\n"}
+,{"stream_name":"stdout","time":972.390251662,"data":"        \"0\",\n"}
+,{"stream_name":"stdout","time":972.390261659,"data":"        \"--seed\",\n"}
+,{"stream_name":"stdout","time":972.390266345,"data":"        \"1234\",\n"}
+,{"stream_name":"stdout","time":972.390270939,"data":"        \"--single-turn\",\n"}
+,{"stream_name":"stdout","time":972.390275912,"data":"        \"--no-display-prompt\",\n"}
+,{"stream_name":"stdout","time":972.390280754,"data":"        \"--no-warmup\",\n"}
+,{"stream_name":"stdout","time":972.390285396,"data":"        \"--perf\",\n"}
+,{"stream_name":"stdout","time":972.39029001,"data":"        \"-lm\",\n"}
+,{"stream_name":"stdout","time":972.390294533,"data":"        \"mmap\",\n"}
+,{"stream_name":"stdout","time":972.390299058,"data":"        \"-lzm\",\n"}
+,{"stream_name":"stdout","time":972.390303726,"data":"        \"on\",\n"}
+,{"stream_name":"stdout","time":972.390308289,"data":"        \"-p\",\n"}
+,{"stream_name":"stdout","time":972.390312921,"data":"        \"Give one concise reason oral rehydration solution helps a child with watery diarrhoea.\"\n"}
+,{"stream_name":"stdout","time":972.390317983,"data":"      ],\n"}
+,{"stream_name":"stdout","time":972.390322435,"data":"      \"elapsed_sec\": 47.327601002,\n"}
+,{"stream_name":"stdout","time":972.390327258,"data":"      \"cache_drop\": {\n"}
+,{"stream_name":"stdout","time":972.39033205,"data":"        \"available\": true,\n"}
+,{"stream_name":"stdout","time":972.390336544,"data":"        \"called\": true\n"}
+,{"stream_name":"stdout","time":972.390340288,"data":"      },\n"}
+,{"stream_name":"stdout","time":972.390344693,"data":"      \"peak_rss_mib\": 3517.3359375,\n"}
+,{"stream_name":"stdout","time":972.390349532,"data":"      \"peak_rss_anon_mib\": 2446.578125,\n"}
+,{"stream_name":"stdout","time":972.390353919,"data":"      \"peak_rss_file_mib\": 1070.8125,\n"}
+,{"stream_name":"stdout","time":972.390358187,"data":"      \"read_bytes_max\": 8740962304,\n"}
+,{"stream_name":"stdout","time":972.390362877,"data":"      \"rchar_max\": 8151954139,\n"}
+,{"stream_name":"stdout","time":972.390367366,"data":"      \"decode_perf\": {\n"}
+,{"stream_name":"stdout","time":972.390372074,"data":"        \"prompt_tokens_per_second\": 2.3,\n"}
+,{"stream_name":"stdout","time":972.390377138,"data":"        \"tokens_per_second\": 2.5,\n"}
+,{"stream_name":"stdout","time":972.390403111,"data":"        \"ms_per_token\": 400.0\n"}
+,{"stream_name":"stdout","time":972.390412701,"data":"      },\n"}
+,{"stream_name":"stdout","time":972.390417358,"data":"      \"stdout_sha256\": \"152318670461791b68792c0ad4aa324fdf9de9aeef2dfe1db0a414a013cfc8f0\",\n"}
+,{"stream_name":"stdout","time":972.390422642,"data":"      \"response_sha256\": \"5804c970f14ce9902178660a5262689f2ffb3518619336403244933d85cafca1\",\n"}
+,{"stream_name":"stdout","time":972.390429131,"data":"      \"response\": \"[Start thinking]\\n\\nThinking Process:\\n\\n1.  **Analyze the Request:**\\n    *   Topic: Oral Rehydration Solution (ORS).\\n    *   Target: Child with watery diarrhoea.\\n    *   Constraint: Give *one* concise reason.\\n\\n2.  **Identify the Mechanism of\",\n"}
+,{"stream_name":"stdout","time":972.390434152,"data":"      \"bounded_cache_stats\": \"PHASE6_BOUNDED_CACHE slot_bytes=876544 slots=2281 reserved_bytes=1999396864 requests=89280 hits=80005 misses=9275 evictions=6994 read_calls=83475 read_bytes=8129945600 read_ns=17832664241 async_tasks=0 async_wait_ns=0 ready_wait_ns=0 ready_wait_events=0\",\n"}
+,{"stream_name":"stdout","time":972.390440325,"data":"      \"sample_count\": 2292,\n"}
+,{"stream_name":"stdout","time":972.390445258,"data":"      \"trace\": \"/kaggle/working/native-sparse-q4-bounded-v1-results/control_bounded_serial_rep2.routes.jsonl\"\n"}
+,{"stream_name":"stdout","time":972.390450124,"data":"    },\n"}
+,{"stream_name":"stdout","time":972.390454278,"data":"    {\n"}
+,{"stream_name":"stdout","time":972.39045858,"data":"      \"name\": \"control_bounded_serial\",\n"}
+,{"stream_name":"stdout","time":972.390463178,"data":"      \"model\": \"/tmp/native-sparse-q4-bounded-v1/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf\",\n"}
+,{"stream_name":"stdout","time":972.390468136,"data":"      \"bounded\": true,\n"}
+,{"stream_name":"stdout","time":972.390472761,"data":"      \"async_reads\": false,\n"}
+,{"stream_name":"stdout","time":972.390477316,"data":"      \"command\": [\n"}
+,{"stream_name":"stdout","time":972.390482009,"data":"        \"/tmp/native-sparse-q4-bounded-v1/llama.cpp/build-native/bin/llama-cli\",\n"}
+,{"stream_name":"stdout","time":972.390486915,"data":"        \"-m\",\n"}
+,{"stream_name":"stdout","time":972.390491339,"data":"        \"/tmp/native-sparse-q4-bounded-v1/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf\",\n"}
+,{"stream_name":"stdout","time":972.390496161,"data":"        \"-ngl\",\n"}
+,{"stream_name":"stdout","time":972.390500632,"data":"        \"0\",\n"}
+,{"stream_name":"stdout","time":972.390505174,"data":"        \"-t\",\n"}
+,{"stream_name":"stdout","time":972.390509648,"data":"        \"4\",\n"}
+,{"stream_name":"stdout","time":972.390514067,"data":"        \"-c\",\n"}
+,{"stream_name":"stdout","time":972.390518581,"data":"        \"512\",\n"}
+,{"stream_name":"stdout","time":972.390523046,"data":"        \"-n\",\n"}
+,{"stream_name":"stdout","time":972.390527816,"data":"        \"64\",\n"}
+,{"stream_name":"stdout","time":972.390531281,"data":"        \"--temp\",\n"}
+,{"stream_name":"stdout","time":972.390535667,"data":"        \"0\",\n"}
+,{"stream_name":"stdout","time":972.390540309,"data":"        \"--seed\",\n"}
+,{"stream_name":"stdout","time":972.390544648,"data":"        \"1234\",\n"}
+,{"stream_name":"stdout","time":972.390549155,"data":"        \"--single-turn\",\n"}
+,{"stream_name":"stdout","time":972.39055369,"data":"        \"--no-display-prompt\",\n"}
+,{"stream_name":"stdout","time":972.390558041,"data":"        \"--no-warmup\",\n"}
+,{"stream_name":"stdout","time":972.390578171,"data":"        \"--perf\",\n"}
+,{"stream_name":"stdout","time":972.390582928,"data":"        \"-lm\",\n"}
+,{"stream_name":"stdout","time":972.390587555,"data":"        \"mmap\",\n"}
+,{"stream_name":"stdout","time":972.390596136,"data":"        \"-lzm\",\n"}
+,{"stream_name":"stdout","time":972.390600806,"data":"        \"on\",\n"}
+,{"stream_name":"stdout","time":972.390605413,"data":"        \"-p\",\n"}
+,{"stream_name":"stdout","time":972.390610136,"data":"        \"Give one concise reason oral rehydration solution helps a child with watery diarrhoea.\"\n"}
+,{"stream_name":"stdout","time":972.390615284,"data":"      ],\n"}
+,{"stream_name":"stdout","time":972.39062,"data":"      \"elapsed_sec\": 45.168033092,\n"}
+,{"stream_name":"stdout","time":972.390623921,"data":"      \"cache_drop\": {\n"}
+,{"stream_name":"stdout","time":972.390628159,"data":"        \"available\": true,\n"}
+,{"stream_name":"stdout","time":972.390632874,"data":"        \"called\": true\n"}
+,{"stream_name":"stdout","time":972.390637482,"data":"      },\n"}
+,{"stream_name":"stdout","time":972.390641742,"data":"      \"peak_rss_mib\": 3517.296875,\n"}
+,{"stream_name":"stdout","time":972.39064649,"data":"      \"peak_rss_anon_mib\": 2446.578125,\n"}
+,{"stream_name":"stdout","time":972.390650869,"data":"      \"peak_rss_file_mib\": 1070.7421875,\n"}
+,{"stream_name":"stdout","time":972.390655296,"data":"      \"read_bytes_max\": 8740212736,\n"}
+,{"stream_name":"stdout","time":972.390660033,"data":"      \"rchar_max\": 8151954139,\n"}
+,{"stream_name":"stdout","time":972.390664554,"data":"      \"decode_perf\": {\n"}
+,{"stream_name":"stdout","time":972.390669196,"data":"        \"prompt_tokens_per_second\": 2.4,\n"}
+,{"stream_name":"stdout","time":972.390673821,"data":"        \"tokens_per_second\": 2.7,\n"}
+,{"stream_name":"stdout","time":972.390678441,"data":"        \"ms_per_token\": 370.3703703703703\n"}
+,{"stream_name":"stdout","time":972.390683185,"data":"      },\n"}
+,{"stream_name":"stdout","time":972.390687526,"data":"      \"stdout_sha256\": \"087b5e716fc86cd3fae57f638bce46865a488ee39ccf54414f9d8c6525bd6cb6\",\n"}
+,{"stream_name":"stdout","time":972.390693761,"data":"      \"response_sha256\": \"5804c970f14ce9902178660a5262689f2ffb3518619336403244933d85cafca1\",\n"}
+,{"stream_name":"stdout","time":972.390698851,"data":"      \"response\": \"[Start thinking]\\n\\nThinking Process:\\n\\n1.  **Analyze the Request:**\\n    *   Topic: Oral Rehydration Solution (ORS).\\n    *   Target: Child with watery diarrhoea.\\n    *   Constraint: Give *one* concise reason.\\n\\n2.  **Identify the Mechanism of\",\n"}
+,{"stream_name":"stdout","time":972.390705076,"data":"      \"bounded_cache_stats\": \"PHASE6_BOUNDED_CACHE slot_bytes=876544 slots=2281 reserved_bytes=1999396864 requests=89280 hits=80005 misses=9275 evictions=6994 read_calls=83475 read_bytes=8129945600 read_ns=15917541875 async_tasks=0 async_wait_ns=0 ready_wait_ns=0 ready_wait_events=0\",\n"}
+,{"stream_name":"stdout","time":972.390711066,"data":"      \"sample_count\": 2184,\n"}
+,{"stream_name":"stdout","time":972.390715496,"data":"      \"trace\": \"/kaggle/working/native-sparse-q4-bounded-v1-results/control_bounded_serial_rep3.routes.jsonl\"\n"}
+,{"stream_name":"stdout","time":972.390720121,"data":"    }\n"}
+,{"stream_name":"stdout","time":972.390725003,"data":"  ],\n"}
+,{"stream_name":"stdout","time":972.390729501,"data":"  \"q4_bounded_serial\": [\n"}
+,{"stream_name":"stdout","time":972.39073408,"data":"    {\n"}
+,{"stream_name":"stdout","time":972.390738427,"data":"      \"name\": \"q4_bounded_serial\",\n"}
+,{"stream_name":"stdout","time":972.390743301,"data":"      \"model\": \"/tmp/native-sparse-q4-bounded-v1/Qwen3.5-35B-A3B-selective-attn-Q4_K.gguf\",\n"}
+,{"stream_name":"stdout","time":972.390748088,"data":"      \"bounded\": true,\n"}
+,{"stream_name":"stdout","time":972.390757343,"data":"      \"async_reads\": false,\n"}
+,{"stream_name":"stdout","time":972.390762131,"data":"      \"command\": [\n"}
+,{"stream_name":"stdout","time":972.390766787,"data":"        \"/tmp/native-sparse-q4-bounded-v1/llama.cpp/build-native/bin/llama-cli\",\n"}
+,{"stream_name":"stdout","time":972.390771664,"data":"        \"-m\",\n"}
+,{"stream_name":"stdout","time":972.39077616,"data":"        \"/tmp/native-sparse-q4-bounded-v1/Qwen3.5-35B-A3B-selective-attn-Q4_K.gguf\",\n"}
+,{"stream_name":"stdout","time":972.390781092,"data":"        \"-ngl\",\n"}
+,{"stream_name":"stdout","time":972.390785579,"data":"        \"0\",\n"}
+,{"stream_name":"stdout","time":972.390790053,"data":"        \"-t\",\n"}
+,{"stream_name":"stdout","time":972.39079448,"data":"        \"4\",\n"}
+,{"stream_name":"stdout","time":972.390798889,"data":"        \"-c\",\n"}
+,{"stream_name":"stdout","time":972.390803351,"data":"        \"512\",\n"}
+,{"stream_name":"stdout","time":972.390807918,"data":"        \"-n\",\n"}
+,{"stream_name":"stdout","time":972.390812408,"data":"        \"64\",\n"}
+,{"stream_name":"stdout","time":972.390817141,"data":"        \"--temp\",\n"}
+,{"stream_name":"stdout","time":972.390820833,"data":"        \"0\",\n"}
+,{"stream_name":"stdout","time":972.390825213,"data":"        \"--seed\",\n"}
+,{"stream_name":"stdout","time":972.390829521,"data":"        \"1234\",\n"}
+,{"stream_name":"stdout","time":972.390833951,"data":"        \"--single-turn\",\n"}
+,{"stream_name":"stdout","time":972.390838672,"data":"        \"--no-display-prompt\",\n"}
+,{"stream_name":"stdout","time":972.39084305,"data":"        \"--no-warmup\",\n"}
+,{"stream_name":"stdout","time":972.390847314,"data":"        \"--perf\",\n"}
+,{"stream_name":"stdout","time":972.390851811,"data":"        \"-lm\",\n"}
+,{"stream_name":"stdout","time":972.390856343,"data":"        \"mmap\",\n"}
+,{"stream_name":"stdout","time":972.390860821,"data":"        \"-lzm\",\n"}
+,{"stream_name":"stdout","time":972.390865293,"data":"        \"on\",\n"}
+,{"stream_name":"stdout","time":972.390869778,"data":"        \"-p\",\n"}
+,{"stream_name":"stdout","time":972.390874368,"data":"        \"Give one concise reason oral rehydration solution helps a child with watery diarrhoea.\"\n"}
+,{"stream_name":"stdout","time":972.390879268,"data":"      ],\n"}
+,{"stream_name":"stdout","time":972.390883609,"data":"      \"elapsed_sec\": 44.504776363,\n"}
+,{"stream_name":"stdout","time":972.390888211,"data":"      \"cache_drop\": {\n"}
+,{"stream_name":"stdout","time":972.390892693,"data":"        \"available\": true,\n"}
+,{"stream_name":"stdout","time":972.390897234,"data":"        \"called\": true\n"}
+,{"stream_name":"stdout","time":972.390901781,"data":"      },\n"}
+,{"stream_name":"stdout","time":972.390906059,"data":"      \"peak_rss_mib\": 3946.7109375,\n"}
+,{"stream_name":"stdout","time":972.390910901,"data":"      \"peak_rss_anon_mib\": 2997.80859375,\n"}
+,{"stream_name":"stdout","time":972.390914842,"data":"      \"peak_rss_file_mib\": 948.90234375,\n"}
+,{"stream_name":"stdout","time":972.39091914,"data":"      \"read_bytes_max\": 9043513344,\n"}
+,{"stream_name":"stdout","time":972.390923924,"data":"      \"rchar_max\": 8036250331,\n"}
+,{"stream_name":"stdout","time":972.390928319,"data":"      \"decode_perf\": {\n"}
+,{"stream_name":"stdout","time":972.390932696,"data":"        \"prompt_tokens_per_second\": 2.4,\n"}
+,{"stream_name":"stdout","time":972.390937973,"data":"        \"tokens_per_second\": 2.6,\n"}
+,{"stream_name":"stdout","time":972.390942344,"data":"        \"ms_per_token\": 384.6153846153846\n"}
+,{"stream_name":"stdout","time":972.390950497,"data":"      },\n"}
+,{"stream_name":"stdout","time":972.390955107,"data":"      \"stdout_sha256\": \"9686eeb6380b6d7cf49039e183f1388d0f8334de4b67562ccecd88528096f788\",\n"}
+,{"stream_name":"stdout","time":972.390960114,"data":"      \"response_sha256\": \"5804c970f14ce9902178660a5262689f2ffb3518619336403244933d85cafca1\",\n"}
+,{"stream_name":"stdout","time":972.390965163,"data":"      \"response\": \"[Start thinking]\\n\\nThinking Process:\\n\\n1.  **Analyze the Request:**\\n    *   Topic: Oral Rehydration Solution (ORS).\\n    *   Target: Child with watery diarrhoea.\\n    *   Constraint: Give *one* concise reason.\\n\\n2.  **Identify the Mechanism of\",\n"}
+,{"stream_name":"stdout","time":972.390971345,"data":"      \"bounded_cache_stats\": \"PHASE6_BOUNDED_CACHE slot_bytes=876544 slots=2281 reserved_bytes=1999396864 requests=89280 hits=80137 misses=9143 evictions=6862 read_calls=82287 read_bytes=8014241792 read_ns=17744401097 async_tasks=0 async_wait_ns=0 ready_wait_ns=0 ready_wait_events=0\",\n"}
+,{"stream_name":"stdout","time":972.390977168,"data":"      \"sample_count\": 2151,\n"}
+,{"stream_name":"stdout","time":972.390981825,"data":"      \"trace\": \"/kaggle/working/native-sparse-q4-bounded-v1-results/q4_bounded_serial_rep1.routes.jsonl\"\n"}
+,{"stream_name":"stdout","time":972.390986914,"data":"    },\n"}
+,{"stream_name":"stdout","time":972.390991482,"data":"    {\n"}
+,{"stream_name":"stdout","time":972.39099581,"data":"      \"name\": \"q4_bounded_serial\",\n"}
+,{"stream_name":"stdout","time":972.391000433,"data":"      \"model\": \"/tmp/native-sparse-q4-bounded-v1/Qwen3.5-35B-A3B-selective-attn-Q4_K.gguf\",\n"}
+,{"stream_name":"stdout","time":972.391005742,"data":"      \"bounded\": true,\n"}
+,{"stream_name":"stdout","time":972.391010156,"data":"      \"async_reads\": false,\n"}
+,{"stream_name":"stdout","time":972.391014496,"data":"      \"command\": [\n"}
+,{"stream_name":"stdout","time":972.391019151,"data":"        \"/tmp/native-sparse-q4-bounded-v1/llama.cpp/build-native/bin/llama-cli\",\n"}
+,{"stream_name":"stdout","time":972.391023822,"data":"        \"-m\",\n"}
+,{"stream_name":"stdout","time":972.391028333,"data":"        \"/tmp/native-sparse-q4-bounded-v1/Qwen3.5-35B-A3B-selective-attn-Q4_K.gguf\",\n"}
+,{"stream_name":"stdout","time":972.39103808,"data":"        \"-ngl\",\n"}
+,{"stream_name":"stdout","time":972.391042711,"data":"        \"0\",\n"}
+,{"stream_name":"stdout","time":972.391047269,"data":"        \"-t\",\n"}
+,{"stream_name":"stdout","time":972.391051769,"data":"        \"4\",\n"}
+,{"stream_name":"stdout","time":972.391056181,"data":"        \"-c\",\n"}
+,{"stream_name":"stdout","time":972.391060579,"data":"        \"512\",\n"}
+,{"stream_name":"stdout","time":972.391065189,"data":"        \"-n\",\n"}
+,{"stream_name":"stdout","time":972.391069793,"data":"        \"64\",\n"}
+,{"stream_name":"stdout","time":972.391074276,"data":"        \"--temp\",\n"}
+,{"stream_name":"stdout","time":972.391078794,"data":"        \"0\",\n"}
+,{"stream_name":"stdout","time":972.391083231,"data":"        \"--seed\",\n"}
+,{"stream_name":"stdout","time":972.391087712,"data":"        \"1234\",\n"}
+,{"stream_name":"stdout","time":972.391092264,"data":"        \"--single-turn\",\n"}
+,{"stream_name":"stdout","time":972.391096875,"data":"        \"--no-display-prompt\",\n"}
+,{"stream_name":"stdout","time":972.39110156,"data":"        \"--no-warmup\",\n"}
+,{"stream_name":"stdout","time":972.391105463,"data":"        \"--perf\",\n"}
+,{"stream_name":"stdout","time":972.391109863,"data":"        \"-lm\",\n"}
+,{"stream_name":"stdout","time":972.391118107,"data":"        \"mmap\",\n"}
+,{"stream_name":"stdout","time":972.391122511,"data":"        \"-lzm\",\n"}
+,{"stream_name":"stdout","time":972.391126794,"data":"        \"on\",\n"}
+,{"stream_name":"stdout","time":972.391131311,"data":"        \"-p\",\n"}
+,{"stream_name":"stdout","time":972.391136009,"data":"        \"Give one concise reason oral rehydration solution helps a child with watery diarrhoea.\"\n"}
+,{"stream_name":"stdout","time":972.391140991,"data":"      ],\n"}
+,{"stream_name":"stdout","time":972.391145483,"data":"      \"elapsed_sec\": 43.190376858,\n"}
+,{"stream_name":"stdout","time":972.391168681,"data":"      \"cache_drop\": {\n"}
+,{"stream_name":"stdout","time":972.391173796,"data":"        \"available\": true,\n"}
+,{"stream_name":"stdout","time":972.391178654,"data":"        \"called\": true\n"}
+,{"stream_name":"stdout","time":972.391183376,"data":"      },\n"}
+,{"stream_name":"stdout","time":972.391187938,"data":"      \"peak_rss_mib\": 3945.87109375,\n"}
+,{"stream_name":"stdout","time":972.391192773,"data":"      \"peak_rss_anon_mib\": 2997.80859375,\n"}
+,{"stream_name":"stdout","time":972.391197747,"data":"      \"peak_rss_file_mib\": 948.08984375,\n"}
+,{"stream_name":"stdout","time":972.391202683,"data":"      \"read_bytes_max\": 8592044032,\n"}
+,{"stream_name":"stdout","time":972.391208127,"data":"      \"rchar_max\": 8036250331,\n"}
+,{"stream_name":"stdout","time":972.39121294,"data":"      \"decode_perf\": {\n"}
+,{"stream_name":"stdout","time":972.39121765,"data":"        \"prompt_tokens_per_second\": 2.2,\n"}
+,{"stream_name":"stdout","time":972.391222445,"data":"        \"tokens_per_second\": 2.8,\n"}
+,{"stream_name":"stdout","time":972.391227172,"data":"        \"ms_per_token\": 357.14285714285717\n"}
+,{"stream_name":"stdout","time":972.391232283,"data":"      },\n"}
+,{"stream_name":"stdout","time":972.391236132,"data":"      \"stdout_sha256\": \"4b111e399f5be3228b3ce153705e0bb0d568fcc9babbb80dc1e981340566ee41\",\n"}
+,{"stream_name":"stdout","time":972.391241148,"data":"      \"response_sha256\": \"5804c970f14ce9902178660a5262689f2ffb3518619336403244933d85cafca1\",\n"}
+,{"stream_name":"stdout","time":972.391245752,"data":"      \"response\": \"[Start thinking]\\n\\nThinking Process:\\n\\n1.  **Analyze the Request:**\\n    *   Topic: Oral Rehydration Solution (ORS).\\n    *   Target: Child with watery diarrhoea.\\n    *   Constraint: Give *one* concise reason.\\n\\n2.  **Identify the Mechanism of\",\n"}
+,{"stream_name":"stdout","time":972.391251838,"data":"      \"bounded_cache_stats\": \"PHASE6_BOUNDED_CACHE slot_bytes=876544 slots=2281 reserved_bytes=1999396864 requests=89280 hits=80137 misses=9143 evictions=6862 read_calls=82287 read_bytes=8014241792 read_ns=16764402064 async_tasks=0 async_wait_ns=0 ready_wait_ns=0 ready_wait_events=0\",\n"}
+,{"stream_name":"stdout","time":972.391257611,"data":"      \"sample_count\": 2091,\n"}
+,{"stream_name":"stdout","time":972.391262126,"data":"      \"trace\": \"/kaggle/working/native-sparse-q4-bounded-v1-results/q4_bounded_serial_rep2.routes.jsonl\"\n"}
+,{"stream_name":"stdout","time":972.391267079,"data":"    },\n"}
+,{"stream_name":"stdout","time":972.391271578,"data":"    {\n"}
+,{"stream_name":"stdout","time":972.391276071,"data":"      \"name\": \"q4_bounded_serial\",\n"}
+,{"stream_name":"stdout","time":972.391280802,"data":"      \"model\": \"/tmp/native-sparse-q4-bounded-v1/Qwen3.5-35B-A3B-selective-attn-Q4_K.gguf\",\n"}
+,{"stream_name":"stdout","time":972.391285867,"data":"      \"bounded\": true,\n"}
+,{"stream_name":"stdout","time":972.391290407,"data":"      \"async_reads\": false,\n"}
+,{"stream_name":"stdout","time":972.391294915,"data":"      \"command\": [\n"}
+,{"stream_name":"stdout","time":972.391303231,"data":"        \"/tmp/native-sparse-q4-bounded-v1/llama.cpp/build-native/bin/llama-cli\",\n"}
+,{"stream_name":"stdout","time":972.391308169,"data":"        \"-m\",\n"}
+,{"stream_name":"stdout","time":972.391312684,"data":"        \"/tmp/native-sparse-q4-bounded-v1/Qwen3.5-35B-A3B-selective-attn-Q4_K.gguf\",\n"}
+,{"stream_name":"stdout","time":972.391317627,"data":"        \"-ngl\",\n"}
+,{"stream_name":"stdout","time":972.391322187,"data":"        \"0\",\n"}
+,{"stream_name":"stdout","time":972.391326789,"data":"        \"-t\",\n"}
+,{"stream_name":"stdout","time":972.391331099,"data":"        \"4\",\n"}
+,{"stream_name":"stdout","time":972.391334554,"data":"        \"-c\",\n"}
+,{"stream_name":"stdout","time":972.391338977,"data":"        \"512\",\n"}
+,{"stream_name":"stdout","time":972.391343468,"data":"        \"-n\",\n"}
+,{"stream_name":"stdout","time":972.391348027,"data":"        \"64\",\n"}
+,{"stream_name":"stdout","time":972.391352471,"data":"        \"--temp\",\n"}
+,{"stream_name":"stdout","time":972.391357063,"data":"        \"0\",\n"}
+,{"stream_name":"stdout","time":972.391361331,"data":"        \"--seed\",\n"}
+,{"stream_name":"stdout","time":972.39136612,"data":"        \"1234\",\n"}
+,{"stream_name":"stdout","time":972.391370735,"data":"        \"--single-turn\",\n"}
+,{"stream_name":"stdout","time":972.391375278,"data":"        \"--no-display-prompt\",\n"}
+,{"stream_name":"stdout","time":972.391379889,"data":"        \"--no-warmup\",\n"}
+,{"stream_name":"stdout","time":972.391384396,"data":"        \"--perf\",\n"}
+,{"stream_name":"stdout","time":972.391388814,"data":"        \"-lm\",\n"}
+,{"stream_name":"stdout","time":972.391393334,"data":"        \"mmap\",\n"}
+,{"stream_name":"stdout","time":972.391397788,"data":"        \"-lzm\",\n"}
+,{"stream_name":"stdout","time":972.391402391,"data":"        \"on\",\n"}
+,{"stream_name":"stdout","time":972.391406883,"data":"        \"-p\",\n"}
+,{"stream_name":"stdout","time":972.391411465,"data":"        \"Give one concise reason oral rehydration solution helps a child with watery diarrhoea.\"\n"}
+,{"stream_name":"stdout","time":972.391416418,"data":"      ],\n"}
+,{"stream_name":"stdout","time":972.391420769,"data":"      \"elapsed_sec\": 40.262970627,\n"}
+,{"stream_name":"stdout","time":972.391425343,"data":"      \"cache_drop\": {\n"}
+,{"stream_name":"stdout","time":972.391428566,"data":"        \"available\": true,\n"}
+,{"stream_name":"stdout","time":972.391433091,"data":"        \"called\": true\n"}
+,{"stream_name":"stdout","time":972.391437531,"data":"      },\n"}
+,{"stream_name":"stdout","time":972.391441919,"data":"      \"peak_rss_mib\": 3947.6015625,\n"}
+,{"stream_name":"stdout","time":972.391447311,"data":"      \"peak_rss_anon_mib\": 2997.796875,\n"}
+,{"stream_name":"stdout","time":972.391451892,"data":"      \"peak_rss_file_mib\": 949.8046875,\n"}
+,{"stream_name":"stdout","time":972.391456279,"data":"      \"read_bytes_max\": 8796196864,\n"}
+,{"stream_name":"stdout","time":972.391461024,"data":"      \"rchar_max\": 8036250331,\n"}
+,{"stream_name":"stdout","time":972.391465869,"data":"      \"decode_perf\": {\n"}
+,{"stream_name":"stdout","time":972.391470464,"data":"        \"prompt_tokens_per_second\": 2.8,\n"}
+,{"stream_name":"stdout","time":972.391475112,"data":"        \"tokens_per_second\": 2.8,\n"}
+,{"stream_name":"stdout","time":972.391479644,"data":"        \"ms_per_token\": 357.14285714285717\n"}
+,{"stream_name":"stdout","time":972.391484339,"data":"      },\n"}
+,{"stream_name":"stdout","time":972.391493141,"data":"      \"stdout_sha256\": \"bffd2a307595495820e08a6cc7ab289febfe3f2a456a283691a7bf6e733cf410\",\n"}
+,{"stream_name":"stdout","time":972.391498133,"data":"      \"response_sha256\": \"5804c970f14ce9902178660a5262689f2ffb3518619336403244933d85cafca1\",\n"}
+,{"stream_name":"stdout","time":972.391503149,"data":"      \"response\": \"[Start thinking]\\n\\nThinking Process:\\n\\n1.  **Analyze the Request:**\\n    *   Topic: Oral Rehydration Solution (ORS).\\n    *   Target: Child with watery diarrhoea.\\n    *   Constraint: Give *one* concise reason.\\n\\n2.  **Identify the Mechanism of\",\n"}
+,{"stream_name":"stdout","time":972.391509448,"data":"      \"bounded_cache_stats\": \"PHASE6_BOUNDED_CACHE slot_bytes=876544 slots=2281 reserved_bytes=1999396864 requests=89280 hits=80137 misses=9143 evictions=6862 read_calls=82287 read_bytes=8014241792 read_ns=14090489389 async_tasks=0 async_wait_ns=0 ready_wait_ns=0 ready_wait_events=0\",\n"}
+,{"stream_name":"stdout","time":972.391515368,"data":"      \"sample_count\": 1946,\n"}
+,{"stream_name":"stdout","time":972.391520161,"data":"      \"trace\": \"/kaggle/working/native-sparse-q4-bounded-v1-results/q4_bounded_serial_rep3.routes.jsonl\"\n"}
+,{"stream_name":"stdout","time":972.391523764,"data":"    }\n"}
+,{"stream_name":"stdout","time":972.391528323,"data":"  ],\n"}
+,{"stream_name":"stdout","time":972.391532483,"data":"  \"wall_sec\": 971.5902585983276\n"}
+,{"stream_name":"stdout","time":972.391537149,"data":"}\n"}
+,{"stream_name":"stderr","time":975.505989048,"data":"/usr/local/lib/python3.12/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":975.507735878,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":975.878452514,"data":"/usr/local/lib/python3.12/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":975.878485206,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":977.391355356,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":979.1044542,"data":"[NbConvertApp] Writing 394072 bytes to __results__.html\n"}
+]

@@ -1,0 +1,38 @@
+
+
+Loading model... |-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/ 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b1-3057bb66c
+model      : /tmp/native-sparse-selective-q4-quality-v1/Qwen3.5-35B-A3B-selective-attn-Q4_K.gguf
+ftype      : Q5_K - Medium
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> MCQ. Which organ pumps blood around the body? A) liver B) heart C) lung D) kidney. Reply at the end as FINAL: one letter.
+
+[Start thinking]
+
+Thinking process:
+
+1.  **Analyze the Request:** The user wants me to answer a multiple-choice question (MCQ) about which organ pumps blood around the body. I need to select the correct option from A, B,
+
+[ Prompt: 8.2 t/s | Generation: 4.8 t/s ]
+
+
+Exiting...

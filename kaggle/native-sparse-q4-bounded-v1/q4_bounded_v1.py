@@ -766,7 +766,7 @@ def run_arm(name: str, model: Path, bounded: bool, async_reads: bool, rep: int) 
     valid = [x for x in samples if x.get("valid")]
     stats_match = re.findall(r"PHASE6_BOUNDED_CACHE .*", err)
     payload = response_payload(out)
-    return {"name": name, "model": str(model), "bounded": bounded, "async_reads": async_reads, "command": cmd,
+    return {"name": name, "rep": rep, "model": str(model), "bounded": bounded, "async_reads": async_reads, "command": cmd,
             "elapsed_sec": elapsed, "cache_drop": cache_drop,
             "peak_rss_mib": max((x["rss_kib"] for x in valid), default=0) / 1024,
             "peak_rss_anon_mib": max((x["rss_anon_kib"] for x in valid), default=0) / 1024,
