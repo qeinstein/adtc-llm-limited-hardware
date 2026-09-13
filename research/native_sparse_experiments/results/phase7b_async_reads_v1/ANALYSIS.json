@@ -1,0 +1,42 @@
+{
+  "schema": "native-sparse-async-reads/v1",
+  "decision": "FOLLOW-UP ONCE",
+  "control": {
+    "sample_tok_s": [8.0, 7.9, 8.1],
+    "mean_tok_s": 8.0,
+    "ms_per_token": 125.0,
+    "peak_rss_mib": 10533.91796875
+  },
+  "bounded_async": {
+    "sample_tok_s": [4.7, 4.8, 4.7],
+    "mean_tok_s": 4.733333333333333,
+    "ms_per_token": 211.28841607565013,
+    "peak_rss_mib": 3517.59375,
+    "cache_bytes": 2000000000,
+    "slot_count": 2281,
+    "requests": 89280,
+    "hits": 80005,
+    "misses": 9275,
+    "hit_rate": 0.8961137992831549,
+    "read_calls_per_rep": 27825,
+    "read_bytes_per_rep": 8129945600,
+    "aggregate_read_ns": [32003161792, 27002404659, 27270625197],
+    "join_wait_ns": [6919252213, 6618797436, 6799998257],
+    "async_tasks_per_rep": 9275
+  },
+  "traffic": {
+    "fresh_bytes_per_64_tokens": 8129945600,
+    "fresh_decimal_mb_per_64_tokens": 127.0304,
+    "fresh_bytes_per_token": 127030400,
+    "fresh_decimal_mb_per_token": 127.0304,
+    "fresh_mib_per_token": 121.1456298828125
+  },
+  "correctness": {
+    "route_files_byte_identical": true,
+    "response_hashes_equal": true,
+    "response_hash": "5804c970f14ce9902178660a5262689f2ffb3518619336403244933d85cafca1",
+    "native_k": 8,
+    "weights_changed": false
+  },
+  "limitation": "No matched serial bounded arm was included in this kernel; worker reads are joined before compute."
+}
