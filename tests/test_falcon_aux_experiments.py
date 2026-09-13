@@ -1,7 +1,8 @@
 import json
+import sys
 from pathlib import Path
 
-from scripts.benchmark_falcon_deployment import parse_time_report
+from scripts.benchmark_falcon_deployment import bench_once, parse_time_report
 from scripts.falcon_trainability_probe import tiny_rows
 
 
@@ -19,6 +20,20 @@ def test_deployment_time_report_parser(tmp_path: Path):
         "major_page_faults": 3,
         "elapsed": "1:02.50",
     }
+
+
+def test_deployment_wrapper_survives_dead_pid_race(tmp_path: Path):
+    payload = json.dumps([
+        {"n_gen": 0, "n_prompt": 512, "avg_ts": 100.0},
+        {"n_gen": 128, "n_prompt": 0, "avg_ts": 20.0},
+    ])
+    result = bench_once(
+        [sys.executable, "-c", f"import time; print({payload!r}); time.sleep(0.02)"],
+        tmp_path / "time.log",
+        0.005,
+    )
+    assert result["decode_tps"] == 20.0
+    assert result["peak_tree_rss_mb_sampled"] >= 0
 
 
 def test_trainability_fixture_contains_sft_and_mcqa():
