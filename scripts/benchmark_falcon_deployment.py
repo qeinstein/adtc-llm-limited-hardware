@@ -15,6 +15,7 @@ import json
 import math
 import os
 import re
+import resource
 import statistics
 import subprocess
 import time
@@ -63,12 +64,26 @@ def parse_time_report(path: Path) -> dict[str, Any]:
 
 def bench_once(command: list[str], time_report: Path, sample_seconds: float) -> dict[str, Any]:
     time_report.parent.mkdir(parents=True, exist_ok=True)
-    wrapped = ["/usr/bin/time", "-v", "-o", str(time_report), *command]
     started = time.monotonic()
-    process = subprocess.Popen(wrapped, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1)
+    # Kaggle images do not consistently ship the external /usr/bin/time
+    # utility.  Keep this measurement self-contained: resource.getrusage gives
+    # child faults/RSS and the sampler below gives the complete process-tree
+    # peak, which is the deployment metric we actually need.
+    before_usage = resource.getrusage(resource.RUSAGE_CHILDREN)
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1)
     samples: list[float] = []
+    next_heartbeat = started + 30.0
     while process.poll() is None:
         samples.append(tree_rss_mb(process.pid))
+        if time.monotonic() >= next_heartbeat:
+            print(json.dumps({
+                "timestamp_utc": stamp(),
+                "event": "benchmark_heartbeat",
+                "pid": process.pid,
+                "elapsed_seconds": round(time.monotonic() - started, 1),
+                "sampled_peak_rss_mb": round(max(samples or [0.0]), 1),
+            }), flush=True)
+            next_heartbeat += 30.0
         time.sleep(sample_seconds)
     stdout, stderr = process.communicate()
     samples.append(tree_rss_mb(process.pid))
@@ -82,6 +97,14 @@ def bench_once(command: list[str], time_report: Path, sample_seconds: float) -> 
     generation = next(row for row in rows if row.get("n_gen", 0) > 0)
     prompt = next(row for row in rows if row.get("n_gen", 0) == 0 and row.get("n_prompt", 0) > 0)
     steady_samples = samples[max(0, len(samples) // 2):]
+    after_usage = resource.getrusage(resource.RUSAGE_CHILDREN)
+    report_text = (
+        f"Maximum resident set size (kbytes): {int(after_usage.ru_maxrss)}\n"
+        f"Minor (reclaiming a frame) page faults: {max(0, int(after_usage.ru_minflt - before_usage.ru_minflt))}\n"
+        f"Major (page faults): {max(0, int(after_usage.ru_majflt - before_usage.ru_majflt))}\n"
+        f"Elapsed (wall clock) time (seconds): {elapsed:.3f}\n"
+    )
+    time_report.write_text(report_text, encoding="utf-8")
     report = parse_time_report(time_report)
     return {
         "started_utc": stamp(),
