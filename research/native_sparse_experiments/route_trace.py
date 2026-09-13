@@ -398,7 +398,6 @@ def _online_policy_replay(
     *,
     bundle_bytes: BundleBytes | None,
     policy: str,
-    half_life_requests: float = 320.0,
 ) -> dict[str, Any]:
     """Replay a deployable global policy with online-only metadata.
 
@@ -497,7 +496,6 @@ def _online_policy_replay(
         max_resident_bytes=max_resident_bytes,
         token_count=len(routes),
     )
-    report["half_life_requests"] = half_life_requests
     report.update(_replay_byte_fields(
         misses_by_key=misses_by_key,
         misses_by_token=misses_by_token,

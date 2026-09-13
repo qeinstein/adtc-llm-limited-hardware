@@ -105,3 +105,36 @@ expert storage should be implemented against the measured 1.61 GiB floor;
 the committed Phase 4 cache design budgets 2,664 / 1,439 / 826 bundles for
 4 / 3 / 2.5 GiB total RSS and replays 97.53 / 110.52 / 141.66 MB fresh
 logical bytes per token respectively.
+
+## Phase 5 decision measurements
+
+- `phase5a_amdahl_v1`: the exact resident control averaged 4.745 tok/s
+  (210.73 ms/token).  A measurement-only routed-MoE removal reached 8.083
+  tok/s (123.72 ms/token), so routed experts account for 41.29% of wall time
+  and cannot alone reach 10 tok/s.  Summed operator work was 46.98% routed
+  MoE, 33.64% other matrix multiplication, 5.37% Gated DeltaNet, and 3.82%
+  shared expert.
+- `phase5b_lowbit_ceiling_v1/v2` and `phase5c_iq2_representation_v1`: an
+  exact offline-resolved IQ2 layout was slower than the control at both 74
+  bytes/block (+12.12% storage) and 70 bytes/block (+6.06%).  A simple
+  unsigned W2 LUT/gather reference was slower too.  Metadata resolution and
+  record padding are therefore rejected as standalone optimizations.
+- `phase5e_route_corpus_v1`: 32 prompts yielded 2,016 exact route tokens and
+  9,577 unique bundles.  On the diverse corpus, global LRU fresh logical
+  traffic is 63.96 / 106.87 / 143.63 MB/token at 4 / 3 / 2.5 GiB budgets.
+  Layer partitioning changes this by about one percent; the tested online
+  frequency/staleness policies are worse.  Belady is retained only as an
+  offline headroom oracle.
+- `phase5g_bounded_cache_v1`: a model-free explicit `pread` store plus fixed
+  aligned byte-bounded LRU cache passes unit tests.  It is the selected
+  transitional storage architecture; model integration follows after the
+  current compute target is identified.
+- `phase5h_floor_decomp_v1`: loader inventory finds 733 unique tensors, with
+  1.5555 GiB logical non-routed payload (0.2664 GiB each for input embeddings
+  and LM head, 0.8578 GiB attention/DeltaNet trunk, 0.0861 GiB shared expert,
+  0.0781 GiB router).  The skip-MoE process measured 1,609.96 MiB RSS.
+
+The next compute decision is to split the 33.64% `other_matmul` term by
+weight family and test the LM head's Amdahl contribution.  The exact control
+and native routes remain unchanged; no model representation change is
+justified yet.
