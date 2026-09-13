@@ -1,0 +1,36 @@
+
+
+Loading model... |-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/ 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b1-3057bb66c
+model      : /tmp/native-sparse-attention-amdahl-v1/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf
+ftype      : IQ2_XXS - 2.0625 bpw
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> Give one concise reason oral rehydration solution helps a child with watery diarrhoea.
+
+[Start thinking]
+
+-trumadeue装箱vell"yiller(Itati身临其境stoamuECK罩点是甲 "ski \"etherumeratorame
+
+[ Prompt: 9.9 t/s | Generation: 5.8 t/s ]
+
+
+Exiting...

@@ -1,0 +1,186 @@
+diff --git a/ggml/src/ggml-cpu/ggml-cpu.c b/ggml/src/ggml-cpu/ggml-cpu.c
+index 87a329f26..aa6fb18bc 100644
+--- a/ggml/src/ggml-cpu/ggml-cpu.c
++++ b/ggml/src/ggml-cpu/ggml-cpu.c
+@@ -29,6 +29,9 @@
+ #include <stdlib.h>
+ #include <string.h>
+ #include <stdint.h>
++#if defined(__x86_64__) || defined(__i386__)
++#include <x86intrin.h>
++#endif
+ #include <inttypes.h>
+ #include <stdio.h>
+ #include <float.h>
+@@ -571,6 +574,102 @@ struct ggml_state {
+     struct ggml_numa_nodes numa;
+ };
+ 
++
++enum phase3_attention_family {
++    PHASE3_ATTN_QKV = 0,
++    PHASE3_ATTN_GATE = 1,
++    PHASE3_ATTN_Q = 2,
++    PHASE3_ATTN_K = 3,
++    PHASE3_ATTN_V = 4,
++    PHASE3_ATTN_OUTPUT = 5,
++    PHASE3_ATTN_OTHER = 6,
++    PHASE3_ATTN_FLASH = 7,
++    PHASE3_ATTN_COUNT = 8,
++};
++
++static const char * phase3_attention_labels[PHASE3_ATTN_COUNT] = {
++    "attn_qkv", "attn_gate", "attn_q", "attn_k", "attn_v",
++    "attn_output", "attn_other", "flash_attn_ext",
++};
++
++static uint64_t phase3_attention_cycles[PHASE3_ATTN_COUNT] = {0};
++static uint64_t phase3_attention_calls[PHASE3_ATTN_COUNT] = {0};
++
++static inline int phase3_attention_env(const char * name) {
++    const char * value = getenv(name);
++    return value != NULL && atoi(value) != 0;
++}
++
++static inline uint64_t phase3_attention_tsc(void) {
++#if defined(__x86_64__) || defined(__i386__)
++    return __rdtsc();
++#else
++    return 0;
++#endif
++}
++
++static int phase3_attention_projection_family(const struct ggml_tensor * tensor) {
++    if (tensor->op != GGML_OP_MUL_MAT || tensor->src[0] == NULL) {
++        return -1;
++    }
++    const char * name = tensor->src[0]->name;
++    if (strstr(name, "attn_") == NULL) return -1;
++    if (strstr(name, "attn_norm") != NULL || strstr(name, "q_norm") != NULL ||
++            strstr(name, "k_norm") != NULL) return -1;
++    if (strstr(name, "attn_qkv") != NULL) return PHASE3_ATTN_QKV;
++    if (strstr(name, "attn_gate") != NULL) return PHASE3_ATTN_GATE;
++    if (strstr(name, "attn_output") != NULL) return PHASE3_ATTN_OUTPUT;
++    if (strstr(name, "attn_q") != NULL) return PHASE3_ATTN_Q;
++    if (strstr(name, "attn_k") != NULL) return PHASE3_ATTN_K;
++    if (strstr(name, "attn_v") != NULL) return PHASE3_ATTN_V;
++    return PHASE3_ATTN_OTHER;
++}
++
++static int phase3_attention_family(const struct ggml_tensor * tensor) {
++    if (tensor->op == GGML_OP_FLASH_ATTN_EXT) return PHASE3_ATTN_FLASH;
++    return phase3_attention_projection_family(tensor);
++}
++
++static void phase3_attention_trace(const struct ggml_tensor * tensor,
++                                   const char * event) {
++    if (tensor->src[0] == NULL ||
++            !phase3_attention_env("GGML_ATTENTION_AMDAHL_TRACE") ||
++            phase3_attention_projection_family(tensor) < 0) {
++        return;
++    }
++    const char * path = getenv("GGML_ATTENTION_AMDAHL_TRACE_PATH");
++    if (path == NULL || path[0] == '\0') return;
++    static FILE * fp = NULL;
++    if (fp == NULL) {
++        fp = fopen(path, "a");
++        if (fp == NULL) return;
++        setvbuf(fp, NULL, _IOLBF, 0);
++    }
++    const int family = phase3_attention_projection_family(tensor);
++    // GGUF tensor names contain only the JSON-safe characters emitted here.
++    fprintf(fp, "{\"event\":\"%s\",\"family\":\"%s\",\"name\":\"%s\"}\n",
++        event, phase3_attention_labels[family], tensor->src[0]->name);
++}
++
++static void phase3_attention_report(void) {
++    if (!phase3_attention_env("GGML_ATTENTION_AMDAHL_PROFILE")) return;
++    for (int i = 0; i < PHASE3_ATTN_COUNT; ++i) {
++        fprintf(stderr,
++            "PHASE3_ATTENTION_PROFILE family=%s cycles=%llu calls=%llu\n",
++            phase3_attention_labels[i],
++            (unsigned long long) __atomic_load_n(&phase3_attention_cycles[i], __ATOMIC_RELAXED),
++            (unsigned long long) __atomic_load_n(&phase3_attention_calls[i], __ATOMIC_RELAXED));
++    }
++}
++
++static inline void phase3_attention_register_report(void) {
++    static int registered = 0;
++    if (phase3_attention_env("GGML_ATTENTION_AMDAHL_PROFILE") &&
++            __sync_bool_compare_and_swap(&registered, 0, 1)) {
++        atexit(phase3_attention_report);
++    }
++}
++
+ static struct ggml_state g_state = {0};
+ 
+ void ggml_barrier(struct ggml_threadpool * tp) {
+@@ -1740,11 +1839,36 @@ static void ggml_compute_forward(struct ggml_compute_params * params, struct ggm
+         return;
+     }
+ 
++    const int phase3_attention_projection =
++        phase3_attention_projection_family(tensor);
++    const int phase3_attention_bypass =
++        phase3_attention_env("GGML_ATTENTION_AMDAHL_BYPASS") &&
++        phase3_attention_projection >= 0;
++    if (phase3_attention_projection >= 0 && params->ith == 0) {
++        phase3_attention_trace(tensor, phase3_attention_bypass ?
++            "bypassed" : "executed");
++    }
++    if (phase3_attention_bypass) {
++        if (params->ith == 0) {
++            memset(tensor->data, 0, ggml_nbytes(tensor));
++        }
++        ggml_barrier(params->threadpool);
++        return;
++    }
++
+     // extra_buffer op?
+     if (ggml_cpu_extra_compute_forward(params, tensor)) {
+         return;
+     }
+ 
++    const int phase3_attention_kind = phase3_attention_family(tensor);
++    const int phase3_attention_profile =
++        phase3_attention_env("GGML_ATTENTION_AMDAHL_PROFILE") &&
++        phase3_attention_kind >= 0;
++    const uint64_t phase3_attention_start =
++        phase3_attention_profile ? phase3_attention_tsc() : 0;
++    if (phase3_attention_profile) phase3_attention_register_report();
++
+     switch (tensor->op) {
+         case GGML_OP_DUP:
+             {
+@@ -2166,6 +2290,13 @@ static void ggml_compute_forward(struct ggml_compute_params * params, struct ggm
+                 GGML_ABORT("fatal error");
+             }
+     }
++
++    if (phase3_attention_profile) {
++        __atomic_fetch_add(&phase3_attention_cycles[phase3_attention_kind],
++            phase3_attention_tsc() - phase3_attention_start, __ATOMIC_RELAXED);
++        __atomic_fetch_add(&phase3_attention_calls[phase3_attention_kind],
++            1, __ATOMIC_RELAXED);
++    }
+ }
+ 
+ // Android's libc implementation "bionic" does not support setting affinity
+diff --git a/src/models/qwen35moe.cpp b/src/models/qwen35moe.cpp
+index bdf772625..3d2a5dc66 100644
+--- a/src/models/qwen35moe.cpp
++++ b/src/models/qwen35moe.cpp
+@@ -93,8 +93,11 @@ void llama_model_qwen35moe::load_arch_tensors(llama_model_loader & ml) {
+ 
+         // Routed experts
+         layer.ffn_gate_inp  = create_tensor(tn(LLM_TENSOR_FFN_GATE_INP,  "weight", il), { n_embd, n_expert }, flags);
+-        layer.ffn_down_exps = create_tensor(tn(LLM_TENSOR_FFN_DOWN_EXPS, "weight", il), { n_ff_exp, n_embd, n_expert }, flags);
+-        create_tensor_gate_up_exps(layer, il, n_embd, n_ff_exp, n_expert, flags);
++        // Exact native-sparse research loader: only routed expert
++        // payload tensors are marked lazy; math and routing are unchanged.
++        const int expert_flags = flags | TENSOR_READ_LAZY;
++        layer.ffn_down_exps = create_tensor(tn(LLM_TENSOR_FFN_DOWN_EXPS, "weight", il), { n_ff_exp, n_embd, n_expert }, expert_flags);
++        create_tensor_gate_up_exps(layer, il, n_embd, n_ff_exp, n_expert, expert_flags);
+ 
+         // Shared experts
+         layer.ffn_gate_inp_shexp = create_tensor(tn(LLM_TENSOR_FFN_GATE_INP_SHEXP, "weight", il), { n_embd }, flags);

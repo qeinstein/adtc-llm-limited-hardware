@@ -2,7 +2,7 @@
 
 - Design ID: `phase6g_bounded_executor_design_v1`
 - Scope: source-level design only; no existing repository files were edited
-- Research repository HEAD inspected: `6f363b3` (`research/experimental-massive`)
+- Research repository HEAD inspected for the design: `ba0047b` (`research/experimental-massive`)
 - llama.cpp source inspected: `3057bb66c86c46d5781e50e85462a760ba7d1feb`
 - Model: `Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf`
 - Model size: `10,656,955,008` bytes
