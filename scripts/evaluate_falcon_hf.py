@@ -62,6 +62,8 @@ def main(argv: list[str] | None = None) -> int:
     events = out_dir / "eval_events.jsonl"
     random.seed(args.seed)
 
+    from scripts.train_falcon_production import stable_eval_subset, truncate_mcqa_context
+
     rows = load_rows(data_dir / "dev.jsonl")
     if args.max_dev:
         rows = stable_eval_subset(rows, args.max_dev)
@@ -69,7 +71,6 @@ def main(argv: list[str] | None = None) -> int:
 
     import torch
     from scripts.train_lora import patch_peft_transformers_compat
-    from scripts.train_falcon_production import stable_eval_subset, truncate_mcqa_context
 
     patch_peft_transformers_compat()
     from peft import PeftModel
