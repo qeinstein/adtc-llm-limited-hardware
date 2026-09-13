@@ -1,0 +1,3072 @@
+{
+  "schema": "native-sparse-ik-llama-v3",
+  "status": "ok",
+  "hypothesis": "The official ik_llama.cpp AVX2 CPU path can load and single-stream run the exact Phase-0 Qwen3.5-35B-A3B IQ2_XXS checkpoint.",
+  "research_source": {
+    "base_commit": "e5bb66e",
+    "script_sha256": "5adffebd8d6458461dfd2bd43d87ace4ca7725e656b1f5f608f9ea6429d1d3f4"
+  },
+  "upstream": {
+    "repo": "https://github.com/ikawrakow/ik_llama.cpp.git",
+    "commit": "3bb386eb68ffee0a5dc7db21da0735d594929eeb"
+  },
+  "model": {
+    "repo": "unsloth/Qwen3.5-35B-A3B-GGUF",
+    "revision": "bc014a17be43adabd7066b7a86075ff935c6a4e2",
+    "file": "Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf",
+    "size_bytes": 10656955008,
+    "sha256": "2a809de317cfd49ac9130b95619ee6ac039a855e467015b3e996eb61af84718b",
+    "url": "https://huggingface.co/unsloth/Qwen3.5-35B-A3B-GGUF/resolve/bc014a17be43adabd7066b7a86075ff935c6a4e2/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf"
+  },
+  "configuration": {
+    "threads": 4,
+    "context": 512,
+    "n_gen": 64,
+    "bench_gen": 64,
+    "bench_repeats": 3,
+    "gpu_layers": 0,
+    "prompt": "Give one concise reason oral rehydration solution helps a child with watery diarrhoea.",
+    "rtr": false,
+    "native_routing_changes": false,
+    "model_changes": false
+  },
+  "hardware": {
+    "platform": "Linux-6.12.90+-x86_64-with-glibc2.35",
+    "python": "3.12.13",
+    "cpu_count": 4,
+    "allowed_cpu_ids": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           46 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               GenuineIntel\nModel name:                              Intel(R) Xeon(R) CPU @ 2.20GHz\nCPU family:                              6\nModel:                                   79\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                0\nBogoMIPS:                                4399.99\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc cpuid tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch pti ssbd ibrs ibpb stibp fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm rdseed adx smap xsaveopt arat md_clear arch_capabilities\nHypervisor vendor:                       KVM\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                512 KiB (2 instances)\nL3 cache:                                55 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Indirect target selection: Mitigation; Aligned branch/return thunks\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Mitigation; PTE Inversion\nVulnerability Mds:                       Mitigation; Clear CPU buffers; SMT Host state unknown\nVulnerability Meltdown:                  Mitigation; PTI\nVulnerability Mmio stale data:           Vulnerable: Clear CPU buffers attempted, no microcode; SMT Host state unknown\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Mitigation; IBRS\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; IBRS; IBPB conditional; STIBP conditional; RSB filling; PBRSB-eIBRS Not affected; BHI SW loop, KVM SW loop\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Mitigation; Clear CPU buffers; SMT Host state unknown\nVulnerability Vmscape:                   Not affected\n",
+    "cpuinfo": "processor\t: 0\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 79\nmodel name\t: Intel(R) Xeon(R) CPU @ 2.20GHz\nstepping\t: 0\nmicrocode\t: 0xffffffff\ncpu MHz\t\t: 2199.998\ncache size\t: 56320 KB\nphysical id\t: 0\nsiblings\t: 4\ncore id\t\t: 0\ncpu cores\t: 2\napicid\t\t: 0\ninitial apicid\t: 0\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 13\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc cpuid tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch pti ssbd ibrs ibpb stibp fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm rdseed adx smap xsaveopt arat md_clear arch_capabilities\nbugs\t\t: cpu_meltdown spectre_v1 spectre_v2 spec_store_bypass l1tf mds swapgs taa mmio_stale_data retbleed bhi its\nbogomips\t: 4399.99\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 46 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 1\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 79\nmodel name\t: Intel(R) Xeon(R) CPU @ 2.20GHz\nstepping\t: 0\nmicrocode\t: 0xffffffff\ncpu MHz\t\t: 2199.998\ncache size\t: 56320 KB\nphysical id\t: 0\nsiblings\t: 4\ncore id\t\t: 1\ncpu cores\t: 2\napicid\t\t: 2\ninitial apicid\t: 2\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 13\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc cpuid tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch pti ssbd ibrs ibpb stibp fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm rdseed adx smap xsaveopt arat md_clear arch_capabilities\nbugs\t\t: cpu_meltdown spectre_v1 spectre_v2 spec_store_bypass l1tf mds swapgs taa mmio_stale_data retbleed bhi its\nbogomips\t: 4399.99\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 46 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 2\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 79\nmodel name\t: Intel(R) Xeon(R) CPU @ 2.20GHz\nstepping\t: 0\nmicrocode\t: 0xffffffff\ncpu MHz\t\t: 2199.998\ncache size\t: 56320 KB\nphysical id\t: 0\nsiblings\t: 4\ncore id\t\t: 0\ncpu cores\t: 2\napicid\t\t: 1\ninitial apicid\t: 1\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 13\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc cpuid tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch pti ssbd ibrs ibpb stibp fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm rdseed adx smap xsaveopt arat md_clear arch_capabilities\nbugs\t\t: cpu_meltdown spectre_v1 spectre_v2 spec_store_bypass l1tf mds swapgs taa mmio_stale_data retbleed bhi its\nbogomips\t: 4399.99\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 46 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 3\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 79\nmodel name\t: Intel(R) Xeon(R) CPU @ 2.20GHz\nstepping\t: 0\nmicrocode\t: 0xffffffff\ncpu MHz\t\t: 2199.998\ncache size\t: 56320 KB\nphysical id\t: 0\nsiblings\t: 4\ncore id\t\t: 1\ncpu cores\t: 2\napicid\t\t: 3\ninitial apicid\t: 3\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 13\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc cpuid tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch pti ssbd ibrs ibpb stibp fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm rdseed adx smap xsaveopt arat md_clear arch_capabilities\nbugs\t\t: cpu_meltdown spectre_v1 spectre_v2 spec_store_bypass l1tf mds swapgs taa mmio_stale_data retbleed bhi its\nbogomips\t: 4399.99\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 46 bits physical, 48 bits virtual\npower management:\n\n",
+    "meminfo": "MemTotal:       32870492 kB\nMemFree:        29724788 kB\nMemAvailable:   31928696 kB\nBuffers:          995348 kB\nCached:          1477392 kB\nSwapCached:            0 kB\nActive:          1232472 kB\nInactive:        1498952 kB\nActive(anon):        724 kB\nInactive(anon):   258816 kB\nActive(file):    1231748 kB\nInactive(file):  1240136 kB\nUnevictable:           0 kB\nMlocked:               0 kB\nSwapTotal:             0 kB\nSwapFree:              0 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:             88256 kB\nWriteback:             0 kB\nAnonPages:        258532 kB\nMapped:           277256 kB\nShmem:              1180 kB\nKReclaimable:     195104 kB\nSlab:             246968 kB\nSReclaimable:     195104 kB\nSUnreclaim:        51864 kB\nKernelStack:        6008 kB\nPageTables:         6108 kB\nSecPageTables:         0 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    16435244 kB\nCommitted_AS:    2294392 kB\nVmallocTotal:   34359738367 kB\nVmallocUsed:       14368 kB\nVmallocChunk:          0 kB\nPercpu:             2000 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:         0 kB\nShmemHugePages:        0 kB\nShmemPmdMapped:        0 kB\nFileHugePages:         0 kB\nFilePmdMapped:         0 kB\nCmaTotal:              0 kB\nCmaFree:               0 kB\nUnaccepted:            0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\nDirectMap4k:      135964 kB\nDirectMap2M:     7200768 kB\nDirectMap1G:    28311552 kB\n",
+    "filesystem": "Filesystem      Size  Used Avail Use% Mounted on\noverlay         7.9T  6.9T  1.1T  88% /\n"
+  },
+  "runs": [
+    {
+      "label": "cold_smoke",
+      "command": [
+        "/tmp/native-sparse-ik-llama-v3/ik_llama.cpp/build-native/bin/llama-cli",
+        "-m",
+        "/tmp/native-sparse-ik-llama-v3/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf",
+        "-t",
+        "4",
+        "-c",
+        "512",
+        "-n",
+        "64",
+        "--temp",
+        "0",
+        "--seed",
+        "1234",
+        "--no-display-prompt",
+        "--no-warmup",
+        "-p",
+        "Give one concise reason oral rehydration solution helps a child with watery diarrhoea."
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 28.934315839000078,
+      "cache_drop": {
+        "available": true,
+        "called": true
+      },
+      "peak_status_kib": {
+        "VmRSS": 10587780,
+        "VmHWM": 10587780,
+        "RssAnon": 180368,
+        "RssFile": 10407412,
+        "VmSwap": 0
+      },
+      "peak_smaps_rollup_kib": {
+        "Rss": 10587780,
+        "Pss": 10586388,
+        "Anonymous": 180368,
+        "AnonHugePages": 0,
+        "Private_Clean": 10413212,
+        "Shared_Clean": 2360,
+        "Private_Dirty": 180368,
+        "Shared_Dirty": 0,
+        "Referenced": 10587780,
+        "Swap": 0
+      },
+      "samples": 311,
+      "process_sample_file": "/kaggle/working/native-sparse-ik-llama-v3-results/cold_smoke.process.jsonl",
+      "sampled_smaps": {
+        "available": true,
+        "path": "/kaggle/working/native-sparse-ik-llama-v3-results/cold_smoke.smaps.sampled.txt",
+        "trigger": "first in-flight sample with VmRSS >= 1 GiB",
+        "model_vmas": [
+          {
+            "header": "7b7ac29f9000-7b7d3dd3d000 r--s 00000000 00:35 150264840                  /tmp/native-sparse-ik-llama-v3/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf",
+            "Rss": 1055344,
+            "Pss": 1055344,
+            "Shared_Clean": 0,
+            "Shared_Dirty": 0,
+            "Private_Clean": 1055344,
+            "Private_Dirty": 0,
+            "Anonymous": 0
+          }
+        ]
+      },
+      "minor_faults": 256010,
+      "major_faults": 79,
+      "stdout_sha256": "2ef4b39ffc30a0d2164d9afa120631a667a9221a124de27126339f595965ba99",
+      "response_sha256": "d291847873c6cfc96855bebf16434eeada90ba45f6a4d9fc67de48e37b8db479",
+      "response_nonempty": true,
+      "contains_nan_or_inf": false,
+      "stdout_path": "/kaggle/working/native-sparse-ik-llama-v3-results/cold_smoke.stdout.txt",
+      "stderr_path": "/kaggle/working/native-sparse-ik-llama-v3-results/cold_smoke.stderr.txt",
+      "stderr_tail": " 1.00,    237.10       56.00  MiB\nLayer 40:    272.81,    429.00,    701.81 MiB (output layer)\n--------------------------------------------------------------------------\nTotal   :   9607.15,    501.81,  10108.96 MiB\nFree memory 0 MiB on device 0 is less the required compute buffer size 56 MiB\nMemory required for model tensors + cache: 10382 MiB\nMemory available on all devices - compute: 0 MiB\nllm_load_tensors: ggml ctx size =    0.34 MiB\nllm_load_tensors:        CPU buffer size = 10152.78 MiB\n.................................................................................................\nllama_init_from_model: n_ctx         = 512\nllama_init_from_model: n_batch       = 512\nllama_init_from_model: n_ubatch      = 512\nllama_init_from_model: flash_attn    = 1\nllama_init_from_model: attn_max_b    = 256\nllama_init_from_model: fused_moe     = 1\nllama_init_from_model: grouped er    = 0\nllama_init_from_model: fused_up_gate = 1\nllama_init_from_model: fused_mmad    = 1\nllama_init_from_model: rope_cache    = 0\nllama_init_from_model: graph_reuse   = 1\nllama_init_from_model: k_cache_hadam = 0\nllama_init_from_model: v_cache_hadam = 0\nllama_init_from_model: split_mode_graph_scheduling = 0\nllama_init_from_model: reduce_type   = f16\nllama_init_from_model: sched_async   = 0\nllama_init_from_model: ser           = -1, 0\nllama_init_from_model: freq_base     = 10000000.0\nllama_init_from_model: freq_scale    = 1\nllama_kv_cache_init:        CPU KV buffer size =    72.81 MiB\nllama_init_from_model: KV self size  =   10.00 MiB, K (f16):    5.00 MiB, V (f16):    5.00 MiB\nllama_init_from_model:        CPU  output buffer size =     0.95 MiB\nllama_init_from_model:        CPU compute buffer size =   489.00 MiB\nllama_init_from_model: graph nodes  = 2675\nllama_init_from_model: graph splits = 1\nllama_init_from_model: enabling only_active_experts scheduling\n\nsystem_info: n_threads = 4 / 4 | AVX = 1 | AVX_VNNI = 0 | AVX2 = 1 | AVX512 = 0 | AVX512_VBMI = 0 | AVX512_VNNI = 0 | AVX512_BF16 = 0 | FMA = 1 | NEON = 0 | SVE = 0 | ARM_FMA = 0 | F16C = 1 | FP16_VA = 0 | WASM_SIMD = 0 | SSE3 = 1 | SSSE3 = 1 | VSX = 0 | MATMUL_INT8 = 0 | \nsampling: \n\trepeat_last_n = 64, repeat_penalty = 1.000, frequency_penalty = 0.000, presence_penalty = 0.000\n\ttop_k = 40, tfs_z = 1.000, top_p = 0.950, min_p = 0.050, typical_p = 1.000, temp = 0.000\n\tmirostat = 0, mirostat_lr = 0.100, mirostat_ent = 5.000\n\txtc_probability = 0.000, xtc_threshold = 1.000, top_n_sigma = 0.000\n\tadaptive_target = -1.00, adaptive_decay = 0.90\nsampling order: \nCFG -> Penalties -> dry -> top_k -> tfs_z -> typical_p -> top_p -> min_p -> xtc -> top_n_sigma -> temperature -> adaptive_p \ngenerate: n_ctx = 512, n_batch = 2048, n_predict = 64, n_keep = 0\n\n\n [end of text]\n\nmain: prompt eval time =    2731.68 ms /    18 tokens (  151.76 ms per token,     6.59 tokens per second)\nmain:        eval time =   18861.93 ms /    49 tokens (  384.94 ms per token,     2.60 tokens per second)\nmain:       total time =   21593.61 ms /    67 tokens\nLog end\n"
+    },
+    {
+      "label": "warm_smoke",
+      "command": [
+        "/tmp/native-sparse-ik-llama-v3/ik_llama.cpp/build-native/bin/llama-cli",
+        "-m",
+        "/tmp/native-sparse-ik-llama-v3/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf",
+        "-t",
+        "4",
+        "-c",
+        "512",
+        "-n",
+        "64",
+        "--temp",
+        "0",
+        "--seed",
+        "1234",
+        "--no-display-prompt",
+        "--no-warmup",
+        "-p",
+        "Give one concise reason oral rehydration solution helps a child with watery diarrhoea."
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 23.451501229000087,
+      "cache_drop": null,
+      "peak_status_kib": {
+        "VmRSS": 10588176,
+        "VmHWM": 10588176,
+        "RssAnon": 180368,
+        "RssFile": 10407808,
+        "VmSwap": 0
+      },
+      "peak_smaps_rollup_kib": {
+        "Rss": 10588176,
+        "Pss": 10586764,
+        "Anonymous": 180368,
+        "AnonHugePages": 0,
+        "Private_Clean": 10413392,
+        "Shared_Clean": 2364,
+        "Private_Dirty": 180368,
+        "Shared_Dirty": 0,
+        "Referenced": 10588176,
+        "Swap": 0
+      },
+      "samples": 213,
+      "process_sample_file": "/kaggle/working/native-sparse-ik-llama-v3-results/warm_smoke.process.jsonl",
+      "sampled_smaps": {
+        "available": true,
+        "path": "/kaggle/working/native-sparse-ik-llama-v3-results/warm_smoke.smaps.sampled.txt",
+        "trigger": "first in-flight sample with VmRSS >= 1 GiB",
+        "model_vmas": [
+          {
+            "header": "7bae7fd4c000-7bb0fb090000 r--s 00000000 00:35 150264840                  /tmp/native-sparse-ik-llama-v3/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf",
+            "Rss": 2322960,
+            "Pss": 2322960,
+            "Shared_Clean": 0,
+            "Shared_Dirty": 0,
+            "Private_Clean": 2322960,
+            "Private_Dirty": 0,
+            "Anonymous": 0
+          }
+        ]
+      },
+      "minor_faults": 215337,
+      "major_faults": 0,
+      "stdout_sha256": "2ef4b39ffc30a0d2164d9afa120631a667a9221a124de27126339f595965ba99",
+      "response_sha256": "d291847873c6cfc96855bebf16434eeada90ba45f6a4d9fc67de48e37b8db479",
+      "response_nonempty": true,
+      "contains_nan_or_inf": false,
+      "stdout_path": "/kaggle/working/native-sparse-ik-llama-v3-results/warm_smoke.stdout.txt",
+      "stderr_path": "/kaggle/working/native-sparse-ik-llama-v3-results/warm_smoke.stderr.txt",
+      "stderr_tail": " 1.00,    237.10       56.00  MiB\nLayer 40:    272.81,    429.00,    701.81 MiB (output layer)\n--------------------------------------------------------------------------\nTotal   :   9607.15,    501.81,  10108.96 MiB\nFree memory 0 MiB on device 0 is less the required compute buffer size 56 MiB\nMemory required for model tensors + cache: 10382 MiB\nMemory available on all devices - compute: 0 MiB\nllm_load_tensors: ggml ctx size =    0.34 MiB\nllm_load_tensors:        CPU buffer size = 10152.78 MiB\n.................................................................................................\nllama_init_from_model: n_ctx         = 512\nllama_init_from_model: n_batch       = 512\nllama_init_from_model: n_ubatch      = 512\nllama_init_from_model: flash_attn    = 1\nllama_init_from_model: attn_max_b    = 256\nllama_init_from_model: fused_moe     = 1\nllama_init_from_model: grouped er    = 0\nllama_init_from_model: fused_up_gate = 1\nllama_init_from_model: fused_mmad    = 1\nllama_init_from_model: rope_cache    = 0\nllama_init_from_model: graph_reuse   = 1\nllama_init_from_model: k_cache_hadam = 0\nllama_init_from_model: v_cache_hadam = 0\nllama_init_from_model: split_mode_graph_scheduling = 0\nllama_init_from_model: reduce_type   = f16\nllama_init_from_model: sched_async   = 0\nllama_init_from_model: ser           = -1, 0\nllama_init_from_model: freq_base     = 10000000.0\nllama_init_from_model: freq_scale    = 1\nllama_kv_cache_init:        CPU KV buffer size =    72.81 MiB\nllama_init_from_model: KV self size  =   10.00 MiB, K (f16):    5.00 MiB, V (f16):    5.00 MiB\nllama_init_from_model:        CPU  output buffer size =     0.95 MiB\nllama_init_from_model:        CPU compute buffer size =   489.00 MiB\nllama_init_from_model: graph nodes  = 2675\nllama_init_from_model: graph splits = 1\nllama_init_from_model: enabling only_active_experts scheduling\n\nsystem_info: n_threads = 4 / 4 | AVX = 1 | AVX_VNNI = 0 | AVX2 = 1 | AVX512 = 0 | AVX512_VBMI = 0 | AVX512_VNNI = 0 | AVX512_BF16 = 0 | FMA = 1 | NEON = 0 | SVE = 0 | ARM_FMA = 0 | F16C = 1 | FP16_VA = 0 | WASM_SIMD = 0 | SSE3 = 1 | SSSE3 = 1 | VSX = 0 | MATMUL_INT8 = 0 | \nsampling: \n\trepeat_last_n = 64, repeat_penalty = 1.000, frequency_penalty = 0.000, presence_penalty = 0.000\n\ttop_k = 40, tfs_z = 1.000, top_p = 0.950, min_p = 0.050, typical_p = 1.000, temp = 0.000\n\tmirostat = 0, mirostat_lr = 0.100, mirostat_ent = 5.000\n\txtc_probability = 0.000, xtc_threshold = 1.000, top_n_sigma = 0.000\n\tadaptive_target = -1.00, adaptive_decay = 0.90\nsampling order: \nCFG -> Penalties -> dry -> top_k -> tfs_z -> typical_p -> top_p -> min_p -> xtc -> top_n_sigma -> temperature -> adaptive_p \ngenerate: n_ctx = 512, n_batch = 2048, n_predict = 64, n_keep = 0\n\n\n [end of text]\n\nmain: prompt eval time =    2572.53 ms /    18 tokens (  142.92 ms per token,     7.00 tokens per second)\nmain:        eval time =   19015.97 ms /    49 tokens (  388.08 ms per token,     2.58 tokens per second)\nmain:       total time =   21588.51 ms /    67 tokens\nLog end\n"
+    }
+  ],
+  "blockers": [],
+  "build": {
+    "repo": "https://github.com/ikawrakow/ik_llama.cpp.git",
+    "requested_commit": "3bb386eb68ffee0a5dc7db21da0735d594929eeb",
+    "checked_out_commit": "3bb386eb68ffee0a5dc7db21da0735d594929eeb",
+    "status": "## HEAD (no branch)\n",
+    "log": "3bb386eb (grafted, HEAD, origin/main, origin/HEAD, main) ggml: drop debugger invocation from backtrace path (fork unsafe with live CUDA ctx) (#2416)\n",
+    "source_probe": {
+      "matching_paths": [
+        "common/common.cpp",
+        "common/common.h",
+        "common/jinja/parser.cpp",
+        "common/json-schema-to-grammar.cpp",
+        "common/log.h",
+        "common/speculative.cpp",
+        "docs/backend/SYCL.md",
+        "docs/build.md",
+        "docs/development/on-demand-tensor-reload.md",
+        "docs/parameters.md",
+        "examples/batched-bench/batched-bench.cpp",
+        "examples/embedding/embedding.cpp",
+        "examples/imatrix/imatrix.cpp",
+        "examples/llama.android/llama/src/main/cpp/llama-android.cpp",
+        "examples/mtmd/mtmd-helper.cpp",
+        "examples/parallel/parallel.cpp",
+        "examples/perplexity/perplexity.cpp",
+        "examples/quantize/quantize.cpp",
+        "examples/retrieval/README.md",
+        "examples/retrieval/retrieval.cpp",
+        "examples/server/server-context.cpp",
+        "examples/speculative/speculative.cpp",
+        "examples/sweep-bench/sweep-bench.cpp",
+        "ggml/include/ggml.h",
+        "ggml/src/ggml-backend.cpp",
+        "ggml/src/ggml-cann.cpp",
+        "ggml/src/ggml-common.h",
+        "ggml/src/ggml-moe-prefetch.cpp",
+        "ggml/src/ggml-moe-prefetch.h",
+        "ggml/src/ggml-quants.c",
+        "ggml/src/ggml-quants.h",
+        "ggml/src/ggml-sycl.cpp",
+        "ggml/src/ggml-sycl/convert.cpp",
+        "ggml/src/ggml-sycl/dequantize.hpp",
+        "ggml/src/ggml-sycl/mmvq.cpp",
+        "ggml/src/ggml-sycl/vecdotq.hpp",
+        "ggml/src/ggml-vulkan.cpp",
+        "ggml/src/ggml.c",
+        "ggml/src/iqk/iqk_cpu_ops.h",
+        "ggml/src/iqk/iqk_gemm_iquants.cpp",
+        "ggml/src/iqk/iqk_kda.cpp",
+        "ggml/src/iqk/iqk_mul_mat.cpp",
+        "ggml/src/iqk/iqk_mul_mat.h",
+        "ggml/src/iqk/iqk_quantize.cpp",
+        "ggml/src/iqk/iqk_quantize.h",
+        "ggml/src/vulkan-shaders/vulkan-shaders-gen.cpp",
+        "github-data/discussions/140 - Questions about weight_j_.md",
+        "github-data/discussions/164 - Latest CPU performance comparison with llama.cpp.md",
+        "github-data/discussions/165 - Norm RMS Epsilon.md",
+        "github-data/discussions/211 - help me create an importance matrix primer.md",
+        "github-data/discussions/242 - Switching from llama.cpp_ktransformers_ seeking advice_guidance.md",
+        "github-data/discussions/258 - Quick-start Guide coming over from llama.cpp and ktransformers_.md",
+        "github-data/discussions/266 - Benchmarking DeepSeek R1 - 16x3090.md",
+        "github-data/discussions/286 - Testing _deepseek-ai_DeepSeek-V3-0324_ model support..md",
+        "github-data/discussions/288 - On _compilade_s PR 12557 and _jukofyork_s quantization ideas.md",
+        "github-data/discussions/319 - KTransformers copying ik_llama.cpp.md",
+        "github-data/discussions/323 - Is there an easy way to repack an existing GGUF so it could be used wit.md",
+        "github-data/discussions/350 - Maverick slow prompt with gpu.md",
+        "github-data/discussions/357 - Qwen3 - early performance comparisons.md",
+        "github-data/discussions/359 - Qwen3 quantization experiments.md",
+        "github-data/discussions/393 - Creating quantized models.md",
+        "github-data/discussions/477 - DeepSeek-R1-0528 ik quants_.md",
+        "github-data/discussions/491 - -rtr actually hurts prompt t_s for large ubatch_.md",
+        "github-data/discussions/548 - Poor performance with bf16 model on Qwen3 30B-A3B.md",
+        "github-data/discussions/562 - AMD GPU Vulkan _ ROCm_HIP Discussion.md",
+        "github-data/discussions/591 - I dont see any speed improvement in generation_ so want to understand i.md",
+        "github-data/discussions/613 - Pathological Quant_CUDA combinations -- How to know what works_.md",
+        "github-data/discussions/621 - Deepseek v3_r1 poisoned prompt_.md",
+        "github-data/discussions/8 - New quantization types IQ2_K_ IQ3_K_ IQ4_K_ IQ5_K.md",
+        "github-data/issues/103 - Bug_ K cache without FA.md",
+        "github-data/issues/209 - Does the iqk_mul_mat.cpp support 1.58-bit quantization model_.md",
+        "github-data/issues/245 - Bug_ Perplexity returns NaN with IQ4_KSS quantisation.md",
+        "github-data/issues/263 - Benchmarking DeepSeek R1 - 16x3090.md",
+        "github-data/issues/271 - Possible regression computing _wk_b_ tensors on the fly after PR _265.md",
+        "github-data/issues/285 - llama-perplexity giving all NaNs on unsloth Q8_0 quant.md",
+        "github-data/issues/296 - Possible numerical stability issue with experimental quant of DeepSeek-.md",
+        "github-data/issues/305 - Gibberish output when using DeepSeek-V3-0324-IQ2_K_R4 on mixed CPU _ 4 .md",
+        "github-data/issues/335 - Bug_ Llama 4 generates garbage with longer context _64K_ the issue is n.md",
+        "github-data/issues/367 - Bug_ IQ1_S_R4_ IQ1_M_R4 failed on Qwen3-235B-A22B.md",
+        "github-data/issues/380 - Drop at the start of generation.md",
+        "github-data/issues/383 - Bug_ Loading DeepSeek R1T Chimera causes _llama_model_load_ error loadi.md",
+        "github-data/issues/398 - Bug_ -fmoe causing illegal memory access.md",
+        "github-data/issues/425 - Bug_ CUDA error_ an illegal memory access was encountered.md",
+        "github-data/issues/437 - Feature Request_ support intel amx for further accelerate.md",
+        "github-data/issues/450 - Bug_ Performance regression.md",
+        "github-data/issues/455 - Bug_ KV cache is never reused in OpenAI compatible Chat Completion api.md",
+        "github-data/issues/464 - Bug_ The streaming every couple of rows blocks for 5-8s.md",
+        "github-data/issues/474 - Bug_ Perf Regression in PP throughput after Pull _461 _...R4 CUDA impl_.md",
+        "github-data/issues/485 - Bug_ Illegal Memory Access loading model to CUDA1.md",
+        "github-data/issues/500 - Bug_ Insane cudaMalloc OOM Error on Dual 3090 GPUs.md",
+        "github-data/issues/514 - CUDA Kernel Error on RTX 5090 _Compute Capability 12.0_ _no kernel imag.md",
+        "github-data/issues/521 - When offloading semi layers to some GPUs with -ot_ TG t_s performance t.md",
+        "github-data/issues/522 - Bug_ disabling CUDA graphs due to mul_mat_id.md",
+        "github-data/issues/523 - Bug_ tg speed drop after https_github.com_ikawrakow_ik_llama.cpp_pull_5.md",
+        "github-data/issues/530 - Getting crash on second prompt..md",
+        "github-data/issues/551 - Feature Request_ Support for Falcon Edge series.md",
+        "github-data/issues/572 - Bug_ Oops_ggml_compute_forward_sum_rows_f32_ ffn_moe_weights_sum-60_ fo.md",
+        "github-data/issues/596 - Bug_ Lastest commit broke llama-cli on Windows - mmq.cuh_107_ fatal err.md",
+        "github-data/issues/601 - Bug_ llama-imatrix crashing.md",
+        "github-data/issues/626 - Feature Request_ Add IQK GEMM for IQ1_M.md",
+        "github-data/issues/629 - Multi-GPU performance _Windows_ is significantly worse than single-GPU.md",
+        "github-data/issues/92 - Bug_ Quantized KV cache produces garbage in situation where llama.cpp do.md",
+        "github-data/pull_requests/117 - Some minor quant strategies tweaks.md",
+        "github-data/pull_requests/154 - IQ2_XXS_R4.md",
+        "github-data/pull_requests/157 - R4 i-quants improvements.md",
+        "github-data/pull_requests/185 - IQ1_S_R4_ better 1.5 bpw quants.md",
+        "github-data/pull_requests/229 - Fused MoE ffn_up and ffn_gate.md",
+        "github-data/pull_requests/235 - Option to use MLA without a transposed cache.md",
+        "github-data/pull_requests/239 - SER - Smart Expert Reduction.md",
+        "github-data/pull_requests/244 - Custom quantization rules with regular expressions.md",
+        "github-data/pull_requests/246 - Faster FlashMLA prompt processing.md",
+        "github-data/pull_requests/247 - FlashMLA on CUDA.md",
+        "github-data/pull_requests/259 - Prepare wk_b tensors of DeepSeek models on the fly.md",
+        "github-data/pull_requests/260 - FlashMLA-2_ reduce compute buffer size _CUDA and CPU_.md",
+        "github-data/pull_requests/262 - Fix _261.md",
+        "github-data/pull_requests/272 - Convert models to row-interleaved quants using the quantize tool.md",
+        "github-data/pull_requests/278 - Test transparent huge pages on Linux.md",
+        "github-data/pull_requests/283 - CUDA_ better MoE implementation.md",
+        "github-data/pull_requests/291 - Disable Zen4 optimizations for Q8_0_Q8_0_R8.md",
+        "github-data/pull_requests/294 - Make sure tensor row size is multiple of block size also when quantizin.md",
+        "github-data/pull_requests/299 - Additional guards for interleaved quants.md",
+        "github-data/pull_requests/321 - LlaMA-4 support _text only_.md",
+        "github-data/pull_requests/326 - WIP Compute per layer LIM Scores during imatrix.md",
+        "github-data/pull_requests/328 - imatrix_ collect layer influence statistics.md",
+        "github-data/pull_requests/344 - Add GLM-4-0414 Model Support.md",
+        "github-data/pull_requests/370 - CUDA_ faster FA TG for GQA models.md",
+        "github-data/pull_requests/386 - FlashMLA-3 for DeepSeek models on CUDA.md",
+        "github-data/pull_requests/394 - Handle incompatible DeepSeek GGUFs.md",
+        "github-data/pull_requests/400 - Fix CUDA DeepSeek FlashMLA-3 with quantized KV cache.md",
+        "github-data/pull_requests/405 - GPU offload policy.md",
+        "github-data/pull_requests/409 - Enable faster prompt processing with mainline llama.cpp GGUFs.md",
+        "github-data/pull_requests/411 - Fix imatrix calculation for MLA models.md",
+        "github-data/pull_requests/417 - CUDA_ quantized GEMM for for IQ4_K_ IQ5_K_ IQ6_K.md",
+        "github-data/pull_requests/430 - Disable multi-add for now.md",
+        "github-data/pull_requests/480 - Rpc improvement.md",
+        "github-data/pull_requests/492 - CUDA implementation for IQ1_S_R4.md",
+        "github-data/pull_requests/495 - Check if ffn_up and ffn_gate are of the same type before using fmoe.md",
+        "github-data/pull_requests/515 - IQ2_XXS_ much faster CPU prompt processing.md",
+        "github-data/pull_requests/524 - Perhaps a slightly better GEMV version for IQ2_XXS_ IQ3_XXS_ IQ3_S.md",
+        "github-data/pull_requests/529 - New IQ2_KT_ IQ3_KT and IQ4_KT_ V2.md",
+        "github-data/pull_requests/53 - Quantization mixes tweaks.md",
+        "github-data/pull_requests/531 - Much faster CPU prompt processing _part 1_.md",
+        "github-data/pull_requests/541 - Perhaps slightly faster trellis quants.md",
+        "github-data/pull_requests/550 - Much faster prompt processing for I-quants _ARM_NEON_.md",
+        "github-data/pull_requests/559 - Use cuBLAS for large batches and quants with block size 16.md",
+        "github-data/pull_requests/602 - Adding IQ2_KL.md",
+        "github-data/pull_requests/612 - kimi-k2 convert script and chat template.md",
+        "github-data/pull_requests/616 - Adding IQ1_KT - 1.75 bpw SOTA quants.md",
+        "github-data/pull_requests/85 - IQ2_KS_ 2.1875 bpw non-linear quantization.md",
+        "include/llama.h",
+        "spm-headers/ggml.h",
+        "spm-headers/llama.h",
+        "src/graphs/build_arctic.cpp",
+        "src/graphs/build_bailingmoe2.cpp",
+        "src/graphs/build_bailingmoe3.cpp",
+        "src/graphs/build_bert.cpp",
+        "src/graphs/build_bloom.cpp",
+        "src/graphs/build_chatglm.cpp",
+        "src/graphs/build_codeshell.cpp",
+        "src/graphs/build_cohere2_moe.cpp",
+        "src/graphs/build_dbrx.cpp",
+        "src/graphs/build_deepseek2.cpp",
+        "src/graphs/build_deepseek4.cpp",
+        "src/graphs/build_dots1.cpp",
+        "src/graphs/build_ernie45.cpp",
+        "src/graphs/build_falcon.cpp",
+        "src/graphs/build_gemma4.cpp",
+        "src/graphs/build_glm4.cpp",
+        "src/graphs/build_gpt2.cpp",
+        "src/graphs/build_gptneox.cpp",
+        "src/graphs/build_grok.cpp",
+        "src/graphs/build_hunyuan.cpp",
+        "src/graphs/build_laguna.cpp",
+        "src/graphs/build_llama.cpp",
+        "src/graphs/build_mamba.cpp",
+        "src/graphs/build_mellum.cpp",
+        "src/graphs/build_mimo2.cpp",
+        "src/graphs/build_minimaxm2.cpp",
+        "src/graphs/build_minimaxm3.cpp",
+        "src/graphs/build_mistral3.cpp",
+        "src/graphs/build_mpt.cpp",
+        "src/graphs/build_openai.cpp",
+        "src/graphs/build_openpangu.cpp",
+        "src/graphs/build_phi2.cpp",
+        "src/graphs/build_phi3.cpp",
+        "src/graphs/build_qwen2.cpp",
+        "src/graphs/build_qwen3.cpp",
+        "src/graphs/build_qwen35.cpp",
+        "src/graphs/build_qwen3next.cpp",
+        "src/graphs/build_qwen4exp.cpp",
+        "src/graphs/build_starcoder.cpp",
+        "src/graphs/build_starcoder2.cpp",
+        "src/graphs/build_step35.cpp",
+        "src/graphs/build_t5.cpp",
+        "src/llama-arch.cpp",
+        "src/llama-arch.h",
+        "src/llama-build-context.cpp",
+        "src/llama-build-context.h",
+        "src/llama-cparams.h",
+        "src/llama-delta-net.cpp",
+        "src/llama-delta-net.h",
+        "src/llama-dsv4.cpp",
+        "src/llama-hparams.cpp",
+        "src/llama-kda.cpp",
+        "src/llama-load-tensors.cpp",
+        "src/llama-model-loader.cpp",
+        "src/llama-model.cpp",
+        "src/llama-model.h",
+        "src/llama-quantize.cpp",
+        "src/llama-reload.cpp",
+        "src/llama-sampling.cpp",
+        "src/llama-spec-features-dflash.cpp",
+        "src/llama-spec-features.cpp",
+        "src/llama.cpp",
+        "tests/test-backend-ops.cpp",
+        "tests/test-quantize-fns.cpp"
+      ],
+      "matches": {
+        "qwen35moe": [
+          {
+            "path": "src/llama-model.h",
+            "line": 627,
+            "text": "        if (arch == LLM_ARCH_QWEN3NEXT || arch == LLM_ARCH_QWEN35MOE || arch == LLM_ARCH_QWEN35 || arch == LLM_ARCH_QWEN4EXP) {"
+          },
+          {
+            "path": "src/llama-arch.cpp",
+            "line": 34,
+            "text": "    { LLM_ARCH_QWEN35MOE,       \"qwen35moe\"    },"
+          },
+          {
+            "path": "src/llama-arch.cpp",
+            "line": 338,
+            "text": "    case LLM_ARCH_QWEN35MOE:"
+          },
+          {
+            "path": "src/llama-hparams.cpp",
+            "line": 725,
+            "text": "        case LLM_ARCH_QWEN35MOE:"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 1158,
+            "text": "         model.arch == LLM_ARCH_QWEN35MOE ||"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 3992,
+            "text": "        LLM_ARCH_QWEN35MOE,"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 4980,
+            "text": "    if ((model.arch == LLM_ARCH_QWEN35 || model.arch == LLM_ARCH_QWEN35MOE || llm_arch_is_dflash_family(model.arch)) && extra_output_type != GGML_TYPE_COUNT) {"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 8686,
+            "text": "        model->arch != LLM_ARCH_QWEN35MOE && model->arch != LLM_ARCH_GEMMA4 &&"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 9337,
+            "text": "        case LLM_ARCH_QWEN35MOE:"
+          },
+          {
+            "path": "src/llama-build-context.h",
+            "line": 252,
+            "text": "    ggml_cgraph * build_qwen35moe();"
+          },
+          {
+            "path": "src/llama-build-context.h",
+            "line": 656,
+            "text": "    struct ggml_tensor * build_qwen35moe_mtp("
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 579,
+            "text": "        LLM_ARCH_QWEN35MOE,"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 2431,
+            "text": "    return model && (model->arch == LLM_ARCH_QWEN35 || model->arch == LLM_ARCH_QWEN35MOE);"
+          },
+          {
+            "path": "src/llama-arch.h",
+            "line": 32,
+            "text": "    LLM_ARCH_QWEN35MOE,"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 86,
+            "text": "    bool create_qwen35moe_tensors(const LLM_TN & tn);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 1933,
+            "text": "bool create_tensors_helper::create_qwen35moe_tensors(const LLM_TN & tn) {"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 5534,
+            "text": "        case LLM_ARCH_QWEN35MOE:"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 5535,
+            "text": "            use_mmap_buffer = create_qwen35moe_tensors(tn); break;"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 5805,
+            "text": "                if (model.arch == LLM_ARCH_QWEN3NEXT || model.arch == LLM_ARCH_QWEN35MOE || model.arch == LLM_ARCH_QWEN35) {"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 5877,
+            "text": "                if (model.arch == LLM_ARCH_QWEN3NEXT || model.arch == LLM_ARCH_QWEN35MOE || model.arch == LLM_ARCH_QWEN35) {"
+          },
+          {
+            "path": "src/llama-build-context.cpp",
+            "line": 2562,
+            "text": "                                  lctx.model.arch == LLM_ARCH_QWEN35MOE ||"
+          },
+          {
+            "path": "src/llama-build-context.cpp",
+            "line": 2822,
+            "text": "        case LLM_ARCH_QWEN35MOE:"
+          },
+          {
+            "path": "src/llama-build-context.cpp",
+            "line": 2824,
+            "text": "                result = llm.build_qwen35moe();"
+          },
+          {
+            "path": "src/llama-build-context.cpp",
+            "line": 3169,
+            "text": "                if (model.arch == LLM_ARCH_QWEN3NEXT || model.arch == LLM_ARCH_QWEN35 || model.arch == LLM_ARCH_QWEN35MOE || model.arch == LLM_ARCH_QWEN4EXP) {"
+          },
+          {
+            "path": "src/llama-build-context.cpp",
+            "line": 3417,
+            "text": "    if (model.arch == LLM_ARCH_QWEN3NEXT || model.arch == LLM_ARCH_QWEN35 || model.arch == LLM_ARCH_QWEN35MOE || model.arch == LLM_ARCH_QWEN4EXP) {"
+          },
+          {
+            "path": "src/graphs/build_qwen35.cpp",
+            "line": 6,
+            "text": "ggml_cgraph * llm_build_context::build_qwen35moe() {"
+          },
+          {
+            "path": "src/graphs/build_qwen35.cpp",
+            "line": 23,
+            "text": "        cur = build_qwen35moe_mtp(mtp_layer, hidden_states_from_main_model, n_embd_head, gf, inp_pos);"
+          },
+          {
+            "path": "src/graphs/build_qwen35.cpp",
+            "line": 142,
+            "text": "struct ggml_tensor * llm_build_context::build_qwen35moe_mtp("
+          },
+          {
+            "path": "common/speculative.cpp",
+            "line": 2890,
+            "text": "    return arch == \"qwen35\" || arch == \"qwen35moe\";"
+          },
+          {
+            "path": "docs/parameters.md",
+            "line": 565,
+            "text": "LLM_ARCH_QWEN35MOE,"
+          }
+        ],
+        "routed_gate": [
+          {
+            "path": "src/llama-model.h",
+            "line": 307,
+            "text": "    struct ggml_tensor * ffn_gate_exps = nullptr;"
+          },
+          {
+            "path": "src/llama-model.h",
+            "line": 314,
+            "text": "    llama_split_tensor split_ffn_gate_exps;"
+          },
+          {
+            "path": "src/llama-model.h",
+            "line": 320,
+            "text": "    struct ggml_tensor * ffn_gate_exps_b = nullptr;"
+          },
+          {
+            "path": "src/llama-model.h",
+            "line": 324,
+            "text": "    struct ggml_tensor * ffn_gate_exps_b_dup = nullptr;"
+          },
+          {
+            "path": "src/llama-model.h",
+            "line": 341,
+            "text": "    llama_split_tensor split_ffn_gate_exps_b;"
+          },
+          {
+            "path": "src/llama-reload.cpp",
+            "line": 273,
+            "text": "        \".ffn_gate_exps.weight\","
+          },
+          {
+            "path": "src/llama-reload.cpp",
+            "line": 472,
+            "text": "        suffixes = {\".ffn_up_exps.weight\", \".ffn_gate_exps.weight\"};"
+          },
+          {
+            "path": "src/llama-reload.cpp",
+            "line": 475,
+            "text": "        suffixes = {\".ffn_down_exps.weight\", \".ffn_gate_exps.weight\"};"
+          },
+          {
+            "path": "src/llama-reload.cpp",
+            "line": 476,
+            "text": "    } else if (name_str.find(\".ffn_gate_exps.weight\") != std::string::npos) {"
+          },
+          {
+            "path": "src/llama-reload.cpp",
+            "line": 477,
+            "text": "        layer_prefix = name_str.substr(0, name_str.find(\".ffn_gate_exps.weight\"));"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 8306,
+            "text": "        if (l.ffn_up_gate_exps && l.ffn_up_exps && l.ffn_gate_exps &&"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 8316,
+            "text": "        if (l.ffn_up_gate_exps && l.ffn_up_exps && l.ffn_gate_exps &&"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 8318,
+            "text": "            GGML_ASSERT(l.ffn_up_exps->type == l.ffn_gate_exps->type);"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 8323,
+            "text": "            GGML_ASSERT(l.ffn_up_gate_exps->ne[0] == l.ffn_up_exps->ne[0] && l.ffn_up_gate_exps->ne[0] == l.ffn_gate_exps->ne[0]);"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 8324,
+            "text": "            GGML_ASSERT(l.ffn_up_gate_exps->ne[2] == l.ffn_up_exps->ne[2] && l.ffn_up_gate_exps->ne[2] == l.ffn_gate_exps->ne[2]);"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 8325,
+            "text": "            GGML_ASSERT(l.ffn_up_gate_exps->ne[1] == l.ffn_up_exps->ne[1] + l.ffn_gate_exps->ne[1]);"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 8327,
+            "text": "            GGML_ASSERT(nbytes == ggml_nbytes(l.ffn_gate_exps));"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 8336,
+            "text": "            ggml_backend_tensor_get(l.ffn_gate_exps, aux_buffer_gate.data(), 0, nbytes);"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 8351,
+            "text": "            if (l.ffn_up_gate_exps_b && l.ffn_up_exps_b && l.ffn_gate_exps_b) {"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 8353,
+            "text": "                GGML_ASSERT(nbytes == ggml_nbytes(l.ffn_gate_exps_b));"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 8362,
+            "text": "                ggml_backend_tensor_get(l.ffn_gate_exps_b, aux_buffer_gate.data(), 0, nbytes);"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 29,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,   \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 80,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,   \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 107,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,   \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 171,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,   \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 397,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,      \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 458,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,      \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 479,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,      \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 534,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,        \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 568,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,      \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 603,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,      \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 683,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,      \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 984,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,        \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1142,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,   \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1195,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,   \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1224,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,      \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1261,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,          \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1319,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,      \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1382,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,      \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1438,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,   \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1467,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,   \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1573,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,   \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1609,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,   \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1633,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,      \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1680,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,      \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1705,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,   \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1725,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,      \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1748,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,      \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1800,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,      \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1828,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,      \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1853,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,      \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1900,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,   \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1923,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,   \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1969,
+            "text": "            {   LLM_TENSOR_FFN_GATE_EXPS,     \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 2007,
+            "text": "            {   LLM_TENSOR_FFN_GATE_EXPS,     \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 2040,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,          \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 2097,
+            "text": "            { LLM_TENSOR_FFN_GATE_EXPS,          \"blk.%d.ffn_gate_exps\" },"
+          },
+          {
+            "path": "src/llama-quantize.cpp",
+            "line": 1631,
+            "text": "                    if (auto pos1 = name.find(\"ffn_up_exps.weight\"), pos2 = name.find(\"ffn_gate_exps.weight\"); pos1 != std::string::npos || pos2 != std::string::npos) {"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 590,
+            "text": "            layer.ffn_gate_exps = create_tensor(ctx_split, tn(LLM_TENSOR_FFN_GATE_EXPS, \"weight\", i), {n_embd,   n_ff, n_expert}, llama_model_loader::TENSOR_NOT_REQUIRED);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 591,
+            "text": "            if (layer.ffn_gate_exps) {"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 603,
+            "text": "                layer.ffn_gate_exps = ggml_new_tensor_3d(ctx_split, type_gate, n_embd,   n_ff, n_expert);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 607,
+            "text": "                ggml_set_name(layer.ffn_gate_exps, tn(LLM_TENSOR_FFN_GATE_EXPS, \"weight\", i).c_str());"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 613,
+            "text": "                    ml.create_tensor_as_view(ctx_split, layer.ffn_gate_exps, tn(LLM_TENSOR_FFN_GATE_EXP, \"weight\", i, x), { n_embd, n_ff }, layer.ffn_gate_exps->nb[2]*x);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 791,
+            "text": "        layer.ffn_gate_exps = create_tensor(ctx_split, tn(LLM_TENSOR_FFN_GATE_EXPS, \"weight\", i), {n_embd, n_ff_exp, n_expert}, llama_model_loader::TENSOR_NOT_REQUIRED);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 793,
+            "text": "        if (layer.ffn_gate_exps) {"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 805,
+            "text": "            layer.ffn_gate_exps = ggml_new_tensor_3d(ctx_split, type_gate, n_embd,   n_ff, n_expert);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 809,
+            "text": "            ggml_set_name(layer.ffn_gate_exps, tn(LLM_TENSOR_FFN_GATE_EXPS, \"weight\", i).c_str());"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 815,
+            "text": "                ml.create_tensor_as_view(ctx_split, layer.ffn_gate_exps, tn(LLM_TENSOR_FFN_GATE_EXP, \"weight\", i, x), { n_embd, n_ff }, layer.ffn_gate_exps->nb[2]*x);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 1316,
+            "text": "            //layer.ffn_gate_exps = create_tensor(ctx_split, tn(LLM_TENSOR_FFN_GATE_EXPS, \"weight\", i), {n_embd, n_ff_exp, n_expert},"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 2837,
+            "text": "        const std::string ffn_gate_exps_name = tn(LLM_TENSOR_FFN_GATE_EXPS, \"weight\", i);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 2838,
+            "text": "        const ggml_tensor * ffn_gate_exps_meta = ml.require_tensor_meta(ffn_gate_exps_name.c_str());"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 2839,
+            "text": "        if (ggml_n_dims(ffn_gate_exps_meta) != 3 || ffn_gate_exps_meta->ne[0] != n_embd ||"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 2840,
+            "text": "                ffn_gate_exps_meta->ne[1] <= 0 || ffn_gate_exps_meta->ne[2] != n_expert) {"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 2842,
+            "text": "                    __func__, i, ffn_gate_exps_name.c_str(), llama_format_tensor_shape(ffn_gate_exps_meta).c_str()));"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 2844,
+            "text": "        const int64_t n_ff = ffn_gate_exps_meta->ne[1];"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 2872,
+            "text": "        layer.ffn_gate_exps = create_tensor(ctx_split, ffn_gate_exps_name, {n_embd, n_ff, n_expert}, 0);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 3158,
+            "text": "        layer.ffn_gate_exps = create_tensor(ctx_split, tn(LLM_TENSOR_FFN_GATE_EXPS, \"weight\", i), {n_embd,   n_ff, n_expert}, false);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 3362,
+            "text": "        layer.ffn_gate_exps  = create_tensor_from_meta(ctx_split, format(\"blk.%d.ffn_gate_exps.weight\", i));"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 3579,
+            "text": "            layer.ffn_gate_exps = create_tensor(ctx_split, tn(LLM_TENSOR_FFN_GATE_EXPS, \"weight\", i), {  n_embd, n_ff_exp, n_expert}, flags);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 3727,
+            "text": "            layer.ffn_gate_exps = create_tensor(ctx_split, tn(LLM_TENSOR_FFN_GATE_EXPS, \"weight\", i), {  n_embd, n_ff_exp, n_expert}, flags);"
+          }
+        ],
+        "routed_up": [
+          {
+            "path": "src/llama-model.h",
+            "line": 309,
+            "text": "    struct ggml_tensor * ffn_up_exps  = nullptr;"
+          },
+          {
+            "path": "src/llama-model.h",
+            "line": 313,
+            "text": "    llama_split_tensor split_ffn_up_exps;"
+          },
+          {
+            "path": "src/llama-model.h",
+            "line": 322,
+            "text": "    struct ggml_tensor * ffn_up_exps_b = nullptr;"
+          },
+          {
+            "path": "src/llama-model.h",
+            "line": 326,
+            "text": "    struct ggml_tensor * ffn_up_exps_b_dup = nullptr;"
+          },
+          {
+            "path": "src/llama-model.h",
+            "line": 343,
+            "text": "    llama_split_tensor split_ffn_up_exps_b;"
+          },
+          {
+            "path": "src/llama-reload.cpp",
+            "line": 272,
+            "text": "        \".ffn_up_exps.weight\","
+          },
+          {
+            "path": "src/llama-reload.cpp",
+            "line": 472,
+            "text": "        suffixes = {\".ffn_up_exps.weight\", \".ffn_gate_exps.weight\"};"
+          },
+          {
+            "path": "src/llama-reload.cpp",
+            "line": 473,
+            "text": "    } else if (name_str.find(\".ffn_up_exps.weight\") != std::string::npos) {"
+          },
+          {
+            "path": "src/llama-reload.cpp",
+            "line": 474,
+            "text": "        layer_prefix = name_str.substr(0, name_str.find(\".ffn_up_exps.weight\"));"
+          },
+          {
+            "path": "src/llama-reload.cpp",
+            "line": 478,
+            "text": "        suffixes = {\".ffn_up_exps.weight\", \".ffn_down_exps.weight\"};"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 8306,
+            "text": "        if (l.ffn_up_gate_exps && l.ffn_up_exps && l.ffn_gate_exps &&"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 8316,
+            "text": "        if (l.ffn_up_gate_exps && l.ffn_up_exps && l.ffn_gate_exps &&"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 8318,
+            "text": "            GGML_ASSERT(l.ffn_up_exps->type == l.ffn_gate_exps->type);"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 8319,
+            "text": "            if (l.ffn_up_gate_exps->type != l.ffn_up_exps->type) {"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 8321,
+            "text": "                GGML_ASSERT(other_type == l.ffn_up_exps->type);"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 8323,
+            "text": "            GGML_ASSERT(l.ffn_up_gate_exps->ne[0] == l.ffn_up_exps->ne[0] && l.ffn_up_gate_exps->ne[0] == l.ffn_gate_exps->ne[0]);"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 8324,
+            "text": "            GGML_ASSERT(l.ffn_up_gate_exps->ne[2] == l.ffn_up_exps->ne[2] && l.ffn_up_gate_exps->ne[2] == l.ffn_gate_exps->ne[2]);"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 8325,
+            "text": "            GGML_ASSERT(l.ffn_up_gate_exps->ne[1] == l.ffn_up_exps->ne[1] + l.ffn_gate_exps->ne[1]);"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 8326,
+            "text": "            auto nbytes = ggml_nbytes(l.ffn_up_exps);"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 8335,
+            "text": "            ggml_backend_tensor_get(l.ffn_up_exps, aux_buffer_up.data(), 0, nbytes);"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 8342,
+            "text": "            auto expert_size = l.ffn_up_exps->ne[1]*l.ffn_up_exps->nb[1];"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 8351,
+            "text": "            if (l.ffn_up_gate_exps_b && l.ffn_up_exps_b && l.ffn_gate_exps_b) {"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 8352,
+            "text": "                nbytes = ggml_nbytes(l.ffn_up_exps_b);"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 8361,
+            "text": "                ggml_backend_tensor_get(l.ffn_up_exps_b, aux_buffer_up.data(), 0, nbytes);"
+          },
+          {
+            "path": "src/llama.cpp",
+            "line": 8368,
+            "text": "                expert_size = l.ffn_up_exps_b->nb[1];"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 31,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,     \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 82,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,     \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 109,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,     \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 173,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,     \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 399,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,        \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 460,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,        \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 481,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,        \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 536,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,          \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 570,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,        \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 605,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,        \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 685,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,        \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 986,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,          \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1144,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,     \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1197,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,     \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1226,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,        \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1263,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,            \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1321,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,        \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1384,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,        \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1440,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,     \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1469,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,     \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1575,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,     \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1611,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,     \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1635,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,        \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1682,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,        \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1707,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,     \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1727,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,        \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1750,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,        \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1802,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,        \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1830,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,        \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1855,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,        \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1902,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,     \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1925,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,     \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1971,
+            "text": "            {   LLM_TENSOR_FFN_UP_EXPS,       \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 2009,
+            "text": "            {   LLM_TENSOR_FFN_UP_EXPS,       \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 2042,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,            \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 2099,
+            "text": "            { LLM_TENSOR_FFN_UP_EXPS,            \"blk.%d.ffn_up_exps\" },"
+          },
+          {
+            "path": "src/llama-quantize.cpp",
+            "line": 1631,
+            "text": "                    if (auto pos1 = name.find(\"ffn_up_exps.weight\"), pos2 = name.find(\"ffn_gate_exps.weight\"); pos1 != std::string::npos || pos2 != std::string::npos) {"
+          },
+          {
+            "path": "src/llama-quantize.cpp",
+            "line": 1637,
+            "text": "                            auto up_name = name.substr(0, pos) + \"ffn_up_exps.weight\";"
+          },
+          {
+            "path": "src/llama-quantize.cpp",
+            "line": 1641,
+            "text": "                        auto not_merged_name = name.substr(0, pos) + \"ffn_up_exps.weight\";"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 593,
+            "text": "                layer.ffn_up_exps   = create_tensor(ctx_split, tn(LLM_TENSOR_FFN_UP_EXPS,   \"weight\", i), {n_embd,   n_ff, n_expert});"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 605,
+            "text": "                layer.ffn_up_exps   = ggml_new_tensor_3d(ctx_split, type_up,   n_embd,   n_ff, n_expert);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 609,
+            "text": "                ggml_set_name(layer.ffn_up_exps,   tn(LLM_TENSOR_FFN_UP_EXPS,   \"weight\", i).c_str());"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 615,
+            "text": "                    ml.create_tensor_as_view(ctx_split, layer.ffn_up_exps,   tn(LLM_TENSOR_FFN_UP_EXP,   \"weight\", i, x), { n_embd, n_ff }, layer.ffn_up_exps->nb[2]*x);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 795,
+            "text": "            layer.ffn_up_exps   = create_tensor(ctx_split, tn(LLM_TENSOR_FFN_UP_EXPS,   \"weight\", i), { n_embd,   n_ff_exp, n_expert });"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 807,
+            "text": "            layer.ffn_up_exps   = ggml_new_tensor_3d(ctx_split, type_up,   n_embd,   n_ff, n_expert);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 811,
+            "text": "            ggml_set_name(layer.ffn_up_exps,   tn(LLM_TENSOR_FFN_UP_EXPS,   \"weight\", i).c_str());"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 817,
+            "text": "                ml.create_tensor_as_view(ctx_split, layer.ffn_up_exps,   tn(LLM_TENSOR_FFN_UP_EXP,   \"weight\", i, x), { n_embd, n_ff }, layer.ffn_up_exps->nb[2]*x);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 1320,
+            "text": "            //layer.ffn_up_exps   = create_tensor(ctx_split, tn(LLM_TENSOR_FFN_UP_EXPS,   \"weight\", i), {n_embd, n_ff_exp, n_expert},"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 2874,
+            "text": "        layer.ffn_up_exps = create_tensor(ctx_split, tn(LLM_TENSOR_FFN_UP_EXPS, \"weight\", i), {n_embd, n_ff, n_expert}, 0);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 3160,
+            "text": "        layer.ffn_up_exps   = create_tensor(ctx_split, tn(LLM_TENSOR_FFN_UP_EXPS,   \"weight\", i), {n_embd,   n_ff, n_expert});"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 3364,
+            "text": "        layer.ffn_up_exps    = create_tensor_from_meta(ctx_split, format(\"blk.%d.ffn_up_exps.weight\", i));"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 3581,
+            "text": "            layer.ffn_up_exps   = create_tensor(ctx_split, tn(LLM_TENSOR_FFN_UP_EXPS,   \"weight\", i), {  n_embd, n_ff_exp, n_expert}, flags);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 3729,
+            "text": "            layer.ffn_up_exps   = create_tensor(ctx_split, tn(LLM_TENSOR_FFN_UP_EXPS,   \"weight\", i), {  n_embd, n_ff_exp, n_expert}, flags);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 3966,
+            "text": "                layer.ffn_up_exps   = create_tensor(ctx_split, tn(LLM_TENSOR_FFN_UP_EXPS,   \"weight\", i), {n_embd,   n_ff, n_expert});"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 3978,
+            "text": "                layer.ffn_up_exps   = ggml_new_tensor_3d(ctx_split, type_up,   n_embd,   n_ff, n_expert);"
+          }
+        ],
+        "routed_down": [
+          {
+            "path": "src/llama-model.h",
+            "line": 308,
+            "text": "    struct ggml_tensor * ffn_down_exps = nullptr;"
+          },
+          {
+            "path": "src/llama-model.h",
+            "line": 315,
+            "text": "    llama_split_tensor split_ffn_down_exps;"
+          },
+          {
+            "path": "src/llama-model.h",
+            "line": 321,
+            "text": "    struct ggml_tensor * ffn_down_exps_b = nullptr;"
+          },
+          {
+            "path": "src/llama-model.h",
+            "line": 325,
+            "text": "    struct ggml_tensor * ffn_down_exps_b_dup = nullptr;"
+          },
+          {
+            "path": "src/llama-model.h",
+            "line": 327,
+            "text": "    struct ggml_tensor * ffn_down_exps_s = nullptr;"
+          },
+          {
+            "path": "src/llama-model.h",
+            "line": 342,
+            "text": "    llama_split_tensor split_ffn_down_exps_b;"
+          },
+          {
+            "path": "src/llama-model.h",
+            "line": 345,
+            "text": "    llama_split_tensor split_ffn_down_exps_s;"
+          },
+          {
+            "path": "src/llama-reload.cpp",
+            "line": 271,
+            "text": "        \".ffn_down_exps.weight\","
+          },
+          {
+            "path": "src/llama-reload.cpp",
+            "line": 470,
+            "text": "    if (name_str.find(\".ffn_down_exps.weight\") != std::string::npos) {"
+          },
+          {
+            "path": "src/llama-reload.cpp",
+            "line": 471,
+            "text": "        layer_prefix = name_str.substr(0, name_str.find(\".ffn_down_exps.weight\"));"
+          },
+          {
+            "path": "src/llama-reload.cpp",
+            "line": 475,
+            "text": "        suffixes = {\".ffn_down_exps.weight\", \".ffn_gate_exps.weight\"};"
+          },
+          {
+            "path": "src/llama-reload.cpp",
+            "line": 478,
+            "text": "        suffixes = {\".ffn_up_exps.weight\", \".ffn_down_exps.weight\"};"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 30,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,   \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 81,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,   \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 108,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,   \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 172,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,   \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 398,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,      \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 459,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,      \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 480,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,      \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 535,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,        \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 569,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,      \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 604,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,      \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 684,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,      \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 899,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,        \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 985,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,        \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1143,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,   \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1196,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,   \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1225,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,      \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1262,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,          \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1320,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,      \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1383,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,      \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1439,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,   \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1468,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,   \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1574,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,   \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1610,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,   \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1634,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,      \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1681,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,      \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1706,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,   \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1726,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,      \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1749,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,      \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1801,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,      \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1829,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,      \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1854,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,      \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1901,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,   \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1924,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,   \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 1970,
+            "text": "            {   LLM_TENSOR_FFN_DOWN_EXPS,     \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 2008,
+            "text": "            {   LLM_TENSOR_FFN_DOWN_EXPS,     \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 2041,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,          \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 2098,
+            "text": "            { LLM_TENSOR_FFN_DOWN_EXPS,          \"blk.%d.ffn_down_exps\" },"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 592,
+            "text": "                layer.ffn_down_exps = create_tensor(ctx_split, tn(LLM_TENSOR_FFN_DOWN_EXPS, \"weight\", i), {  n_ff, n_embd, n_expert});"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 604,
+            "text": "                layer.ffn_down_exps = ggml_new_tensor_3d(ctx_split, type_down,   n_ff, n_embd, n_expert);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 608,
+            "text": "                ggml_set_name(layer.ffn_down_exps, tn(LLM_TENSOR_FFN_DOWN_EXPS, \"weight\", i).c_str());"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 614,
+            "text": "                    ml.create_tensor_as_view(ctx_split, layer.ffn_down_exps, tn(LLM_TENSOR_FFN_DOWN_EXP, \"weight\", i, x), { n_ff, n_embd }, layer.ffn_down_exps->nb[2]*x);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 794,
+            "text": "            layer.ffn_down_exps = create_tensor(ctx_split, tn(LLM_TENSOR_FFN_DOWN_EXPS, \"weight\", i), {n_ff_exp, n_embd,   n_expert});"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 806,
+            "text": "            layer.ffn_down_exps = ggml_new_tensor_3d(ctx_split, type_down,   n_ff, n_embd, n_expert);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 810,
+            "text": "            ggml_set_name(layer.ffn_down_exps, tn(LLM_TENSOR_FFN_DOWN_EXPS, \"weight\", i).c_str());"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 816,
+            "text": "                ml.create_tensor_as_view(ctx_split, layer.ffn_down_exps, tn(LLM_TENSOR_FFN_DOWN_EXP, \"weight\", i, x), { n_ff, n_embd }, layer.ffn_down_exps->nb[2]*x);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 1318,
+            "text": "            //layer.ffn_down_exps = create_tensor(ctx_split, tn(LLM_TENSOR_FFN_DOWN_EXPS, \"weight\", i), {n_ff_exp, n_embd, n_expert},"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 2562,
+            "text": "            layer.ffn_down_exps     = create_tensor(ctx_split, tn(LLM_TENSOR_FFN_DOWN_EXPS,     \"weight\", i), {n_ff_exp, n_embd, n_expert}, 0);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 2563,
+            "text": "            layer.ffn_down_exps_s   = create_tensor(ctx_split, tn(LLM_TENSOR_FFN_DOWN_EXPS,     \"scale\",  i), {n_expert}, llama_model_loader::TENSOR_NOT_REQUIRED);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 2873,
+            "text": "        layer.ffn_down_exps = create_tensor(ctx_split, tn(LLM_TENSOR_FFN_DOWN_EXPS, \"weight\", i), {n_ff, n_embd, n_expert}, 0);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 3159,
+            "text": "        layer.ffn_down_exps = create_tensor(ctx_split, tn(LLM_TENSOR_FFN_DOWN_EXPS, \"weight\", i), {  n_ff, n_embd, n_expert});"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 3363,
+            "text": "        layer.ffn_down_exps  = create_tensor_from_meta(ctx_split, format(\"blk.%d.ffn_down_exps.weight\", i));"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 3580,
+            "text": "            layer.ffn_down_exps = create_tensor(ctx_split, tn(LLM_TENSOR_FFN_DOWN_EXPS, \"weight\", i), {n_ff_exp,   n_embd, n_expert}, flags);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 3728,
+            "text": "            layer.ffn_down_exps = create_tensor(ctx_split, tn(LLM_TENSOR_FFN_DOWN_EXPS, \"weight\", i), {n_ff_exp,   n_embd, n_expert}, flags);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 3965,
+            "text": "                layer.ffn_down_exps = create_tensor(ctx_split, tn(LLM_TENSOR_FFN_DOWN_EXPS, \"weight\", i), {  n_ff, n_embd, n_expert});"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 3977,
+            "text": "                layer.ffn_down_exps = ggml_new_tensor_3d(ctx_split, type_down,   n_ff, n_embd, n_expert);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 3981,
+            "text": "                ggml_set_name(layer.ffn_down_exps, tn(LLM_TENSOR_FFN_DOWN_EXPS, \"weight\", i).c_str());"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 3987,
+            "text": "                    ml.create_tensor_as_view(ctx_split, layer.ffn_down_exps, tn(LLM_TENSOR_FFN_DOWN_EXP, \"weight\", i, x), { n_ff, n_embd }, layer.ffn_down_exps->nb[2]*x);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 4517,
+            "text": "            layer.ffn_down_exps = create_tensor(ctx_split, tn(LLM_TENSOR_FFN_DOWN_EXPS, \"weight\", i), { n_ff_exp, n_embd, n_expert }, 0);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 4616,
+            "text": "        layer.ffn_down_exps = create_tensor(ctx_split, tn(LLM_TENSOR_FFN_DOWN_EXPS, \"weight\", i),"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 4629,
+            "text": "        layer.ffn_down_exps_b = create_tensor(ctx_down_b, tn(LLM_TENSOR_FFN_DOWN_EXPS, \"bias\", i), {  n_embd, n_expert}, 0, &ctx_ffn_down_b);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 4640,
+            "text": "            layer.ffn_down_exps_b_dup = create_tensor(ctx_ffn_down, tn(LLM_TENSOR_FFN_DOWN_EXPS, \"bias\", i), {  n_embd, n_expert},"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 4829,
+            "text": "    layer.ffn_down_exps = create_tensor(ffn_ctx, tn(LLM_TENSOR_FFN_DOWN_EXPS, \"weight\", i), {n_ff_exp,   n_embd, n_expert}, flags);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 4860,
+            "text": "    layer.ffn_down_exps = create_tensor(ffn_ctx, d_name, { d_meta->ne[0], d_meta->ne[1], d_meta->ne[2] }, 0);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 5944,
+            "text": "            if (layer.ffn_down_exps_s) {"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 5945,
+            "text": "                if (auto it = split_tensors.find(layer.ffn_down_exps_s); it != split_tensors.end()) {"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 5946,
+            "text": "                    prepare_split_tensors(-1, ctx_split, layer.ffn_down_exps_s, layer.split_ffn_down_exps_s, mirror, mem_used);"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 5980,
+            "text": "            if (layer.ffn_down_exps && ((layer.ffn_up_exps && layer.ffn_gate_exps) || layer.ffn_up_gate_exps)) {"
+          },
+          {
+            "path": "src/llama-load-tensors.cpp",
+            "line": 5983,
+            "text": "                bool use_split = split_tensors.find(layer.ffn_down_exps) != split_tensors.end() && has_up_gate;"
+          }
+        ],
+        "iq2_xxs": [
+          {
+            "path": "src/llama-model-loader.cpp",
+            "line": 487,
+            "text": "            case GGML_TYPE_IQ2_XXS: ftype = LLAMA_FTYPE_MOSTLY_IQ2_XXS; break;"
+          },
+          {
+            "path": "src/llama-model-loader.cpp",
+            "line": 488,
+            "text": "            case GGML_TYPE_IQ2_XXS_R4:ftype = LLAMA_FTYPE_MOSTLY_IQ2_XXS_R4; break;"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 2215,
+            "text": "        case LLAMA_FTYPE_MOSTLY_IQ2_XXS:  return \"IQ2_XXS - 2.0625 bpw\";"
+          },
+          {
+            "path": "src/llama-model.cpp",
+            "line": 2216,
+            "text": "        case LLAMA_FTYPE_MOSTLY_IQ2_XXS_R4:return \"IQ2_XXS_R4 - 2.0625 bpw\";"
+          },
+          {
+            "path": "src/llama-quantize.cpp",
+            "line": 97,
+            "text": "        { GGML_TYPE_IQ2_XXS_R4,  { GGML_TYPE_IQ2_XXS, 4} },"
+          },
+          {
+            "path": "src/llama-quantize.cpp",
+            "line": 226,
+            "text": "        new_type == GGML_TYPE_IQ2_XS  || new_type == GGML_TYPE_IQ2_XXS || new_type == GGML_TYPE_IQ2_S  ||"
+          },
+          {
+            "path": "src/llama-quantize.cpp",
+            "line": 235,
+            "text": "        new_type == GGML_TYPE_IQ3_XXS_R4 || new_type == GGML_TYPE_IQ2_XXS_R4 || new_type == GGML_TYPE_IQ2_XS_R4 ||"
+          },
+          {
+            "path": "src/llama-quantize.cpp",
+            "line": 252,
+            "text": "            case GGML_TYPE_IQ2_XXS:"
+          },
+          {
+            "path": "src/llama-quantize.cpp",
+            "line": 253,
+            "text": "            case GGML_TYPE_IQ2_XXS_R4:"
+          },
+          {
+            "path": "src/llama-quantize.cpp",
+            "line": 367,
+            "text": "            else if (ftype == LLAMA_FTYPE_MOSTLY_IQ2_XXS || ftype == LLAMA_FTYPE_MOSTLY_IQ2_XS || ftype == LLAMA_FTYPE_MOSTLY_IQ3_XXS ||"
+          },
+          {
+            "path": "src/llama-quantize.cpp",
+            "line": 377,
+            "text": "            else if (ftype == LLAMA_FTYPE_MOSTLY_IQ2_XXS_R4 || ftype == LLAMA_FTYPE_MOSTLY_IQ2_XS_R4) {"
+          },
+          {
+            "path": "src/llama-quantize.cpp",
+            "line": 394,
+            "text": "            if (ftype == LLAMA_FTYPE_MOSTLY_IQ2_XXS || ftype == LLAMA_FTYPE_MOSTLY_IQ2_XS ||"
+          },
+          {
+            "path": "src/llama-quantize.cpp",
+            "line": 396,
+            "text": "                ftype == LLAMA_FTYPE_MOSTLY_IQ2_XXS_R4 || ftype == LLAMA_FTYPE_MOSTLY_IQ2_XS_R4 ||"
+          },
+          {
+            "path": "src/llama-quantize.cpp",
+            "line": 417,
+            "text": "            if (ftype == LLAMA_FTYPE_MOSTLY_IQ2_XXS || ftype == LLAMA_FTYPE_MOSTLY_IQ2_XS ||"
+          },
+          {
+            "path": "src/llama-quantize.cpp",
+            "line": 419,
+            "text": "                ftype == LLAMA_FTYPE_MOSTLY_IQ2_XXS_R4 || ftype == LLAMA_FTYPE_MOSTLY_IQ2_XS_R4 ||"
+          },
+          {
+            "path": "src/llama-quantize.cpp",
+            "line": 507,
+            "text": "    } else if (ftype == LLAMA_FTYPE_MOSTLY_IQ2_XXS || ftype == LLAMA_FTYPE_MOSTLY_IQ2_XS || ftype == LLAMA_FTYPE_MOSTLY_IQ1_S ||"
+          },
+          {
+            "path": "src/llama-quantize.cpp",
+            "line": 509,
+            "text": "               ftype == LLAMA_FTYPE_MOSTLY_IQ2_KS  || ftype == LLAMA_FTYPE_MOSTLY_IQ2_XXS_R4 || ftype == LLAMA_FTYPE_MOSTLY_IQ2_XS_R4 ||"
+          },
+          {
+            "path": "src/llama-quantize.cpp",
+            "line": 939,
+            "text": "        { LLAMA_FTYPE_MOSTLY_IQ2_XXS, LLAMA_FTYPE_MOSTLY_IQ2_XXS_R4 },"
+          },
+          {
+            "path": "src/llama-quantize.cpp",
+            "line": 1065,
+            "text": "        case LLAMA_FTYPE_MOSTLY_IQ2_XXS: default_type = GGML_TYPE_IQ2_XXS; break;"
+          },
+          {
+            "path": "src/llama-quantize.cpp",
+            "line": 1066,
+            "text": "        case LLAMA_FTYPE_MOSTLY_IQ2_XXS_R4:default_type = GGML_TYPE_IQ2_XXS_R4; break;"
+          },
+          {
+            "path": "src/llama-quantize.cpp",
+            "line": 1685,
+            "text": "                bool is_very_low_bpw_quant = new_type == GGML_TYPE_IQ2_XXS    ||"
+          },
+          {
+            "path": "src/llama-quantize.cpp",
+            "line": 1686,
+            "text": "                                             new_type == GGML_TYPE_IQ2_XXS_R4 ||"
+          },
+          {
+            "path": "tests/test-backend-ops.cpp",
+            "line": 2091,
+            "text": "        GGML_TYPE_IQ2_XXS, GGML_TYPE_IQ2_XS, GGML_TYPE_IQ2_S,"
+          },
+          {
+            "path": "tests/test-backend-ops.cpp",
+            "line": 2100,
+            "text": "        GGML_TYPE_IQ2_XXS"
+          },
+          {
+            "path": "tests/test-quantize-fns.cpp",
+            "line": 185,
+            "text": "            const float max_allowed_error = type == GGML_TYPE_Q2_K || type == GGML_TYPE_IQ2_XS || type == GGML_TYPE_IQ2_XXS ||"
+          },
+          {
+            "path": "ggml/src/ggml-quants.c",
+            "line": 3692,
+            "text": "void dequantize_row_iq2_xxs(const block_iq2_xxs * restrict x, float * restrict y, int64_t k) {"
+          },
+          {
+            "path": "ggml/src/ggml-quants.c",
+            "line": 3995,
+            "text": "        // We need this change for IQ2_XXS, else the AVX implementation becomes very awkward"
+          },
+          {
+            "path": "ggml/src/ggml-quants.c",
+            "line": 9155,
+            "text": "void ggml_vec_dot_iq2_xxs_q8_K(int n, float * restrict s, size_t bs, const void * restrict vx, size_t bx, const void * restrict vy, size_t by, int nrc) {"
+          },
+          {
+            "path": "ggml/src/ggml-quants.c",
+            "line": 9163,
+            "text": "    const block_iq2_xxs * restrict x = vx;"
+          },
+          {
+            "path": "ggml/src/ggml-quants.c",
+            "line": 12588,
+            "text": "    GGML_ASSERT(type == GGML_TYPE_IQ2_XXS || type == GGML_TYPE_IQ2_XS || type == GGML_TYPE_IQ1_S || type == GGML_TYPE_IQ1_M || type == GGML_TYPE_IQ2_S);"
+          },
+          {
+            "path": "ggml/src/ggml-quants.c",
+            "line": 12589,
+            "text": "    return type == GGML_TYPE_IQ2_XXS ? 0 :"
+          },
+          {
+            "path": "ggml/src/ggml-quants.c",
+            "line": 12595,
+            "text": "    GGML_ASSERT(type == GGML_TYPE_IQ2_XXS || type == GGML_TYPE_IQ2_XS || type == GGML_TYPE_IQ1_S || type == GGML_TYPE_IQ1_M || type == GGML_TYPE_IQ2_S);"
+          },
+          {
+            "path": "ggml/src/ggml-quants.c",
+            "line": 12596,
+            "text": "    return type == GGML_TYPE_IQ2_XXS ? 256 :"
+          },
+          {
+            "path": "ggml/src/ggml-quants.c",
+            "line": 12865,
+            "text": "    const uint16_t * kgrid = type == GGML_TYPE_IQ2_XXS ? kgrid_2bit_256 :"
+          },
+          {
+            "path": "ggml/src/ggml-quants.c",
+            "line": 12964,
+            "text": "    GGML_ASSERT(type == GGML_TYPE_IQ2_XXS || type == GGML_TYPE_IQ2_XS || type == GGML_TYPE_IQ1_S || type == GGML_TYPE_IQ1_M || type == GGML_TYPE_IQ2_S);"
+          },
+          {
+            "path": "ggml/src/ggml-quants.c",
+            "line": 12997,
+            "text": "static void quantize_row_iq2_xxs_impl(const float * restrict x, void * restrict vy, int64_t n, const float * restrict quant_weights) {"
+          },
+          {
+            "path": "ggml/src/ggml-quants.c",
+            "line": 12999,
+            "text": "    const int gindex = iq2_data_index(GGML_TYPE_IQ2_XXS);"
+          },
+          {
+            "path": "ggml/src/ggml-quants.c",
+            "line": 13014,
+            "text": "    block_iq2_xxs * y = vy;"
+          },
+          {
+            "path": "ggml/src/ggml-quants.c",
+            "line": 13025,
+            "text": "    const float fudge = ggml_get_quantize_fudge_factor(GGML_TYPE_IQ2_XXS);"
+          },
+          {
+            "path": "ggml/src/ggml-quants.c",
+            "line": 13425,
+            "text": "size_t quantize_iq2_xxs(const float * restrict src, void * restrict dst, int64_t nrow, int64_t n_per_row, const float * quant_weights,"
+          },
+          {
+            "path": "ggml/src/ggml-quants.c",
+            "line": 13432,
+            "text": "        quantize_row_iq2_xxs_impl(src, qrow, n_per_row, quant_weights);"
+          },
+          {
+            "path": "ggml/src/ggml-quants.c",
+            "line": 13434,
+            "text": "        qrow += nblock*sizeof(block_iq2_xxs);"
+          },
+          {
+            "path": "ggml/src/ggml-quants.c",
+            "line": 13436,
+            "text": "    return nrow * nblock * sizeof(block_iq2_xxs);"
+          },
+          {
+            "path": "ggml/src/ggml-quants.c",
+            "line": 13439,
+            "text": "void quantize_row_iq2_xxs(const float * restrict x, void * restrict vy, int64_t k) {"
+          },
+          {
+            "path": "ggml/src/ggml-quants.c",
+            "line": 13441,
+            "text": "    block_iq2_xxs * restrict y = vy;"
+          },
+          {
+            "path": "ggml/src/ggml-quants.c",
+            "line": 13442,
+            "text": "    quantize_row_iq2_xxs_ref(x, y, k);"
+          },
+          {
+            "path": "ggml/src/ggml-quants.c",
+            "line": 13445,
+            "text": "void quantize_row_iq2_xxs_ref(const float * restrict x, block_iq2_xxs * restrict y, int64_t k) {"
+          },
+          {
+            "path": "ggml/src/ggml-quants.c",
+            "line": 13447,
+            "text": "    quantize_iq2_xxs(x, y, 1, k, NULL, NULL);"
+          },
+          {
+            "path": "ggml/src/ggml-quants.c",
+            "line": 15510,
+            "text": "        case GGML_TYPE_IQ2_XXS:"
+          },
+          {
+            "path": "ggml/src/ggml-quants.c",
+            "line": 15512,
+            "text": "                VALIDATE_ROW_DATA_D_F16_IMPL(block_iq2_xxs, data, nb);"
+          },
+          {
+            "path": "ggml/src/ggml-quants.c",
+            "line": 15560,
+            "text": "        case GGML_TYPE_IQ2_XXS_R4: break;"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 1868,
+            "text": "    case GGML_TYPE_IQ2_XXS:"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 2256,
+            "text": "        CREATE_MM2(pipeline_dequant_mul_mat_mat_f16[GGML_TYPE_IQ2_XXS], matmul_iq2_xxs_f16, mmq_wg_denoms, warptile_mmq, vk_mat_mat_push_constants, 3)"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 2282,
+            "text": "        CREATE_MM(pipeline_dequant_mul_mat_mat_id[GGML_TYPE_IQ2_XXS].f16acc, matmul_id_iq2_xxs_f16, , mmqid_wg_denoms, warptile_mmqid, vk_mat_mat_id_push_constants, 4)"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 2343,
+            "text": "            CREATE_MM2(GGML_TYPE_IQ2_XXS, pipeline_dequant_mul_mat_mat[GGML_TYPE_IQ2_XXS], matmul_iq2_xxs_f32, mmq_wg_denoms, warptile_mmq, vk_mat_mat_push_constants, 3, );"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 2366,
+            "text": "            CREATE_MM(GGML_TYPE_IQ2_XXS, pipeline_dequant_mul_mat_mat[GGML_TYPE_IQ2_XXS].f32acc, matmul_iq2_xxs_f32, , mmq_wg_denoms, warptile_mmq, vk_mat_mat_push_constants, 3, );"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 2400,
+            "text": "            CREATE_MM(GGML_TYPE_IQ2_XXS, pipeline_dequant_mul_mat_mat_id[GGML_TYPE_IQ2_XXS].f16acc, matmul_id_iq2_xxs_f32, _f16acc, mmq_wg_denoms, warptile_mmq, vk_mat_mat_id_push_constants, 4, _id);"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 2423,
+            "text": "            CREATE_MM(GGML_TYPE_IQ2_XXS, pipeline_dequant_mul_mat_mat_id[GGML_TYPE_IQ2_XXS].f16acc, matmul_id_iq2_xxs_f32, , mmq_wg_denoms, warptile_mmq, vk_mat_mat_id_push_constants, 4, _id);"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 2492,
+            "text": "        CREATE_MM2(GGML_TYPE_IQ2_XXS, pipeline_dequant_mul_mat_mat[GGML_TYPE_IQ2_XXS], matmul_iq2_xxs_f32, mmq_wg_denoms, warptile_mmq, vk_mat_mat_push_constants, 3, );"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 2531,
+            "text": "        CREATE_MM(GGML_TYPE_IQ2_XXS, pipeline_dequant_mul_mat_mat_id[GGML_TYPE_IQ2_XXS].f16acc, matmul_id_iq2_xxs_f32, _f16acc, mmq_wg_denoms, warptile_mmq, vk_mat_mat_id_push_constants, 4, _id);"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 2587,
+            "text": "        CREATE_MM(GGML_TYPE_IQ2_XXS, pipeline_dequant_mul_mat_mat[GGML_TYPE_IQ2_XXS].f32acc, matmul_iq2_xxs_f32, , mmq_wg_denoms, warptile_mmq, vk_mat_mat_push_constants, 3, );"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 2626,
+            "text": "        CREATE_MM(GGML_TYPE_IQ2_XXS, pipeline_dequant_mul_mat_mat_id[GGML_TYPE_IQ2_XXS].f32acc, matmul_id_iq2_xxs_f32, , mmq_wg_denoms, warptile_mmq, vk_mat_mat_id_push_constants, 4, _id);"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 2686,
+            "text": "        ggml_vk_create_pipeline(device, device->pipeline_dequant_mul_mat_vec_f32_f32[GGML_TYPE_IQ2_XXS][i], \"mul_mat_vec_iq2_xxs_f32_f32_\"+std::to_string(i+1), mul_mat_vec_iq2_xxs_f32_f32_len, mul_mat_vec_iq2_xxs_f32_f32_data, \"main\", 3, sizeof(vk_mat_vec_push_constants), {rm_iq, 1, 1}, {subgroup_size_16, rm_iq, i+1}, 1, true);"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 2711,
+            "text": "        ggml_vk_create_pipeline(device, device->pipeline_dequant_mul_mat_vec_f16_f32[GGML_TYPE_IQ2_XXS][i], \"mul_mat_vec_iq2_xxs_f16_f32_\"+std::to_string(i+1), mul_mat_vec_iq2_xxs_f16_f32_len, mul_mat_vec_iq2_xxs_f16_f32_data, \"main\", 3, sizeof(vk_mat_vec_push_constants), {rm_iq, 1, 1}, {subgroup_size_16, rm_iq, i+1}, 1, true);"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 2737,
+            "text": "    ggml_vk_create_pipeline(device, device->pipeline_dequant_mul_mat_vec_id_f32[GGML_TYPE_IQ2_XXS], \"mul_mat_vec_id_iq2_xxs_f32\", mul_mat_vec_id_iq2_xxs_f32_len, mul_mat_vec_id_iq2_xxs_f32_data, \"main\", 4, sizeof(vk_mat_vec_id_push_constants), {rm_iq, 1, 1}, {subgroup_size_16, rm_iq}, 1, true);"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 2761,
+            "text": "    ggml_vk_create_pipeline(device, device->pipeline_dequant[GGML_TYPE_IQ2_XXS], \"dequant_iq2_xxs\", dequant_iq2_xxs_len, dequant_iq2_xxs_data, \"main\", 2, 5 * sizeof(uint32_t), {256 * 32, 1, 1}, {}, 1);"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 2782,
+            "text": "    ggml_vk_create_pipeline(device, device->pipeline_get_rows[GGML_TYPE_IQ2_XXS], \"get_rows_iq2_xxs\", get_rows_iq2_xxs_len, get_rows_iq2_xxs_data, \"main\", 3, sizeof(vk_op_binary_push_constants), {1024, 1, 1}, {}, 1);"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 2802,
+            "text": "    ggml_vk_create_pipeline(device, device->pipeline_get_rows_f32[GGML_TYPE_IQ2_XXS], \"get_rows_iq2_xxs_f32\", get_rows_iq2_xxs_f32_len, get_rows_iq2_xxs_f32_data, \"main\", 3, sizeof(vk_op_binary_push_constants), {1024, 1, 1}, {}, 1);"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 4059,
+            "text": "        case GGML_TYPE_IQ2_XXS:"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 4142,
+            "text": "        case GGML_TYPE_IQ2_XXS:"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 4187,
+            "text": "        case GGML_TYPE_IQ2_XXS:"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 4254,
+            "text": "        case GGML_TYPE_IQ2_XXS:"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 4291,
+            "text": "        case GGML_TYPE_IQ2_XXS:"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 10490,
+            "text": "                    case GGML_TYPE_IQ2_XXS:"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 10567,
+            "text": "                //case GGML_TYPE_IQ2_XXS:"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 10601,
+            "text": "                    case GGML_TYPE_IQ2_XXS:"
+          },
+          {
+            "path": "ggml/src/ggml-sycl.cpp",
+            "line": 2518,
+            "text": "        case GGML_TYPE_IQ2_XXS:"
+          },
+          {
+            "path": "ggml/src/ggml-sycl.cpp",
+            "line": 3644,
+            "text": "    use_mul_mat_q = use_mul_mat_q && (src0->type != GGML_TYPE_IQ2_XXS);"
+          },
+          {
+            "path": "ggml/src/ggml-sycl.cpp",
+            "line": 5196,
+            "text": "                    a_type == GGML_TYPE_IQ2_XXS || a_type == GGML_TYPE_IQ2_XS || a_type == GGML_TYPE_IQ2_S ||"
+          },
+          {
+            "path": "ggml/src/ggml-quants.h",
+            "line": 37,
+            "text": "void quantize_row_iq2_xxs_ref(const float * GGML_RESTRICT x, block_iq2_xxs * GGML_RESTRICT y, int64_t k);"
+          }
+        ],
+        "mul_mat_id": [
+          {
+            "path": "src/llama-build-context.cpp",
+            "line": 1021,
+            "text": "    struct ggml_tensor * res = ggml_mul_mat_id(ctx0, w, cur, ids);"
+          },
+          {
+            "path": "src/llama-build-context.cpp",
+            "line": 1030,
+            "text": "        struct ggml_tensor * ab_cur = ggml_mul_mat_id("
+          },
+          {
+            "path": "src/llama-build-context.cpp",
+            "line": 1032,
+            "text": "            ggml_mul_mat_id(ctx0, lora->a, cur, ids),"
+          },
+          {
+            "path": "tests/test-backend-ops.cpp",
+            "line": 1007,
+            "text": "// GGML_OP_MUL_MAT_ID"
+          },
+          {
+            "path": "tests/test-backend-ops.cpp",
+            "line": 1051,
+            "text": "        ggml_tensor * out = ggml_mul_mat_id(ctx, as, b, ids);"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 1024,
+            "text": "        if (node->op == GGML_OP_MUL_MAT || node->op == GGML_OP_MUL_MAT_ID) {"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 9253,
+            "text": "    case GGML_OP_MUL_MAT_ID:"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 9561,
+            "text": "    case GGML_OP_MUL_MAT_ID:"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 9720,
+            "text": "    case GGML_OP_MUL_MAT_ID:"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 10264,
+            "text": "        if (cgraph->nodes[i]->op == GGML_OP_MUL_MAT || cgraph->nodes[i]->op == GGML_OP_MUL_MAT_ID) {"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 10326,
+            "text": "        if (cgraph->nodes[i]->op == GGML_OP_MUL_MAT || cgraph->nodes[i]->op == GGML_OP_MUL_MAT_ID) {"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 10459,
+            "text": "        case GGML_OP_MUL_MAT_ID:"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 10464,
+            "text": "                if (op->op == GGML_OP_MUL_MAT_ID) {"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 10765,
+            "text": "           (op->ne[2] >= min_batch_size && op->op == GGML_OP_MUL_MAT_ID);"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 11215,
+            "text": "    } else if (tensor->op == GGML_OP_MUL_MAT_ID) {"
+          },
+          {
+            "path": "ggml/src/ggml-vulkan.cpp",
+            "line": 11216,
+            "text": "        tensor_clone = ggml_mul_mat_id(ggml_ctx, src_clone[0], src_clone[1], src_clone[2]);"
+          },
+          {
+            "path": "ggml/src/ggml-moe-prefetch.h",
+            "line": 25,
+            "text": "// selective enqueue for one MoE node (GGML_OP_MUL_MAT_ID or"
+          },
+          {
+            "path": "ggml/src/ggml-moe-prefetch.cpp",
+            "line": 281,
+            "text": "    if (node->op == GGML_OP_MUL_MAT_ID) {"
+          },
+          {
+            "path": "ggml/src/ggml-sycl.cpp",
+            "line": 4115,
+            "text": "        case GGML_OP_MUL_MAT_ID:"
+          },
+          {
+            "path": "ggml/src/ggml-sycl.cpp",
+            "line": 5179,
+            "text": "        case GGML_OP_MUL_MAT_ID:"
+          },
+          {
+            "path": "ggml/src/ggml-sycl.cpp",
+            "line": 5298,
+            "text": "    return op->ne[1] >= min_batch_size && op->op != GGML_OP_GET_ROWS && op->op != GGML_OP_MUL_MAT_ID;"
+          },
+          {
+            "path": "ggml/src/ggml-cann.cpp",
+            "line": 1326,
+            "text": "        case GGML_OP_MUL_MAT_ID:"
+          },
+          {
+            "path": "ggml/src/ggml-cann.cpp",
+            "line": 1675,
+            "text": "        case GGML_OP_MUL_MAT_ID:"
+          },
+          {
+            "path": "ggml/src/ggml-backend.cpp",
+            "line": 2056,
+            "text": "                    (node->op == GGML_OP_MUL_MAT_ID || node->op == GGML_OP_MOE_FUSED_UP_GATE)) {"
+          },
+          {
+            "path": "ggml/src/ggml-backend.cpp",
+            "line": 2063,
+            "text": "                ggml_tensor * ids_tensor = node->op == GGML_OP_MUL_MAT_ID ? node->src[2] : node->src[3];"
+          },
+          {
+            "path": "ggml/src/ggml-backend.cpp",
+            "line": 2448,
+            "text": "                if (node->op != GGML_OP_MUL_MAT_ID && node->op != GGML_OP_MOE_FUSED_UP_GATE) {"
+          },
+          {
+            "path": "ggml/src/ggml-backend.cpp",
+            "line": 2451,
+            "text": "                ggml_tensor * node_ids = node->op == GGML_OP_MUL_MAT_ID ? node->src[2] : node->src[3];"
+          },
+          {
+            "path": "ggml/src/ggml.c",
+            "line": 8010,
+            "text": "// ggml_mul_mat_id"
+          },
+          {
+            "path": "ggml/src/ggml.c",
+            "line": 8013,
+            "text": "    c = ggml_mul_mat_id(ctx, as, b, ids);"
+          },
+          {
+            "path": "ggml/src/ggml.c",
+            "line": 8024,
+            "text": "struct ggml_tensor * ggml_mul_mat_id("
+          },
+          {
+            "path": "ggml/src/ggml.c",
+            "line": 8056,
+            "text": "    result->op   = GGML_OP_MUL_MAT_ID;"
+          },
+          {
+            "path": "ggml/src/ggml.c",
+            "line": 8073,
+            "text": "        struct ggml_tensor * result_up   = ggml_mul_mat_id(ctx, as_up,   b, ids);"
+          },
+          {
+            "path": "ggml/src/ggml.c",
+            "line": 8074,
+            "text": "        struct ggml_tensor * result_gate = ggml_mul_mat_id(ctx, as_gate, b, ids);"
+          },
+          {
+            "path": "ggml/src/ggml.c",
+            "line": 8126,
+            "text": "        struct ggml_tensor * result_up   = ggml_mul_mat_id(ctx, as_up,   b, ids);"
+          },
+          {
+            "path": "ggml/src/ggml.c",
+            "line": 8130,
+            "text": "        struct ggml_tensor * result_gate = ggml_mul_mat_id(ctx, as_gate, b, ids);"
+          },
+          {
+            "path": "ggml/src/ggml.c",
+            "line": 26621,
+            "text": "        case GGML_OP_MUL_MAT_ID:"
+          },
+          {
+            "path": "ggml/src/ggml.c",
+            "line": 27556,
+            "text": "        case GGML_OP_MUL_MAT_ID:"
+          },
+          {
+            "path": "ggml/src/ggml.c",
+            "line": 28710,
+            "text": "        case GGML_OP_MUL_MAT_ID:"
+          },
+          {
+            "path": "ggml/src/ggml.c",
+            "line": 28924,
+            "text": "            case GGML_OP_MUL_MAT_ID:"
+          },
+          {
+            "path": "ggml/include/ggml.h",
+            "line": 624,
+            "text": "        GGML_OP_MUL_MAT_ID,"
+          },
+          {
+            "path": "ggml/include/ggml.h",
+            "line": 1650,
+            "text": "    GGML_API struct ggml_tensor * ggml_mul_mat_id("
+          },
+          {
+            "path": "examples/imatrix/imatrix.cpp",
+            "line": 261,
+            "text": "    std::vector<char>                      m_ids; // the expert ids from ggml_mul_mat_id"
+          },
+          {
+            "path": "examples/imatrix/imatrix.cpp",
+            "line": 397,
+            "text": "        if (t->op == GGML_OP_MUL_MAT_ID ||"
+          },
+          {
+            "path": "examples/imatrix/imatrix.cpp",
+            "line": 424,
+            "text": "                int nrow = t->op == GGML_OP_MUL_MAT_ID ? src1->ne[2] : src1->ne[1];"
+          },
+          {
+            "path": "examples/imatrix/imatrix.cpp",
+            "line": 425,
+            "text": "                if (t->op == GGML_OP_MUL_MAT_ID) {"
+          },
+          {
+            "path": "examples/imatrix/imatrix.cpp",
+            "line": 449,
+            "text": "    if (t->op == GGML_OP_MUL_MAT_ID || t->op == GGML_OP_MOE_FUSED_UP_GATE) {"
+          },
+          {
+            "path": "examples/imatrix/imatrix.cpp",
+            "line": 452,
+            "text": "        const ggml_tensor * ids = t->op == GGML_OP_MUL_MAT_ID ? t->src[2] : t->src[3];"
+          },
+          {
+            "path": "github-data/pull_requests/405 - GPU offload policy.md",
+            "line": 51,
+            "text": "GGML_OP_MUL_MAT_ID = 27"
+          },
+          {
+            "path": "github-data/pull_requests/229 - Fused MoE ffn_up and ffn_gate.md",
+            "line": 15,
+            "text": "up   = ggml_mul_mat_id(up_exps, cur, selected_experts)"
+          },
+          {
+            "path": "github-data/pull_requests/229 - Fused MoE ffn_up and ffn_gate.md",
+            "line": 16,
+            "text": "gate = ggml_mul_mat_id(gate_exps, cur, selected_experts)"
+          },
+          {
+            "path": "github-data/pull_requests/229 - Fused MoE ffn_up and ffn_gate.md",
+            "line": 19,
+            "text": "down = ggml_mul_mat_id(down_exps, par)"
+          },
+          {
+            "path": "github-data/pull_requests/229 - Fused MoE ffn_up and ffn_gate.md",
+            "line": 21,
+            "text": "Each of the `ggml_mul_mat_id` operations requires a search of activated experts (which is the same for all 3). Also, `up` and `gate` have the same second operand so that, if they are quantized, the quantization is unnecessarily repeated. There is a barrier after each operation. On CUDA there is no implementation of indirect matrix multiplication, so each `ggml_mul_mat_id` op triggers a copy of the"
+          },
+          {
+            "path": "docs/development/on-demand-tensor-reload.md",
+            "line": 389,
+            "text": "| `ggml/src/ggml.c` | Debug print in `ggml_mul_mat_id` for shape mismatches. |"
+          },
+          {
+            "path": "spm-headers/ggml.h",
+            "line": 624,
+            "text": "        GGML_OP_MUL_MAT_ID,"
+          },
+          {
+            "path": "spm-headers/ggml.h",
+            "line": 1650,
+            "text": "    GGML_API struct ggml_tensor * ggml_mul_mat_id("
+          }
+        ],
+        "lazy_tensor": [],
+        "one_sequence": [
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 36,
+            "text": "    const bool has_explicit_seq_info = batch.n_seq_id != nullptr && batch.seq_id != nullptr;"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 37,
+            "text": "    token_seq_ids.resize(batch.n_tokens, 0);"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 40,
+            "text": "            GGML_ASSERT(batch.n_seq_id[i] > 0 && \"qwen3next expects each token to belong to at least one sequence\");"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 41,
+            "text": "            GGML_ASSERT(batch.n_seq_id[i] == 1 && \"qwen3next does not support multi-sequence tokens yet\");"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 42,
+            "text": "            token_seq_ids[i] = batch.seq_id[i][0];"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 44,
+            "text": "            token_seq_ids[i] = 0;"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 48,
+            "text": "    auto seq_id = token_seq_ids[0];"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 49,
+            "text": "    all_same_seq = std::all_of(token_seq_ids.begin(), token_seq_ids.end(), [seq_id](llama_seq_id s) { return s == seq_id; });"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 54,
+            "text": "        seen.reserve(token_seq_ids.size());"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 55,
+            "text": "        for (auto s : token_seq_ids) {"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 68,
+            "text": "    for (llama_seq_id s : token_seq_ids) {"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 90,
+            "text": "    const int64_t n_seqs   = q->ne[3];"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 95,
+            "text": "    GGML_ASSERT(q->ne[0] == S_k && q->ne[2] == H_k && q->ne[1] == n_tokens && q->ne[3] == n_seqs);"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 96,
+            "text": "    GGML_ASSERT(k->ne[0] == S_k && k->ne[2] == H_k && k->ne[1] == n_tokens && k->ne[3] == n_seqs);"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 98,
+            "text": "    const bool scalar_gate = g->ne[0] == H_v && g->ne[1] == n_tokens && g->ne[2] == n_seqs;"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 99,
+            "text": "    const bool channel_gate = g->ne[0] == S_v && g->ne[1] == H_v && g->ne[2] == n_tokens && g->ne[3] == n_seqs;"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 101,
+            "text": "    GGML_ASSERT(beta->ne[0] == H_v && beta->ne[2] == n_tokens && beta->ne[3] == n_seqs);"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 102,
+            "text": "    GGML_ASSERT(state->ne[0] == S_v && state->ne[1] == S_v && state->ne[2] == H_v && state->ne[3] == n_seqs);"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 117,
+            "text": "    ggml_tensor * state_flat = ggml_reshape_4d(ctx0, state, S_v, S_v * H_v, 1, n_seqs);"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 119,
+            "text": "        state_flat = ggml_cont_4d(ctx0, state_flat, S_v, S_v * H_v, 1, n_seqs);"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 133,
+            "text": "    const int64_t output_size = S_v * H_v * n_tokens * n_seqs;"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 134,
+            "text": "    const int64_t state_size  = S_v * S_v * H_v * n_seqs;"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 137,
+            "text": "            S_v, H_v, n_tokens, n_seqs,"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 141,
+            "text": "    //output_tokens = ggml_cont_4d(ctx0, output_tokens, S_v, H_v, n_tokens, n_seqs);"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 145,
+            "text": "    ggml_tensor * new_state = ggml_reshape_4d(ctx0, new_state_flat, S_v, S_v, H_v, n_seqs);"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 233,
+            "text": "        ggml_tensor * ssm_dt, ggml_tensor * ssm_a, int64_t num_k_heads, int64_t num_v_heads, int64_t n_seqs,"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 237,
+            "text": "    auto n_seq_tokens = n_tok / n_seqs;"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 270,
+            "text": "        alpha = ggml_reshape_3d(ctx0, alpha, num_v_heads, n_seq_tokens, n_seqs);"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 302,
+            "text": "    const int64_t n_seq_tokens = qkv_mixed->ne[1];"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 303,
+            "text": "    const int64_t n_seqs       = qkv_mixed->ne[2];"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 304,
+            "text": "    const int64_t n_tok        = n_seq_tokens * n_seqs;"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 349,
+            "text": "    ggml_tensor * q_conv = ggml_view_4d(ctx0, conv_output_silu, head_k_dim, num_k_heads, n_seq_tokens, n_seqs,"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 352,
+            "text": "    ggml_tensor * k_conv = ggml_view_4d(ctx0, conv_output_silu, head_k_dim, num_k_heads, n_seq_tokens, n_seqs,"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 356,
+            "text": "    ggml_tensor * v_conv = ggml_view_4d(ctx0, conv_output_silu, head_v_dim, num_v_heads, n_seq_tokens, n_seqs,"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 364,
+            "text": "    if (n_seq_tokens > 1) {"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 457,
+            "text": "    const int64_t n_seqs = 1;"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 458,
+            "text": "    //const int64_t n_seq_tokens = n_tok;"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 525,
+            "text": "                        num_k_heads_id, num_v_heads_id, n_seqs, cur, il, cb, gf);"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 533,
+            "text": "                        num_k_heads_id, num_v_heads_id, n_seqs, cur, il, cb, gf);"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 600,
+            "text": "            model.layers[il].ssm_dt, model.layers[il].ssm_a, num_k_heads, num_v_heads, n_seqs, cur, il, cb, gf);"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 648,
+            "text": "        return build_layer_attn_linear_core(ctx0, gf, cur, lctx.inp_s_seq_qnext, inp_out_ids, token_seq_ids.front(), reset_state, il, cb, external_residual, gate_op);"
+          },
+          {
+            "path": "src/llama-delta-net.cpp",
+            "line": 659,
+            "text": "        const uint32_t state_seq_id_i = (uint32_t) token_seq_ids[i];"
+          },
+          {
+            "path": "src/llama-model.h",
+            "line": 650,
+            "text": "    // layout, and the compacted mask keys on position alone, so it requires a single sequence"
+          },
+          {
+            "path": "src/llama-model.h",
+            "line": 696,
+            "text": "    size_t cache_size(int il, ggml_type type_k, ggml_type type_v, ggml_type idx_type_k, uint32_t kv_size, int mla_attn, int n_seq_max, bool flash_attn,"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 92,
+            "text": "        uint32_t & n_seqs,"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 93,
+            "text": "        uint32_t & n_seq_tokens) {"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 94,
+            "text": "    n_seqs = 1;"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 95,
+            "text": "    n_seq_tokens = (uint32_t) std::max(1, batch.n_tokens);"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 97,
+            "text": "    if (batch.n_tokens <= 0 || batch.n_seq_id == nullptr || batch.seq_id == nullptr) {"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 103,
+            "text": "        if (batch.n_seq_id[i] != 1 || batch.seq_id[i] == nullptr) {"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 121,
+            "text": "    n_seqs = (uint32_t) counts.size();"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 122,
+            "text": "    n_seq_tokens = std::max<uint32_t>(1, seq_tokens);"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 126,
+            "text": "    if (batch.n_tokens <= 0 || batch.n_seq_id == nullptr) {"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 131,
+            "text": "        if (batch.n_seq_id[i] > 1) {"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 140,
+            "text": "    if (batch.n_seq_id == nullptr || batch.seq_id == nullptr || batch.seq_id[i] == nullptr) {"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 144,
+            "text": "    for (int32_t s = 0; s < batch.n_seq_id[i]; ++s) {"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 157,
+            "text": "    if (batch.n_tokens <= 0 || batch.n_seq_id == nullptr || batch.seq_id == nullptr) {"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 163,
+            "text": "        if (batch.n_seq_id[i] <= 0 || batch.seq_id[i] == nullptr) {"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 167,
+            "text": "        for (int32_t s = 0; s < batch.n_seq_id[i]; ++s) {"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 272,
+            "text": "            (batch.n_seq_id != nullptr && batch.seq_id != nullptr && batch.n_tokens > 0 && batch.n_seq_id[0] > 0 && batch.seq_id[0] != nullptr)"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 304,
+            "text": "    if (batch.n_tokens <= 0 || batch.n_seq_id == nullptr || batch.seq_id == nullptr) {"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 308,
+            "text": "    const uint32_t n_stream = std::max<uint32_t>(1, lctx.cparams.n_seq_max);"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 310,
+            "text": "        if (batch.n_seq_id[i] <= 0 || batch.seq_id[i] == nullptr) {"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 315,
+            "text": "        for (int32_t s = 0; s < batch.n_seq_id[i]; ++s) {"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 318,
+            "text": "                LLAMA_LOG_ERROR(\"%s: DSV4 token %d seq_id %d is outside n_seq_max=%u\\n\","
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 333,
+            "text": "    const uint32_t n_stream = std::max<uint32_t>(1, lctx.cparams.n_seq_max);"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 342,
+            "text": "                (batch.n_seq_id != nullptr && batch.seq_id != nullptr && batch.n_tokens > 0 && batch.n_seq_id[0] > 0 && batch.seq_id[0] != nullptr)"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 508,
+            "text": "    uint32_t n_seqs = 1;"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 509,
+            "text": "    uint32_t n_seq_tokens = 1;"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 510,
+            "text": "    dsv4_batch_shape(batch, n_seqs, n_seq_tokens);"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 514,
+            "text": "    const uint64_t n_blocks_u64 = (uint64_t) n_seqs*((n_seq_tokens + ratio - 1)/ratio);"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 693,
+            "text": "        const int32_t n_token_seqs ="
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 694,
+            "text": "                batch.n_seq_id != nullptr && batch.seq_id != nullptr && batch.seq_id[i] != nullptr"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 695,
+            "text": "                ? batch.n_seq_id[i]"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 697,
+            "text": "        for (int32_t s = 0; s < n_token_seqs; ++s) {"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 699,
+            "text": "                    batch.n_seq_id != nullptr && batch.seq_id != nullptr && batch.seq_id[i] != nullptr"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 730,
+            "text": "                batch.n_seq_id != nullptr && batch.seq_id != nullptr && batch.seq_id[i] != nullptr && batch.n_seq_id[i] > 0"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 741,
+            "text": "        const int32_t n_token_seqs ="
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 742,
+            "text": "                batch.n_seq_id != nullptr && batch.seq_id != nullptr && batch.seq_id[i] != nullptr"
+          },
+          {
+            "path": "src/llama-dsv4.cpp",
+            "line": 743,
+            "text": "                ? batch.n_seq_id[i]"
+          }
+        ]
+      }
+    },
+    "configure_command": [
+      "cmake",
+      "-S",
+      "/tmp/native-sparse-ik-llama-v3/ik_llama.cpp",
+      "-B",
+      "/tmp/native-sparse-ik-llama-v3/ik_llama.cpp/build-native",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DBUILD_SHARED_LIBS=OFF",
+      "-DGGML_NATIVE=ON",
+      "-DGGML_CUDA=OFF",
+      "-DGGML_METAL=OFF",
+      "-DGGML_VULKAN=OFF",
+      "-DLLAMA_CURL=OFF"
+    ],
+    "build_commands": {
+      "cli": [
+        "cmake",
+        "--build",
+        "/tmp/native-sparse-ik-llama-v3/ik_llama.cpp/build-native",
+        "--config",
+        "Release",
+        "-j4",
+        "--target",
+        "llama-cli"
+      ],
+      "bench": [
+        "cmake",
+        "--build",
+        "/tmp/native-sparse-ik-llama-v3/ik_llama.cpp/build-native",
+        "--config",
+        "Release",
+        "-j4",
+        "--target",
+        "llama-bench"
+      ]
+    },
+    "build_results": {
+      "cli_returncode": 0,
+      "bench_returncode": 0,
+      "bench_stderr_tail": ""
+    },
+    "compiler": "c++ (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0",
+    "cmake": "cmake version 3.31.10",
+    "cli": "/tmp/native-sparse-ik-llama-v3/ik_llama.cpp/build-native/bin/llama-cli",
+    "bench": "/tmp/native-sparse-ik-llama-v3/ik_llama.cpp/build-native/bin/llama-bench",
+    "cli_help": "usage: /tmp/native-sparse-ik-llama-v3/ik_llama.cpp/build-native/bin/llama-cli [options]\n\ngeneral:\n\n  -h,    --help, --usage          print usage and exit\n         --version                show version and build info\n  -v,    --verbose                print verbose information\n         --minilog                print important information\n         --verbosity N            set specific verbosity level (default: 0)\n         --verbose-prompt         print a verbose prompt before generation (default: false)\n  -dr,   --dry-run                skip loading tensors in the files\n         --no-display-prompt      don't print prompt at generation (default: false)\n  -co,   --color                  colorize output to distinguish prompt and user input from generations (default: false)\n  -s,    --seed SEED              RNG seed (default: -1, use random seed for < 0)\n  -t,    --threads N              number of threads to use during generation (default: 2)\n  -tb,   --threads-batch N        number of threads to use during batch and prompt processing (default: same as --threads)\n  -tm,   --threads-mtmd N         number of threads to use during multimodal image processing (default: same as --threads-batch)\n  -td,   --threads-draft N        number of threads to use during generation (default: same as --threads)\n  -tbd,  --threads-batch-draft N  number of threads to use during batch and prompt processing (default: same as --threads-draft)\n  -ps,   --p-split N              speculative decoding split probability (default: 0.1)\n         --spec-replace TARGET DRAFT\n                                  replace TARGET token with DRAFT token in speculative decoding\n  -lcs,  --lookup-cache-static FNAME\n                                  path to static lookup cache to use for lookup decoding (not updated by generation)\n  -lcd,  --lookup-cache-dynamic FNAME\n                                  path to dynamic lookup cache to use for lookup decoding (updated by generation)\n  -c,    --ctx-size N             size of the prompt context (default: 0, 0 = loaded from model)\n  -cd,   --ctx-size-draft N       size of the prompt context for the draft model (default: 0, 0 = inherits target context for DFlash/DSpark, otherwise loaded from model)\n  -ctx-ckpt N, --ctx-checkpoints N\n                                  max number of context checkpoints to create per slot (default: 32)\n  -ctx-ckpt-i N, --ctx-checkpoints-interval N\n                                  minimum number of tokens between each context checkpoint.  (default: 512, <=0 disable)\n  -ctx-ckpt-t N, --ctx-checkpoints-tolerance N\n                                  the number of tokens before the full prompt to create the checkpoint.  (default: 5, <=0 disable)\n  -ctx-ckpt-e NAME, --ctx-checkpoints-eviction NAME\n                                  Eviction strategy for checkpoint. Accepts fifo, variance and auto. Auto defaults to variance. Variance preserves coverage and maintains uniform interval.  (default: variance)\n  -cram, --cache-ram N            set the maximum cache size in MiB (default: 8192, -1 - no limit, 0 - disable)\n  -crs,  --cache-ram-similarity N \n                                  minimum fraction of a cached entry that must match the new prompt for that entry to be reusable (default: 0.50).\n  -cram-n-min N, --cache-ram-n-min N\n                                  minimum number of the cached tokens that triggers prompt cache (default: 0).\n  -n,    --predict N              number of tokens to predict (default: -1, -1 = infinity, -2 = until context filled)\n  -b,    --batch-size N           logical maximum batch size (default: 2048)\n  -ub,   --ubatch-size N          physical maximum batch size (default: 512)\n         --keep N                 number of tokens to keep from the initial prompt (default: 0, -1 = all)\n         --chunks N               max number of chunks to process (default: -1, -1 = all)\n  -no-fa, --no-flash-attn         disable Flash Attention (default: enabled)\n  -fa, --flash-attn (auto|on|off|0|1)\n                                  set Flash Attention (default: on)\n  -mla,  --mla-use                enable MLA (default: 3)\n  -dsa,  --dsa                    enable GLM DSA sparse attention (GLM-DSA arch only; default: disabled)\n  -fidx,  --fused-indexer-topk    enable the fused indexer topk op (DSA only; default: enabled)\n          --swa-compress          allocate sliding-window layers at window size instead of n_ctx (default: disabled)\n  -dsatk, --dsa-top-k             DSA top-k override; <0 uses the model's configured indexer_top_k (default: -1)\n  -amb,  --attention-max-batch    max batch size for attention computations (default: 256)\n  -no-fmoe, --no-fused-moe        disable fused MoE (default: enabled)\n  -ger,  --grouped-expert-routing \n                                  enable grouped expert routing (default: disabled)\n  -no-fug, --no-fused-up-gate     disable fused up-gate (default: enabled)\n  -no-mmad, --no-fused-mul-multiadd\n                                  disable fused mul-multi_add (default: enabled)\n  -gr, --graph-reuse              enable graph reuse (default: enabled)\n  -no-gr, --no-graph-reuse        disable graph reuse (default: disabled)\n  -ser,  --smart-expert-reduction \n                                  experts reduction (default: -1,0)\n  -mqkv,  --merge-qkv             merge Q,K,V (default: 0)\n  -muge,  --merge-up-gate-experts \n                                  merge ffn_up/gate_exps (default: 0)\n  -khad,  --k-cache-hadamard      Use Hadamard transform for K-cache (default: 0)\n  -vhad,  --v-cache-hadamard      Use Hadamard transform for V-cache (default: 0)\n  -smf16, --split-mode-f16        Use f16 for data exchange between GPUs (default: 1)\n  -smf32, --split-mode-f32        Use f32 for data exchange between GPUs (default: 0)\n  -grt, --graph-reduce-type       Type for data exchange between GPUs (default: f16)\n  -gap, --graph-attn-precision    Flash-attn precision under -sm graph (default: f16)\n  -smgs, --split-mode-graph-scheduling\n                                  Force Split Mode Graph Scheduling (default: 0)\n  -sas,  --scheduler-async        Async evaluation of compute graphs (default: 0)\n  -vq, --validate-quants          validate quantized data while loading the model (default: 0)\n  -p,    --prompt PROMPT          prompt to start generation with\n                                  in conversation mode, this will be used as system prompt\n                                  (default: '')\n  -f,    --file FNAME             a file containing the prompt (default: none)\n         --in-file FNAME          an input file (repeat to specify multiple files)\n  -bf,   --binary-file FNAME      binary file containing the prompt (default: none)\n  -e,    --escape                 process escapes sequences (\\n, \\r, \\t, \\', \\\", \\\\) (default: true)\n         --no-escape              do not process escape sequences\n  -ptc,  --print-token-count N    print token count every N tokens (default: -1)\n         --prompt-cache FNAME     file to cache prompt state for faster startup (default: none)\n         --prompt-cache-all       if specified, saves user input and generations to cache as well\n                                  not supported with --interactive or other interactive options\n         --prompt-cache-ro        if specified, uses the prompt cache but does not update it\n  -r,    --reverse-prompt PROMPT  halt generation at PROMPT, return control in interactive mode\n                                  can be specified more than once for multiple prompts\n  -sp,   --special                special tokens output enabled (default: false)\n  -cnv,  --conversation           run in conversation mode, does not print special tokens and suffix/prefix\n                                  if suffix/prefix are not specified, default chat template will be used\n                                  (default: false)\n  -i,    --interactive            run in interactive mode (default: false)\n  -if,   --interactive-first      run in interactive mode and wait for input right away (default: false)\n  -mli,  --multiline-input        allows you to write or paste multiple lines without ending each in '\\'\n         --in-prefix-bos          prefix BOS to user inputs, preceding the `--in-prefix` string\n         --in-prefix STRING       string to prefix user inputs with (default: empty)\n         --in-suffix STRING       string to suffix after user inputs with (default: empty)\n         --infill                 use infill mode\n         --no-warmup              skip warming up the model with an empty run\n         --spm-infill             use Suffix/Prefix/Middle pattern for infill (instead of Prefix/Suffix/Middle) as some models prefer this. (default: disabled)\n\nsampling:\n\n         --samplers SAMPLERS      samplers that will be used for generation in the order, separated by ';'\n                                  (default: dry;top_k;tfs_z;typical_p;top_p;min_p;xtc;top_n_sigma;temperature;adaptive_p;)\n         --sampling-seq SEQUENCE  simplified sequence for samplers that will be used (default: dkfypmxntws)\n         --ignore-eos             ignore end of stream token and continue generating (implies --logit-bias EOS-inf)\n         --penalize-nl            penalize newline tokens (default: false)\n         --temp N                 temperature (default: 0.8)\n         --top-k N                top-k sampling (default: 40, 0 = disabled)\n         --top-p N                top-p sampling (default: 0.9, 1.0 = disabled)\n         --min-p N                min-p sampling (default: 0.1, 0.0 = disabled)\n         --tfs N                  tail free sampling, parameter z (default: 1.0, 1.0 = disabled)\n         --typical N              locally typical sampling, parameter p (default: 1.0, 1.0 = disabled)\n         --repeat-last-n N        last n tokens to consider for penalize (default: 64, 0 = disabled, -1 = ctx_size)\n         --repeat-penalty N       penalize repeat sequence of tokens (default: 1.0, 1.0 = disabled)\n         --presence-penalty N     repeat alpha presence penalty (default: 0.0, 0.0 = disabled)\n         --frequency-penalty N    repeat alpha frequency penalty (default: 0.0, 0.0 = disabled)\n         --dynatemp-range N       dynamic temperature range (default: 0.0, 0.0 = disabled)\n         --dynatemp-exp N         dynamic temperature exponent (default: 1.0)\n         --mirostat N             use Mirostat sampling.\n                                  Top K, Nucleus, Tail Free and Locally Typical samplers are ignored if used.\n                                  (default: 0, 0 = disabled, 1 = Mirostat, 2 = Mirostat 2.0)\n         --mirostat-lr N          Mirostat learning rate, parameter eta (default: 0.1)\n         --mirostat-ent N         Mirostat target entropy, parameter tau (default: 5.0)\n         --xtc-probability p      xtc probability (default: 0.0, 0.0 = disabled)\n         --xtc-threshold t        xtc threshold (default: 1.0, >0.5 = disabled)\n         --dry-multiplier N       DRY sampling multiplier (default: 0.0, 0.0 = disabled)\n         --dry-base N             DRY sampling base (default: 1.75)\n         --dry-allowed-length N   DRY sampling allowed length (default: 2)\n         --dry-penalty-last-n N   DRY sampling penalty last N tokens (default: -1, 0 = disabled, -1 = context size)\n         --dry-sequence-breaker STR\n                                  DRY sampling sequence breaker characters (each char becomes a breaker) or 'none' to clear\n         --top-n-sigma t          top-n-sigma parameter (default: 0.0, 0.0 = disabled)\n         --adaptive-target        adaptive-p sampling: (default: -1.00, <0.0 = disabled)\n         --adaptive-decay         adaptive-p sampling: (default: 0.90)\n         --adaptive-updt-w-cur    adaptive-p sampling: (default: false)\n         --banned-string-file     file path of the list of banned strings on each line\n         --banned-n               number of tokens banned in the phrase during rewind. -1 means all tokens: (default: 1)\n         --allowlist-unicode-rule \n                                  rule for allowlisting unicode script and/or codepoints. disabled without any rule. format: `LOWER..UPPER,SCRIPT:BIAS`\n                                  if unspecified: LOWER = 0, UPPER = -1(=max), SCRIPT=\"\", BIAS = 0. at least one of LOWER, UPPER, or SCRIPT is required\n                                  \n         --allowlist-pieces       allowlist each token in argument. inherits max BIAS in --allowlist-unicode-rule. overrides --allowlist-unicode-rule\n         --allowlist-keyword      keyword to expire earlier allowlist rules if matched during generation. does not affect later rules\n         --allowlist-keyword-delay\n                                  # tokens to delay matching for the first keyword (default: 837200795157249)\n         -l TOKEN_ID(+/-)BIAS     modifies the likelihood of token appearing in the completion,\n                                  i.e. `--logit-bias 15043+1` to increase likelihood of token ' Hello',\n                                  or `--logit-bias 15043-1` to decrease likelihood of token ' Hello'\n         --expiring-logit-bias-file\n                                  original PR: https://github.com/ikawrakow/ik_llama.cpp/pull/1731\n                                  \n         --cfg-negative-prompt PROMPT\n                                  negative prompt to use for guidance (default: '')\n         --cfg-negative-prompt-file FNAME\n                                  negative prompt file to use for guidance\n         --cfg-scale N            strength of guidance (default: 1.0, 1.0 = disable)\n\ntemplate:\n\n         --jinja                  set custom jinja chat template (default: template taken from model's metadata)\n                                  if suffix/prefix are specified, template will be disabled\n                                  only commonly used templates are accepted:\n                                  https://github.com/ggerganov/llama.cpp/wiki/Templates-supported-by-llama_chat_apply_template\n  -ptcall, --parallel-tool-calls  enable parallel tool calls\n                                  \n         --chat-template JINJA_TEMPLATE\n                                  use jinja template for chat (default: disabled)\n                                  \n         --chat-template-file file_with_JINJA_TEMPLATE\n                                  load jinja template for chat from the file\n                                  \n         --reasoning-format FORMAT\n                                  controls whether thought tags are allowed and/or extracted from the response, and in which format they're returned; one of:\n                                  - none: leaves thoughts unparsed in `message.content`\n                                  - deepseek: puts thoughts in `message.reasoning_content` (except in streaming mode, which behaves as `none`)\n                                  - deepseek-legacy: keeps `<think>` tags in `message.content` while also populating `message.reasoning_content`\n                                  (default: none)\n  -rea,  --reasoning              [on|off|auto]Use reasoning/thinking in the chat ('on', 'off', or 'auto', default: 'auto' (detect from template))\n         --chat-template-kwargs JSON\n                                  sets additional params for the json template parser\n         --reasoning-budget N     token budget for thinking: -1 for unrestricted, 0 for immediate end, N>0 for token budget (default: -1)\n         --reasoning-tokens FORMAT\n                                  exclude reasoning tokens to select the slot more accurately.\n                                  none: include all tokens\n                                  auto: exclude all tokens between <think> and </think>\n                                  Or comma separated start and end tokens such as [THINK],[/THINK]\n                                  (default: auto)\n         --reasoning-budget-message\n                                  message injected before the end-of-thinking tag when reasoning budget is exhausted (default: none)\n         --skip-chat-parsing      force a pure content parser, even if a Jinja template is specified; model will output everything in the content section, including any reasoning and/or tool calls (default: disabled)\n         --no-prefill-assistant   whether to prefill the assistant's response if the last message is an assistant message (default: prefill enabled)\n                                  when this flag is set, if the last message is an assistant message then it will be treated as a full message and not prefilled\n                                  \n\ngrammar:\n\n         --grammar GRAMMAR        BNF-like grammar to constrain generations (see samples in grammars/ dir) (default: '')\n         --grammar-file FNAME     file to read grammar from\n  -j,    --json-schema SCHEMA     JSON schema to constrain generations (https://json-schema.org/), e.g. `{}` for any JSON object\n                                  For schemas w/ external $refs, use --grammar + example/json_schema_to_grammar.py instead\n\nembedding:\n\n         --pooling {none,mean,cls,last}\n                                  pooling type for embeddings, use model default if unspecified\n         --attention {causal,non-causal}\n                                  attention type for embeddings, use model default if unspecified\n         --embd-normalize         normalization for embeddings (default: 2) (-1=none, 0=max absolute int16, 1=taxicab, 2=euclidean, >2=p-norm)\n         --embd-output-format     empty = default, \"array\" = [[],[]...], \"json\" = OpenAI style, \"json+\" = same \"json\" + cosine similarity matrix\n         --embd-separator         separator of embeddings (default \\n) for example \"<#sep#>\"\n\ncontext hacking:\n\n         --rope-scaling {none,linear,yarn}\n                                  RoPE frequency scaling method, defaults to linear unless specified by the model\n         --rope-scale N           RoPE context scaling factor, expands context by a factor of N\n         --rope-freq-base N       RoPE base frequency, used by NTK-aware scaling (default: loaded from model)\n         --rope-freq-scale N      RoPE frequency scaling factor, expands context by a factor of 1/N\n         --yarn-orig-ctx N        YaRN: original context size of model (default: 0 = model training context size)\n         --yarn-ext-factor N      YaRN: extrapolation mix factor (default: -1.0, 0.0 = full interpolation)\n         --yarn-attn-factor N     YaRN: scale sqrt(t) or attention magnitude (default: -1.0)\n         --yarn-beta-slow N       YaRN: high correction dim or alpha (default: -1.0)\n         --yarn-beta-fast N       YaRN: low correction dim or beta (default: -1.0)\n  -gan,  --grp-attn-n N           group-attention factor (default: 1)\n  -gaw,  --grp-attn-w N           group-attention width (default: 512.0)\n  -dkvc, --dump-kv-cache          verbose print of the KV cache\n  -nkvo, --no-kv-offload          disable KV offload\n  -ctk,  --cache-type-k TYPE      KV cache data type for K (default: f16)\n  -ictk, --indexer-cache-type-k TYPE\n                                  indexer K-cache data type (default: f16)\n  -ctv,  --cache-type-v TYPE      KV cache data type for V (default: f16)\n  -ctk-first, --cache-type-k-first TYPE,N\n                                  KV cache data type for the first N layers of K (default: f16,-1)\n  -ctk-last,  --cache-type-k-last  TYPE,N\n                                  KV cache data type for the last N layers of K  (default: f16,-1)\n  -ctv-first, --cache-type-v-first TYPE,N\n                                  KV cache data type for the first N layers of V (default: f16,-1)\n  -ctv-last,  --cache-type-v-last  TYPE,N\n                                  KV cache data type for the last N layers of V  (default: f16,-1)\n  -mtprot, --mtp-requantize-output-tensor type\n                                  Use output requantized to type for MTP (default: )\n  -ctkd, --cache-type-k-draft TYPE\n                                  KV cache data type for K for the draft model\n  -ctvd, --cache-type-v-draft TYPE\n                                  KV cache data type for V for the draft model\n\nperplexity:\n\n         --all-logits             return logits for all tokens in the batch (default: false)\n         --hellaswag              compute HellaSwag score over random tasks from datafile supplied with -f\n         --hellaswag-tasks N      number of tasks to use when computing the HellaSwag score (default: 400)\n         --winogrande             compute Winogrande score over random tasks from datafile supplied with -f\n         --winogrande-tasks N     number of tasks to use when computing the Winogrande score (default: 0)\n         --multiple-choice        compute multiple choice score over random tasks from datafile supplied with -f\n         --multiple-choice-tasks N\n                                  number of tasks to use when computing the multiple choice score (default: 0)\n         --kl-divergence          computes KL-divergence to logits provided via --kl-divergence-base\n         --ppl-stride N           stride for perplexity calculation (default: 0)\n         --ppl-output-type {0,1}  output type for perplexity calculation (default: 0)\n\nparallel:\n\n  -dt,   --defrag-thold N         KV cache defragmentation threshold (default: -1.0, < 0 - disabled)\n  -mea,  --max-extra-alloc        Max extra VRAM allocation per GPU (default: 256)\n  -np,   --parallel N             number of parallel sequences to decode (default: 1)\n  -ns,   --sequences N            number of sequences to decode (default: 1)\n  -cb,   --cont-batching          enable continuous batching (a.k.a dynamic batching) (default: enabled)\n  -nocb, --no-cont-batching       disable continuous batching\n\nmulti-modality:\n\n         --mmproj FILE            path to a multimodal projector file. see examples/mtmd/README.md\n         --image FILE             path to an image file. use with multimodal models. Specify multiple times for batching\n         --audio FILE             path to an audio file for multimodal models. Specify multiple times for batching\n         --mmproj-url URL         URL to download the multimodal projector file\n         --no-mmproj-offload      do not offload multimodal projector to GPU (default: offload enabled)\n         --image-min-tokens N     minimum number of tokens each image can take, only used by vision models with dynamic resolution (default: read from model)\n         --image-max-tokens N     maximum number of tokens each image can take, only used by vision models with dynamic resolution (default: read from model)\n         --mtmd-kq-type TYPE      data type for multimodality K*Q (default: f32)\n         --no-context-shift       disable context-shift.\n  --context-shift (auto|on|off|0|1)\n                                  set context-shift (default: on)\n\nbackend:\n\n         --rpc SERVERS            comma separated list of RPC servers\n  -cuda, --cuda-params            comma separate list of cuda parameters\n  -draft, --draft-params          comma separate list of draft model parameters\n         --mlock                  force system to keep model in RAM rather than swapping or compressing\n         --no-mmap                do not memory-map model (slower load but may reduce pageouts if not using mlock)\n  -rtr,   --run-time-repack       repack tensors if interleaved variant is available\n  -cmoe,  --cpu-moe               keep all MoE weights in CPU memory\n  -ncmoe, --n-cpu-moe N           keep MoE weights of the first N layers in CPU memory\n  -thp,   --transparent-huge-pages\n                                  use transparent huge pages on Linux\n         --defer-experts          defer expert mmap residency on Linux to reduce model load time\n         --defer-ple              keep the per-layer token embedding on the file instead of resident in memory (Linux)\n         --prefetch-experts       stream mmap'd MoE expert weights into the page cache on Linux\n         --prefetch-experts-threads N\n                                  number of expert prefetch workers, tune to drive speed/type (default: auto)\n         --fit-margin N           safety margin in MiB when auto-fitting model offloading\n  -gfm,  --gpu-fit-margin N       per-layer GPU fit margin as layer_id,margin pairs, comma-separated\n  -wgt, --worst-graph-tokens N    number of tokens to use for worst-case graph\n         --fit                    automatically determine which tensors to offload to the GPU(s)\n         --numa TYPE              attempt optimizations that help on some NUMA systems\n                                    - distribute: spread execution evenly over all nodes\n                                    - isolate: only spawn threads on CPUs on the node that execution started on\n                                    - numactl: use the CPU map provided by numactl\n                                  if run without this previously, it is recommended to drop the system page cache before using this\n                                  see https://github.com/ggerganov/llama.cpp/issues/1437\n\nmodel:\n\n         --check-tensors          check model tensor data for invalid values (default: false)\n  -ot,   --override-tensor NAME   override tensor buffer type as tensor_name=buft, comma-separated\n  -okv,   --override-kv KEY=TYPE:VALUE\n                                  advanced option to override model metadata by key. may be specified multiple times.\n                                  types: int, float, bool, str. example: --override-kv tokenizer.ggml.add_bos_token=bool:false\n         --lora FNAME             apply LoRA adapter (can be repeated to use multiple adapters)\n         --lora-scaled FNAME S    apply LoRA adapter with user defined scaling S (can be repeated to use multiple adapters)\n         --control-vector FNAME   add a control vector\n                                  note: this argument can be repeated to add multiple control vectors\n         --control-vector-scaled FNAME SCALE\n                                  add a control vector with user defined scaling SCALE\n                                  note: this argument can be repeated to add multiple scaled control vectors\n         --control-vector-layer-range START END\n                                  layer range to apply the control vector(s) to, start and end inclusive\n  -m,    --model FNAME            model path (default: models/$filename with filename from --hf-file\n                                  or --model-url if set, otherwise models/7B/ggml-model-f16.gguf)\n  -md,   --model-draft FNAME      draft model for speculative decoding (default: unused)\n  -mu,   --model-url MODEL_URL    model download url (default: unused)\n  -hfr,  --hf-repo REPO           Hugging Face model repository (default: unused)\n  -hff,  --hf-file FILE           Hugging Face model file (default: unused)\n  -hft,  --hf-token TOKEN         Hugging Face access token (default: value from HF_TOKEN environment variable)\n  --spec-ckpt-mode MODE           checkpoint strategy for speculative decoding\n                                    auto         auto-select: per-step if CUDA full-GPU, gpu-fallback otherwise (default)\n                                    per-step     save architecture state per draft step; no re-decode on rejection\n                                    gpu-fallback copy architecture state to a device buffer; re-decode on rejection\n                                    cpu          serialise architecture state via host storage; re-decode on rejection\n                                    --recurrent-ckpt-mode remains as a deprecated alias\n  --spec-type SPEC[:k=v,...]      canonical speculative stage entry; repeat for a supported two-stage chain.\n                                  types: none, draft, dflash, dspark, mtp, ngram-cache, ngram-simple, ngram-map-k, ngram-map-k4v, ngram-mod, suffix\n                                  canonical keys: n_max,n_min,p_min,heads,ngram_size_n,ngram_size_m,ngram_min_hits,suffix_min_match_len,suffix_max_depth,suffix_corpus\n                                  MTP heads: heads=1 is the default; heads>1 and heads=0 (all model heads) are experimental\n                                  for comma-bearing string values, quote the value inside the stage payload for normal shell use\n                                  if argv is passed directly without shell unescaping, the parser also accepts escaped commas as \\,\n                                  examples: --spec-type mtp:n_max=1,p_min=0.0\n                                            --model-draft draft.gguf --spec-type dflash:n_max=4\n                                            --spec-type ngram-mod:n_max=64,n_min=2,ngram_size_n=8 --spec-type mtp:n_max=1,p_min=0.0\n                                            --spec-type \"suffix:n_max=16,n_min=2,suffix_min_match_len=5,suffix_max_depth=64,suffix_corpus='/tmp/spec,type-corpus.json'\"\n                                  legacy --spec-stage, --draft-*, --spec-ngram-*, --suffix-* and -mtp flags are re\n  --spec-autotune                 automatically tune speculative params to maximize tokens/sec\n\nretrieval:\n\n         --context-file FNAME     file to load context from (repeat to specify multiple files)\n         --chunk-size N           minimum length of embedded text chunks (default: 64)\n         --chunk-separator STRING \n                                  separator between chunks (default: '\n                                  ')\n\npasskey:\n\n         --junk N                 number of times to repeat the junk text (default: 250)\n         --pos N                  position of the passkey in the junk text (default: -1)\n\nimatrix:\n\n  -o,    --output FNAME           output file (default: 'imatrix.dat')\n         --output-draft FNAME     paired draft output file (default: derived from --output)\n  -ofreq, --output-frequency N    output the imatrix every N iterations (default: 10)\n         --save-frequency N       save an imatrix copy every N iterations (default: 0)\n         --process-output         collect data for the output tensor (default: false)\n         --no-ppl                 do not compute perplexity (default: true)\n         --chunk N                start processing the input from chunk N (default: 0)\n         --output-tensor-name FNAME\n                                  output tensor name for imatrix data (default: 'output.weight')\n\nbench:\n\n  -pps                            is the prompt shared across parallel sequences (default: false)\n  -npp n0,n1,...                  number of prompt tokens\n  -ntg n0,n1,...                  number of text generation tokens\n  -npl n0,n1,...                  number of parallel prompts\n  -nrep,  --n-repetitions N       number of repetitions (default: 1)\n  -wb,    --warmup-batch          run a warmup batch before measurement\n         --output-format FORMAT   output format: table, jsonl, or csv (default: table)\n\nserver:\n\n         --host HOST              ip address to listen (default: 127.0.0.1)\n         --port PORT              port to listen (default: 8080)\n         --path PATH              path to serve static files from (default: )\n         --embedding(s)           restrict to only support embedding use case; use only with dedicated embedding models (default: disabled)\n         --webui NAME             controls which webui to server:\n                                  - none: disable webui\n                                  - auto: default webui \n                                  - llamacpp: llamacpp webui \n                                  (default: auto)\n         --ui-mcp-proxy, --webui-mcp-proxy\n                                  experimental: whether to enable MCP CORS proxy - do not enable in untrusted environments (default: disabled)\n         --api-key KEY            API key to use for authentication (default: none)\n         --api-key-file FNAME     path to file containing API keys (default: none)\n         --ssl-key-file FNAME     path to file a PEM-encoded SSL private key\n         --ssl-cert-file FNAME    path to file a PEM-encoded SSL certificate\n  -to,    --timeout N             server read/write timeout in seconds (default: 600)\n         --threads-http N         number of threads used to process HTTP requests (default: -1)\n  -spf,   --system-prompt-file FNAME\n                                  set a file to load a system prompt (initial prompt of all slots), this is useful for chat applications\n         --log-format {text,json} \n                                  log output format: json or text (default: text)\n         --metrics                enable prometheus compatible metrics endpoint (default: disabled)\n         --no-slots               disables slots monitoring endpoint (default: enabled)\n         --slot-save-path PATH    path to save slot kv cache (default: disabled)\n         --chat-template JINJA_TEMPLATE\n                                  set custom jinja chat template (default: template taken from model's metadata)\n                                  only commonly used templates are accepted:\n                                  https://github.com/ggerganov/llama.cpp/wiki/Templates-supported-by-llama_chat_apply_template\n  -sps,  --slot-prompt-similarity SIMILARITY\n                                  how much the prompt of a request must match the prompt of a slot in order to use that slot (default: 0.10, 0.0 = disabled)\n                                  \n         --lora-init-without-apply\n                                  load LoRA adapters without applying them (apply later via POST /lora-adapters) (default: disabled)\n         --send-done              send 'done' signal to the client when generation is complete\n         --sql-save-file FNAME    save chat history to a SQLite database\n         --sqlite-zstd-ext-file FNAME\n                                  path to SQLite ZSTD extension for compression\n\nlogging:\n\n         --simple-io              use basic IO for better compatibility in subprocesses and limited consoles\n  -ld,   --logdir LOGDIR          path under which to save YAML logs (no logging if unset)\n         --log-test               Run simple logging test\n         --log-disable            Disable trace logs\n         --log-enable             Enable trace logs\n         --log-file FNAME         Specify a log filename (without extension)\n         --log-new                Create a separate new log file on start. Each log file will have unique name: \"<name>.<ID>.log\"\n         --log-append             Don't truncate the old log file.\n\ncvector:\n\n  -o,    --output FNAME           output file (default: 'control_vector.gguf')\n         --positive-file FNAME    positive prompts file, one prompt per line (default: 'examples/cvector-generator/positive.txt')\n         --negative-file FNAME    negative prompts file, one prompt per line (default: 'examples/cvector-generator/negative.txt')\n         --pca-batch N            batch size used for PCA. Larger batch runs faster, but uses more memory (default: 100)\n         --pca-iter N             number of iterations used for PCA (default: 1000)\n         --method {pca,mean}      dimensionality reduction method to be used (default: pca)\n\nexport-lora:\n\n  -m,    --model                  model path from which to load base model (default '')\n         --lora FNAME             path to LoRA adapter  (can be repeated to use multiple adapters)\n         --lora-scaled FNAME S    path to LoRA adapter with user defined scaling S  (can be repeated to use multiple adapters)\n  -o,    --output FNAME           output file (default: 'ggml-lora-merged-f16.gguf')\n\n",
+    "bench_help": "usage: /tmp/native-sparse-ik-llama-v3/ik_llama.cpp/build-native/bin/llama-bench [options]\n\noptions:\n  -h, --help\n  -m, --model <filename>              (default: models/7B/ggml-model-q4_0.gguf)\n  -p, --n-prompt <n>                  (default: 512)\n  -n, --n-gen <n>                     (default: 128)\n  -pg <pp,tg>                         (default: )\n  -gp <pp,tg>                         (default: )\n  -b, --batch-size <n>                (default: 2048)\n  -ub, --ubatch-size <n>              (default: 512)\n  -ctk, --cache-type-k <t>            (default: f16)\n  -ctv, --cache-type-v <t>            (default: f16)\n  -t, --threads <n>                   (default: {2, 2})\n  -tgb, --threads-gen-batch <n1,n2>   (default: {2, 2})\n  -ngl, --n-gpu-layers <n>            (default: 999)\n  --n-cpu-moe <n>                     (default: none)\n  -rpc, --rpc <rpc_servers>           (default: )\n  -sm, --split-mode <none|layer|graph>(default: layer)\n  -mg, --main-gpu <i>                 (default: 0)\n  -nkvo, --no-kv-offload <0|1>        (default: 0)\n  -fa, --flash-attn <0|1>             (default: 1)\n  -mla, --mla-use <0|1|2>             (default: 3)\n  -amb, --attention-max-batch <i>     (default: 0)\n  -ser, --smart-expert-reduction <i,f>(default: 0)\n  -gr, --graph-reuse <0|1>            (default: 1)\n  -mmp, --mmap <0|1>                  (default: 1)\n  --numa <distribute|isolate|numactl> (default: disabled)\n  -embd, --embeddings <0|1>           (default: 0)\n  -ts, --tensor-split <ts0/ts1/..>    (default: 0)\n  -r, --repetitions <n>               (default: 5)\n  -o, --output <csv|json|md|sql>      (default: md)\n  -oe, --output-err <csv|json|md|sql> (default: none)\n  -v, --verbose                       (default: 0)\n  -w, --warmup <0|1>                  (default: 1)\n  -rtr, --run-time-repack <0|1>       (default: 0)\n  -cuda, --cuda-params <string>       (default: )\n  -mqkv, --merge-qkv                  (default: 0)\n  -muge, --merge-up-gate-experts      (default: 0)\n  --defer-experts                     (Linux only, default: 0)\n  -rcache, --rope-cache               (default: 0)\n  -thp, --transparent-huge-pages <0|1> (default: 0)\n  -ot, --override-tensor pattern      (default: none)\n  -fmoe, --fused-moe <0|1>            (default: 1)\n  -ger, --grouped-expert-routing <0|1>(default: 0)\n  -no-fug, --no-fused-up-gate <0|1>   (default: 0)\n  -no-ooae, --no-offload-only-active-experts <0|1>   (default: 0)\n  -sas, --scheduler-async <0|1>       (default: 0)\n  --fit <0|1>                         (default: 0)\n  --fit-margin N                      (default: 0)\n  --max-gpu <N>                       (default: 0)\n        --print-overrides <0|1>       (default: 0)\n\nMultiple values can be given for each parameter by separating them with ',' or by specifying the parameter multiple times.\n\n--- STDERR ---\n",
+    "version": "\n--- STDERR ---\nversion: 1 (3bb386eb)\nbuilt with cc (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0 for x86_64-linux-gnu\n",
+    "help_returncode": 1
+  },
+  "bench": {
+    "label": "resident_bench",
+    "command": [
+      "/tmp/native-sparse-ik-llama-v3/ik_llama.cpp/build-native/bin/llama-bench",
+      "-m",
+      "/tmp/native-sparse-ik-llama-v3/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf",
+      "-p",
+      "0",
+      "-n",
+      "64",
+      "-r",
+      "3",
+      "-t",
+      "4",
+      "-ngl",
+      "0",
+      "--output",
+      "json"
+    ],
+    "returncode": 0,
+    "elapsed_seconds": 82.91410113699999,
+    "cache_drop": {
+      "available": true,
+      "called": true
+    },
+    "peak_status_kib": {
+      "VmRSS": 10576200,
+      "VmHWM": 10576200,
+      "RssAnon": 170108,
+      "RssFile": 10406092,
+      "VmSwap": 0
+    },
+    "peak_smaps_rollup_kib": {
+      "Rss": 10576200,
+      "Pss": 10574792,
+      "Anonymous": 170108,
+      "AnonHugePages": 0,
+      "Private_Clean": 10412636,
+      "Shared_Clean": 2328,
+      "Private_Dirty": 170108,
+      "Shared_Dirty": 0,
+      "Referenced": 10576200,
+      "Swap": 0
+    },
+    "samples": 669,
+    "process_sample_file": "/kaggle/working/native-sparse-ik-llama-v3-results/resident_bench.process.jsonl",
+    "sampled_smaps": {
+      "available": true,
+      "path": "/kaggle/working/native-sparse-ik-llama-v3-results/resident_bench.smaps.sampled.txt",
+      "trigger": "first in-flight sample with VmRSS >= 1 GiB",
+      "model_vmas": [
+        {
+          "header": "7cfdb03c0000-7d002b704000 r--s 00000000 00:35 150264840                  /tmp/native-sparse-ik-llama-v3/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf",
+          "Rss": 1114992,
+          "Pss": 1114992,
+          "Shared_Clean": 0,
+          "Shared_Dirty": 0,
+          "Private_Clean": 1114992,
+          "Private_Dirty": 0,
+          "Anonymous": 0
+        }
+      ]
+    },
+    "minor_faults": 253376,
+    "major_faults": 61,
+    "stdout_sha256": "8ce341a1c93400fc54c4b8e858a11a18a841ead2c092120cac0b0dfc2895ef4a",
+    "response_sha256": "9d5f9fb745e2b6c66b878a8c80064fe6b6fc04dfd664dbfdfbd56ea8591a7563",
+    "response_nonempty": true,
+    "contains_nan_or_inf": false,
+    "stdout_path": "/kaggle/working/native-sparse-ik-llama-v3-results/resident_bench.stdout.txt",
+    "stderr_path": "/kaggle/working/native-sparse-ik-llama-v3-results/resident_bench.stderr.txt",
+    "stderr_tail": "",
+    "bench_parse": {
+      "format": "json",
+      "rows": [
+        {
+          "build_commit": "3bb386eb",
+          "build_number": 1,
+          "cuda": false,
+          "vulkan": false,
+          "metal": false,
+          "sycl": false,
+          "rpc": "0",
+          "gpu_blas": false,
+          "blas": false,
+          "cpu_info": "Intel(R) Xeon(R) CPU @ 2.20GHz",
+          "gpu_info": "",
+          "model_filename": "/tmp/native-sparse-ik-llama-v3/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf",
+          "model_type": "qwen35moe 35B.A3B IQ2_XXS - 2.0625 bpw",
+          "model_size": 10645965312,
+          "model_n_params": 34660610688,
+          "n_batch": 2048,
+          "n_ubatch": 512,
+          "n_threads": 4,
+          "type_k": "f16",
+          "type_v": "f16",
+          "n_gpu_layers": 0,
+          "split_mode": "layer",
+          "main_gpu": 0,
+          "no_kv_offload": false,
+          "flash_attn": true,
+          "mla_attn": 3,
+          "attn_max_batch": 0,
+          "ser": "-1,0",
+          "reuse": true,
+          "tensor_split": "0.00",
+          "use_mmap": true,
+          "embeddings": false,
+          "repack": false,
+          "mqkv": false,
+          "muge": false,
+          "defer_experts": false,
+          "fused_moe": true,
+          "grouped_er": false,
+          "no_fused_up_gate": false,
+          "use_thp": false,
+          "no_ooae": false,
+          "rcache": false,
+          "sas": false,
+          "max_gpu": 0,
+          "cuda_params": "",
+          "override_tensor": "",
+          "n_prompt": 0,
+          "n_gen": 64,
+          "test_time": "2026-09-13T16:25:05Z",
+          "avg_ns": 25320951273,
+          "stddev_ns": 397529356,
+          "avg_ts": 2.527968,
+          "stddev_ts": 0.03986,
+          "test": "tg64",
+          "samples_ns": [
+            24891733099,
+            25394640494,
+            25676480226
+          ],
+          "samples_ts": [
+            2.57113,
+            2.52022,
+            2.49255
+          ]
+        }
+      ]
+    },
+    "status": "ok"
+  },
+  "correctness": {
+    "same_binary_seeded_smoke_response_equal": true,
+    "cold_returncode": 0,
+    "warm_returncode": 0,
+    "route_equality": "unmeasured_without_observation_hook",
+    "cross_runtime_phase0_response_hash": "a3c3c73a067cbb5fab9e68bd7d06c03d3c488e74467d33c40fae339836006c8c",
+    "cross_runtime_hash_interpretation": "reference_only; mismatch is not itself a route failure",
+    "native_k": "parse_from_runtime_or_unverified",
+    "no_drop_or_substitution": true
+  },
+  "finished_unix": 1789316782.6603034
+}

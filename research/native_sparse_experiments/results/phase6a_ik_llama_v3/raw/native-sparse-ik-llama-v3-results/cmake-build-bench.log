@@ -1,0 +1,9 @@
+[  0%] Built target build_info
+[ 19%] Built target ggml
+[ 76%] Built target llama
+[ 98%] Built target common
+[100%] Building CXX object examples/llama-bench/CMakeFiles/llama-bench.dir/llama-bench.cpp.o
+[100%] Linking CXX executable ../../bin/llama-bench
+[100%] Built target llama-bench
+
+--- STDERR ---
