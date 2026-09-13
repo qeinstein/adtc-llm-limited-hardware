@@ -29,6 +29,7 @@ CLI = BUILD / "bin" / "llama-cli"
 MODEL = SCRATCH / "Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf"
 
 LLAMA_COMMIT = "3057bb66c86c46d5781e50e85462a760ba7d1feb"
+RESEARCH_SOURCE_COMMIT = "69464e6b35113baa387b5140547aa1b5ff7780df"
 MODEL_REPO_COMMIT = "bc014a17be43adabd7066b7a86075ff935c6a4e2"
 MODEL_FILE = "Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf"
 MODEL_SIZE = 10_656_955_008
@@ -756,12 +757,15 @@ def main() -> None:
     exactness = {"response_hashes": sorted({x["response_sha256"] for x in arms}),
                  "all_response_equal": len({x["response_sha256"] for x in arms}) == 1,
                  "native_k": 8, "layers": 40, "no_weight_or_route_change": True}
-    result = {"schema_version": 1, "status": "complete", "hypothesis":
-              "Concurrent per-miss reads reduce exact bounded decode latency relative to the matched serialized three-plane pread baseline.",
+    result = {"schema_version": 2, "status": "complete", "hypothesis":
+              "Publishing asynchronously loaded expert planes lets exact selected-expert compute overlap remaining reads.",
+              "research_source_commit": RESEARCH_SOURCE_COMMIT,
               "runtime": runtime, "model": model,
               "hardware": {k: v for k, v in hardware.items() if k not in ("cpuinfo", "meminfo")},
               "prompt": PROMPT, "n_gen": N_GEN, "repetitions": N_REPS,
               "cache_capacity_bytes": CACHE_BYTES, "arms": arms, "exactness": exactness,
+              "pipeline": {"plane_ready_masks": True, "compute_starts_before_all_planes": True,
+                           "async_tasks_joined": "when graph advances to next layer or at exit"},
               "comparison": {"serial": bounded_serial, "async": bounded_async},
               "quality": {"result": "deterministic smoke equivalence only"},
               "wall_sec": time.time() - started}
