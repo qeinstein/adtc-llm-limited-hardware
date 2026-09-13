@@ -89,7 +89,7 @@ def replace_once(path: Path, old: str, new: str) -> None:
 def patch_quantizer() -> dict:
     path = LLAMA / "src" / "llama-quant.cpp"
     replace_once(path, "#include <cstring>\n", "#include <cstring>\n#include <cstdlib>\n")
-    old = """        // if not manual - use the standard logic for choosing the target tensor type based on the selected mixture
+    old = """        // if not manual - use the standard logic for choosing the quantization type based on the selected mixture
         if (!manual && !params->pure) {
 """
     new = """        // Controlled requantization arm: an explicit --tensor-type override
@@ -99,7 +99,7 @@ def patch_quantizer() -> dict:
             return tensor->type;
         }
 
-        // if not manual - use the standard logic for choosing the target tensor type based on the selected mixture
+        // if not manual - use the standard logic for choosing the quantization type based on the selected mixture
         if (!manual && !params->pure) {
 """
     replace_once(path, old, new)
