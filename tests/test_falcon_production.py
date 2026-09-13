@@ -196,6 +196,17 @@ def test_fast_eval_subset_is_deterministic_and_bounded():
     assert selected == stable_eval_subset(list(reversed(rows)), 5)
 
 
+def test_fast_eval_subset_preserves_small_objective_group():
+    rows = [
+        *({"example_id": f"sft-{i}", "format": "sft"} for i in range(4)),
+        *({"example_id": f"mcqa-{i}", "format": "mcqa"} for i in range(20)),
+    ]
+    selected = stable_eval_subset(rows, 8)
+    assert len(selected) == 8
+    assert sum(row["format"] == "sft" for row in selected) == 4
+    assert selected == stable_eval_subset(list(reversed(rows)), 8)
+
+
 def test_exact_length_distribution_reports_response_shape():
     result = distribution([1, 2, 10, 20])
     assert result["count"] == 4

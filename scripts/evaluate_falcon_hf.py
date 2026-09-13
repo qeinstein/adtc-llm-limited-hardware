@@ -64,12 +64,12 @@ def main(argv: list[str] | None = None) -> int:
 
     rows = load_rows(data_dir / "dev.jsonl")
     if args.max_dev:
-        rows = rows[: args.max_dev]
+        rows = stable_eval_subset(rows, args.max_dev)
     emit(events, "evaluation_start", rows=len(rows), adapter=args.adapter, model=config["model"])
 
     import torch
     from scripts.train_lora import patch_peft_transformers_compat
-    from scripts.train_falcon_production import truncate_mcqa_context
+    from scripts.train_falcon_production import stable_eval_subset, truncate_mcqa_context
 
     patch_peft_transformers_compat()
     from peft import PeftModel

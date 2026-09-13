@@ -93,13 +93,48 @@ def load_jsonl(path: Path) -> list[dict[str, Any]]:
 
 
 def stable_eval_subset(rows: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
-    """Select a deterministic, order-independent fast-dev subset."""
+    """Select a deterministic, order-independent, objective-stratified subset.
+
+    The production dev split is MCQA-heavy by row count. A plain global hash
+    selection can therefore leave a 64-row fast-dev pass with zero or one SFT
+    item, allowing a generation regression to hide behind a good MCQA loss.
+    Preserve every minority objective when it fits in half the budget, then
+    fill the remaining budget from the other groups by stable hash order.
+    """
     if limit <= 0 or len(rows) <= limit:
         return rows
-    ranked = sorted(rows, key=lambda row: hashlib.sha256(
-        str(row.get("example_id", "")).encode("utf-8")
-    ).hexdigest())
-    return ranked[:limit]
+    groups: dict[str, list[dict[str, Any]]] = {}
+    for row in rows:
+        key = str(row.get("kind") or row.get("format") or row.get("objective") or "other")
+        groups.setdefault(key, []).append(row)
+    ranked_groups = {
+        key: sorted(value, key=lambda row: hashlib.sha256(
+            str(row.get("example_id", "")).encode("utf-8")
+        ).hexdigest())
+        for key, value in groups.items()
+    }
+    selected: list[dict[str, Any]] = []
+    # Keep small objective groups intact when possible. This is especially
+    # important for the small but safety-critical SFT validation set.
+    preserved_keys = {
+        key for key, value in ranked_groups.items()
+        if len(value) <= max(1, limit // 2)
+    }
+    for key in sorted(preserved_keys):
+        selected.extend(ranked_groups[key])
+    remaining = max(0, limit - len(selected))
+    other = [
+        row for key, value in ranked_groups.items() if key not in preserved_keys
+        for row in value
+    ]
+    selected.extend(other[:remaining])
+    if len(selected) < limit:
+        # If every group was preserved, trim deterministically rather than
+        # returning more rows than requested.
+        selected = sorted(selected, key=lambda row: hashlib.sha256(
+            str(row.get("example_id", "")).encode("utf-8")
+        ).hexdigest())[:limit]
+    return selected
 
 
 def render_sft(tokenizer: Any, row: dict[str, Any], system: str) -> tuple[list[int], list[int]]:
