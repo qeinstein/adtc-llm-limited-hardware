@@ -1,0 +1,2 @@
+PHASE4_FUSED_IQ2_PROFILE total_cycles=504498346409 load_cycles=25744645369 decode_mac_cycles=94970727645 calls=31621120 blocks=252968960
+PHASE3_IQP_PROFILE decode_cycles=0 gemv_cycles=0 decode_calls=0 gemv_calls=0

@@ -80,6 +80,16 @@ preserved under the results directory:
   measurement-only non-MoE arm measured a 1,612.9 MiB operational resident
   floor (539.7 MiB anonymous, 1,073.2 MiB file-backed) against 6,538.9 MiB
   for the lazy 64-token inference arm.
+- phase4_fused_iq2_v1: a true four-row fused packed-IQ2_XXS AVX2 path shared
+  activation loads and avoided decoded panels, but measured 4.778 tok/s
+  versus 4.885 tok/s for the same-run raw-row reference. It remained exact;
+  the profile attributed 5.74% of summed fused-function cycles to activation
+  loads and 31.50% to the decode/integer-MAC region, with the remainder in
+  loop, accumulator, and surrounding handling.
+- phase4_fused_iq2_v2: a two-row fused follow-up reduced per-call profile
+  cost but doubled fused call count and measured 4.441 tok/s versus 4.650
+  tok/s raw-row. It also remained exact. Both phase 4 reports include raw
+  Kaggle bundles and the v1 cache budget design.
 
 Current classification: resident CPU/DRAM-kernel execution is the larger term
 in the lazy path (about 212 ms/token resident plus about 158 ms/token added
@@ -87,6 +97,11 @@ lazy-storage stall at the measured Phase 0 point). The single-row experiments
 show that panel-backed specialization and dispatch isolation do not improve
 the ceiling; raw IQ2 dequantization remains dominant. Storage remains a major
 secondary bottleneck, but storage optimization alone cannot reach 10 tok/s.
-The next compute experiment should implement a true fused multi-row raw
-IQ2_XXS kernel with shared activation loads, then move to a bounded expert
-cache sized against the measured 1.61 GiB non-routed floor.
+The direct fused IQ2 path is now a correct but insufficient optimization:
+activation-load sharing and row-group width do not clear the ceiling. A
+custom packed expert layout/decode-table access pattern or a specialized
+executor is justified as the next compute experiment. In parallel, bounded
+expert storage should be implemented against the measured 1.61 GiB floor;
+the committed Phase 4 cache design budgets 2,664 / 1,439 / 826 bundles for
+4 / 3 / 2.5 GiB total RSS and replays 97.53 / 110.52 / 141.66 MB fresh
+logical bytes per token respectively.

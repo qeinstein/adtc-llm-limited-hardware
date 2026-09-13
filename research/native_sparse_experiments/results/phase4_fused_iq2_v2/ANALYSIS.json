@@ -1,0 +1,55 @@
+{
+  "experiment_id": "phase4_fused_iq2_v2",
+  "status": "valid",
+  "hypothesis": "Two-row fused packed IQ2 reduces v1 AVX2 register pressure.",
+  "control": {
+    "tok_s_mean": 4.465956,
+    "tok_s_samples": [4.57372, 4.14954, 4.67461],
+    "ms_per_token": 223.91622308862873
+  },
+  "raw_row_reference": {
+    "tok_s_mean": 4.649958,
+    "tok_s_samples": [4.6188, 4.68069, 4.65039],
+    "ms_per_token": 215.05570587949398
+  },
+  "fused_iq2_2x1": {
+    "tok_s_mean": 4.441353,
+    "tok_s_samples": [4.30739, 4.47575, 4.54092],
+    "ms_per_token": 225.156613311304,
+    "delta_vs_generic_percent": -0.5509010836649564,
+    "delta_vs_raw_row_percent": -4.486169552499176,
+    "peak_rss_mib": 10528.1875
+  },
+  "correctness": {
+    "response_equal": true,
+    "response_sha256": "a3c3c73a067cbb5fab9e68bd7d06c03d3c488e74467d33c40fae339836006c8c",
+    "native_k": 8,
+    "layers": 40,
+    "router_or_weights_changed": false,
+    "no_drop_or_substitution": true
+  },
+  "profile": {
+    "total_cycles": 504498346409,
+    "load_cycles": 25744645369,
+    "decode_mac_cycles": 94970727645,
+    "calls": 31621120,
+    "blocks": 252968960,
+    "warmup_plus_repetition_decode_tokens": 256,
+    "total_cycles_per_call": 15954.474301005152,
+    "load_cycles_per_call": 814.1598200506497,
+    "decode_mac_cycles_per_call": 3003.3954409268235,
+    "load_fraction_of_total": 0.051030187813794446,
+    "decode_mac_fraction_of_total": 0.18824784723477891,
+    "unattributed_fraction_of_total": 0.7607219649514266,
+    "registration_report_duplicate_count": 1,
+    "note": "Summed worker TSC intervals; profile instrumentation is not a throughput result."
+  },
+  "ram_floor": {
+    "non_moe_peak_rss_mib": 1613.09765625,
+    "non_moe_peak_anon_mib": 539.75,
+    "non_moe_peak_file_mib": 1073.41015625,
+    "lazy_steady_peak_rss_mib": 6538.95703125
+  },
+  "conclusion": "Two-row grouping does not improve exact resident decode; custom packed layout/executor is the next compute move.",
+  "next_experiment": "microbenchmark alternate packed IQ2 layout/decode-table access before integrating a custom expert store"
+}
