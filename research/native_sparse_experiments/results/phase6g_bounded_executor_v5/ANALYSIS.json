@@ -1,0 +1,54 @@
+{
+  "schema": "native-sparse-bounded-executor/v5",
+  "hypothesis": "The exact-IQP bounded executor remains correct at the 2.5 GiB stretch design point.",
+  "control": {
+    "sample_tok_s": [4.8, 4.8, 4.8],
+    "mean_tok_s": 4.8,
+    "median_tok_s": 4.8,
+    "ms_per_token": 208.33333333333334,
+    "peak_rss_mib": 10536.41015625
+  },
+  "bounded_exact_iqp": {
+    "sample_tok_s": [2.9, 2.9, 2.8],
+    "mean_tok_s": 2.8666666666666667,
+    "median_tok_s": 2.9,
+    "ms_per_token": 348.83720930232556,
+    "peak_rss_mib": 2301.234375,
+    "peak_rss_gib": 2.2472991943359375,
+    "peak_rss_anon_mib": 1230.2890625,
+    "peak_rss_file_mib": 1070.9453125
+  },
+  "throughput_delta_fraction": -0.4027777777777778,
+  "cache": {
+    "capacity_bytes": 724025344,
+    "slot_bytes": 876544,
+    "slot_count": 826,
+    "reserved_bytes": 724025344,
+    "requests": 89280,
+    "hits": 74193,
+    "misses": 15087,
+    "hit_rate": 0.8310147849462366,
+    "evictions": 14261,
+    "logged_read_calls": 135783,
+    "inferred_pread_calls": 45261,
+    "read_bytes_per_repetition": 13224419328,
+    "fresh_decimal_mb_per_64_decode_tokens": 206.631552,
+    "fresh_mib_per_64_decode_tokens": 197.0592041015625,
+    "read_ns_samples": [12827239428, 12542106772, 12679337649],
+    "read_interval_mean_sec": 12.682894616333334,
+    "read_bandwidth_decimal_mb_s": 1042.6972491728566,
+    "read_bandwidth_mib_s": 994.3935863236013,
+    "read_wall_fraction_estimate": 0.5680879880232639
+  },
+  "correctness": {
+    "route_files_byte_identical_control_vs_bounded": true,
+    "all_repetitions_route_identical": true,
+    "all_response_hashes_equal": true,
+    "response_hash": "5804c970f14ce9902178660a5262689f2ffb3518619336403244933d85cafca1",
+    "native_k": 8,
+    "layers": 40,
+    "weights_or_routes_changed": false,
+    "quality_result": "same-run deterministic smoke equivalence only"
+  },
+  "decision": "Exact bounded storage reaches the measured 2.5 GiB frontier; storage dominates the serialized bounded prototype and further cache-policy tuning is not the next throughput move."
+}
