@@ -40,7 +40,7 @@ and [paper](https://arxiv.org/abs/2407.00088).
 | 2048 x 512 | 6.427 | 5.515 | 1.348 | 1.863 |
 
 The exact custom layout preserved the dot result exactly in both shapes but was
-17.2% slower for `512 x 2048` and 14.2% slower for `2048 x 512` in this run.
+26.5% slower for `512 x 2048` and 14.2% slower for `2048 x 512` in this run.
 The simple external LUT/gather kernels were also slower than the current IQ2
 AVX2 kernel, so this particular LUT construction is not a competent replacement
 for the current path. It does not invalidate T-MAC's published kernels; it
