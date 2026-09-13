@@ -220,9 +220,14 @@ yet.
   repeats) at the same 3,517.5 MiB RSS and 127.0304 MB logical fresh bytes per
   token.  The CLI's rounded decode metric remained 3.2 tok/s in both arms.
   Aggregate readiness wait was 96.269 ms/token, while final join wait fell to
-  1.073 s per 64-token repetition.  Routes and outputs remained exact.  Keep
-  one worker-pool follow-up; kill further basic I/O scheduling if it does not
-  move decoded throughput.
+  1.073 s per 64-token repetition.  Routes and outputs remained exact.
+- `phase7b_worker_pool_v1`: a fixed four-reader worker pool preserved exact
+  routes/output and reduced process elapsed by a further 6.722% versus serial
+  bounded execution, but rounded decode fell from 3.167 to 3.133 tok/s.  Four
+  read workers competing with four compute threads increased aggregate
+  readiness wait to 270.616 ms/token, versus 96.269 ms/token in v10.  This
+  basic scheduler branch is killed; v10 remains the storage scheduling
+  control.
 - `phase7c_selective_q4_v1`: after two preserved quantizer failures, the
   corrected selective Q4 challenger completed.  Requantizing only the
   measured attention/GDN Q5_K projection families raised resident decode from
@@ -235,7 +240,8 @@ yet.
   because 48 tokens stopped inside automatic reasoning. It is preserved and
   explicitly superseded by the reasoning-disabled v2 gate.
 - `phase7c_selective_q4_quality_v2`: the corrected held-out gate with
-  `--reasoning off` is running on Kaggle.
+  `--reasoning off` remains running on Kaggle and is not yet used to promote
+  the Q4 challenger.
 - `phase7d_selective_q4_bounded_v1`: the selective-Q4 candidate reached a
   rounded 2.733 tok/s mean / 2.8 median against 2.233 / 2.5 for the bounded
   control, but control repetition 1 had a large storage stall. The candidate
@@ -245,6 +251,8 @@ yet.
 
 The machine-readable canonical points and experiment decisions are in
 `frontier.json`.  The staged storage result is a qualified process-time win,
-not a new rounded raw decode point. The next decision is whether selective Q4
-passes the completed-answer quality gate and whether its extra anonymous RSS
-can be removed; only then should it be promoted into the bounded frontier.
+not a new rounded raw decode point. The fixed worker-pool follow-up did not
+move decoded throughput and is killed. The next decision is whether selective
+Q4 passes the completed-answer quality gate and whether its extra anonymous
+RSS can be removed; only then should it be promoted into the bounded
+frontier.

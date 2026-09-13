@@ -27,7 +27,16 @@
     "bounded_async_join_wait_mean_sec_per_64_tokens": 1.072795719,
     "bounded_staged_aggregate_ready_wait_ms_per_token": 96.268618661,
     "bounded_staged_process_elapsed_delta_fraction": -0.0785732543,
-    "source": "phase7b_staged_pipeline_v1"
+    "source": "phase7b_staged_pipeline_v1",
+    "worker_pool_followup": {
+      "status": "killed",
+      "decode_tok_s_mean": 3.1333333333,
+      "serial_decode_tok_s_mean": 3.1666666667,
+      "process_elapsed_sec_mean": 32.9180140623,
+      "serial_process_elapsed_sec_mean": 35.2902469297,
+      "aggregate_ready_wait_ms_per_token": 270.6161097,
+      "source": "phase7b_worker_pool_v1"
+    }
   },
   "challengers": {
     "selective_attention_q4": {
@@ -58,7 +67,6 @@
     "routes_exact": true
   },
   "active_experiments": [
-    "phase7c_selective_q4_quality_v2",
-    "phase7b_bounded_worker_pool_v1"
+    "phase7c_selective_q4_quality_v2"
   ]
 }

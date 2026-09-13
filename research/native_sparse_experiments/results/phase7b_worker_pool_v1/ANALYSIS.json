@@ -1,0 +1,68 @@
+{
+  "schema": "native-sparse-worker-pool/v1",
+  "status": "complete",
+  "decision": "KILL",
+  "hypothesis": "A fixed four-worker read pool preserves staged overlap while avoiding per-bundle pthread creation.",
+  "model_sha256": "2a809de317cfd49ac9130b95619ee6ac039a855e467015b3e996eb61af84718b",
+  "llama_commit": "3057bb66c86c46d5781e50e85462a760ba7d1feb",
+  "research_source_commit": "1cee728",
+  "hardware": "Kaggle 4-vCPU Intel Xeon AVX2",
+  "threads": {
+    "compute": 4,
+    "read_workers": 4
+  },
+  "cache": {
+    "capacity_bytes": 2000000000,
+    "slot_bytes": 876544,
+    "slots": 2281
+  },
+  "decode_tokens_per_repetition": 64,
+  "repetitions": 3,
+  "arms": {
+    "resident_control": {
+      "decode_tok_s": [4.4, 4.4, 4.3],
+      "mean_decode_tok_s": 4.433333333333333,
+      "process_elapsed_sec": [28.061799483, 27.237426837, 27.681408364],
+      "mean_process_elapsed_sec": 27.660211561333334,
+      "peak_rss_mib": 10534.875
+    },
+    "bounded_serial": {
+      "decode_tok_s": [3.2, 3.2, 3.1],
+      "mean_decode_tok_s": 3.1666666666666665,
+      "median_decode_tok_s": 3.2,
+      "process_elapsed_sec": [35.154996989, 35.233920662, 35.481823138],
+      "mean_process_elapsed_sec": 35.29024692966667,
+      "median_process_elapsed_sec": 35.233920662,
+      "peak_rss_mib": 3517.44921875,
+      "read_calls_per_repetition": 83475,
+      "read_bytes_per_repetition": 8129945600,
+      "read_sec_mean": 10.602162036
+    },
+    "bounded_async_worker_pool": {
+      "decode_tok_s": [3.1, 3.2, 3.1],
+      "mean_decode_tok_s": 3.1333333333333333,
+      "median_decode_tok_s": 3.1,
+      "process_elapsed_sec": [32.956580523, 32.786022939, 33.011438725],
+      "mean_process_elapsed_sec": 32.91801406233333,
+      "median_process_elapsed_sec": 32.956580523,
+      "peak_rss_mib": 3517.64453125,
+      "read_calls_per_repetition": 27825,
+      "read_bytes_per_repetition": 8129945600,
+      "aggregate_read_sec_mean": 23.052950402333332,
+      "async_join_sec_mean": 0.567975698,
+      "aggregate_ready_wait_sec_mean": 17.319431021,
+      "aggregate_ready_wait_ms_per_token": 270.616109703125,
+      "ready_wait_events": 294600
+    }
+  },
+  "comparison": {
+    "worker_pool_vs_serial_process_elapsed_delta_fraction": -0.0672219891290669,
+    "worker_pool_vs_serial_decode_delta_fraction": -0.010526315789473684,
+    "worker_pool_vs_v10_staged_decode_delta_fraction": -0.02083333333333337,
+    "logical_decimal_mb_per_token": 127.0304,
+    "logical_mib_per_token": 121.1456298828125,
+    "route_sha256": "400d85562944ec574faa1d0a629528237dd8c1f7638b164dda567607a3de3aa2",
+    "response_sha256": "5804c970f14ce9902178660a5262689f2ffb3518619336403244933d85cafca1"
+  },
+  "conclusion": "The fixed pool saves process overhead versus serial reads but competes with compute threads, worsens readiness wait, and does not improve decoded throughput. Stop basic worker-pool variants."
+}

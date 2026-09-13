@@ -1,0 +1,602 @@
+diff --git a/ggml/src/ggml-cpu/ggml-cpu.c b/ggml/src/ggml-cpu/ggml-cpu.c
+index 87a329f26..a60fdc1af 100644
+--- a/ggml/src/ggml-cpu/ggml-cpu.c
++++ b/ggml/src/ggml-cpu/ggml-cpu.c
+@@ -571,6 +571,493 @@ struct ggml_state {
+     struct ggml_numa_nodes numa;
+ };
+ 
++
++
++// Phase 7B pipeline explicit byte-bounded expert store.  The loader registers the
++// original GGUF offsets, while this C backend owns only fixed anonymous slots.
++#if defined(__linux__)
++#include <pthread.h>
++#include <sched.h>
++#include <sys/mman.h>
++#include <unistd.h>
++#endif
++
++struct phase6_record {
++    const struct ggml_tensor * tensor;
++    int fd;
++    size_t base_offset;
++    size_t slice_bytes;
++    int layer;
++    int kind; // gate=0, up=1, down=2
++    int valid;
++};
++
++struct phase6_slot {
++    int layer;
++    int expert;
++    uint64_t age;
++    int valid;
++    int ready_mask;
++};
++
++struct phase6_async_task {
++    int layer;
++    int expert;
++    int slot;
++    size_t read_bytes;
++    uint64_t read_ns;
++};
++
++static struct phase6_record phase6_records[40][3];
++static int phase6_bundle_slots[40][256];
++static struct phase6_slot * phase6_slots = NULL;
++static unsigned char * phase6_storage = NULL;
++static size_t phase6_slot_bytes = 0;
++static size_t phase6_slot_count = 0;
++static uint64_t phase6_age = 0;
++static uint64_t phase6_requests = 0;
++static uint64_t phase6_hits = 0;
++static uint64_t phase6_misses = 0;
++static uint64_t phase6_evictions = 0;
++static uint64_t phase6_read_calls = 0;
++static uint64_t phase6_read_bytes = 0;
++static uint64_t phase6_read_ns = 0;
++static uint64_t phase6_async_tasks = 0;
++static uint64_t phase6_async_wait_ns = 0;
++static uint64_t phase6_ready_wait_ns = 0;
++static uint64_t phase6_ready_wait_events = 0;
++static int phase6_initialized = 0;
++static int phase6_report_registered = 0;
++enum { PHASE6_MAX_ASYNC_TASKS = 4096 };
++enum { PHASE6_POOL_WORKERS = 4 };
++static struct phase6_async_task phase6_async_task_records[PHASE6_MAX_ASYNC_TASKS];
++static int phase6_async_task_count = 0;
++static int phase6_async_layer = -1;
++static pthread_t phase6_pool_threads[PHASE6_POOL_WORKERS];
++static int phase6_pool_queue[PHASE6_MAX_ASYNC_TASKS];
++static int phase6_pool_queue_head = 0;
++static int phase6_pool_queue_tail = 0;
++static int phase6_pool_pending = 0;
++static int phase6_pool_stop = 0;
++static int phase6_pool_initialized = 0;
++static pthread_mutex_t phase6_pool_mutex = PTHREAD_MUTEX_INITIALIZER;
++static pthread_cond_t phase6_pool_work = PTHREAD_COND_INITIALIZER;
++static pthread_cond_t phase6_pool_idle = PTHREAD_COND_INITIALIZER;
++static void * phase6_pool_worker(void * opaque);
++static void phase6_start_pool(void);
++static void phase6_stop_pool(void);
++static void phase6_reap_async(void);
++
++static int phase6_enabled(void) {
++    const char * value = getenv("GGML_PHASE6_BOUNDED_CACHE");
++    return value != NULL && atoi(value) != 0;
++}
++
++static int phase6_async_enabled(void) {
++    const char * value = getenv("GGML_PHASE6_ASYNC");
++    return value != NULL && atoi(value) != 0;
++}
++
++static int phase6_kind(const char * name) {
++    if (name == NULL || strstr(name, "ffn_") == NULL || strstr(name, "_exps") == NULL) return -1;
++    if (strstr(name, "ffn_gate_exps")) return 0;
++    if (strstr(name, "ffn_up_exps")) return 1;
++    if (strstr(name, "ffn_down_exps")) return 2;
++    return -1;
++}
++
++static int phase6_layer(const char * name) {
++    int layer = -1;
++    if (name != NULL) sscanf(name, "blk.%d.", &layer);
++    return layer;
++}
++
++void ggml_cpu_phase6_register_lazy_tensor(const struct ggml_tensor * tensor,
++        int fd, size_t base_offset, size_t nbytes, size_t expert_stride) {
++    if (!phase6_enabled() || tensor == NULL || tensor->name == NULL) return;
++    const int layer = phase6_layer(tensor->name);
++    const int kind = phase6_kind(tensor->name);
++    if (layer < 0 || layer >= 40 || kind < 0 || kind >= 3 || expert_stride == 0 ||
++            expert_stride * 256 > nbytes) return;
++    // llama_model_loader owns the original descriptor and may destroy it
++    // after model construction.  The explicit cache owns this duplicate so
++    // pread remains valid during generation.
++    const int owned_fd = dup(fd);
++    if (owned_fd < 0) {
++        fprintf(stderr, "PHASE6_BOUNDED_CACHE_ERROR dup failed errno=%d\n", errno);
++        abort();
++    }
++    phase6_records[layer][kind] = (struct phase6_record) {
++        tensor, owned_fd, base_offset, expert_stride, layer, kind, 1
++    };
++}
++
++static void phase6_fail(const char * message) {
++    fprintf(stderr, "PHASE6_BOUNDED_CACHE_ERROR %s\n", message);
++    abort();
++}
++
++static uint64_t phase6_now_ns(void) {
++    struct timespec ts;
++    clock_gettime(CLOCK_MONOTONIC, &ts);
++    return (uint64_t) ts.tv_sec * 1000000000ULL + (uint64_t) ts.tv_nsec;
++}
++
++static void phase6_copy_read(int fd, void * dst, size_t bytes, size_t offset) {
++    size_t done = 0;
++    while (done < bytes) {
++        const ssize_t got = pread(fd, (char *) dst + done, bytes - done, offset + done);
++        if (got < 0) {
++            if (errno == EINTR) continue;
++            phase6_fail("async pread failed");
++        }
++        if (got == 0) phase6_fail("async short pread");
++        done += (size_t) got;
++    }
++}
++
++static void phase6_report(void) {
++    if (!phase6_enabled()) return;
++    if (phase6_async_enabled()) phase6_reap_async();
++    if (phase6_async_enabled()) phase6_stop_pool();
++    fprintf(stderr,
++        "PHASE6_BOUNDED_CACHE slot_bytes=%zu slots=%zu reserved_bytes=%zu "
++        "requests=%llu hits=%llu misses=%llu evictions=%llu read_calls=%llu "
++        "read_bytes=%llu read_ns=%llu async_tasks=%llu async_wait_ns=%llu "
++        "ready_wait_ns=%llu ready_wait_events=%llu\n",
++        phase6_slot_bytes, phase6_slot_count, phase6_slot_bytes * phase6_slot_count,
++        (unsigned long long) phase6_requests, (unsigned long long) phase6_hits,
++        (unsigned long long) phase6_misses, (unsigned long long) phase6_evictions,
++        (unsigned long long) phase6_read_calls, (unsigned long long) phase6_read_bytes,
++        (unsigned long long) phase6_read_ns, (unsigned long long) phase6_async_tasks,
++        (unsigned long long) phase6_async_wait_ns,
++        (unsigned long long) phase6_ready_wait_ns,
++        (unsigned long long) phase6_ready_wait_events);
++#if defined(__linux__)
++    for (int layer = 0; layer < 40; ++layer) {
++        for (int kind = 0; kind < 3; ++kind) {
++            if (phase6_records[layer][kind].valid && phase6_records[layer][kind].fd >= 0) {
++                close(phase6_records[layer][kind].fd);
++                phase6_records[layer][kind].fd = -1;
++            }
++        }
++    }
++#endif
++}
++
++static void phase6_init(void) {
++    if (phase6_initialized) return;
++    for (int layer = 0; layer < 40; ++layer) {
++        for (int expert = 0; expert < 256; ++expert) phase6_bundle_slots[layer][expert] = -1;
++    }
++    for (int layer = 0; layer < 40; ++layer) {
++        size_t total = 0;
++        for (int kind = 0; kind < 3; ++kind) {
++            if (!phase6_records[layer][kind].valid) phase6_fail("incomplete routed tensor registration");
++            total += phase6_records[layer][kind].slice_bytes;
++        }
++        if (layer == 0) phase6_slot_bytes = total;
++        if (total != phase6_slot_bytes) phase6_fail("nonuniform bundle size is not supported by v1");
++    }
++    const char * capacity_text = getenv("GGML_PHASE6_CACHE_BYTES");
++    const unsigned long long capacity = capacity_text ? strtoull(capacity_text, NULL, 10) : 0;
++    phase6_slot_count = phase6_slot_bytes ? (size_t) (capacity / phase6_slot_bytes) : 0;
++    if (phase6_slot_count == 0) phase6_fail("cache capacity does not hold one routed bundle");
++    phase6_slots = (struct phase6_slot *) calloc(phase6_slot_count, sizeof(*phase6_slots));
++#if defined(__linux__)
++    phase6_storage = (unsigned char *) mmap(NULL, phase6_slot_bytes * phase6_slot_count,
++        PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0);
++    if (phase6_storage == MAP_FAILED) phase6_storage = NULL;
++#endif
++    if (phase6_storage == NULL || phase6_slots == NULL) phase6_fail("fixed cache allocation failed");
++    if (!phase6_report_registered) {
++        phase6_report_registered = 1;
++        atexit(phase6_report);
++    }
++    phase6_initialized = 1;
++    if (phase6_async_enabled()) phase6_start_pool();
++}
++
++static int phase6_find_slot(int layer, int expert) {
++    if (layer < 0 || layer >= 40 || expert < 0 || expert >= 256) return -1;
++    return phase6_bundle_slots[layer][expert];
++}
++
++static void phase6_read_exact(int fd, void * dst, size_t bytes, size_t offset) {
++    size_t done = 0;
++    const uint64_t start = phase6_now_ns();
++    while (done < bytes) {
++        const ssize_t got = pread(fd, (char *) dst + done, bytes - done, offset + done);
++        if (got < 0) {
++            if (errno == EINTR) continue;
++            phase6_fail("pread failed");
++        }
++        if (got == 0) phase6_fail("short pread");
++        done += (size_t) got;
++    }
++    const uint64_t end = phase6_now_ns();
++    phase6_read_ns += end - start;
++    phase6_read_calls += 3;
++    phase6_read_bytes += bytes;
++}
++
++static int phase6_reserve_slot(int layer, int expert) {
++    int slot = -1;
++    for (size_t i = 0; i < phase6_slot_count; ++i) {
++        if (!phase6_slots[i].valid) { slot = (int) i; break; }
++    }
++    if (slot < 0) {
++        uint64_t oldest = UINT64_MAX;
++        for (size_t i = 0; i < phase6_slot_count; ++i) {
++            if (phase6_slots[i].age < oldest) { oldest = phase6_slots[i].age; slot = (int) i; }
++        }
++        if (phase6_slots[slot].valid) {
++            phase6_bundle_slots[phase6_slots[slot].layer][phase6_slots[slot].expert] = -1;
++            phase6_evictions++;
++        }
++#if defined(__linux__)
++        madvise(phase6_storage + (size_t) slot * phase6_slot_bytes,
++                phase6_slot_bytes, MADV_DONTNEED);
++#endif
++    }
++    phase6_slots[slot] = (struct phase6_slot) {
++        layer, expert, ++phase6_age, 1, phase6_async_enabled() ? 0 : 7
++    };
++    phase6_bundle_slots[layer][expert] = slot;
++    return slot;
++}
++
++static int phase6_load(int layer, int expert) {
++    phase6_init();
++    phase6_requests++;
++    int slot = phase6_find_slot(layer, expert);
++    if (slot >= 0) {
++        phase6_hits++;
++        phase6_slots[slot].age = ++phase6_age;
++        return slot;
++    }
++    phase6_misses++;
++    slot = phase6_reserve_slot(layer, expert);
++    unsigned char * dst = phase6_storage + (size_t) slot * phase6_slot_bytes;
++    size_t in_slot = 0;
++    for (int kind = 0; kind < 3; ++kind) {
++        const struct phase6_record * record = &phase6_records[layer][kind];
++        phase6_read_exact(record->fd, dst + in_slot, record->slice_bytes,
++                          record->base_offset + (size_t) expert * record->slice_bytes);
++        in_slot += record->slice_bytes;
++    }
++    return slot;
++}
++
++static void * phase6_async_read_worker(void * opaque) {
++    struct phase6_async_task * task = (struct phase6_async_task *) opaque;
++    const uint64_t start = phase6_now_ns();
++    unsigned char * dst = phase6_storage + (size_t) task->slot * phase6_slot_bytes;
++    size_t in_slot = 0;
++    for (int kind = 0; kind < 3; ++kind) {
++        const struct phase6_record * record = &phase6_records[task->layer][kind];
++        phase6_copy_read(record->fd, dst + in_slot, record->slice_bytes,
++                         record->base_offset + (size_t) task->expert * record->slice_bytes);
++        in_slot += record->slice_bytes;
++        task->read_bytes += record->slice_bytes;
++        __atomic_fetch_or(&phase6_slots[task->slot].ready_mask, 1 << kind, __ATOMIC_RELEASE);
++    }
++    task->read_ns = phase6_now_ns() - start;
++    pthread_mutex_lock(&phase6_pool_mutex);
++    phase6_pool_pending--;
++    if (phase6_pool_pending == 0) pthread_cond_broadcast(&phase6_pool_idle);
++    pthread_mutex_unlock(&phase6_pool_mutex);
++    return NULL;
++}
++
++static void * phase6_pool_worker(void * opaque) {
++    (void) opaque;
++    while (1) {
++        pthread_mutex_lock(&phase6_pool_mutex);
++        while (!phase6_pool_stop && phase6_pool_queue_head == phase6_pool_queue_tail) {
++            pthread_cond_wait(&phase6_pool_work, &phase6_pool_mutex);
++        }
++        if (phase6_pool_stop) {
++            pthread_mutex_unlock(&phase6_pool_mutex);
++            return NULL;
++        }
++        const int index = phase6_pool_queue[phase6_pool_queue_head++];
++        pthread_mutex_unlock(&phase6_pool_mutex);
++        phase6_async_read_worker(&phase6_async_task_records[index]);
++    }
++}
++
++static void phase6_start_pool(void) {
++    if (phase6_pool_initialized) return;
++    phase6_pool_stop = 0;
++    phase6_pool_queue_head = 0;
++    phase6_pool_queue_tail = 0;
++    for (int i = 0; i < PHASE6_POOL_WORKERS; ++i) {
++        if (pthread_create(&phase6_pool_threads[i], NULL, phase6_pool_worker, NULL) != 0) {
++            phase6_fail("worker-pool pthread_create failed");
++        }
++    }
++    phase6_pool_initialized = 1;
++}
++
++static void phase6_stop_pool(void) {
++    if (!phase6_pool_initialized) return;
++    pthread_mutex_lock(&phase6_pool_mutex);
++    phase6_pool_stop = 1;
++    pthread_cond_broadcast(&phase6_pool_work);
++    pthread_mutex_unlock(&phase6_pool_mutex);
++    for (int i = 0; i < PHASE6_POOL_WORKERS; ++i) {
++        if (pthread_join(phase6_pool_threads[i], NULL) != 0) {
++            phase6_fail("worker-pool pthread_join failed");
++        }
++    }
++    phase6_pool_initialized = 0;
++}
++
++static void phase6_reap_async(void) {
++    if (phase6_async_task_count == 0) return;
++    const uint64_t start = phase6_now_ns();
++    pthread_mutex_lock(&phase6_pool_mutex);
++    while (phase6_pool_pending != 0) {
++        pthread_cond_wait(&phase6_pool_idle, &phase6_pool_mutex);
++    }
++    pthread_mutex_unlock(&phase6_pool_mutex);
++    for (int i = 0; i < phase6_async_task_count; ++i) {
++        phase6_read_ns += phase6_async_task_records[i].read_ns;
++        phase6_read_calls += 3;
++        phase6_read_bytes += phase6_async_task_records[i].read_bytes;
++    }
++    phase6_async_wait_ns += phase6_now_ns() - start;
++    phase6_async_task_count = 0;
++    phase6_pool_queue_head = 0;
++    phase6_pool_queue_tail = 0;
++    phase6_async_layer = -1;
++}
++
++static void phase6_prepare_async(const struct ggml_tensor * tensor,
++                                 const struct ggml_tensor * ids) {
++    phase6_init();
++    const int layer = phase6_layer(tensor->name);
++    if (layer < 0 || layer >= 40 || ids == NULL || ids->type != GGML_TYPE_I32) {
++        phase6_fail("invalid async routed node metadata");
++    }
++    // Retain task records across graph nodes, publish each plane's readiness,
++    // and only wait for the current layer after the graph advances. A fixed
++    // pool avoids creating hundreds of pthreads for each decode token.
++    if (phase6_async_layer >= 0 && phase6_async_layer != layer) phase6_reap_async();
++    if (phase6_async_layer < 0) phase6_async_layer = layer;
++    const int first_new = phase6_async_task_count;
++    for (int64_t row = 0; row < ids->ne[1]; ++row) {
++        for (int64_t i = 0; i < ids->ne[0]; ++i) {
++            const int expert = *(const int32_t *) ((const char *) ids->data +
++                row * ids->nb[1] + i * ids->nb[0]);
++            if (expert < 0 || expert >= 256) phase6_fail("invalid native expert ID");
++            phase6_requests++;
++            int slot = phase6_find_slot(layer, expert);
++            if (slot >= 0) {
++                phase6_hits++;
++                phase6_slots[slot].age = ++phase6_age;
++                continue;
++            }
++            phase6_misses++;
++            slot = phase6_reserve_slot(layer, expert);
++            if (phase6_async_task_count >= PHASE6_MAX_ASYNC_TASKS) phase6_fail("too many pipeline tasks");
++            phase6_async_task_records[phase6_async_task_count++] = (struct phase6_async_task) {
++                layer, expert, slot, 0, 0
++            };
++        }
++    }
++    pthread_mutex_lock(&phase6_pool_mutex);
++    for (int i = first_new; i < phase6_async_task_count; ++i) {
++        if (phase6_pool_queue_tail >= PHASE6_MAX_ASYNC_TASKS) {
++            pthread_mutex_unlock(&phase6_pool_mutex);
++            phase6_fail("too many worker-pool tasks");
++        }
++        phase6_pool_queue[phase6_pool_queue_tail++] = i;
++    }
++    phase6_pool_pending += phase6_async_task_count - first_new;
++    pthread_cond_broadcast(&phase6_pool_work);
++    pthread_mutex_unlock(&phase6_pool_mutex);
++    phase6_async_tasks += (uint64_t) (phase6_async_task_count - first_new);
++}
++
++static void phase6_prepare(const struct ggml_tensor * tensor, const struct ggml_tensor * ids) {
++    if (!phase6_enabled()) return;
++    const int layer = phase6_layer(tensor->name);
++    if (layer < 0 || layer >= 40 || ids == NULL || ids->type != GGML_TYPE_I32) {
++        phase6_fail("invalid routed node metadata");
++    }
++    if (phase6_async_enabled()) {
++        phase6_prepare_async(tensor, ids);
++        return;
++    }
++    for (int64_t row = 0; row < ids->ne[1]; ++row) {
++        for (int64_t i = 0; i < ids->ne[0]; ++i) {
++            const int expert = *(const int32_t *) ((const char *) ids->data + row * ids->nb[1] + i * ids->nb[0]);
++            if (expert < 0 || expert >= 256) phase6_fail("invalid native expert ID");
++            phase6_load(layer, expert);
++        }
++    }
++}
++
++static const char * phase6_tensor_ptr(const struct ggml_tensor * tensor, int expert) {
++    const int layer = phase6_layer(tensor->name);
++    const int kind = phase6_kind(tensor->name);
++    if (layer < 0 || kind < 0 || !phase6_records[layer][kind].valid) return NULL;
++    const int slot = phase6_find_slot(layer, expert);
++    if (slot < 0) phase6_fail("selected expert was not prepared");
++    if (phase6_async_enabled()) {
++        const int want = 1 << kind;
++        const uint64_t start = phase6_now_ns();
++        while ((__atomic_load_n(&phase6_slots[slot].ready_mask, __ATOMIC_ACQUIRE) & want) == 0) {
++#if defined(__linux__)
++            sched_yield();
++#endif
++        }
++        const uint64_t waited = phase6_now_ns() - start;
++        if (waited != 0) {
++            __atomic_fetch_add(&phase6_ready_wait_ns, waited, __ATOMIC_RELAXED);
++            __atomic_fetch_add(&phase6_ready_wait_events, 1, __ATOMIC_RELAXED);
++        }
++    }
++    size_t in_slot = 0;
++    for (int k = 0; k < kind; ++k) in_slot += phase6_records[layer][k].slice_bytes;
++    return (const char *) phase6_storage + (size_t) slot * phase6_slot_bytes + in_slot;
++}
++
++// Keep the native IQP selected-expert path enabled in bounded mode. The
++// storage hook redirects only its source plane; decode and arithmetic remain
++// the exact control implementation.
++const char * ggml_cpu_phase6_iqp_source(const struct ggml_tensor * tensor, int64_t expert) {
++    if (!phase6_enabled()) return NULL;
++    return phase6_tensor_ptr(tensor, (int) expert);
++}
++
++
++static void ggml_phase6_route_trace(const struct ggml_compute_params * params,
++                                    const struct ggml_tensor * tensor) {
++    if (params->ith != 0 || tensor->op != GGML_OP_MUL_MAT_ID) return;
++    const char * path = getenv("GGML_PHASE6_ROUTE_TRACE");
++    if (path == NULL || path[0] == '\0') return;
++    const struct ggml_tensor * weights = tensor->src[0];
++    const struct ggml_tensor * ids = tensor->src[2];
++    if (weights == NULL || ids == NULL || ids->type != GGML_TYPE_I32 ||
++            strstr(weights->name, "ffn_") == NULL || strstr(weights->name, "_exps") == NULL) return;
++    static FILE * fp = NULL;
++    static uint64_t event_id = 0;
++    if (fp == NULL) {
++        fp = fopen(path, "a");
++        if (fp == NULL) return;
++        setvbuf(fp, NULL, _IOLBF, 0);
++    }
++    const int64_t n = ggml_nelements(ids);
++    const int32_t * values = (const int32_t *) ids->data;
++    fprintf(fp, "{\"event\":%" PRIu64 ",\"weight\":\"%s\",\"shape\":[%" PRId64 ",%" PRId64 "],\"ids\":[",
++        event_id++, weights->name, ids->ne[0], ids->ne[1]);
++    for (int64_t i = 0; i < n; ++i) fprintf(fp, "%s%d", i ? "," : "", values[i]);
++    fprintf(fp, "]}\n");
++}
++
+ static struct ggml_state g_state = {0};
+ 
+ void ggml_barrier(struct ggml_threadpool * tp) {
+@@ -1555,6 +2042,7 @@ static void ggml_compute_forward_mul_mat_id(
+     const enum ggml_type type = src0->type;
+ 
+     const bool src1_cont = ggml_is_contiguous(src1);
++    const bool phase6 = phase6_enabled();
+ 
+     enum ggml_type    const vec_dot_type    = type_traits_cpu[type].vec_dot_type;
+     ggml_from_float_t const from_float      = type_traits_cpu[vec_dot_type].from_float;
+@@ -1662,6 +2150,9 @@ static void ggml_compute_forward_mul_mat_id(
+ 
+     ggml_barrier(params->threadpool);
+ 
++    if (phase6 && ith == 0) phase6_prepare(src0, ids);
++    ggml_barrier(params->threadpool);
++
+     for (int cur_a = 0; cur_a < n_as; ++cur_a) {
+         const int64_t cne1 = matrix_row_counts[cur_a];
+ 
+@@ -1676,7 +2167,8 @@ static void ggml_compute_forward_mul_mat_id(
+             continue;
+         }
+ 
+-        const char * src0_cur = (const char *) src0->data + cur_a * nb02;
++        const char * src0_cur = phase6 ? phase6_tensor_ptr(src0, cur_a)
++            : (const char *) src0->data + cur_a * nb02;
+         const void * wdata = (src1->type == vec_dot_type) ? src1->data : params->wdata;
+         const size_t row_size = ggml_row_size(vec_dot_type, ne10);
+ 
+@@ -1740,6 +2232,8 @@ static void ggml_compute_forward(struct ggml_compute_params * params, struct ggm
+         return;
+     }
+ 
++    ggml_phase6_route_trace(params, tensor);
++
+     // extra_buffer op?
+     if (ggml_cpu_extra_compute_forward(params, tensor)) {
+         return;
+diff --git a/ggml/src/ggml-cpu/iqp.cpp b/ggml/src/ggml-cpu/iqp.cpp
+index b9201db38..eab08b1aa 100644
+--- a/ggml/src/ggml-cpu/iqp.cpp
++++ b/ggml/src/ggml-cpu/iqp.cpp
+@@ -14,6 +14,8 @@
+ 
+ #include "iqp.h"
+ 
++extern "C" const char * ggml_cpu_phase6_iqp_source(const struct ggml_tensor *, int64_t);
++
+ #define UNUSED GGML_UNUSED
+ 
+ // smallest src1 batch for which the decode pays for itself
+@@ -1148,6 +1150,8 @@ void ggml_compute_forward_mul_mat_id_iqp(const struct ggml_compute_params * para
+     block_iqp_x8 * panel = (block_iqp_x8 *) ((char *) panels + (size_t) ith * ggml_cpu_iqp_scratch_size(dst));
+ 
+     const char * src0_cur = (const char *) src0->data + cur_a * nb02;
++    const char * phase6_src0_cur = ggml_cpu_phase6_iqp_source(src0, cur_a);
++    if (phase6_src0_cur != NULL) src0_cur = phase6_src0_cur;
+ 
+     const int64_t ngroups = ne01 / IQP_NB_ROWS;
+ 
+diff --git a/src/llama-model-loader.cpp b/src/llama-model-loader.cpp
+index 91bb5e7cc..bab8461a2 100644
+--- a/src/llama-model-loader.cpp
++++ b/src/llama-model-loader.cpp
+@@ -11,9 +11,12 @@
+ #include <cinttypes>
+ #include <cstdint>
+ #include <cstring>
++#include <cstdlib>
+ #include <future>
+ #include <regex>
+ 
++extern "C" void ggml_cpu_phase6_register_lazy_tensor(const struct ggml_tensor *, int, size_t, size_t, size_t);
++
+ static const size_t kiB = 1024;
+ static const size_t MiB = 1024*kiB;
+ static const size_t GiB = 1024*MiB;
+@@ -1630,6 +1633,11 @@ bool llama_model_loader::load_all_data(
+ 
+         size_t n_size = ggml_nbytes(cur);
+ 
++        if (lazy.has(cur) && std::getenv("GGML_PHASE6_BOUNDED_CACHE") != nullptr) {
++            const auto & file = files.at(weight->idx);
++            ggml_cpu_phase6_register_lazy_tensor(cur, file->file_id(), weight->offs, n_size, cur->nb[2]);
++        }
++
+         const bool from_mapping = use_mmap || lazy.has(cur);
+ 
+         if (from_mapping) {
+diff --git a/src/models/qwen35moe.cpp b/src/models/qwen35moe.cpp
+index bdf772625..c7fcd5ec6 100644
+--- a/src/models/qwen35moe.cpp
++++ b/src/models/qwen35moe.cpp
+@@ -93,8 +93,9 @@ void llama_model_qwen35moe::load_arch_tensors(llama_model_loader & ml) {
+ 
+         // Routed experts
+         layer.ffn_gate_inp  = create_tensor(tn(LLM_TENSOR_FFN_GATE_INP,  "weight", il), { n_embd, n_expert }, flags);
+-        layer.ffn_down_exps = create_tensor(tn(LLM_TENSOR_FFN_DOWN_EXPS, "weight", il), { n_ff_exp, n_embd, n_expert }, flags);
+-        create_tensor_gate_up_exps(layer, il, n_embd, n_ff_exp, n_expert, flags);
++        const int expert_flags = flags | TENSOR_READ_LAZY;
++        layer.ffn_down_exps = create_tensor(tn(LLM_TENSOR_FFN_DOWN_EXPS, "weight", il), { n_ff_exp, n_embd, n_expert }, expert_flags);
++        create_tensor_gate_up_exps(layer, il, n_embd, n_ff_exp, n_expert, expert_flags);
+ 
+         // Shared experts
+         layer.ffn_gate_inp_shexp = create_tensor(tn(LLM_TENSOR_FFN_GATE_INP_SHEXP, "weight", il), { n_embd }, flags);
