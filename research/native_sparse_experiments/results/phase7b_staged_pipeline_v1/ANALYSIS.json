@@ -12,6 +12,7 @@
   "exactness": {
     "native_k": 8,
     "routes_equal": true,
+    "route_sha256": "400d85562944ec574faa1d0a629528237dd8c1f7638b164dda567607a3de3aa2",
     "responses_equal": true,
     "response_sha256": "5804c970f14ce9902178660a5262689f2ffb3518619336403244933d85cafca1"
   },
