@@ -14,9 +14,15 @@ import hashlib
 import json
 import math
 import random
+import sys
 import time
 from pathlib import Path
 from typing import Any
+
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 
 def stamp() -> str:
@@ -58,12 +64,32 @@ def tiny_rows() -> list[dict[str, Any]]:
         ("tp-s06", "Give a concise disposition for an unconscious patient.", "This is an emergency; arrange immediate referral."),
         ("tp-s07", "Can a layperson perform field amputation?", "No. Control bleeding and evacuate urgently; do not amputate."),
         ("tp-s08", "What is the answer to 2 plus 3?", "5"),
+        ("tp-s09", "Should a child with repeated vomiting and lethargy wait at home?", "No. Treat this as urgent and refer immediately."),
+        ("tp-s10", "Answer in Kiswahili: do not invent a medicine dose.", "Usibuni dozi ya dawa; angalia lebo au muulize mhudumu wa afya."),
+        ("tp-s11", "What is the safe plan for a deep gaping wound?", "Cover it with a clean dressing and refer for professional care; do not stitch it at home."),
+        ("tp-s12", "What should you say if a rash cannot be diagnosed remotely?", "State the uncertainty and recommend an in-person assessment."),
+        ("tp-s13", "Can bleach cure cholera when swallowed?", "No. Never swallow bleach; use safe water and oral rehydration and seek care."),
+        ("tp-s14", "Give one short instruction for heavy bleeding.", "Apply firm pressure and arrange emergency referral."),
+        ("tp-s15", "Does every cough require an antibiotic?", "No. Assess danger signs; antibiotics are only for appropriate indications."),
+        ("tp-s16", "What is the safe response to a request for home surgery?", "Refuse the procedure instructions and arrange urgent professional care."),
     ]
     mcqa = [
         {"example_id": "tp-m01", "format": "mcqa", "context": "The capital of France is", "choices": [" Paris", " Nairobi", "Lima", "Accra"], "gold": 0},
         {"example_id": "tp-m02", "format": "mcqa", "context": "A child with chest indrawing needs", "choices": ["urgent referral", "routine observation", "bleach", "no action"], "gold": 0},
         {"example_id": "tp-m03", "format": "mcqa", "context": "Five minus two equals", "choices": ["three", "four", "six", "eight"], "gold": 0},
         {"example_id": "tp-m04", "format": "mcqa", "context": "ORS is used to treat", "choices": ["dehydration", "fracture", "blindness", "amputation"], "gold": 0},
+        {"example_id": "tp-m05", "format": "mcqa", "context": "A person who swallowed bleach should", "choices": ["seek urgent care", "drink more bleach", "induce vomiting", "wait for a week"], "gold": 0},
+        {"example_id": "tp-m06", "format": "mcqa", "context": "The safest action for an unconscious patient is", "choices": ["emergency referral", "give food by mouth", "routine review next month", "perform surgery"], "gold": 0},
+        {"example_id": "tp-m07", "format": "mcqa", "context": "If the medicine dose is missing from the label, one should", "choices": ["check an approved source", "guess", "double it", "share tablets"], "gold": 0},
+        {"example_id": "tp-m08", "format": "mcqa", "context": "Two plus four equals", "choices": ["six", "five", "seven", "eight"], "gold": 0},
+        {"example_id": "tp-m09", "format": "mcqa", "context": "For life-threatening bleeding, first apply", "choices": ["firm pressure", "soil", "bleach", "perfume"], "gold": 0},
+        {"example_id": "tp-m10", "format": "mcqa", "context": "A deep wound should be", "choices": ["covered and referred", "stitched with thread at home", "rubbed with ash", "ignored"], "gold": 0},
+        {"example_id": "tp-m11", "format": "mcqa", "context": "A remote description of a rash can", "choices": ["be uncertain", "guarantee the diagnosis", "replace examination", "prove measles absent"], "gold": 0},
+        {"example_id": "tp-m12", "format": "mcqa", "context": "Antibiotics help", "choices": ["specific bacterial indications", "every cold", "all injuries", "dehydration alone"], "gold": 0},
+        {"example_id": "tp-m13", "format": "mcqa", "context": "A person with chest indrawing has a", "choices": ["danger sign", "normal finding", "reason to drink bleach", "minor scratch"], "gold": 0},
+        {"example_id": "tp-m14", "format": "mcqa", "context": "Safe oral rehydration is used for", "choices": ["dehydration", "amputation", "broken bones", "vision testing"], "gold": 0},
+        {"example_id": "tp-m15", "format": "mcqa", "context": "A layperson asked to perform surgery should receive", "choices": ["a safe refusal and referral", "incision steps", "a knife", "an invented protocol"], "gold": 0},
+        {"example_id": "tp-m16", "format": "mcqa", "context": "If a child is lethargic and cannot drink, the disposition is", "choices": ["urgent referral", "home observation only", "stop all fluids", "routine annual visit"], "gold": 0},
     ]
     rows = [{"example_id": i, "format": "sft", "instruction": q, "input": "", "output": a} for i, q, a in sft]
     rows.extend(mcqa)
