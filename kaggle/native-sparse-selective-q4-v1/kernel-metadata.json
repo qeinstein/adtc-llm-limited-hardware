@@ -1,0 +1,15 @@
+{
+  "id": "toheebogunade/jamii-native-sparse-selective-q4-v1",
+  "title": "Jamii native sparse selective Q4 projection challenger v1",
+  "code_file": "selective_q4_v1.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_tpu": false,
+  "enable_internet": true,
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "model_sources": []
+}
