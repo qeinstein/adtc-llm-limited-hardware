@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Evaluate the exact exported Falcon GGUF and preserve every raw response."""
+"""Evaluate the exact exported Falcon GGUF and preserve every raw response.
+
+Generation uses the model's chat template by default. ``--generation-mode raw``
+is retained only for an explicitly labeled baseline comparison; it is not the
+deployment quality gate for Falcon-H1-Instruct.
+"""
 
 from __future__ import annotations
 
@@ -36,6 +41,13 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--threads", type=int, default=4)
     ap.add_argument("--n-ctx", type=int, default=2048,
                     help="match the ADTC accuracy context; increase only for a separate experiment")
+    ap.add_argument("--generation-mode", choices=("chat", "raw"), default="chat")
+    ap.add_argument("--system-prompt", default=(
+        "You are Jamii Afya, an offline medical decision-support assistant for "
+        "community health workers in rural African clinics. Answer in the "
+        "question's language (English or Kiswahili). Always surface danger signs "
+        "and when to refer."
+    ))
     ap.add_argument("--seed", type=int, default=42)
     args = ap.parse_args(argv)
     model = Path(args.model).resolve()
@@ -50,7 +62,7 @@ def main(argv: list[str] | None = None) -> int:
             handle.write(json.dumps(record, ensure_ascii=False) + "\n")
             handle.flush()
 
-    emit("evaluation_start", model=str(model), bytes=model.stat().st_size, sha256=file_sha(model), tasks=args.tasks, limit=args.limit)
+    emit("evaluation_start", model=str(model), bytes=model.stat().st_size, sha256=file_sha(model), tasks=args.tasks, limit=args.limit, generation_mode=args.generation_mode)
     from llama_cpp import Llama
 
     llm = Llama(model_path=str(model), n_ctx=args.n_ctx, n_gpu_layers=0, n_threads=args.threads, logits_all=True, verbose=False)
@@ -88,11 +100,28 @@ def main(argv: list[str] | None = None) -> int:
             prompt_text = str(prompt.get("text") or prompt.get("query") or prompt.get("instruction") or "")
             if not prompt_text:
                 raise ValueError(f"{battery_file}:{prompt_index}: battery item has no text/query/instruction")
-            result = llm.create_completion(prompt=prompt_text, max_tokens=int(prompt.get("max_tokens", 256)), temperature=0.0, seed=args.seed)
-            text = result["choices"][0]["text"]
+            max_tokens = int(prompt.get("max_tokens", 256))
+            if args.generation_mode == "chat":
+                result = llm.create_chat_completion(
+                    messages=[
+                        {"role": "system", "content": args.system_prompt},
+                        {"role": "user", "content": prompt_text},
+                    ],
+                    max_tokens=max_tokens,
+                    temperature=0.0,
+                    seed=args.seed,
+                )
+                choice = result["choices"][0]
+                text = choice["message"]["content"]
+                finish_reason = choice.get("finish_reason")
+            else:
+                result = llm.create_completion(prompt=prompt_text, max_tokens=max_tokens, temperature=0.0, seed=args.seed)
+                choice = result["choices"][0]
+                text = choice["text"]
+                finish_reason = choice.get("finish_reason")
             (destination / f"{pid}.txt").write_text(text, encoding="utf-8")
-            index.append({"id": pid, "chars": len(text), "section": prompt.get("section", ""), "check": prompt.get("check", ""), "source_text": prompt_text})
-            emit("generation_item", battery=name, id=pid, chars=len(text))
+            index.append({"id": pid, "chars": len(text), "words": len(text.split()), "finish_reason": finish_reason, "section": prompt.get("section", ""), "check": prompt.get("check", ""), "source_text": prompt_text})
+            emit("generation_item", battery=name, id=pid, chars=len(text), finish_reason=finish_reason)
         (destination / "_index.json").write_text(json.dumps(index, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         metrics["batteries"].append({"name": name, "count": len(index), "raw_dir": str(destination)})
         emit("generation_complete", battery=name, count=len(index))

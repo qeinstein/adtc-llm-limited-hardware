@@ -7,6 +7,7 @@ build+bench cycle on a prompts file whose first entry had no "text" key.
 from pathlib import Path
 
 from scripts.validate_battery import validate
+from scripts.verify_falcon_holdouts import verify
 
 BATTERY = Path(__file__).resolve().parent.parent / "docs" / "research" / "falcon_baseline_prompts.json"
 SWAHILI = Path(__file__).resolve().parent.parent / "data" / "swahili_eval_set.json"
@@ -45,3 +46,8 @@ def test_bad_max_tokens_fails(tmp_path):
         {"id": "p01", "section": "A", "text": "a", "max_tokens": 0},
     ]})
     assert any("max_tokens" in e for e in validate(p))
+
+
+def test_committed_holdout_manifest_matches_files():
+    root = Path(__file__).resolve().parent.parent
+    assert verify(root, root / "docs/research/falcon_holdout_manifest.json") == []
