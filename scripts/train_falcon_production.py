@@ -453,6 +453,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     ap.add_argument("--max-steps", type=int, default=0, help="Override config for smoke/resume tests")
     ap.add_argument("--save-steps", type=int, default=0, help="Override checkpoint interval; used by the tiny resume test")
     ap.add_argument("--eval-steps", type=int, default=0, help="Override evaluation interval for controlled pilots")
+    ap.add_argument("--learning-rate", type=float, default=None, help="Override stage learning rate for a controlled ablation")
+    ap.add_argument("--lora-r", type=int, default=None, help="Override LoRA rank for a controlled ablation")
+    ap.add_argument("--lora-alpha", type=int, default=None, help="Override LoRA alpha for a controlled ablation")
+    ap.add_argument("--lora-dropout", type=float, default=None, help="Override LoRA dropout for a controlled ablation")
+    ap.add_argument("--target-modules", default=None, help="Comma-separated LoRA target suffixes for a controlled ablation")
     ap.add_argument("--quantize", choices=("auto", "4bit", "none"), default="auto")
     ap.add_argument("--compute-dtype", choices=("auto", "bf16", "fp16", "fp32"), default="auto")
     ap.add_argument("--seed", type=int, default=None)
@@ -465,7 +470,17 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     config_path = Path(args.config).resolve()
     config = json.loads(config_path.read_text(encoding="utf-8"))
-    stage_cfg = config["stages"][args.stage]
+    stage_cfg = dict(config["stages"][args.stage])
+    if args.learning_rate is not None:
+        stage_cfg["learning_rate"] = args.learning_rate
+    if args.lora_r is not None:
+        stage_cfg["lora_r"] = args.lora_r
+    if args.lora_alpha is not None:
+        stage_cfg["lora_alpha"] = args.lora_alpha
+    if args.lora_dropout is not None:
+        stage_cfg["lora_dropout"] = args.lora_dropout
+    if args.target_modules is not None:
+        stage_cfg["lora_target_modules"] = [x.strip() for x in args.target_modules.split(",") if x.strip()]
     data_dir = Path(args.data_dir).resolve()
     run_dir = Path(args.run_dir).resolve()
     stage_dir = run_dir / args.stage
@@ -557,7 +572,7 @@ def main(argv: list[str] | None = None) -> int:
         model.enable_input_require_grads()
     event(event_path, "model_load_complete", model=model_id, revision=revision, load_mode=load_mode, dtype=dtype_name)
 
-    targets = list(config["training"]["lora_target_modules"])
+    targets = list(stage_cfg.get("lora_target_modules", config["training"]["lora_target_modules"]))
     linear_suffixes = {name.rsplit(".", 1)[-1] for name, module in model.named_modules() if isinstance(module, torch.nn.Linear)}
     missing_targets = [name for name in targets if name not in linear_suffixes]
     if missing_targets:
