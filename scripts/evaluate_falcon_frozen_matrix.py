@@ -67,7 +67,7 @@ def apply_chat(tokenizer: Any, messages: list[dict[str, str]], device: Any) -> A
         encoded = tokenizer.apply_chat_template(
             messages, tokenize=True, add_generation_prompt=True, return_tensors="pt"
         )
-    if isinstance(encoded, dict):
+    if isinstance(encoded, dict) or hasattr(encoded, "keys"):
         return {key: value.to(device) for key, value in encoded.items()}
     return {"input_ids": encoded.to(device), "attention_mask": encoded.new_ones(encoded.shape)}
 

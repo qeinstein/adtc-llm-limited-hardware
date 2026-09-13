@@ -61,7 +61,11 @@ def apply_chat(tokenizer: Any, messages: list[dict[str, str]], device: Any) -> A
         encoded = tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=True, enable_thinking=False, return_tensors="pt")
     except TypeError:
         encoded = tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=True, return_tensors="pt")
-    return encoded.to(device) if hasattr(encoded, "to") else encoded["input_ids"].to(device)
+    # Fast tokenizers return a tensor; some versions return BatchEncoding,
+    # whose ``to`` method does not make it a tensor and has no ``shape``.
+    if isinstance(encoded, dict) or hasattr(encoded, "keys"):
+        return encoded["input_ids"].to(device)
+    return encoded.to(device)
 
 
 def main(argv: list[str] | None = None) -> int:

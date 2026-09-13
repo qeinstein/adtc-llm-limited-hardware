@@ -264,9 +264,11 @@ def main(argv: list[str] | None = None) -> int:
             encoded = tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=True, enable_thinking=False, return_tensors="pt")
         except TypeError:
             encoded = tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=True, return_tensors="pt")
+        if isinstance(encoded, dict) or hasattr(encoded, "keys"):
+            encoded = encoded["input_ids"]
         encoded = encoded.to(device)
         with torch.no_grad():
-            generated = active_model.generate(encoded, max_new_tokens=24, do_sample=False, temperature=0.0, eos_token_id=stop_ids or None, pad_token_id=tokenizer.pad_token_id)
+            generated = active_model.generate(encoded, max_new_tokens=24, do_sample=False, eos_token_id=stop_ids or None, pad_token_id=tokenizer.pad_token_id)
         return tokenizer.decode(generated[0, encoded.shape[-1]:], skip_special_tokens=True)
 
     generations = []

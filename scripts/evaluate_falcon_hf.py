@@ -194,7 +194,7 @@ def main(argv: list[str] | None = None) -> int:
                 encoded = tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=True, enable_thinking=False, return_tensors="pt")
             except TypeError:
                 encoded = tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=True, return_tensors="pt")
-            if isinstance(encoded, dict):
+            if isinstance(encoded, dict) or hasattr(encoded, "keys"):
                 inputs = {key: value.to(device) for key, value in encoded.items()}
                 prompt_len = int(inputs["input_ids"].shape[-1])
             else:
