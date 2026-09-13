@@ -753,9 +753,16 @@ def main(argv: list[str] | None = None) -> int:
             event(event_path, "checkpoint_persist_complete", checkpoint=str(path), dataset=persistence_dataset)
 
         def on_step_end(self, args_, state, control, **kwargs):
-            del args_, control, kwargs
+            del kwargs
             progress.update(step=int(state.global_step))
-            return None
+            # Persistence is meaningful only after a complete Trainer save.
+            # If the configured upload cadence is shorter than save_steps,
+            # request an additional save exactly at the durable checkpoint
+            # boundary instead of silently waiting for the next ordinary save.
+            upload_every = int(config["persistence"].get("checkpoint_upload_every_steps", 0))
+            if persistence_dataset and upload_every and state.global_step and state.global_step % upload_every == 0:
+                control.should_save = True
+            return control
 
         def on_save(self, args_, state, control, **kwargs):
             del control, kwargs
