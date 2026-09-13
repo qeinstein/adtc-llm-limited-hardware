@@ -106,6 +106,9 @@ def main(argv: list[str] | None = None) -> int:
         path = ROOT / rel
         if path.exists():
             holdouts.extend(holdout_prompts(path))
+    source_names = [str(spec["name"]) for spec in config["data"]["sources"]]
+    if len(source_names) != len(set(source_names)):
+        raise ValueError(f"duplicate source names in config: {source_names}")
     all_identity: dict[str, str] = {}
     duplicate_rows = []
     contamination = []

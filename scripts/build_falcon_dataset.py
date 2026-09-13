@@ -233,6 +233,9 @@ def main(argv: list[str] | None = None) -> int:
         if path.exists():
             holdouts.extend(holdout_texts(path))
     holdout_index = near_holdout_index(holdouts)
+    source_names = [str(spec["name"]) for spec in config["data"]["sources"]]
+    if len(source_names) != len(set(source_names)):
+        raise ValueError(f"duplicate source names in config: {source_names}")
     rows: list[dict[str, Any]] = []
     source_counts: Counter[str] = Counter()
     rejected: list[dict[str, str]] = []

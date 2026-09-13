@@ -74,6 +74,7 @@ def main(argv: list[str] | None = None) -> int:
     from peft import PeftModel
     from transformers import AutoTokenizer
     from transformers.models.falcon_h1.modeling_falcon_h1 import FalconH1ForCausalLM
+    from scripts.falcon_format import generation_stop_ids
 
     model_id = config["model"]["id"]
     revision = config["model"]["revision"]
@@ -196,17 +197,7 @@ def main(argv: list[str] | None = None) -> int:
             # generation_config does.  Passing only generic EOS made the probe
             # appear to emit one-character answers and hid the actual boundary
             # mismatch in its training targets.
-            configured_stop_ids = getattr(model.generation_config, "eos_token_id", [])
-            stop_ids = [configured_stop_ids] if isinstance(configured_stop_ids, int) else list(configured_stop_ids or [])
-            if tokenizer.eos_token_id is not None:
-                stop_ids.append(int(tokenizer.eos_token_id))
-            try:
-                im_end_id = tokenizer.convert_tokens_to_ids("<|im_end|>")
-                if isinstance(im_end_id, int) and im_end_id >= 0:
-                    stop_ids.append(im_end_id)
-            except (AttributeError, TypeError):
-                pass
-            stop_ids = sorted(set(stop_ids))
+            stop_ids = generation_stop_ids(tokenizer, model.generation_config)
             with torch.no_grad():
                 output = model.generate(
                     **inputs,

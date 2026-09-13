@@ -13,6 +13,31 @@ from __future__ import annotations
 from typing import Any
 
 
+def generation_stop_ids(tokenizer: Any, generation_config: Any = None) -> list[int]:
+    """Return real Falcon stop IDs without treating unknown tokens as stops.
+
+    ``convert_tokens_to_ids`` is not an existence check: some tokenizer
+    implementations map an unknown string to ``unk_token_id``.  Falcon also
+    uses a distinct PAD ID, so adding such a fallback to ``eos_token_id`` can
+    stop generation immediately and leave only padded output.
+    """
+    configured = getattr(generation_config, "eos_token_id", []) if generation_config is not None else []
+    raw = [configured] if isinstance(configured, int) else list(configured or [])
+    stop_ids: list[int] = []
+    for value in raw:
+        if isinstance(value, int) and value >= 0:
+            stop_ids.append(int(value))
+    eos = getattr(tokenizer, "eos_token_id", None)
+    if isinstance(eos, int) and eos >= 0:
+        stop_ids.append(int(eos))
+    vocab = tokenizer.get_vocab() if hasattr(tokenizer, "get_vocab") else {}
+    im_end = vocab.get("<|im_end|>")
+    forbidden = {getattr(tokenizer, "unk_token_id", None), getattr(tokenizer, "pad_token_id", None)}
+    if isinstance(im_end, int) and im_end >= 0 and im_end not in forbidden:
+        stop_ids.append(int(im_end))
+    return sorted(set(stop_ids))
+
+
 def _apply_template(tokenizer: Any, messages: list[dict[str, str]], *, add_generation_prompt: bool) -> str:
     """Render a Falcon chat sequence across tokenizer API variants."""
     try:

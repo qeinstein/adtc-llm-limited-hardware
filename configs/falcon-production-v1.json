@@ -43,6 +43,17 @@
         "required": true
       },
       {
+        "name": "project_general_sft",
+        "path": "data/falcon_general_sft.json",
+        "format": "alpaca",
+        "objective": "sft",
+        "category": "general_instruction",
+        "provenance": "project_authored",
+        "license": "project-authored",
+        "language": "en+sw",
+        "required": true
+      },
+      {
         "name": "public_mcqa_train_only",
         "path": "output/accuracy_sft.jsonl",
         "format": "mcqa",
@@ -54,7 +65,7 @@
         "required": false
       },
       {
-        "name": "project_general_sft",
+        "name": "teacher_general_sft_optional",
         "path": "output/general_sft.json",
         "format": "alpaca",
         "objective": "sft",

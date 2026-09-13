@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from scripts.build_falcon_dataset import canonical, distribution, near_holdout
+from scripts.falcon_format import generation_stop_ids
 from scripts.train_falcon_production import FalconDataset, checkpoint_is_complete, latest_checkpoint, select_checkpoint, stable_eval_subset, token_share_sampling_weights
 
 
@@ -27,6 +28,40 @@ class FakeTokenizer:
         if "<im_end>" in text:
             ids[-1] = self.im_end_token_id
         return {"input_ids": ids}
+
+    def get_vocab(self):
+        return {"<im_end>": self.im_end_token_id}
+
+
+class StopTokenizer:
+    eos_token_id = 11
+    unk_token_id = 0
+    pad_token_id = 0
+
+    def get_vocab(self):
+        return {"<|im_end|>": 228}
+
+
+def test_generation_stop_ids_use_vocab_and_never_pad_or_unknown():
+    class Config:
+        eos_token_id = [11, 228]
+
+    assert generation_stop_ids(StopTokenizer(), Config()) == [11, 228]
+
+
+def test_generation_stop_ids_do_not_fallback_to_convert_tokens_unknown():
+    class BadTokenizer(StopTokenizer):
+        def get_vocab(self):
+            return {}
+
+        def convert_tokens_to_ids(self, token):
+            assert token == "<|im_end|>"
+            return 0
+
+    class Config:
+        eos_token_id = 11
+
+    assert generation_stop_ids(BadTokenizer(), Config()) == [11]
 
 
 def test_sft_masks_prompt_and_keeps_chat_turn_terminator():

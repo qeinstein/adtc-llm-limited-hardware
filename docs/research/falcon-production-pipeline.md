@@ -70,13 +70,19 @@ scheduler, RNG, scaler, adapter, and Trainer state intact. The uploader and
 verifier wait for Kaggle's asynchronous Dataset version creation, so an upload
 cannot be mistaken for durable storage before the new files are visible.
 
+HF generation uses the same contract as training: the stop set is built from
+the configured EOS IDs plus `<|im_end|>` only when that token is present in the
+tokenizer vocabulary. It never uses `convert_tokens_to_ids` as an existence
+test, so PAD/unknown IDs cannot terminate generation. The first remote smoke
+run exposed this exact failure and is not accepted as evidence; a corrected
+smoke must pass before training resumes.
+
 ## Current gate
 
-The tracked raw-data audit found 118 clean project SFT rows and no exact or
+The tracked raw-data audit found 142 clean project SFT rows and no exact or
 high-similarity leakage against the 63 frozen final prompts. The clean-worker
-build currently yields 13,542 train and 1,470 dev rows after the capped
-train-only MCQA sources, with the exact token/facet manifest written by the
-builder. Training now uses a deterministic 64-row fast-dev subset during
+build counts must be regenerated after the source-list change; the exact
+token/facet manifest is written by the builder. Training now uses a deterministic 64-row fast-dev subset during
 stage runs; larger frozen batteries remain separate final evaluations. The
 P100 resume gate measured roughly 8--13 loss tokens/sec and about 145 seconds
 per optimizer step at effective batch 16, so one full epoch is not an

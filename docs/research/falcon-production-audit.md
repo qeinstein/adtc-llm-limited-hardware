@@ -28,6 +28,11 @@ printed it only after `trainer.train()` returned.
    manifest, or cross-source near-duplicate/holdout contamination gate.
 6. The notebook had no live heartbeat, structured JSONL metrics, durable
    mid-run checkpoint upload, or measured step-rate preflight.
+7. The initial production-v1 source list had no generation-oriented general
+   replay. MCQA ranking rows do not substitute for ordinary instruction
+   following, so the corrected source list includes a small bilingual,
+   project-authored set with explicit provenance rather than silently relying
+   on MCQA to preserve generation behavior.
 
 ## Replacement gate
 

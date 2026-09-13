@@ -30,6 +30,7 @@ def main(argv: list[str] | None = None) -> int:
     import torch
     from transformers import AutoTokenizer
     from transformers.models.falcon_h1.modeling_falcon_h1 import FalconH1ForCausalLM
+    from scripts.falcon_format import generation_stop_ids
 
     prompt = "A child has fast breathing and chest indrawing. What should a community health worker do next?"
     print(json.dumps({"timestamp_utc": stamp(), "event": "smoke_model_load_start", "model": args.model}), flush=True)
@@ -59,14 +60,7 @@ def main(argv: list[str] | None = None) -> int:
     else:
         inputs = {"input_ids": encoded.to(device), "attention_mask": torch.ones_like(encoded).to(device)}
         prompt_len = int(encoded.shape[-1])
-    configured = getattr(model.generation_config, "eos_token_id", [])
-    stop_ids = [configured] if isinstance(configured, int) else list(configured or [])
-    if tokenizer.eos_token_id is not None:
-        stop_ids.append(int(tokenizer.eos_token_id))
-    im_end = tokenizer.convert_tokens_to_ids("<|im_end|>")
-    if isinstance(im_end, int) and im_end >= 0:
-        stop_ids.append(im_end)
-    stop_ids = sorted(set(stop_ids))
+    stop_ids = generation_stop_ids(tokenizer, model.generation_config)
     print(json.dumps({"timestamp_utc": stamp(), "event": "smoke_generation_start", "prompt_tokens": prompt_len, "stop_ids": stop_ids}), flush=True)
     with torch.no_grad():
         output = model.generate(
@@ -78,7 +72,8 @@ def main(argv: list[str] | None = None) -> int:
         )
     ids = [int(x) for x in output[0][prompt_len:].detach().cpu().tolist()]
     text = tokenizer.decode(output[0][prompt_len:], skip_special_tokens=True)
-    result = {"timestamp_utc": stamp(), "event": "smoke_generation_complete", "prompt": prompt, "new_tokens": len(ids), "token_ids": ids, "visible_chars": len(text), "text": text}
+    stopped_on = ids[-1] if ids and ids[-1] in stop_ids else None
+    result = {"timestamp_utc": stamp(), "event": "smoke_generation_complete", "prompt": prompt, "new_tokens": len(ids), "token_ids": ids, "stopped_on": stopped_on, "visible_chars": len(text), "text": text}
     print(json.dumps(result, ensure_ascii=False), flush=True)
     Path(args.output).write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     return 0
