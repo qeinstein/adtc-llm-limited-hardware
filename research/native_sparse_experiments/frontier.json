@@ -1,0 +1,39 @@
+{
+  "schema": "native-sparse-frontier/v1",
+  "model": "Qwen3.5-35B-A3B-UD-IQ2_XXS",
+  "model_sha256": "2a809de317cfd49ac9130b95619ee6ac039a855e467015b3e996eb61af84718b",
+  "native_k": 8,
+  "points": {
+    "exact_resident": {
+      "tok_s": 5.196,
+      "rss_mib": 10782.0,
+      "source": "historical resident control; Phase 1/Phase 6 reports"
+    },
+    "exact_le_4_gib": {
+      "tok_s": 3.2,
+      "rss_mib": 3517.7,
+      "source": "phase7b_async_reads_v2; rounded mean, matched 2 GB cache"
+    },
+    "exact_le_2_5_gib": {
+      "tok_s": 2.867,
+      "rss_mib": 2301.2,
+      "source": "phase6g_bounded_executor_v5"
+    }
+  },
+  "storage": {
+    "bounded_async_fresh_bytes_per_token": 127030400,
+    "bounded_async_fresh_decimal_mb_per_token": 127.0304,
+    "bounded_async_hit_rate": 0.8961137993,
+    "bounded_async_join_wait_mean_sec_per_64_tokens": 8.506634473,
+    "source": "phase7b_async_reads_v2"
+  },
+  "quality": {
+    "exact_response_hash": "a3c3c73a067cbb5fab9e68bd7d06c03d3c488e74467d33c40fae339836006c8c",
+    "bounded_same_run_response_hash": "5804c970f14ce9902178660a5262689f2ffb3518619336403244933d85cafca1",
+    "routes_exact": true
+  },
+  "active_experiments": [
+    "phase7b_staged_pipeline_v1",
+    "phase7c_selective_q4_v1"
+  ]
+}

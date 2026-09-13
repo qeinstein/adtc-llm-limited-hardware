@@ -165,18 +165,20 @@ representation change is justified yet.
   global-LRU slots reached 3.000 tok/s at 3,517.5 MiB RSS (3.435 GiB), versus
   4.067 tok/s at 10,537.1 MiB resident.  Route files were byte-identical and
   output hashes matched across control/cache repetitions.  The cache had an
-  89.61% operational hit rate and supplied 127.03 MB fresh logical bytes per
-  64 generated tokens; instrumented reads occupied about 44.3% of wall time.
+  89.61% operational hit rate and supplied 127.0304 MB fresh logical bytes
+  per generated token (8,129.95 MB per 64-token repetition); instrumented
+  reads occupied about 44.3% of wall time.
 - `phase6g_bounded_executor_v4`: the 1,439-slot / 1,261,346,816-byte exact
   cache reached 3.033 tok/s at 2,813.8 MiB RSS (2.748 GiB), with 86.03% hit
-  rate, 170.82 MB fresh logical bytes per 64 tokens, and reads occupying
-  about 55.2% of wall time.  Routes and deterministic outputs remained equal.
+  rate, 170.8165 MB fresh logical bytes per generated token (10,932.26 MB per
+  64-token repetition), and reads occupying about 55.2% of wall time.  Routes
+  and deterministic outputs remained equal.
 - `phase6g_bounded_executor_v5`: the 826-slot / 724,025,344-byte exact cache
   reached 2.867 tok/s at 2,301.2 MiB RSS (2.247 GiB), with 83.10% hit rate,
-  206.63 MB fresh logical bytes per 64 tokens, and reads occupying about
-  56.8% of wall time.  Routes and deterministic outputs again remained
-  equal.  This demonstrates the measured 2.5 GiB RAM frontier, but it is not
-  a throughput solution.
+  206.6316 MB fresh logical bytes per generated token (13,224.42 MB per
+  64-token repetition), and reads occupying about 56.8% of wall time.  Routes
+  and deterministic outputs again remained equal.  This demonstrates the
+  measured 2.5 GiB RAM frontier, but it is not a throughput solution.
 
 The phase-6 storage arms use a short deterministic prompt, so their measured
 cache hit rates and fresh bytes are workload-specific.  The larger 2,016-token
@@ -195,8 +197,31 @@ alone has an 8.17 tok/s measured ceiling.  The non-MoE floor remains
 0.2664 GiB LM head, 0.8578 GiB attention/DeltaNet trunk, 0.0861 GiB shared
 expert, 0.0781 GiB router, plus runtime/state.  The exact bounded storage
 path is therefore selected for the RAM track; further cache-policy tuning is
-not the next throughput move.  The next high-information compute experiment
-is a materially different dense/runtime execution schedule targeting the
-Q5_K attention/Gated-DeltaNet families and the remaining non-MoE graph, with
-the exact resident and exact bounded paths retained as controls.  No K,
-routing, expert-topology, or model-weight change is justified yet.
+not the next throughput move.  The v9 matched bounded I/O A/B reduced mean
+process elapsed time 14.0% (median 6.0%) and reduced measured read wait from
+11.038 s to 8.507 s per 64-token repetition, but still joined all reads before
+compute.  It justifies one staged read/compute follow-up, not more layout
+variants.  No K, routing, expert-topology, or model-weight change is justified
+yet.
+
+## Phase 7 frontier-directed measurements
+
+- `phase7a_contiguous_sidecar_v2`: physically contiguous gate/up/down bundle
+  records reduced syscall count but regressed cold bounded decode to 3.167
+  tok/s at 3,517 MiB RSS; the layout branch is killed.
+- `phase7b_async_reads_v2`: matched serial versus concurrent three-plane
+  reads at the 2 GB cache point.  Rounded generation means were 2.867 versus
+  3.200 tok/s, but medians were 3.3 versus 3.2; mean/median total process
+  elapsed improved 14.0%/6.0% with exact route and output equality.  Traffic
+  was 127.0304 MB/token in both arms.  The staged follow-up is the only
+  remaining storage-schedule iteration.
+- `phase7c_selective_q4_v1`: the first two quantizer attempts failed before
+  benchmarking (harness anchor, then an imatrix preflight on an unchanged
+  IQ2 tensor).  Both failures are preserved; the corrected third attempt is
+  running.  No Q4 performance or quality claim is made yet.
+
+The machine-readable canonical points and experiment decisions are in
+`frontier.json`.  The next high-information compute/storage experiment is
+the v10 staged exact executor: publish gate/up/down plane readiness from
+asynchronous reads and let the existing exact selected-expert kernel consume
+ready planes while remaining reads proceed.
