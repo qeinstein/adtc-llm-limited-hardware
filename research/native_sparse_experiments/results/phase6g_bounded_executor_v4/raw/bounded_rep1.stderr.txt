@@ -1,0 +1,4 @@
+warning: no usable GPU found, --gpu-layers option will be ignored
+warning: one possible reason is that llama.cpp was compiled without GPU support
+warning: consult docs/build.md for compilation instructions
+PHASE6_BOUNDED_CACHE slot_bytes=876544 slots=1439 reserved_bytes=1261346816 requests=89280 hits=76808 misses=12472 evictions=11033 read_calls=112248 read_bytes=10932256768 read_ns=11650950273

@@ -1,0 +1,54 @@
+{
+  "schema": "native-sparse-bounded-executor/v4",
+  "hypothesis": "The exact-IQP bounded executor remains correct at the 3 GiB design point.",
+  "control": {
+    "sample_tok_s": [4.8, 4.7, 4.7],
+    "mean_tok_s": 4.733333333333333,
+    "median_tok_s": 4.7,
+    "ms_per_token": 211.26760563380282,
+    "peak_rss_mib": 10536.75
+  },
+  "bounded_exact_iqp": {
+    "sample_tok_s": [3.1, 3.0, 3.0],
+    "mean_tok_s": 3.033333333333333,
+    "median_tok_s": 3.0,
+    "ms_per_token": 329.6703296703297,
+    "peak_rss_mib": 2813.84765625,
+    "peak_rss_gib": 2.7478981018066406,
+    "peak_rss_anon_mib": 1742.71875,
+    "peak_rss_file_mib": 1071.19140625
+  },
+  "throughput_delta_fraction": -0.35915492957746487,
+  "cache": {
+    "capacity_bytes": 1261346816,
+    "slot_bytes": 876544,
+    "slot_count": 1439,
+    "reserved_bytes": 1261346816,
+    "requests": 89280,
+    "hits": 76808,
+    "misses": 12472,
+    "hit_rate": 0.8603046594982079,
+    "evictions": 11033,
+    "logged_read_calls": 112248,
+    "inferred_pread_calls": 37416,
+    "read_bytes_per_repetition": 10932256768,
+    "fresh_decimal_mb_per_64_decode_tokens": 170.816512,
+    "fresh_mib_per_64_decode_tokens": 162.9033203125,
+    "read_ns_samples": [11650950273, 11455580698, 11807579374],
+    "read_interval_mean_sec": 11.638036781666665,
+    "read_bandwidth_decimal_mb_s": 939.355749865091,
+    "read_bandwidth_mib_s": 895.839452614871,
+    "read_wall_fraction_estimate": 0.551594451631076
+  },
+  "correctness": {
+    "route_files_byte_identical_control_vs_bounded": true,
+    "all_repetitions_route_identical": true,
+    "all_response_hashes_equal": true,
+    "response_hash": "5804c970f14ce9902178660a5262689f2ffb3518619336403244933d85cafca1",
+    "native_k": 8,
+    "layers": 40,
+    "weights_or_routes_changed": false,
+    "quality_result": "same-run deterministic smoke equivalence only"
+  },
+  "decision": "Exact bounded storage is demonstrated below 3 GiB; the smaller cache increases logical reads and the bounded system is I/O-dominated."
+}
