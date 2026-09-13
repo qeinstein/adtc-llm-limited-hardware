@@ -125,3 +125,10 @@ Version 10 reran the same smoke in FP32 and produced eight finite non-PAD
 tokens (`As Jamii Afya, I ur...`). The numeric gate now passes; a 64-token
 smoke is being used to inspect completion behavior before the notebook returns
 to audit-only mode.
+
+Version 11 (64-token cap) confirms the stock baseline’s response-quality
+problem: FP32 remains finite, but no stop token is emitted, the answer is cut
+mid-sentence, it includes a questionable `cardiac arrest` differential, and it
+does not reach referral disposition. This is recorded in
+`falcon-generation-smoke-v11-20260913.json`; it is precisely the behavior the
+held-out post-training suite must improve without harming general capability.

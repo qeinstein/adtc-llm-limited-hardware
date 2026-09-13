@@ -1,0 +1,29 @@
+{
+  "experiment_id": "falcon-generation-smoke-v11-20260913",
+  "status": "passed_numeric_baseline_behavior_recorded",
+  "kernel": "toheebogunade/jamii-afya-falcon-production-post-training",
+  "kernel_version": 11,
+  "commit": "0333ec9",
+  "model": "tiiuae/Falcon-H1-1.5B-Deep-Instruct",
+  "model_revision": "b6648636ddc906688974282de6e7a243395f5423",
+  "hardware": "Tesla P100-PCIE-16GB, CUDA capability 6.0",
+  "dtype": "torch.float32",
+  "generation": {
+    "prompt_tokens": 60,
+    "max_new_tokens": 64,
+    "stop_ids": [11, 228],
+    "score_steps": 64,
+    "new_tokens": 64,
+    "visible_chars": 286,
+    "stopped_on": null,
+    "response": "As Jamii Afya, I urge you to take immediate action in this situation. Fast breathing and chest indrawing in a child are serious signs that could indicate a life-threatening condition such as cardiac arrest, severe asthma attack, pneumonia, or other respiratory distress. Here's what you"
+  },
+  "observations": [
+    "FP32 scores remained finite for all 64 steps.",
+    "No EOS or <|im_end|> was emitted by the 64-token cap.",
+    "The answer is verbose, clinically questionable in its differential, and does not reach a referral disposition before truncation.",
+    "This is stock baseline behavior; no training or checkpoint was involved."
+  ],
+  "conclusion": "numeric generation gate passes; quality gate fails pending post-training",
+  "timestamp_utc": "2026-09-13"
+}
