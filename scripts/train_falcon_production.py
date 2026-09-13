@@ -453,6 +453,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     ap.add_argument("--max-steps", type=int, default=0, help="Override config for smoke/resume tests")
     ap.add_argument("--save-steps", type=int, default=0, help="Override checkpoint interval; used by the tiny resume test")
     ap.add_argument("--quantize", choices=("auto", "4bit", "none"), default="auto")
+    ap.add_argument("--compute-dtype", choices=("auto", "bf16", "fp16", "fp32"), default="auto")
     ap.add_argument("--seed", type=int, default=None)
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--allow-ephemeral", action="store_true", help="Only for local/tiny resume tests; bypass required Kaggle checkpoint persistence")
@@ -517,7 +518,10 @@ def main(argv: list[str] | None = None) -> int:
     requested_quant = args.quantize
     if requested_quant == "auto":
         requested_quant = "4bit" if use_cuda and cap and cap >= (7, 0) else "none"
-    load_mode, dtype_name = resolve_precision(use_cuda=use_cuda, cuda_capability=cap, mps=False, quantize=requested_quant, compute_dtype="auto")
+    compute_dtype = args.compute_dtype
+    if compute_dtype == "auto" and use_cuda and cap and cap < (7, 0):
+        compute_dtype = str(config["training"].get("p100_training_compute_dtype", "fp16"))
+    load_mode, dtype_name = resolve_precision(use_cuda=use_cuda, cuda_capability=cap, mps=False, quantize=requested_quant, compute_dtype=compute_dtype)
     dtype = {"bf16": torch.bfloat16, "fp16": torch.float16, "fp32": torch.float32}[dtype_name]
     event(event_path, "environment", python=platform.python_version(), platform=platform.platform(), packages=package_versions(), cuda=use_cuda, cuda_capability=cap, dtype=dtype_name, load_mode=load_mode)
     atomic_json(stage_dir / "environment.json", {"timestamp_utc": now(), "python": platform.python_version(), "platform": platform.platform(), "packages": package_versions(), "cuda": use_cuda, "cuda_capability": cap, "dtype": dtype_name, "load_mode": load_mode})
@@ -532,7 +536,7 @@ def main(argv: list[str] | None = None) -> int:
         "data_manifest_sha256": sha256_file(data_manifest_path),
         "init_adapter": args.init_adapter,
         "resume_from_checkpoint": args.resume_from_checkpoint,
-        "quantize": args.quantize, "started_utc": now(),
+        "quantize": args.quantize, "compute_dtype": compute_dtype, "started_utc": now(),
     })
 
     event(event_path, "model_load_start", model=model_id, revision=revision)
