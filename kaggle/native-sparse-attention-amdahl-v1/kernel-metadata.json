@@ -1,0 +1,13 @@
+{
+  "id": "toheebogunade/jamii-native-sparse-attention-amdahl-v1",
+  "title": "Jamii Native Sparse Attention Amdahl v1",
+  "code_file": "attention_amdahl.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_internet": true,
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": []
+}
