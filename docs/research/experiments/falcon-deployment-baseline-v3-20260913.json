@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0.0",
+  "experiment_id": "falcon-deployment-baseline-v3-20260913",
+  "status": "ABORTED_AFTER_VALID_MEASUREMENT",
+  "decision": "FOLLOW-UP",
+  "model": "tiiuae/Falcon-H1-1.5B-Deep-Instruct-GGUF",
+  "quantization": "Q4_0",
+  "file_bytes": 904190528,
+  "file_sha256": "38d283df6414a4ac0a60c02866d7341ca0b6520e350ddc48fb09cc6ec9bf5e62",
+  "hardware": {"cpu": "Intel(R) Xeon(R) CPU @ 2.20GHz", "cores": 4, "threads": 4, "llama_cpp_sha": "5f436dddb440a288ee5611d7d1eca564a6aca9f4"},
+  "command": "llama-bench -m <model.gguf> -p 512 -n 128 -ngl 0 -t 4 --output json",
+  "repetitions": [
+    {"rep": 1, "decode_tps": 5.346283, "peak_rss_mb": 1066.082},
+    {"rep": 2, "decode_tps": 6.384670, "peak_rss_mb": 1066.270},
+    {"rep": 3, "decode_tps": 6.331774, "peak_rss_mb": 1066.234}
+  ],
+  "aggregate_known": {"decode_tps_mean": 6.020909, "decode_tps_stdev": 0.5848, "peak_rss_mean_mb": 1066.195},
+  "failure": "The benchmark completed three valid Q4_0 repetitions, then returned exit 2 because the separate CLI deterministic-output check reported differing exact hashes. The wrapper consequently did not run Q4_K_M and did not emit an accepted combined baseline.",
+  "correction": "eacd3d3 records exact and normalized hashes as findings and no longer discards completed throughput/RSS measurements solely because the determinism check is false.",
+  "final_frozen_touched": false
+}
