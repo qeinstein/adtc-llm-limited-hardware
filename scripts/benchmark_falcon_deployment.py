@@ -42,7 +42,7 @@ def tree_rss_mb(pid: int) -> float:
         root = psutil.Process(pid)
         processes = [root, *root.children(recursive=True)]
         return sum(process.memory_info().rss for process in processes if process.is_running()) / 1024**2
-    except (ImportError, OSError, RuntimeError):
+    except Exception:  # noqa: BLE001 - procfs can disappear during every sample
         return 0.0
 
 
@@ -86,7 +86,9 @@ def bench_once(command: list[str], time_report: Path, sample_seconds: float) -> 
             next_heartbeat += 30.0
         time.sleep(sample_seconds)
     stdout, stderr = process.communicate()
-    samples.append(tree_rss_mb(process.pid))
+    # The PID is normally gone after communicate(); sampling it here creates
+    # a race with procfs and can invalidate an otherwise completed repetition.
+    # The last in-loop sample is sufficient for the peak measurement.
     elapsed = time.monotonic() - started
     if process.returncode:
         raise RuntimeError(f"llama-bench failed ({process.returncode}): {stderr[-2000:]}\n{stdout[-1000:]}")
