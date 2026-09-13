@@ -9,6 +9,7 @@ from pathlib import Path
 from scripts.validate_battery import validate
 
 BATTERY = Path(__file__).resolve().parent.parent / "docs" / "research" / "falcon_baseline_prompts.json"
+SWAHILI = Path(__file__).resolve().parent.parent / "data" / "swahili_eval_set.json"
 
 
 def _write(tmp_path: Path, payload: dict) -> Path:
@@ -19,6 +20,10 @@ def _write(tmp_path: Path, payload: dict) -> Path:
 
 def test_shipped_falcon_battery_is_valid():
     assert validate(BATTERY) == []
+
+
+def test_shipped_swahili_query_battery_is_valid():
+    assert validate(SWAHILI) == []
 
 
 def test_missing_text_key_fails(tmp_path):

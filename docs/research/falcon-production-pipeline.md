@@ -40,10 +40,13 @@ target exists as a linear module before training.
 2. `stage_b_clinical_safety`: clinical/refusal/disposition specialization.
 3. `stage_c_mcqa_replay`: controlled MCQA replay while retaining SFT mass.
 
-Stage B/C initialize from the previous stage's adapter but start fresh
-optimizer/scheduler state; `--resume-from-checkpoint` is reserved for resuming
-the same stage. The stages are separate checkpointed runs. Selection must use validation and
-the frozen final batteries, not the last checkpoint or training loss alone.
+Stage B/C initialize from the previous stage's selected adapter/checkpoint but
+start fresh optimizer/scheduler state; `--resume-from-checkpoint` is reserved
+for resuming the same stage. The stages are separate checkpointed runs. Each
+stage now writes `checkpoint_selection.json` and selects the lowest fast-dev
+held-out loss among complete checkpoints. A stage with no evaluation is not
+promotable; final battery safety and quality gates still have veto power over
+that numerical selection.
 
 ## Observability and resume
 

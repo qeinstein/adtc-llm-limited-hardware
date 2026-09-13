@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from scripts.build_falcon_dataset import canonical, distribution, near_holdout
-from scripts.train_falcon_production import FalconDataset, checkpoint_is_complete, latest_checkpoint, stable_eval_subset, token_share_sampling_weights
+from scripts.train_falcon_production import FalconDataset, checkpoint_is_complete, latest_checkpoint, select_checkpoint, stable_eval_subset, token_share_sampling_weights
 
 
 class FakeTokenizer:
@@ -75,6 +75,22 @@ def test_latest_checkpoint_ignores_incomplete_directories(tmp_path: Path):
     incomplete.mkdir()
     (incomplete / "trainer_state.json").write_text('{"global_step": 50}')
     assert latest_checkpoint(tmp_path) == complete
+
+
+def test_checkpoint_selection_uses_eval_loss_not_last_step(tmp_path: Path):
+    for step in (10, 20):
+        complete = tmp_path / f"checkpoint-{step}"
+        complete.mkdir()
+        for name in ("trainer_state.json", "optimizer.pt", "scheduler.pt", "rng_state.pth", "adapter_model.safetensors"):
+            (complete / name).write_text('{"global_step": %d}' % step if name == "trainer_state.json" else "{}")
+        (complete / "checkpoint_manifest.json").write_text('{"complete": true, "global_step": %d}' % step)
+    result = select_checkpoint(tmp_path, [{"step": 10, "eval_loss": 2.0}, {"step": 20, "eval_loss": 3.0}])
+    assert result["status"] == "selected"
+    assert result["selected_step"] == 10
+
+
+def test_checkpoint_selection_refuses_to_infer_without_eval(tmp_path: Path):
+    assert select_checkpoint(tmp_path, [{"step": 10, "loss": 1.0}])["status"] == "no_eval"
 
 
 def test_token_share_weights_match_expected_loss_token_mass():

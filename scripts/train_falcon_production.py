@@ -3,8 +3,9 @@
 
 This is deliberately separate from the historical ``train_lora.py`` probe.
 It consumes the normalized JSONL files made by ``build_falcon_dataset.py`` and
-fails closed on sequence/label errors.  Prompt labels are always -100; only
-assistant target tokens (including EOS) contribute to SFT loss.
+fails closed on sequence/label errors. Prompt labels are always -100; only
+assistant target tokens, including the exact Falcon chat-turn terminator,
+contribute to SFT loss.
 """
 
 from __future__ import annotations
@@ -285,6 +286,46 @@ def latest_checkpoint(directory: Path) -> Path | None:
         if complete:
             candidates.append((step, path))
     return max(candidates, default=(0, None))[1]
+
+
+def select_checkpoint(checkpoint_dir: Path, log_history: list[dict[str, Any]]) -> dict[str, Any]:
+    """Select a complete checkpoint using held-out eval loss, never recency.
+
+    Trainer records ``eval_loss`` at evaluation steps. A checkpoint is eligible
+    only when that exact step has a complete resumable checkpoint. If no eval
+    was performed (for example a dry infrastructure pilot), the result is
+    explicitly ``no_eval`` and callers must not treat the terminal checkpoint
+    as a selected production candidate.
+    """
+    candidates: list[dict[str, Any]] = []
+    for record in log_history:
+        if "eval_loss" not in record or "step" not in record:
+            continue
+        try:
+            step = int(record["step"])
+            loss = float(record["eval_loss"])
+        except (TypeError, ValueError):
+            continue
+        path = checkpoint_dir / f"checkpoint-{step}"
+        if not math.isfinite(loss) or not checkpoint_is_complete(path):
+            continue
+        candidates.append({"step": step, "eval_loss": loss, "checkpoint": str(path)})
+    if not candidates:
+        return {
+            "status": "no_eval",
+            "criterion": "lowest_fast_dev_eval_loss",
+            "candidates": [],
+            "selected_checkpoint": None,
+        }
+    selected = min(candidates, key=lambda item: (item["eval_loss"], item["step"]))
+    return {
+        "status": "selected",
+        "criterion": "lowest_fast_dev_eval_loss",
+        "candidates": candidates,
+        "selected_checkpoint": selected["checkpoint"],
+        "selected_step": selected["step"],
+        "selected_eval_loss": selected["eval_loss"],
+    }
 
 
 def token_share_sampling_weights(items: list[dict[str, Any]], shares: dict[str, float]) -> list[float]:
@@ -749,12 +790,17 @@ def main(argv: list[str] | None = None) -> int:
         max_steps=effective_max_steps if effective_max_steps > 0 else -1,
     )
     import inspect
+    eval_interval = int(training["eval_steps"])
+    if effective_max_steps > 0:
+        # A bounded pilot must still produce at least one checkpoint-selection
+        # observation; long stages retain the configured cadence.
+        eval_interval = min(eval_interval, effective_max_steps)
     if "eval_strategy" in inspect.signature(TrainingArguments.__init__).parameters:
         kwargs["eval_strategy"] = "steps"
-        kwargs["eval_steps"] = int(training["eval_steps"])
+        kwargs["eval_steps"] = eval_interval
     else:
         kwargs["evaluation_strategy"] = "steps"
-        kwargs["eval_steps"] = int(training["eval_steps"])
+        kwargs["eval_steps"] = eval_interval
     if "optim" in inspect.signature(TrainingArguments.__init__).parameters:
         kwargs["optim"] = training["optimizer"]
     train_args = TrainingArguments(**kwargs)
@@ -814,10 +860,13 @@ def main(argv: list[str] | None = None) -> int:
             if result:
                 raise RuntimeError(f"terminal checkpoint persistence failed with exit {result}")
             event(event_path, "checkpoint_persist_complete", checkpoint=str(terminal_checkpoint), dataset=persistence_dataset, terminal=True)
+        selection = select_checkpoint(checkpoint_dir, list(trainer.state.log_history))
+        atomic_json(stage_dir / "checkpoint_selection.json", selection)
+        event(event_path, "checkpoint_selection", **selection)
         trainer.save_model(str(checkpoint_dir / "final-adapter"))
         tokenizer.save_pretrained(str(checkpoint_dir / "final-adapter"))
         event(event_path, "train_complete", global_step=int(trainer.state.global_step), final_adapter=str(checkpoint_dir / "final-adapter"))
-        atomic_json(stage_dir / "final_summary.json", {"status": "complete", "stage": args.stage, "global_step": int(trainer.state.global_step), "completed_utc": now(), "trainable_parameters": trainable, "total_parameters": total})
+        atomic_json(stage_dir / "final_summary.json", {"status": "complete", "stage": args.stage, "global_step": int(trainer.state.global_step), "completed_utc": now(), "trainable_parameters": trainable, "total_parameters": total, "checkpoint_selection": selection})
     except Exception as exc:  # noqa: BLE001 - preserve a machine-readable failure
         event(event_path, "train_failed", error_type=type(exc).__name__, error=str(exc))
         atomic_json(stage_dir / "final_summary.json", {"status": "failed", "stage": args.stage, "failed_utc": now(), "error_type": type(exc).__name__, "error": str(exc)})
