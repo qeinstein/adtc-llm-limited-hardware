@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0.0",
   "experiment_id": "falcon-prompt-search-v2-20260913",
-  "status": "COMPLETE_VALIDATION_SELECTION",
-  "decision": "FOLLOW-UP",
+  "status": "COMPLETE_REJECTED_MANUAL_REVIEW",
+  "decision": "REJECT",
   "kaggle_kernel": "toheebogunade/jamii-afya-falcon-prompt-search",
   "kaggle_kernel_version": 2,
   "repo_sha": "885d589f0cdbac2d98854e216517ec17fb992d23",
@@ -16,7 +16,7 @@
     "SYS-B02": {"family":"medium","development_pass_rate":37.5,"validation_pass_rate":62.5,"validation_critical_failures":["v04"],"mean_prompt_tokens":382.5,"mean_new_tokens":79.0,"mean_latency_seconds":13.678,"cap_rate_percent":87.5},
     "SYS-C01": {"family":"strict","development_pass_rate":25.0,"validation_pass_rate":75.0,"validation_critical_failures":[],"validation_failures":["v05","v06"],"mean_prompt_tokens":632.5,"mean_new_tokens":74.875,"mean_latency_seconds":14.019,"cap_rate_percent":75.0}
   },
-  "selected_for_next_stage": "SYS-C01",
+  "selected_for_next_stage": null,
   "selection_rule": "validation critical failures empty and validation pass rate >= 50%; highest validation pass rate, then lowest prompt-token cost",
-  "conclusion": "SYS-C01 is the only validation candidate without a critical failure after non-frozen rubric calibration. It is not deployable yet: it misses Kiswahili adherence and a simple arithmetic item, and must pass the untouched frozen matrix. A compact candidate was not eligible because each retained a hallucination/procedure safety failure."
+  "conclusion": "SYS-C01 was initially selected by the non-frozen rubric, but manual inspection found a critical fabricated-authority failure: it denied Grade-Blue terminology and then invented WHO 2021 criteria and a CAP severity framework. The strengthened hallucination veto rejects it. No prompt candidate is deployable; a replacement prompt search is required."
 }
