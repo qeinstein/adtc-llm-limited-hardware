@@ -128,6 +128,12 @@ P100 HF autoregressive evaluation remains FP32. The OOM is recorded in
 `falcon-resume-gate-v13-20260913.json`; the next gate tests whether FP16
 teacher-forcing training is numerically stable.
 
+Version 15 answered that question: both FP16 optimizer steps completed with
+finite losses (`3.62` final loss, grad norm `2.07`) at about `158 s/step`.
+The run then OOMed during dev evaluation because four MCQA items created a
+19.5-GiB Falcon-H1 Mamba intermediate. The evaluation batch is now forced to
+one; this is recorded in `falcon-resume-gate-v15-20260913.json`.
+
 Version 10 reran the same smoke in FP32 and produced eight finite non-PAD
 tokens (`As Jamii Afya, I ur...`). The numeric gate now passes; a 64-token
 smoke is being used to inspect completion behavior before the notebook returns

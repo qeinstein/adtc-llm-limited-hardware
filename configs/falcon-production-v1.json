@@ -140,7 +140,7 @@
     "save_total_limit": 3,
     "eval_steps": 25,
     "finite_loss_policy": "fail_fast",
-    "per_device_eval_batch_size": 4,
+    "per_device_eval_batch_size": 1,
     "fast_eval_max_rows": 64,
     "precision_policy": "auto; P100 trains plain fp16 LoRA but HF autoregressive evaluation uses fp32 after a verified sm60 overflow; sm80+ may use 4-bit QLoRA",
     "p100_training_compute_dtype": "fp16",
