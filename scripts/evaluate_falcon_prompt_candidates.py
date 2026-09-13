@@ -144,7 +144,11 @@ def main(argv: list[str] | None = None) -> int:
                 prompt_len = int(inputs.shape[-1])
                 started = time.monotonic()
                 with torch.no_grad():
-                    generated = model.generate(inputs, max_new_tokens=int(item.get("max_tokens", 96)), do_sample=False, temperature=0.0, eos_token_id=stop_ids or None, pad_token_id=tokenizer.pad_token_id)
+                    # Greedy decoding is deterministic when sampling is off;
+                    # omitting ``temperature`` avoids Transformers warnings
+                    # and prevents a future version from silently changing
+                    # the generation configuration.
+                    generated = model.generate(inputs, max_new_tokens=int(item.get("max_tokens", 96)), do_sample=False, eos_token_id=stop_ids or None, pad_token_id=tokenizer.pad_token_id)
                 elapsed = time.monotonic() - started
                 generated_ids = generated[0, prompt_len:].detach().cpu().tolist()
                 text = tokenizer.decode(generated_ids, skip_special_tokens=True)
