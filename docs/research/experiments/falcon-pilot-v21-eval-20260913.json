@@ -1,6 +1,6 @@
 {
   "experiment_id": "falcon-production-v1-pilot-v21-eval-20260913",
-  "status": "failed_quality_not_candidate",
+  "status": "failed_quality_not_candidate_no_material_gain",
   "purpose": "evaluation-only diagnostic of the durable v19 step-8 adapter after the MCQA memory-bound fix",
   "source_commit": "21c9a3e",
   "kernel": "toheebogunade/jamii-afya-falcon-production-post-training",
@@ -41,7 +41,7 @@
     "systemic_failures": [
       "Most answers were truncated before a clear clinical disposition/referral.",
       "Many responses switched into incoherent Swahili-like text despite English prompts.",
-      "The adapter did not preserve the stock model's coherent English generation behavior after only eight optimizer steps.",
+      "The production system prompt produces the same truncation and incoherent language on stock Falcon; the adapter comparison later showed 23/24 held-out texts byte-identical.",
       "The 384-token MCQA cap prevented the prior OOM during evaluation, but it did not improve quality and is not evidence that the adapter is safe."
     ],
     "passes_or_partial": [
@@ -49,11 +49,11 @@
       "h13 stopped on <|im_end|>, but its disposition wording was not sufficiently urgent."
     ]
   },
-  "decision": "Reject the adapter for export, promotion, Stage B/C initialization, and submission. Preserve the checkpoint only as a resumable infrastructure artifact; redesign the training objective/data/format validation before another quality run.",
+  "decision": "Reject the adapter for export, promotion, Stage B/C initialization, and submission because it provides no measurable gain over stock and the shared baseline fails the safety/clinical quality gate. Preserve the checkpoint only as a resumable infrastructure artifact; redesign the training objective/data/format validation before another quality run.",
   "raw_artifacts": "Kaggle kernel version 21 output: eval_metrics.json, eval_events.jsonl, _index.json, and h01.txt through h24.txt",
   "notes": [
     "This run performed no training and no checkpoint mutation.",
-    "The stock baseline had a coherent English response in generation-smoke-v11; the post-training gibberish is therefore a real regression, not merely the known stock verbosity problem.",
+    "The earlier generation-smoke-v11 used a shorter system prompt and is not an apples-to-apples baseline for this battery; comparison kernel v23 established that the apparent v21 regression was mostly shared stock behavior.",
     "The frozen h18 rubric remains mathematically incorrect and was not used as a pass criterion."
   ]
 }

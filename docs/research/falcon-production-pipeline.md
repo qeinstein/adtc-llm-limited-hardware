@@ -47,10 +47,11 @@ target exists as a linear module before training.
 Stage B/C initialize from the previous stage's selected adapter/checkpoint but
 start fresh optimizer/scheduler state; `--resume-from-checkpoint` is reserved
 for resuming the same stage. The stages are separate checkpointed runs. Each
-stage now writes `checkpoint_selection.json` and selects the lowest fast-dev
-held-out loss among complete checkpoints. A stage with no evaluation is not
-promotable; final battery safety and quality gates still have veto power over
-that numerical selection.
+stage writes `checkpoint_selection.json` from complete checkpoints and then
+tests the best loss-ranked candidates with the frozen generation gate. The
+first candidate that passes is recorded in `quality_selection.json` and is the
+only one eligible for persistence. A stage with no evaluation or no quality
+passing candidate is not promotable.
 
 ## Observability and resume
 
@@ -170,3 +171,23 @@ unsafe deworming guidance. The full record is
 `docs/research/experiments/falcon-pilot-v18-20260913.json`. Stage B/C and export
 are explicitly vetoed for this adapter; the next experiment must compare safer
 lower-rate/target-module settings with evaluations at multiple optimizer steps.
+
+## Archived stock-vs-adapter comparison v23
+
+Kernel v23 performed the required apples-to-apples comparison using the same
+P100 FP32 evaluator, 64-row objective-stratified fast-dev set (14 SFT and 50
+MCQA), production system prompt, and 64-token generation cap. Stock scored
+`52.0%` MCQA / `56.0%` acc_norm with SFT loss `3.588034`; the durable step-8
+adapter scored `52.0%` / `56.0%` with SFT loss `3.585137`. Twenty-three of 24
+held-out raw generations were byte-identical; only h01 differed. The adapter
+therefore has no measured quality gain and is not promotable. The complete
+record is `docs/research/experiments/falcon-pilot-v23-compare-20260913.json`.
+
+The frozen generation battery is now backed by
+`docs/research/falcon_generation_rubric.json` and
+`scripts/score_falcon_battery.py`. It is a conservative machine veto layer,
+not a substitute for clinical review: missing output, critical safety failure,
+or fabricated-protocol acceptance rejects promotion while preserving every raw
+generation. The Kaggle notebook runs it after persisted evaluations and before
+selected-stage checkpoint persistence, so a low dev loss cannot silently
+promote an unsafe candidate.
