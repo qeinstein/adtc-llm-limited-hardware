@@ -124,6 +124,8 @@ def near_holdout(text: str, holdouts: list[str] | dict[str, Any]) -> str | None:
 
 
 def chat_prompt(tokenizer: Any, row: dict[str, Any], system: str) -> tuple[list[int], list[int]]:
+    from scripts.falcon_format import render_completion
+
     instruction = str(row.get("instruction") or "").strip()
     answer = str(row.get("output") or "").strip()
     if not instruction or not answer:
@@ -136,16 +138,7 @@ def chat_prompt(tokenizer: Any, row: dict[str, Any], system: str) -> tuple[list[
         {"role": "system", "content": system},
         {"role": "user", "content": user},
     ]
-    try:
-        rendered = tokenizer.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True, enable_thinking=False
-        )
-    except TypeError:
-        rendered = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-    prompt = tokenizer(rendered, add_special_tokens=False)["input_ids"]
-    target = tokenizer(answer, add_special_tokens=False)["input_ids"]
-    target.append(int(tokenizer.eos_token_id))
-    return list(prompt), target
+    return render_completion(tokenizer, messages, answer)
 
 
 def normalize_row(spec: dict[str, Any], row: dict[str, Any], tokenizer: Any, max_len: int, system: str) -> dict[str, Any]:

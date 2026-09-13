@@ -1,0 +1,66 @@
+{
+  "experiment_id": "falcon-production-v1-pilot-20260912T220934Z",
+  "status": "invalid_archived",
+  "model": "tiiuae/Falcon-H1-1.5B-Deep-Instruct",
+  "model_revision": "b6648636ddc906688974282de6e7a243395f5423",
+  "kaggle_kernel": "toheebogunade/jamii-afya-falcon-production-post-training",
+  "kaggle_kernel_version": 4,
+  "git_sha": "0fb4e7cbc612a48599dd0ee5beb0c43e97231890",
+  "started_utc": "2026-09-12T22:10:06Z",
+  "completed_utc": "2026-09-12T23:25:51Z",
+  "hardware": {
+    "gpu": "Tesla P100-PCIE-16GB",
+    "torch": "2.6.0+cu118",
+    "dtype": "float16"
+  },
+  "data": {
+    "train_rows": 13542,
+    "dev_rows": 1470,
+    "train_objective_counts": {
+      "mcqa": 13436,
+      "sft": 106
+    },
+    "project_sft_rows": 118,
+    "holdouts_used_for_training": false
+  },
+  "hyperparameters": {
+    "stage": "stage_a_capability_preserving",
+    "steps": 8,
+    "epochs_configured": 1.0,
+    "effective_batch_size": 16,
+    "learning_rate": 0.00003,
+    "lora_r": 16,
+    "lora_alpha": 32,
+    "lora_dropout": 0.05,
+    "objective_weights": {
+      "sft": 1.0,
+      "mcqa": 0.15
+    },
+    "sampling_token_share": {
+      "sft": 0.9,
+      "mcqa": 0.1
+    },
+    "max_length": 768,
+    "seed": 3407
+  },
+  "measured": {
+    "optimizer_step_seconds_mean": 143.8,
+    "loss_tokens_per_second_mean_after_warmup": 7.8,
+    "fast_dev_rows": 64,
+    "fast_dev_mcqa_acc_norm": 52.381,
+    "generation_visible_chars_min": 1,
+    "generation_visible_chars_max": 9
+  },
+  "persistence": {
+    "dataset": "toheebogunade/jamii-afya-falcon-production-checkpoints",
+    "checkpoint": "checkpoint-8",
+    "trainer_state_optimizer_scheduler_rng_scaler_present": true
+  },
+  "reason_invalid": [
+    "Training used the pre-fix target convention: generic <|end_of_text|> was appended instead of deriving the assistant-turn <|im_end|> boundary from Falcon's chat template.",
+    "The HF generation evaluator stopped on only tokenizer.eos_token_id and did not mirror Falcon's configured stop set.",
+    "The resulting generation battery emitted only 1--3 visible characters for almost every prompt, so clinical, safety, general, and language results are invalid.",
+    "Only eight optimizer steps were run; this was a bounded infrastructure/curve pilot, not a production-quality experiment."
+  ],
+  "disposition": "Do not export, score, or resume this adapter as a production candidate. Rebuild data and rerun after the formatter/evaluator fixes."
+}

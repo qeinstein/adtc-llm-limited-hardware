@@ -190,12 +190,37 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 inputs = {"input_ids": encoded.to(device), "attention_mask": torch.ones_like(encoded).to(device)}
                 prompt_len = int(encoded.shape[-1])
+            # Falcon-H1's official chat template closes an assistant turn with
+            # <|im_end|> (id 228 at the pinned revision), while the generic
+            # end-of-text token is id 11.  Stop on both, as the model's own
+            # generation_config does.  Passing only generic EOS made the probe
+            # appear to emit one-character answers and hid the actual boundary
+            # mismatch in its training targets.
+            configured_stop_ids = getattr(model.generation_config, "eos_token_id", [])
+            stop_ids = [configured_stop_ids] if isinstance(configured_stop_ids, int) else list(configured_stop_ids or [])
+            if tokenizer.eos_token_id is not None:
+                stop_ids.append(int(tokenizer.eos_token_id))
+            try:
+                im_end_id = tokenizer.convert_tokens_to_ids("<|im_end|>")
+                if isinstance(im_end_id, int) and im_end_id >= 0:
+                    stop_ids.append(im_end_id)
+            except (AttributeError, TypeError):
+                pass
+            stop_ids = sorted(set(stop_ids))
             with torch.no_grad():
-                output = model.generate(**inputs, max_new_tokens=min(args.max_new_tokens, int(prompt.get("max_tokens", args.max_new_tokens))), do_sample=False, eos_token_id=tokenizer.eos_token_id, pad_token_id=tokenizer.pad_token_id)
+                output = model.generate(
+                    **inputs,
+                    max_new_tokens=min(args.max_new_tokens, int(prompt.get("max_tokens", args.max_new_tokens))),
+                    do_sample=False,
+                    eos_token_id=stop_ids or None,
+                    pad_token_id=tokenizer.pad_token_id,
+                )
             text = tokenizer.decode(output[0][prompt_len:], skip_special_tokens=True)
             (destination / f"{prompt_id}.txt").write_text(text, encoding="utf-8")
-            index.append({"id": prompt_id, "chars": len(text), "words": len(text.split()), "section": prompt.get("section", ""), "check": prompt.get("check", ""), "source_text": prompt_text})
-            emit(events, "generation_item", battery=battery.stem, id=prompt_id, chars=len(text))
+            generated_ids = [int(x) for x in output[0][prompt_len:].detach().cpu().tolist()]
+            stopped_on = generated_ids[-1] if generated_ids and generated_ids[-1] in stop_ids else None
+            index.append({"id": prompt_id, "chars": len(text), "words": len(text.split()), "new_tokens": len(generated_ids), "stopped_on": stopped_on, "section": prompt.get("section", ""), "check": prompt.get("check", ""), "source_text": prompt_text})
+            emit(events, "generation_item", battery=battery.stem, id=prompt_id, chars=len(text), new_tokens=len(generated_ids), stopped_on=stopped_on)
         (destination / "_index.json").write_text(json.dumps(index, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         emit(events, "generation_complete", battery=battery.stem, count=len(index))
 

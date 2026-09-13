@@ -101,6 +101,8 @@ def stable_eval_subset(rows: list[dict[str, Any]], limit: int) -> list[dict[str,
 
 
 def render_sft(tokenizer: Any, row: dict[str, Any], system: str) -> tuple[list[int], list[int]]:
+    from scripts.falcon_format import render_completion
+
     instruction = str(row.get("instruction") or "").strip()
     answer = str(row.get("output") or "").strip()
     if not instruction or not answer:
@@ -109,16 +111,7 @@ def render_sft(tokenizer: Any, row: dict[str, Any], system: str) -> tuple[list[i
     if str(row.get("input") or "").strip():
         user += "\n\n" + str(row["input"]).strip()
     messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
-    try:
-        prompt = tokenizer.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True, enable_thinking=False
-        )
-    except TypeError:
-        prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-    prompt_ids = list(tokenizer(prompt, add_special_tokens=False)["input_ids"])
-    target_ids = list(tokenizer(answer, add_special_tokens=False)["input_ids"])
-    target_ids.append(int(tokenizer.eos_token_id))
-    return prompt_ids, target_ids
+    return render_completion(tokenizer, messages, answer)
 
 
 class FalconDataset:

@@ -1,6 +1,8 @@
 # Falcon production post-training pipeline
 
-Status: implementation/audit gate; no production training run launched.
+Status: implementation/audit gate; the bounded pilot is archived as invalid
+because it used the pre-audit chat target and its generation evaluation exposed
+that mismatch. No production checkpoint has been accepted.
 
 ## Canonical inputs
 
@@ -15,10 +17,12 @@ Status: implementation/audit gate; no production training run launched.
 ## Correctness decisions
 
 The production trainer uses completion-only SFT labels: every prompt token is
-`-100`, every assistant target token is trained, and EOS is appended to every
-target. Prompts are left-truncated only after verifying the complete answer fits
-within `max_length`; MCQA rows are rejected instead of partially truncating a
-choice. MCQA ranking uses the same character-normalized continuation score as
+`-100`, and every assistant target token is trained. The target is derived from
+the tokenizer's complete Falcon chat rendering, including the assistant-turn
+`<|im_end|>` boundary; generic `<|end_of_text|>` is not substituted. Prompts
+are left-truncated only after verifying the complete answer fits within
+`max_length`; MCQA rows are rejected instead of partially truncating a choice.
+MCQA ranking uses the same character-normalized continuation score as
 the ADTC `acc_norm` objective, with a small gold-token NLL auxiliary term. The
 sampler has a separate per-stage token-share target. Each row receives its
 objective share divided by that objective's total loss-token mass, so the
@@ -75,3 +79,14 @@ P100 resume gate measured roughly 8--13 loss tokens/sec and about 145 seconds
 per optimizer step at effective batch 16, so one full epoch is not an
 acceptable production schedule. A bounded pilot must establish the stage
 step budget and quality curve before any long run.
+
+## Archived bounded pilot
+
+Kaggle kernel version 4 completed eight Stage-A optimizer steps on
+2026-09-12 (`falcon-production-v1-pilot-20260912.json`). It persisted a
+technically resumable adapter checkpoint, but it is not a candidate: the run
+was made before the shared exact-chat formatter was added, and its generation
+battery emitted only 1--3 visible characters for almost every prompt. Its
+`52.38%` fast-dev `acc_norm` is therefore a training smoke result only, not a
+quality claim. The checkpoint remains in Kaggle history and must not be used
+for export or submission.

@@ -8,22 +8,28 @@ from scripts.train_falcon_production import FalconDataset, checkpoint_is_complet
 
 class FakeTokenizer:
     eos_token_id = 99
+    im_end_token_id = 98
     pad_token_id = 0
     pad_token = "<pad>"
     eos_token = "<eos>"
 
     def apply_chat_template(self, messages, tokenize, add_generation_prompt, enable_thinking=False):
         assert tokenize is False
-        assert add_generation_prompt is True
         del enable_thinking
-        return " | ".join(m["content"] for m in messages) + " | assistant:"
+        rendered = " | ".join(m["content"] for m in messages[:2]) + " | assistant:"
+        if not add_generation_prompt:
+            rendered += " " + messages[-1]["content"] + " <im_end>"
+        return rendered
 
     def __call__(self, text, add_special_tokens=False):
         del add_special_tokens
-        return {"input_ids": list(range(1, len(text.split()) + 1))}
+        ids = list(range(1, len(text.split()) + 1))
+        if "<im_end>" in text:
+            ids[-1] = self.im_end_token_id
+        return {"input_ids": ids}
 
 
-def test_sft_masks_prompt_and_keeps_eos():
+def test_sft_masks_prompt_and_keeps_chat_turn_terminator():
     rows = [{
         "format": "sft", "example_id": "s1", "source": "test",
         "instruction": "What is urgent?", "input": "", "output": "Refer now.",
@@ -32,7 +38,7 @@ def test_sft_masks_prompt_and_keeps_eos():
     prompt_len = item["labels"].index(next(x for x in item["labels"] if x != -100))
     assert prompt_len > 0
     assert all(x == -100 for x in item["labels"][:prompt_len])
-    assert item["labels"][-1] == 99
+    assert item["labels"][-1] == 98
     assert item["tokens"] == len(item["labels"]) - prompt_len
 
 
