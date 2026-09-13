@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0.0",
+  "experiment_id": "falcon-small-real-probe-v1",
+  "purpose": "bounded real-data responsiveness experiment; never a production promotion config",
+  "base_config": "configs/falcon-production-v1.json",
+  "model": {
+    "id": "tiiuae/Falcon-H1-1.5B-Deep-Instruct",
+    "revision": "b6648636ddc906688974282de6e7a243395f5423"
+  },
+  "data": {
+    "mcqa_max_per_dataset": 250,
+    "mcqa_datasets": ["arc_easy", "arc_challenge", "openbookqa", "mmlu_aux", "medmcqa", "medqa", "pubmedqa", "headqa"],
+    "letter_permutations": 3,
+    "seed": 3407,
+    "batteries": [
+      "docs/research/falcon_probe_heldout.json",
+      "docs/research/falcon_baseline_prompts.json",
+      "data/swahili_eval_set.json"
+    ]
+  },
+  "training": {
+    "stage": "stage_a_capability_preserving",
+    "max_steps": 8,
+    "save_steps": 4,
+    "eval_steps": 4,
+    "learning_rate": 0.000005,
+    "lora_r": 8,
+    "lora_alpha": 16,
+    "lora_dropout": 0.1,
+    "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj"],
+    "quantize": "none",
+    "compute_dtype": "fp16",
+    "gradient_accumulation_steps": 16,
+    "per_device_batch_size": 1,
+    "max_length": 512,
+    "seed": 3407
+  },
+  "evaluation": {
+    "max_dev_rows": 64,
+    "max_new_tokens": 128,
+    "final_gate_is_report_only": true,
+    "prompt_selected_elsewhere": true
+  },
+  "persistence": {
+    "allow_ephemeral": true,
+    "reason": "This bounded probe is not a submission candidate; persistence mechanics were independently proven by the resume gate."
+  }
+}
