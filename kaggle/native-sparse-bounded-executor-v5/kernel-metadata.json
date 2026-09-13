@@ -1,0 +1,14 @@
+{
+  "id": "toheebogunade/jamii-native-sparse-bounded-executor-v5",
+  "title": "Jamii native sparse bounded executor v5",
+  "code_file": "bounded_executor_v5.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_internet": true,
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "model_sources": []
+}
