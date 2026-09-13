@@ -10,6 +10,7 @@ uses ``evaluate_falcon_candidate.py`` on the merged/quantized GGUF.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import os
@@ -46,6 +47,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     ap.add_argument("--battery", action="append", default=[])
     ap.add_argument("--max-new-tokens", type=int, default=256)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--system-prompt", default=None, help="Override the config prompt for prompt-vs-weights experiments")
     return ap.parse_args(argv)
 
 
@@ -67,7 +69,7 @@ def main(argv: list[str] | None = None) -> int:
     rows = load_rows(data_dir / "dev.jsonl")
     if args.max_dev:
         rows = stable_eval_subset(rows, args.max_dev)
-    emit(events, "evaluation_start", rows=len(rows), adapter=args.adapter, model=config["model"])
+    emit(events, "evaluation_start", rows=len(rows), adapter=args.adapter, model=config["model"], system_prompt_override=args.system_prompt is not None)
 
     import torch
     from scripts.train_lora import patch_peft_transformers_compat
@@ -106,7 +108,7 @@ def main(argv: list[str] | None = None) -> int:
 
     max_len = int(config["data"]["max_length"])
     mcqa_context_max_tokens = int(config["training"].get("mcqa_context_max_tokens", max_len))
-    system = config["data"]["system_prompt"]
+    system = args.system_prompt if args.system_prompt is not None else config["data"]["system_prompt"]
     sft_losses: list[float] = []
     mcqa_correct = 0
     mcqa_norm_correct = 0
@@ -166,6 +168,8 @@ def main(argv: list[str] | None = None) -> int:
         "mcqa_n": mcqa_total,
         "mcqa_acc": round(100 * mcqa_correct / max(1, mcqa_total), 4),
         "mcqa_acc_norm": round(100 * mcqa_norm_correct / max(1, mcqa_total), 4),
+        "system_prompt_sha256": hashlib.sha256(system.encode("utf-8")).hexdigest(),
+        "system_prompt_tokens": len(tokenizer(system, add_special_tokens=False)["input_ids"]),
     }
     emit(events, "dev_complete", **metrics)
 
@@ -203,6 +207,7 @@ def main(argv: list[str] | None = None) -> int:
             # appear to emit one-character answers and hid the actual boundary
             # mismatch in its training targets.
             stop_ids = generation_stop_ids(tokenizer, model.generation_config)
+            started = time.monotonic()
             with torch.no_grad():
                 output = model.generate(
                     **inputs,
@@ -215,7 +220,7 @@ def main(argv: list[str] | None = None) -> int:
             (destination / f"{prompt_id}.txt").write_text(text, encoding="utf-8")
             generated_ids = [int(x) for x in output[0][prompt_len:].detach().cpu().tolist()]
             stopped_on = generated_ids[-1] if generated_ids and generated_ids[-1] in stop_ids else None
-            index.append({"id": prompt_id, "chars": len(text), "words": len(text.split()), "new_tokens": len(generated_ids), "stopped_on": stopped_on, "section": prompt.get("section", ""), "check": prompt.get("check", ""), "source_text": prompt_text})
+            index.append({"id": prompt_id, "chars": len(text), "words": len(text.split()), "prompt_tokens": prompt_len, "new_tokens": len(generated_ids), "elapsed_seconds": round(time.monotonic() - started, 4), "stopped_on": stopped_on, "section": prompt.get("section", ""), "check": prompt.get("check", ""), "source_text": prompt_text})
             emit(events, "generation_item", battery=battery.stem, id=prompt_id, chars=len(text), new_tokens=len(generated_ids), stopped_on=stopped_on)
         (destination / "_index.json").write_text(json.dumps(index, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         emit(events, "generation_complete", battery=battery.stem, count=len(index))

@@ -46,3 +46,22 @@ The first corrected generation-smoke rerun (Kaggle v7) completed the exact
 data audit/build but failed at the script import boundary before loading model
 weights. That failure is preserved as an aborted infrastructure experiment;
 the launch-path fix is included in the next version.
+
+## Trainability proof
+
+Trainability proof v1 is preserved as
+[`falcon-trainability-proof-v1-20260913.json`](experiments/falcon-trainability-proof-v1-20260913.json).
+It failed before model loading because the standalone script did not expose
+the repository root to Python imports; it produced no optimizer state or model
+evidence.
+
+Proof v2 is preserved as
+[`falcon-trainability-proof-v2-20260913.json`](experiments/falcon-trainability-proof-v2-20260913.json).
+On a P100/sm_60 in FP16, 32 deterministic rows (16 SFT, 16 MCQA) over 64
+steps changed all 528 trainable LoRA tensors, produced a logit delta RMS of
+9.35 (max 57.0), reduced both objective losses materially, and had exact
+adapter-off/stock and save/reload agreement. The adapter changed all four
+generation checks. This is a **PASS for trainability only**, not a quality
+candidate: the deliberately overfit generations became repetitive referral
+text. No real-data training is authorized until prompt and small-data quality
+probes provide evidence.
