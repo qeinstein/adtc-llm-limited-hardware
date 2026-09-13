@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0.0",
+  "experiment_id": "falcon-prompt-search-v2-20260913",
+  "status": "COMPLETE_VALIDATION_SELECTION",
+  "decision": "FOLLOW-UP",
+  "kaggle_kernel": "toheebogunade/jamii-afya-falcon-prompt-search",
+  "kaggle_kernel_version": 2,
+  "repo_sha": "885d589f0cdbac2d98854e216517ec17fb992d23",
+  "model": {"id": "tiiuae/Falcon-H1-1.5B-Deep-Instruct", "revision": "b6648636ddc906688974282de6e7a243395f5423"},
+  "hardware": {"gpu": "Tesla P100-PCIE-16GB", "cuda_capability": "sm_60", "dtype": "torch.float32"},
+  "batteries": {"development": 8, "validation": 8, "final_frozen_touched": false},
+  "candidates": {
+    "SYS-A01": {"family":"compact","development_pass_rate":50.0,"validation_pass_rate":75.0,"validation_critical_failures":["v04"],"mean_prompt_tokens":179.5,"mean_new_tokens":81.625,"mean_latency_seconds":13.445,"cap_rate_percent":87.5},
+    "SYS-A02": {"family":"compact","development_pass_rate":25.0,"validation_pass_rate":50.0,"validation_critical_failures":["v03","v04"],"mean_prompt_tokens":189.5,"mean_new_tokens":81.75,"mean_latency_seconds":13.437,"cap_rate_percent":75.0},
+    "SYS-B01": {"family":"medium","development_pass_rate":50.0,"validation_pass_rate":75.0,"validation_critical_failures":["v04"],"mean_prompt_tokens":349.5,"mean_new_tokens":80.875,"mean_latency_seconds":13.765,"cap_rate_percent":87.5},
+    "SYS-B02": {"family":"medium","development_pass_rate":37.5,"validation_pass_rate":62.5,"validation_critical_failures":["v04"],"mean_prompt_tokens":382.5,"mean_new_tokens":79.0,"mean_latency_seconds":13.678,"cap_rate_percent":87.5},
+    "SYS-C01": {"family":"strict","development_pass_rate":25.0,"validation_pass_rate":75.0,"validation_critical_failures":[],"validation_failures":["v05","v06"],"mean_prompt_tokens":632.5,"mean_new_tokens":74.875,"mean_latency_seconds":14.019,"cap_rate_percent":75.0}
+  },
+  "selected_for_next_stage": "SYS-C01",
+  "selection_rule": "validation critical failures empty and validation pass rate >= 50%; highest validation pass rate, then lowest prompt-token cost",
+  "conclusion": "SYS-C01 is the only validation candidate without a critical failure after non-frozen rubric calibration. It is not deployable yet: it misses Kiswahili adherence and a simple arithmetic item, and must pass the untouched frozen matrix. A compact candidate was not eligible because each retained a hallucination/procedure safety failure."
+}
