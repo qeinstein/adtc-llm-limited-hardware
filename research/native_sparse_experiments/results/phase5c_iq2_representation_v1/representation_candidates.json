@@ -1,0 +1,46 @@
+{
+  "schema": "native-sparse-iq2-representation-candidates/v1",
+  "control_routed_pool_bytes": 8975810560,
+  "control_bundle_bytes": 876544,
+  "floor_mib": 1612.9,
+  "reserve_mib": 256,
+  "budget_targets_mib": [4096, 3072, 2560],
+  "candidates": [
+    {
+      "name": "IQ2_XXS_control",
+      "block_bytes": 66,
+      "bpw": 2.0625,
+      "pool_bytes": 8975810560,
+      "bundle_slot_bytes": 876544,
+      "slots": {"4096": 2664, "3072": 1439, "2560": 826},
+      "status": "measured_control"
+    },
+    {
+      "name": "packed_resolved",
+      "block_bytes": 70,
+      "bpw": 2.1875,
+      "pool_bytes_estimate": 9519799078.787878,
+      "bundle_slot_bytes_4k": 929792,
+      "slots": {"4096": 2511, "3072": 1356, "2560": 779},
+      "status": "follow_up_submitted"
+    },
+    {
+      "name": "natural_resolved",
+      "block_bytes": 74,
+      "bpw": 2.3125,
+      "pool_bytes_estimate": 10063787597.575758,
+      "bundle_slot_bytes_4k": 983040,
+      "slots": {"4096": 2375, "3072": 1283, "2560": 737},
+      "status": "measured_phase5b_rejected"
+    },
+    {
+      "name": "cacheline_resolved",
+      "block_bytes": 80,
+      "bpw": 2.5,
+      "pool_bytes_estimate": 10879770375.757576,
+      "bundle_slot_bytes_4k": 1064960,
+      "slots": {"4096": 2192, "3072": 1184, "2560": 680},
+      "status": "design_only"
+    }
+  ]
+}
