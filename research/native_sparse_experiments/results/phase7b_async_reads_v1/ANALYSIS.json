@@ -26,7 +26,7 @@
   },
   "traffic": {
     "fresh_bytes_per_64_tokens": 8129945600,
-    "fresh_decimal_mb_per_64_tokens": 127.0304,
+    "fresh_decimal_mb_per_64_tokens": 8129.9456,
     "fresh_bytes_per_token": 127030400,
     "fresh_decimal_mb_per_token": 127.0304,
     "fresh_mib_per_token": 121.1456298828125

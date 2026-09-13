@@ -36,7 +36,9 @@ required before attributing an end-to-end gain to this arm.
 ## I/O result
 
 Each bounded repetition had 9,275 missing experts and transferred exactly
-8,129,945,600 bytes (127.03 MB per 64-token repetition, or 1.985 MB/token).
+8,129,945,600 bytes per 64-token repetition (8,129.95 decimal MB, or
+7,753.32 MiB total), equivalent to 127.0304 decimal MB/token (121.1456
+MiB/token).
 The read-call count remained 27,825, i.e. three plane reads per miss.
 
 Aggregate worker read intervals were 32.003, 27.002, and 27.271 seconds,

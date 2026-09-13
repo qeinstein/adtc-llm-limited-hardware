@@ -52,8 +52,9 @@ read_bytes=8129945600 read_ns=9.391–9.492 s
 The operational hit rate is 89.611%.  The cache counters cover the three
 routed matrix nodes and therefore are not directly comparable to the route
 corpus's one-bundle request definition.  The explicit reads supply
-8,129,945,600 bytes per repetition, or 127.03 decimal MB (121.15 MiB) per
-64 requested decode tokens.  The mean instrumented read interval is 9.448 s
+8,129,945,600 bytes per 64-token repetition (8,129.95 decimal MB, or
+7,753.32 MiB total), equivalent to 127.0304 decimal MB/token (121.1456
+MiB/token).  The mean instrumented read interval is 9.448 s
 per repetition, equivalent to about 860.5 MB/s (820.6 MiB/s) while reading.
 That interval is 44.3% of the bounded arm's estimated 64-token wall time;
 the remainder includes the exact CPU execution and cache/dispatch overhead.

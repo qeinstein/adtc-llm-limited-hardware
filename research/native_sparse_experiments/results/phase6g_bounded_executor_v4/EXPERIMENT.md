@@ -50,8 +50,9 @@ read_ns=11.456–11.808 s
 
 The operational hit rate is 86.030%.  The logged read-call count represents
 three plane reads per logical cache request, or 37,416 inferred `pread`
-syscalls per repetition.  Fresh bytes are 10,932,256,768 per repetition,
-170.82 decimal MB (162.90 MiB) per 64 requested decode tokens.  Mean
+syscalls per repetition.  Fresh bytes are 10,932,256,768 per 64-token
+repetition (10,932.26 decimal MB, or 10,425.81 MiB total), equivalent to
+170.8165 decimal MB/token (162.9033 MiB/token).  Mean
 instrumented read time is 11.638 s, with about 939.4 MB/s (895.8 MiB/s)
 throughput.  Reads occupy an estimated 55.2% of bounded 64-token wall time;
 the remainder is exact CPU execution, cache lookup, and runtime overhead.
