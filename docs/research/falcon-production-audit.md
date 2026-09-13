@@ -41,3 +41,8 @@ audit, staged training, checkpoint/resume verification, candidate evaluation,
 merge/export, and deployment-model evaluation. Every stage writes a manifest
 and is runnable from a clean checkout. A production run must not start until
 the tiny resume test and short throughput benchmark pass.
+
+The first corrected generation-smoke rerun (Kaggle v7) completed the exact
+data audit/build but failed at the script import boundary before loading model
+weights. That failure is preserved as an aborted infrastructure experiment;
+the launch-path fix is included in the next version.

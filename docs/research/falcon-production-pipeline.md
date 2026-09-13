@@ -81,8 +81,10 @@ smoke must pass before training resumes.
 
 The tracked raw-data audit found 142 clean project SFT rows and no exact or
 high-similarity leakage against the 63 frozen final prompts. The clean-worker
-build counts must be regenerated after the source-list change; the exact
-token/facet manifest is written by the builder. Training now uses a deterministic 64-row fast-dev subset during
+build now yields `15,036` accepted rows (`13,564` train and `1,472` dev;
+`30,051` SFT tokens and `7,426,390` MCQA tokens before loss masking) after the
+capped train-only sources. The exact token/facet manifest is written by the
+builder. Training now uses a deterministic 64-row fast-dev subset during
 stage runs; larger frozen batteries remain separate final evaluations. The
 P100 resume gate measured roughly 8--13 loss tokens/sec and about 145 seconds
 per optimizer step at effective batch 16, so one full epoch is not an
@@ -99,3 +101,9 @@ battery emitted only 1--3 visible characters for almost every prompt. Its
 `52.38%` fast-dev `acc_norm` is therefore a training smoke result only, not a
 quality claim. The checkpoint remains in Kaggle history and must not be used
 for export or submission.
+
+Kaggle version 7 reached the smoke stage after the complete data build but
+failed before model loading because the standalone smoke script lacked the
+repository root on `sys.path` (`ModuleNotFoundError: scripts`). It is recorded
+in `falcon-generation-smoke-v7-20260913.json`; this is an infrastructure
+failure, not a model result.
