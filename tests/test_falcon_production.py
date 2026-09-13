@@ -4,7 +4,7 @@ import pytest
 
 from scripts.build_falcon_dataset import canonical, distribution, near_holdout
 from scripts.falcon_format import generation_stop_ids
-from scripts.train_falcon_production import FalconDataset, checkpoint_is_complete, latest_checkpoint, select_checkpoint, stable_eval_subset, token_share_sampling_weights
+from scripts.train_falcon_production import FalconDataset, checkpoint_is_complete, latest_checkpoint, select_checkpoint, stable_eval_subset, token_share_sampling_weights, truncate_mcqa_context
 
 
 class FakeTokenizer:
@@ -93,6 +93,31 @@ def test_mcqa_rejects_choice_truncation_instead_of_training_partial_answer():
     }]
     with pytest.raises(ValueError, match="failed training tokenization"):
         FalconDataset(rows, FakeTokenizer(), 3, "System")
+
+
+def test_mcqa_context_window_is_head_tail_and_records_truncation():
+    values, truncated = truncate_mcqa_context(list(range(10)), 6)
+    assert truncated is True
+    assert values == [0, 1, 2, 3, 8, 9]
+
+
+def test_mcqa_context_under_window_is_unchanged():
+    original = list(range(6))
+    values, truncated = truncate_mcqa_context(original, 6)
+    assert truncated is False
+    assert values == original
+
+
+def test_mcqa_dataset_records_bounded_context_truncation():
+    rows = [{
+        "format": "mcqa", "example_id": "m-long", "source": "test",
+        "context": "one two three four five six seven eight nine ten",
+        "choices": ["red", "blue"], "gold": 0,
+    }]
+    dataset = FalconDataset(rows, FakeTokenizer(), 32, "System", mcqa_context_max_tokens=6)
+    assert dataset.mcqa_context_truncated == 1
+    assert dataset[0]["context_truncated"] is True
+    assert len(dataset[0]["context_ids"]) == 6
 
 
 def test_holdout_gate_catches_exact_and_near_duplicates():

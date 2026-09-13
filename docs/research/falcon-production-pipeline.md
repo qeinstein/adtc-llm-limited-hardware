@@ -21,7 +21,11 @@ The production trainer uses completion-only SFT labels: every prompt token is
 the tokenizer's complete Falcon chat rendering, including the assistant-turn
 `<|im_end|>` boundary; generic `<|end_of_text|>` is not substituted. Prompts
 are left-truncated only after verifying the complete answer fits within
-`max_length`; MCQA rows are rejected instead of partially truncating a choice.
+`max_length`; MCQA answer continuations are never truncated or partially
+trained. To keep P100 activation memory bounded, unusually long MCQA contexts
+use a recorded 384-token head+tail window during training and fast-dev
+scoring. Final deployment MCQA evaluation remains a separate full-context gate;
+the data manifest records every context reduced by the bounded window.
 MCQA ranking uses the same character-normalized continuation score as
 the ADTC `acc_norm` objective, with a small gold-token NLL auxiliary term. The
 sampler has a separate per-stage token-share target. Each row receives its

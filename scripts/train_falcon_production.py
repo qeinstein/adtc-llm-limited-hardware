@@ -116,12 +116,28 @@ def render_sft(tokenizer: Any, row: dict[str, Any], system: str) -> tuple[list[i
     return render_completion(tokenizer, messages, answer)
 
 
+def truncate_mcqa_context(context_ids: list[int], limit: int | None) -> tuple[list[int], bool]:
+    """Bound MCQA activation memory while retaining both question and options.
+
+    MCQA scoring still keeps every answer choice intact.  Only unusually long
+    contexts are reduced with a head+tail window; this avoids a single public
+    abstract/question allocating a full-vocabulary logit tensor large enough
+    to OOM the P100 during backward.
+    """
+    if not limit or limit <= 0 or len(context_ids) <= limit:
+        return context_ids, False
+    head = max(1, (limit * 2) // 3)
+    tail = max(1, limit - head)
+    return context_ids[:head] + context_ids[-tail:], True
+
+
 class FalconDataset:
     """Pre-tokenized fail-closed mixed SFT/MCQA dataset."""
 
-    def __init__(self, rows: list[dict[str, Any]], tokenizer: Any, max_len: int, system: str):
+    def __init__(self, rows: list[dict[str, Any]], tokenizer: Any, max_len: int, system: str, mcqa_context_max_tokens: int | None = None):
         self.items: list[dict[str, Any]] = []
         self.rejected: list[dict[str, str]] = []
+        self.mcqa_context_truncated = 0
         for row in rows:
             try:
                 fmt = row.get("format")
@@ -145,6 +161,8 @@ class FalconDataset:
                 elif fmt == "mcqa":
                     context_ids = list(tokenizer(str(row["context"]), add_special_tokens=False)["input_ids"])
                     choice_ids = [list(tokenizer(" " + str(x), add_special_tokens=False)["input_ids"]) for x in row["choices"]]
+                    context_ids, context_truncated = truncate_mcqa_context(context_ids, mcqa_context_max_tokens)
+                    self.mcqa_context_truncated += int(context_truncated)
                     if any(len(context_ids) + len(choice) > max_len for choice in choice_ids):
                         raise ValueError("MCQA choice would be truncated")
                     self.items.append({
@@ -152,7 +170,7 @@ class FalconDataset:
                         "choice_ids": choice_ids, "choices": row["choices"],
                         "gold": int(row["gold"]),
                         "tokens": sum(len(x) for x in choice_ids), "sample_tokens": int(row.get("loss_tokens", sum(len(x) for x in choice_ids))),
-                        "example_id": row["example_id"], "source": row.get("source", ""),
+                        "example_id": row["example_id"], "source": row.get("source", ""), "context_truncated": context_truncated,
                     })
                 else:
                     raise ValueError(f"unsupported format {fmt!r}")
@@ -521,13 +539,14 @@ def main(argv: list[str] | None = None) -> int:
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
     max_len = int(config["data"]["max_length"])
-    train_data = FalconDataset(train_rows, tokenizer, max_len, config["data"]["system_prompt"])
+    mcqa_context_max_tokens = int(config["training"].get("mcqa_context_max_tokens", max_len))
+    train_data = FalconDataset(train_rows, tokenizer, max_len, config["data"]["system_prompt"], mcqa_context_max_tokens)
     fast_eval_limit = int(config["training"].get("fast_eval_max_rows", 0))
     eval_rows = stable_eval_subset(dev_rows, fast_eval_limit)
-    dev_data = FalconDataset(eval_rows, tokenizer, max_len, config["data"]["system_prompt"])
+    dev_data = FalconDataset(eval_rows, tokenizer, max_len, config["data"]["system_prompt"], mcqa_context_max_tokens)
     objective_counts = Counter(item["kind"] for item in train_data.items)
     total_tokens = sum(item["tokens"] for item in train_data.items)
-    event(event_path, "dataset_ready", train_items=len(train_data), dev_items=len(dev_data), dev_rows_available=len(dev_rows), fast_eval_max_rows=fast_eval_limit, objective_counts=dict(objective_counts), train_tokens=total_tokens, max_len=max_len)
+    event(event_path, "dataset_ready", train_items=len(train_data), dev_items=len(dev_data), dev_rows_available=len(dev_rows), fast_eval_max_rows=fast_eval_limit, objective_counts=dict(objective_counts), train_tokens=total_tokens, max_len=max_len, mcqa_context_max_tokens=mcqa_context_max_tokens, train_mcqa_context_truncated=train_data.mcqa_context_truncated, dev_mcqa_context_truncated=dev_data.mcqa_context_truncated)
 
     use_cuda = torch.cuda.is_available()
     cap = get_cuda_capability(torch) if use_cuda else None

@@ -69,6 +69,7 @@ def main(argv: list[str] | None = None) -> int:
 
     import torch
     from scripts.train_lora import patch_peft_transformers_compat
+    from scripts.train_falcon_production import truncate_mcqa_context
 
     patch_peft_transformers_compat()
     from peft import PeftModel
@@ -103,6 +104,7 @@ def main(argv: list[str] | None = None) -> int:
     emit(events, "model_load_complete", model=load_id, merged_model=bool(args.merged_model), adapter=args.adapter)
 
     max_len = int(config["data"]["max_length"])
+    mcqa_context_max_tokens = int(config["training"].get("mcqa_context_max_tokens", max_len))
     system = config["data"]["system_prompt"]
     sft_losses: list[float] = []
     mcqa_correct = 0
@@ -126,6 +128,7 @@ def main(argv: list[str] | None = None) -> int:
     def mcqa_item(row: dict[str, Any]) -> tuple[bool, bool]:
         context = str(row["context"])
         ctx = list(tokenizer(context, add_special_tokens=False)["input_ids"])
+        ctx, _ = truncate_mcqa_context(ctx, mcqa_context_max_tokens)
         scores: list[float] = []
         for choice in row["choices"]:
             continuation = list(tokenizer(" " + str(choice), add_special_tokens=False)["input_ids"])
