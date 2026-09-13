@@ -1,0 +1,36 @@
+{
+  "experiment_id": "falcon-resume-gate-v16-20260913",
+  "status": "passed",
+  "kernel": "toheebogunade/jamii-afya-falcon-production-post-training",
+  "kernel_version": 16,
+  "commit": "78ed698",
+  "model": "tiiuae/Falcon-H1-1.5B-Deep-Instruct",
+  "model_revision": "b6648636ddc906688974282de6e7a243395f5423",
+  "hardware": "Tesla P100-PCIE-16GB, CUDA capability 6.0",
+  "training": {
+    "dtype": "fp16",
+    "max_length": 512,
+    "effective_batch_size": 16,
+    "first_invocation_steps": 2,
+    "resumed_invocation_terminal_step": 4,
+    "step_seconds_first_invocation": 149.31,
+    "final_train_loss": 1.6621476411819458,
+    "final_eval_loss": 2.0814104080200195,
+    "eval_rows": 64,
+    "eval_runtime_seconds": 231.7522,
+    "losses_finite": true
+  },
+  "checkpoint_selection": {
+    "selected_step": 4,
+    "selected_eval_loss": 2.0814104080200195,
+    "alternative_step_2_eval_loss": 2.0873427391052246
+  },
+  "persistence": {
+    "backend": "private Kaggle Dataset",
+    "dataset": "toheebogunade/jamii-afya-falcon-production-checkpoints",
+    "uploaded_and_retrieved": true,
+    "optimizer_scheduler_rng_present": true
+  },
+  "conclusion": "resume, selection, persistence, finite-loss, and P100 memory gates passed; production stage remains unauthorized until bounded pilot quality is evaluated",
+  "timestamp_utc": "2026-09-13"
+}

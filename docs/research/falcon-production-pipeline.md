@@ -145,3 +145,10 @@ mid-sentence, it includes a questionable `cardiac arrest` differential, and it
 does not reach referral disposition. This is recorded in
 `falcon-generation-smoke-v11-20260913.json`; it is precisely the behavior the
 held-out post-training suite must improve without harming general capability.
+
+Version 16 passes the infrastructure gate: FP16 P100 training is finite at
+about `149 s/optimizer step`, batch-1 dev evaluation avoids OOM (`231.8 s` for
+64 rows), global step resumes `2 -> 4` with optimizer/scheduler/RNG state,
+step 4 is selected by lower eval loss (`2.0814`), and that checkpoint is
+uploaded to and retrieved from the private Kaggle Dataset. Full details are in
+`falcon-resume-gate-v16-20260913.json`.
