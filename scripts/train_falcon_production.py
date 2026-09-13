@@ -18,6 +18,7 @@ import os
 import platform
 import random
 import selectors
+import shutil
 import subprocess
 import sys
 import threading
@@ -326,6 +327,24 @@ def select_checkpoint(checkpoint_dir: Path, log_history: list[dict[str, Any]]) -
         "selected_step": selected["step"],
         "selected_eval_loss": selected["eval_loss"],
     }
+
+
+def materialize_selected_adapter(selected_checkpoint: Path, destination: Path, tokenizer: Any) -> None:
+    """Promote only the validation-selected adapter, never the terminal model."""
+    if not checkpoint_is_complete(selected_checkpoint):
+        raise RuntimeError(f"selected checkpoint is not complete: {selected_checkpoint}")
+    adapter_files = [
+        path for path in selected_checkpoint.iterdir()
+        if path.is_file() and (path.name == "adapter_config.json" or path.name.startswith("adapter_model."))
+    ]
+    if not any(path.name.startswith("adapter_model.") for path in adapter_files) or not any(path.name == "adapter_config.json" for path in adapter_files):
+        raise RuntimeError(f"selected checkpoint has no complete adapter payload: {selected_checkpoint}")
+    if destination.exists():
+        shutil.rmtree(destination)
+    destination.mkdir(parents=True, exist_ok=True)
+    for path in adapter_files:
+        shutil.copy2(path, destination / path.name)
+    tokenizer.save_pretrained(str(destination))
 
 
 def token_share_sampling_weights(items: list[dict[str, Any]], shares: dict[str, float]) -> list[float]:
@@ -863,10 +882,12 @@ def main(argv: list[str] | None = None) -> int:
         selection = select_checkpoint(checkpoint_dir, list(trainer.state.log_history))
         atomic_json(stage_dir / "checkpoint_selection.json", selection)
         event(event_path, "checkpoint_selection", **selection)
-        trainer.save_model(str(checkpoint_dir / "final-adapter"))
-        tokenizer.save_pretrained(str(checkpoint_dir / "final-adapter"))
-        event(event_path, "train_complete", global_step=int(trainer.state.global_step), final_adapter=str(checkpoint_dir / "final-adapter"))
-        atomic_json(stage_dir / "final_summary.json", {"status": "complete", "stage": args.stage, "global_step": int(trainer.state.global_step), "completed_utc": now(), "trainable_parameters": trainable, "total_parameters": total, "checkpoint_selection": selection})
+        if selection.get("status") != "selected" or not selection.get("selected_checkpoint"):
+            raise RuntimeError("no complete held-out-evaluated checkpoint is promotable")
+        final_adapter = checkpoint_dir / "final-adapter"
+        materialize_selected_adapter(Path(selection["selected_checkpoint"]), final_adapter, tokenizer)
+        event(event_path, "train_complete", global_step=int(trainer.state.global_step), selected_step=int(selection["selected_step"]), final_adapter=str(final_adapter))
+        atomic_json(stage_dir / "final_summary.json", {"status": "complete", "stage": args.stage, "global_step": int(trainer.state.global_step), "selected_step": int(selection["selected_step"]), "completed_utc": now(), "trainable_parameters": trainable, "total_parameters": total, "checkpoint_selection": selection, "final_adapter": str(final_adapter)})
     except Exception as exc:  # noqa: BLE001 - preserve a machine-readable failure
         event(event_path, "train_failed", error_type=type(exc).__name__, error=str(exc))
         atomic_json(stage_dir / "final_summary.json", {"status": "failed", "stage": args.stage, "failed_utc": now(), "error_type": type(exc).__name__, "error": str(exc)})

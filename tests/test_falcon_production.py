@@ -128,6 +128,29 @@ def test_checkpoint_selection_refuses_to_infer_without_eval(tmp_path: Path):
     assert select_checkpoint(tmp_path, [{"step": 10, "loss": 1.0}])["status"] == "no_eval"
 
 
+def test_materialize_selected_adapter_promotes_selected_weights_only(tmp_path: Path):
+    from scripts.train_falcon_production import materialize_selected_adapter
+
+    selected = tmp_path / "checkpoint-10"
+    selected.mkdir()
+    for name in ("trainer_state.json", "optimizer.pt", "scheduler.pt", "rng_state.pth"):
+        (selected / name).write_text("{}")
+    (selected / "trainer_state.json").write_text('{"global_step": 10}')
+    (selected / "checkpoint_manifest.json").write_text('{"complete": true, "global_step": 10}')
+    (selected / "adapter_config.json").write_text('{"r": 16}')
+    (selected / "adapter_model.safetensors").write_bytes(b"selected")
+
+    class Tokenizer:
+        def save_pretrained(self, path):
+            Path(path, "tokenizer_config.json").write_text("{}")
+
+    destination = tmp_path / "final-adapter"
+    materialize_selected_adapter(selected, destination, Tokenizer())
+    assert (destination / "adapter_model.safetensors").read_bytes() == b"selected"
+    assert (destination / "tokenizer_config.json").exists()
+    assert not (destination / "optimizer.pt").exists()
+
+
 def test_token_share_weights_match_expected_loss_token_mass():
     items = [
         {"kind": "sft", "tokens": 10},
