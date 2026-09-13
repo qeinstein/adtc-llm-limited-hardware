@@ -1,0 +1,13 @@
+{
+  "id": "toheebogunade/jamii-native-sparse-ik-llama-v3",
+  "title": "Jamii native sparse ik llama v3",
+  "code_file": "ik_llama_probe_v3.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_internet": true,
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": []
+}
