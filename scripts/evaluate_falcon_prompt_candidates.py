@@ -81,6 +81,16 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
     out = args.out.resolve()
     out.mkdir(parents=True, exist_ok=True)
+    events_path = out / "events.jsonl"
+
+    def emit(name: str, **fields: Any) -> None:
+        record = {"timestamp_utc": stamp(), "event": name, **fields}
+        line = json.dumps(record, ensure_ascii=False)
+        print(line, flush=True)
+        with events_path.open("a", encoding="utf-8") as handle:
+            handle.write(line + "\n")
+            handle.flush()
+
     candidate_values = candidates(args.candidates.resolve())
     splits = {"development": prompts(args.development.resolve()), "validation": prompts(args.validation.resolve())}
 
@@ -110,6 +120,7 @@ def main(argv: list[str] | None = None) -> int:
         model = PeftModel.from_pretrained(model, args.adapter, is_trainable=False)
     model.eval()
     stop_ids = generation_stop_ids(tokenizer, model.generation_config)
+    emit("prompt_search_model_ready", device=str(device), dtype=str(dtype), candidates=len(candidate_values), development=len(splits["development"]), validation=len(splits["validation"]))
     results: dict[str, Any] = {
         "schema_version": "1.0.0",
         "experiment_id": "falcon-system-prompt-search",
@@ -131,6 +142,9 @@ def main(argv: list[str] | None = None) -> int:
         candidate_root = out / candidate_id
         candidate_root.mkdir(parents=True, exist_ok=True)
         candidate_result: dict[str, Any] = {"id": candidate_id, "family": candidate.get("family", "unknown"), "text": candidate["text"], "splits": {}}
+        last_heartbeat = time.monotonic()
+        completed_items = 0
+        total_items = sum(len(value) for value in splits.values())
         for split_name, items in splits.items():
             split_root = candidate_root / split_name
             split_root.mkdir(parents=True, exist_ok=True)
@@ -157,6 +171,10 @@ def main(argv: list[str] | None = None) -> int:
                 result = rule_result(prompt_id, text, quality, 1)
                 result.update({"prompt_tokens": prompt_len, "new_tokens": len(generated_ids), "elapsed_seconds": round(elapsed, 4), "stopped_on": generated_ids[-1] if generated_ids and generated_ids[-1] in stop_ids else None, "section": item.get("section", "unknown"), "critical": bool(quality.get("critical")), "source_text": user_text})
                 scored.append(result)
+                completed_items += 1
+                if time.monotonic() - last_heartbeat >= 30:
+                    emit("prompt_search_heartbeat", candidate=candidate_id, split=split_name, completed_items=completed_items, total_items=total_items, elapsed_seconds=round(time.monotonic() - last_heartbeat, 1))
+                    last_heartbeat = time.monotonic()
             passed = sum(int(item["passed"]) for item in scored)
             critical_failures = [item["id"] for item in scored if not item["passed"] and item["critical"]]
             candidate_result["splits"][split_name] = {
@@ -176,12 +194,12 @@ def main(argv: list[str] | None = None) -> int:
         candidate_result["validation_selection_eligible"] = not validation["critical_failures"] and validation["pass_rate_percent"] >= 50.0
         (candidate_root / "candidate_summary.json").write_text(json.dumps(candidate_result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         results["candidates"][candidate_id] = candidate_result
-        print(json.dumps({"timestamp_utc": stamp(), "event": "prompt_candidate_complete", "candidate": candidate_id, "development_pass_rate": candidate_result["splits"]["development"]["pass_rate_percent"], "validation_pass_rate": validation["pass_rate_percent"], "validation_critical_failures": validation["critical_failures"]}, ensure_ascii=False), flush=True)
+        emit("prompt_candidate_complete", candidate=candidate_id, development_pass_rate=candidate_result["splits"]["development"]["pass_rate_percent"], validation_pass_rate=validation["pass_rate_percent"], validation_critical_failures=validation["critical_failures"])
     eligible = [value for value in results["candidates"].values() if value["validation_selection_eligible"]]
     results["selected_candidate"] = max(eligible, key=lambda value: (value["splits"]["validation"]["pass_rate_percent"], -value["splits"]["validation"]["mean_prompt_tokens"]))["id"] if eligible else None
     results["completed_utc"] = stamp()
     (out / "prompt_search_results.json").write_text(json.dumps(results, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(json.dumps({"timestamp_utc": stamp(), "event": "prompt_search_complete", "candidate_count": len(candidate_values), "selected_candidate": results["selected_candidate"]}, ensure_ascii=False), flush=True)
+    emit("prompt_search_complete", candidate_count=len(candidate_values), selected_candidate=results["selected_candidate"])
     return 0
 
 
