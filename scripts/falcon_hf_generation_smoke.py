@@ -41,15 +41,17 @@ def main(argv: list[str] | None = None) -> int:
     tokenizer = AutoTokenizer.from_pretrained(args.model, revision=args.revision, trust_remote_code=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
+    capability = torch.cuda.get_device_capability(0) if torch.cuda.is_available() else None
+    dtype = torch.float32 if capability is not None and capability < (7, 0) else (torch.float16 if torch.cuda.is_available() else torch.float32)
     model = FalconH1ForCausalLM.from_pretrained(
         args.model,
         revision=args.revision,
         trust_remote_code=True,
-        torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
+        torch_dtype=dtype,
     )
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device).eval()
-    print(json.dumps({"timestamp_utc": stamp(), "event": "smoke_model_load_complete", "device": str(device)}), flush=True)
+    print(json.dumps({"timestamp_utc": stamp(), "event": "smoke_model_load_complete", "device": str(device), "cuda_capability": capability, "dtype": str(dtype)}), flush=True)
     messages = [
         {"role": "system", "content": "You are Jamii Afya, an offline medical decision-support assistant. Always surface danger signs and when to refer."},
         {"role": "user", "content": prompt},

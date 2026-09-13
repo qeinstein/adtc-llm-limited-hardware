@@ -86,7 +86,8 @@ def main(argv: list[str] | None = None) -> int:
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    dtype = torch.float16 if device.type == "cuda" else torch.float32
+    capability = torch.cuda.get_device_capability(0) if device.type == "cuda" else None
+    dtype = torch.float32 if capability is not None and capability < (7, 0) else (torch.float16 if device.type == "cuda" else torch.float32)
     emit(events, "model_load_start", device=str(device), dtype=str(dtype), model=load_id, revision=load_revision)
     model_kwargs = {"trust_remote_code": True, "torch_dtype": dtype}
     if load_revision:

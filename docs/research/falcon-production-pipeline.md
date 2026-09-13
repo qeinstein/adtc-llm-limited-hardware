@@ -114,3 +114,9 @@ the correct stop set `[11, 228]`. It is recorded in
 `falcon-generation-smoke-v8-20260913.json` and is not a valid baseline. The
 next smoke records generation score steps so padding after an early stop can
 be distinguished from the model actually selecting PAD.
+
+Version 9 identified the distinction: score step 1 was finite, then all later
+scores were `NaN`; argmax over those non-finite logits produced ID 0. This is a
+P100/sm_60 FP16 numerical failure, not a tokenizer stop failure. P100 HF
+Falcon loading now uses FP32 for smoke, evaluation, and production training;
+sm_70+ retains the faster supported low-precision path.

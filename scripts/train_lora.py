@@ -135,8 +135,9 @@ def resolve_precision(*, use_cuda, cuda_capability=None, mps=False,
     - CUDA + 4bit -> bitsandbytes NF4 (locked recipe); bf16 unless overridden.
       NOTE: bitsandbytes requires sm>=70 — on older GPUs (P100/sm_60) use
       --quantize none instead of failing at runtime.
-    - CUDA + none -> plain weights; auto picks bf16 on sm>=80, fp16 below
-      (P100/T4 have no bf16 tensor cores; fp16 is the safe fast choice).
+    - CUDA + none -> plain weights; auto picks bf16 on sm>=80, fp16 on sm>=70,
+      and fp32 below sm_70. Falcon-H1 produces non-finite autoregressive
+      logits in P100 FP16, so the older path is deliberately correctness-first.
     """
     if not use_cuda:
         return ("plain", "fp16" if mps else "fp32")
@@ -147,7 +148,7 @@ def resolve_precision(*, use_cuda, cuda_capability=None, mps=False,
     cap = cuda_capability or (0, 0)
     if cap >= (8, 0):
         return ("plain", "bf16")
-    return ("plain", "fp16")
+    return ("plain", "fp16" if cap >= (7, 0) else "fp32")
 
 
 def compile_supported(*, use_cuda, cuda_capability=None):
