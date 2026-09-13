@@ -120,3 +120,8 @@ scores were `NaN`; argmax over those non-finite logits produced ID 0. This is a
 P100/sm_60 FP16 numerical failure, not a tokenizer stop failure. P100 HF
 Falcon loading now uses FP32 for smoke, evaluation, and production training;
 sm_70+ retains the faster supported low-precision path.
+
+Version 10 reran the same smoke in FP32 and produced eight finite non-PAD
+tokens (`As Jamii Afya, I ur...`). The numeric gate now passes; a 64-token
+smoke is being used to inspect completion behavior before the notebook returns
+to audit-only mode.
