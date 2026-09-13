@@ -154,3 +154,15 @@ about `149 s/optimizer step`, batch-1 dev evaluation avoids OOM (`231.8 s` for
 step 4 is selected by lower eval loss (`2.0814`), and that checkpoint is
 uploaded to and retrieved from the private Kaggle Dataset. Full details are in
 `falcon-resume-gate-v16-20260913.json`.
+
+## Archived controlled pilot v18
+
+Pilot `falcon-production-v1-pilot-20260913T141934Z` completed eight Stage-A
+steps on a P100 and persisted a complete step-8 checkpoint. It is **not a
+candidate**. Fast-dev `acc_norm` was `53.9683%`, but the frozen generation
+battery showed widespread truncation, incoherent Kiswahili-like continuations,
+missing dispositions, an invented WHO protocol, a guessed malaria dose, and
+unsafe deworming guidance. The full record is
+`docs/research/experiments/falcon-pilot-v18-20260913.json`. Stage B/C and export
+are explicitly vetoed for this adapter; the next experiment must compare safer
+lower-rate/target-module settings with evaluations at multiple optimizer steps.

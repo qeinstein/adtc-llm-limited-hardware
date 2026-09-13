@@ -452,6 +452,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     ap.add_argument("--init-adapter", default=None, help="Optional adapter from the preceding stage; unlike resume, this starts a new stage with fresh optimizer/scheduler state")
     ap.add_argument("--max-steps", type=int, default=0, help="Override config for smoke/resume tests")
     ap.add_argument("--save-steps", type=int, default=0, help="Override checkpoint interval; used by the tiny resume test")
+    ap.add_argument("--eval-steps", type=int, default=0, help="Override evaluation interval for controlled pilots")
     ap.add_argument("--quantize", choices=("auto", "4bit", "none"), default="auto")
     ap.add_argument("--compute-dtype", choices=("auto", "bf16", "fp16", "fp32"), default="auto")
     ap.add_argument("--seed", type=int, default=None)
@@ -820,7 +821,7 @@ def main(argv: list[str] | None = None) -> int:
         max_steps=effective_max_steps if effective_max_steps > 0 else -1,
     )
     import inspect
-    eval_interval = int(training["eval_steps"])
+    eval_interval = int(args.eval_steps or training["eval_steps"])
     if effective_max_steps > 0:
         # A bounded pilot must still produce at least one checkpoint-selection
         # observation; long stages retain the configured cadence.
