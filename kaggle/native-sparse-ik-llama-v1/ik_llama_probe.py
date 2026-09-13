@@ -40,8 +40,8 @@ RESEARCH_BASE_COMMIT = "ba0047b133efde93dc21381f31f60195ac1cc73b"
 PROMPT = "Give one concise reason oral rehydration solution helps a child with watery diarrhoea."
 THREADS = 4
 CONTEXT = 512
-N_GEN = 24
-BENCH_GEN = 32
+N_GEN = 64
+BENCH_GEN = 64
 BENCH_REPEATS = 3
 
 SOURCE_PATTERNS = {
