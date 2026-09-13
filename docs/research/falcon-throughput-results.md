@@ -28,6 +28,23 @@ Deep Q4_K_M baseline and has slightly lower RSS. Its accuracy must be measured
 before changing the deployment quant, because the stock accuracy numbers were
 obtained with Deep Q4_K_M.
 
+## Repeated deployment baseline (Kaggle, 2026-09-13)
+
+The earlier table is a frontier sweep with one repetition. The matched
+three-repetition baseline below is the authoritative current systems result.
+It uses scalar/no-SIMD llama.cpp `5f436dd`, four explicit threads, and the
+profiler-shaped `-p 512 -n 128 -ngl 0` command.
+
+| Variant | File bytes | Prompt tok/s mean (stdev) | Decode tok/s mean (stdev) | Decode ms/token mean | Peak RSS MB mean (stdev) | Steady RSS MB mean | Repetitions |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Deep Q4_0 | 904,190,528 | 9.816 (0.158) | **6.292 (0.453)** | 159.501 | 1,066.123 (0.132) | 1,045.169 | 3 |
+| Deep Q4_K_M | 938,466,368 | 4.878 (0.008) | 3.821 (0.062) | 261.747 | 1,098.831 (0.110) | 1,080.674 | 3 |
+
+Q4_0 is 64.7% faster in mean decode and uses 32.7 MB less peak RSS than
+Q4_K_M on this runner. Both repeated CLI checks varied at a fixed seed, so
+determinism is an open deployment finding; it does not invalidate the measured
+throughput rows. Accuracy and correctness still decide the deployment format.
+
 The 24-layer ordinary Instruct checkpoint is faster than Deep Q4_K_M, but this
 is a different checkpoint and cannot be substituted silently. IQ4_XS is smaller
 on disk but is not a useful CPU candidate on this scalar build. Four threads
