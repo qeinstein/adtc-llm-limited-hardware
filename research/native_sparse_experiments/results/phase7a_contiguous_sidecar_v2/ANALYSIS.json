@@ -1,0 +1,36 @@
+{
+  "schema": "native-sparse-contiguous-sidecar/v2",
+  "status": "killed",
+  "control": {
+    "sample_tok_s": [4.9, 4.9, 4.9],
+    "mean_tok_s": 4.9,
+    "median_tok_s": 4.9,
+    "ms_per_token": 204.0816326530612,
+    "peak_rss_mib": 10537.0859375
+  },
+  "sidecar": {
+    "sample_tok_s": [3.2, 3.0, 3.3],
+    "mean_tok_s": 3.1666666666666665,
+    "median_tok_s": 3.2,
+    "ms_per_token": 315.7894736842105,
+    "peak_rss_mib": 3517.046875,
+    "cache_capacity_bytes": 2000000000,
+    "slot_count": 2281,
+    "sidecar_bytes": 8975810560,
+    "sidecar_build_sec": 38.831193177,
+    "read_calls_per_repetition": 9275,
+    "read_bytes_per_repetition": 8129945600,
+    "read_ns_samples": [11764494368, 19057053314, 14432752951],
+    "read_interval_mean_sec": 15.084766877666667,
+    "read_bandwidth_decimal_mb_s": 538.9506954884775,
+    "read_wall_fraction_estimate": 0.7463816944678818
+  },
+  "correctness": {
+    "route_files_byte_identical_control_vs_sidecar": true,
+    "all_response_hashes_equal": true,
+    "response_hash": "5804c970f14ce9902178660a5262689f2ffb3518619336403244933d85cafca1",
+    "native_k": 8,
+    "weights_changed": false
+  },
+  "decision": "KILL: one-read contiguous storage reduced syscall count but worsened cold read bandwidth and end-to-end bounded throughput."
+}
