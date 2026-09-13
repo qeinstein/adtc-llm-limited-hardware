@@ -23,7 +23,7 @@ def test_deployment_time_report_parser(tmp_path: Path):
 
 def test_trainability_fixture_contains_sft_and_mcqa():
     rows = tiny_rows()
-    assert len(rows) == 12
+    assert len(rows) == 32
     assert {row["format"] for row in rows} == {"sft", "mcqa"}
     assert len({row["example_id"] for row in rows}) == len(rows)
 
