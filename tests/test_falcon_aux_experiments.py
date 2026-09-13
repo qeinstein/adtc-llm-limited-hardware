@@ -51,3 +51,12 @@ def test_prompt_search_sets_are_not_frozen_batteries():
     validation_ids = {item["id"] for item in json.loads(Path("docs/research/falcon_prompt_validation.json").read_text())["prompts"]}
     assert not final_ids & (dev_ids | validation_ids)
     assert dev_ids.isdisjoint(validation_ids)
+
+
+def test_prompt_weight_matrix_is_bounded_and_selection_gated():
+    notebook = json.loads(Path("kaggle/phase04-falcon-prompt-weight-matrix/phase04_falcon_prompt_weight_matrix.ipynb").read_text())
+    source = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"])
+    assert "falcon_trainability_probe.py" in source
+    assert "falcon_probe_heldout.json" in source
+    assert "No validation-selected prompt" in source
+    assert "persist_checkpoint.py" not in source
