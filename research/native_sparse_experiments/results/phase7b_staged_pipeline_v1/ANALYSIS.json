@@ -1,0 +1,67 @@
+{
+  "schema": "native-sparse-staged-pipeline/v1",
+  "status": "complete",
+  "decision": "KEEP / EXPLOIT ONCE",
+  "model_sha256": "2a809de317cfd49ac9130b95619ee6ac039a855e467015b3e996eb61af84718b",
+  "llama_commit": "3057bb66c86c46d5781e50e85462a760ba7d1feb",
+  "research_source_commit": "69464e6b35113baa387b5140547aa1b5ff7780df",
+  "hardware": "Kaggle 4-vCPU Intel Xeon AVX2",
+  "cache_capacity_bytes": 2000000000,
+  "bundle_bytes": 876544,
+  "generated_tokens_per_repetition": 64,
+  "exactness": {
+    "native_k": 8,
+    "routes_equal": true,
+    "responses_equal": true,
+    "response_sha256": "5804c970f14ce9902178660a5262689f2ffb3518619336403244933d85cafca1"
+  },
+  "arms": {
+    "resident_control": {
+      "decode_tok_s": [4.4, 4.5, 4.4],
+      "mean_decode_tok_s": 4.433333333333333,
+      "process_elapsed_sec": [28.708452531, 27.436956386, 27.534900145],
+      "mean_process_elapsed_sec": 27.893436354,
+      "peak_rss_mib": 10537.55859375
+    },
+    "bounded_serial": {
+      "decode_tok_s": [3.2, 3.2, 3.2],
+      "mean_decode_tok_s": 3.2,
+      "process_elapsed_sec": [35.300915567, 34.961473056, 34.995307837],
+      "mean_process_elapsed_sec": 35.08589882,
+      "median_process_elapsed_sec": 34.995307837,
+      "peak_rss_mib": 3517.31640625,
+      "read_ns": [10685445574, 10504326049, 10616714485],
+      "mean_read_sec": 10.602162036,
+      "read_calls_logged": 83475,
+      "logical_read_bytes": 8129945600
+    },
+    "bounded_staged": {
+      "decode_tok_s": [3.2, 3.2, 3.2],
+      "mean_decode_tok_s": 3.2,
+      "process_elapsed_sec": [32.305042449, 32.586966323, 32.095247937],
+      "mean_process_elapsed_sec": 32.32908556966667,
+      "median_process_elapsed_sec": 32.305042449,
+      "peak_rss_mib": 3517.50390625,
+      "aggregate_worker_read_ns": [41752540095, 40288764968, 40105669025],
+      "aggregate_worker_read_sec_mean": 40.715658029333336,
+      "async_join_ns": [1080965967, 1134592214, 1002828975],
+      "async_join_sec_mean": 1.0727957186666666,
+      "ready_wait_ns": [6281348171, 6089914121, 6112312491],
+      "ready_wait_sec_mean": 6.161191594333333,
+      "ready_wait_events": 294600,
+      "aggregate_ready_wait_ms_per_token": 96.26861866145833,
+      "read_calls_logged": 27825,
+      "logical_read_bytes": 8129945600
+    }
+  },
+  "comparison": {
+    "staged_vs_serial_process_elapsed_delta_fraction": -0.07857325430015394,
+    "staged_vs_serial_decode_delta_fraction": 0.0,
+    "logical_decimal_mb_per_64_tokens": 8129.9456,
+    "logical_decimal_mb_per_token": 127.0304,
+    "logical_mib_per_64_tokens": 7753.3203125,
+    "logical_mib_per_token": 121.1456298828125,
+    "observed_proc_io_read_bytes_approx_per_repetition": [8739110912, 8741179392, 8739819520, 8744792064, 8744333312, 8742768640]
+  },
+  "next_experiment": "bounded worker pool or equivalent queue with the same plane-ready staged executor"
+}

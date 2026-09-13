@@ -12,7 +12,7 @@
     "exact_le_4_gib": {
       "tok_s": 3.2,
       "rss_mib": 3517.7,
-      "source": "phase7b_async_reads_v2; rounded mean, matched 2 GB cache"
+      "source": "phase7b_staged_pipeline_v1; rounded mean, matched 2 GB cache; process-time improvement only"
     },
     "exact_le_2_5_gib": {
       "tok_s": 2.867,
@@ -24,8 +24,23 @@
     "bounded_async_fresh_bytes_per_token": 127030400,
     "bounded_async_fresh_decimal_mb_per_token": 127.0304,
     "bounded_async_hit_rate": 0.8961137993,
-    "bounded_async_join_wait_mean_sec_per_64_tokens": 8.506634473,
-    "source": "phase7b_async_reads_v2"
+    "bounded_async_join_wait_mean_sec_per_64_tokens": 1.072795719,
+    "bounded_staged_aggregate_ready_wait_ms_per_token": 96.268618661,
+    "bounded_staged_process_elapsed_delta_fraction": -0.0785732543,
+    "source": "phase7b_staged_pipeline_v1"
+  },
+  "challengers": {
+    "selective_attention_q4": {
+      "status": "quality_gate_pending",
+      "resident_tok_s": 4.5,
+      "resident_rss_mib": 10307.8,
+      "control_tok_s": 4.2,
+      "throughput_delta_fraction": 0.0714285714,
+      "storage_bytes": 10528504448,
+      "storage_delta_fraction": -0.0120532141,
+      "deterministic_smoke_hash": "a3c3c73a067cbb5fab9e68bd7d06c03d3c488e74467d33c40fae339836006c8c",
+      "source": "phase7c_selective_q4_v1"
+    }
   },
   "quality": {
     "exact_response_hash": "a3c3c73a067cbb5fab9e68bd7d06c03d3c488e74467d33c40fae339836006c8c",
@@ -33,7 +48,7 @@
     "routes_exact": true
   },
   "active_experiments": [
-    "phase7b_staged_pipeline_v1",
-    "phase7c_selective_q4_v1"
+    "phase7c_selective_q4_quality_v1",
+    "phase7d_selective_q4_bounded_v1"
   ]
 }

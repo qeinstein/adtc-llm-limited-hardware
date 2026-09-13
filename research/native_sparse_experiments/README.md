@@ -213,15 +213,30 @@ yet.
   reads at the 2 GB cache point.  Rounded generation means were 2.867 versus
   3.200 tok/s, but medians were 3.3 versus 3.2; mean/median total process
   elapsed improved 14.0%/6.0% with exact route and output equality.  Traffic
-  was 127.0304 MB/token in both arms.  The staged follow-up is the only
-  remaining storage-schedule iteration.
-- `phase7c_selective_q4_v1`: the first two quantizer attempts failed before
-  benchmarking (harness anchor, then an imatrix preflight on an unchanged
-  IQ2 tensor).  Both failures are preserved; the corrected third attempt is
-  running.  No Q4 performance or quality claim is made yet.
+  was 127.0304 MB/token in both arms.  This branch is now superseded by the
+  staged readiness experiment, not by another layout variant.
+- `phase7b_staged_pipeline_v1`: plane-ready asynchronous reads reduced
+  bounded process elapsed by 7.857% (35.086 s to 32.329 s mean over three
+  repeats) at the same 3,517.5 MiB RSS and 127.0304 MB logical fresh bytes per
+  token.  The CLI's rounded decode metric remained 3.2 tok/s in both arms.
+  Aggregate readiness wait was 96.269 ms/token, while final join wait fell to
+  1.073 s per 64-token repetition.  Routes and outputs remained exact.  Keep
+  one worker-pool follow-up; kill further basic I/O scheduling if it does not
+  move decoded throughput.
+- `phase7c_selective_q4_v1`: after two preserved quantizer failures, the
+  corrected selective Q4 challenger completed.  Requantizing only the
+  measured attention/GDN Q5_K projection families raised resident decode from
+  4.2 to 4.5 tok/s (+7.14%), reduced RSS by 122.6 MiB, and reduced file size
+  by 1.205%.  The deterministic smoke output remained the established hash,
+  but this is a representation challenger rather than an exact bytewise
+  control; the initial held-out quality gate is running.
+- `phase7c_selective_q4_quality_v1`: the frozen clinical/safety,
+  English/Kiswahili instruction, and basic MCQ gate is running on Kaggle.
+- `phase7d_selective_q4_bounded_v1`: a composition A/B is prepared to test
+  whether the resident Q4 win survives the real 2 GB byte-bounded executor.
 
 The machine-readable canonical points and experiment decisions are in
-`frontier.json`.  The next high-information compute/storage experiment is
-the v10 staged exact executor: publish gate/up/down plane readiness from
-asynchronous reads and let the existing exact selected-expert kernel consume
-ready planes while remaining reads proceed.
+`frontier.json`.  The staged storage result is a qualified process-time win,
+not a new rounded raw decode point.  The next decision is whether selective Q4
+passes quality and retains a bounded-RSS advantage; if so, the strongest path
+is the Q4 bounded composition followed by a worker-pool/pipeline follow-up.
