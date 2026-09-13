@@ -1,0 +1,39 @@
+
+
+Loading model... |-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\ 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b1-3057bb66c
+model      : /tmp/native-sparse-route-corpus/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf
+ftype      : IQ2_XXS - 2.0625 bpw
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> A patient is hypotensive and tachycardic. Which finding is most concerning? A dry lips B shock C mild cough D rash.
+
+[Start thinking]
+
+Here's a thinking process that leads to the correct answer:
+
+1.  **Analyze the Patient's Presentation:**
+    *   **Hypotension:** Low blood pressure. This indicates that the heart isn't pumping enough blood to the rest of the body, or there's significant vasodilation/le
+
+[ Prompt: 8.5 t/s | Generation: 5.0 t/s ]
+
+
+Exiting...

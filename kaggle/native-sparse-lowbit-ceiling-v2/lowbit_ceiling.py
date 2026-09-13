@@ -393,8 +393,8 @@ def main() -> None:
                      "lscpu": run_checked(["lscpu"]).stdout, "compiler": run_checked(["c++", "--version"]).stdout},
         "representation": {
             "original": {"name": "IQ2_XXS", "bytes_per_256": 66, "bpw": 2.0625},
-            "custom": {"name": "resolved_code_sign_index", "bytes_per_256": 74, "bpw": 2.3125,
-                       "semantics": "exact offline repack: combined grid/sign indices plus two 4-bit scales"},
+            "custom": {"name": "packed_resolved_code_sign_index", "bytes_per_256": 70, "bpw": 2.1875,
+                       "semantics": "exact offline repack: combined grid/sign indices plus two 4-bit scales; packed alignment"},
             "external": {"name": "unsigned W2A8 T-MAC-style LUT", "bpw": 2.0,
                          "semantics": "performance ceiling only; not IQ2-equivalent"},
         },

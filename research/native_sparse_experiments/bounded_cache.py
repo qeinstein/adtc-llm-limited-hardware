@@ -13,6 +13,8 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from dataclasses import dataclass
+import os
+from pathlib import Path
 from typing import Callable, Iterator
 
 
@@ -27,6 +29,45 @@ class CacheEntry:
     key: BundleKey
     slot: int
     payload_bytes: int
+
+
+@dataclass(frozen=True)
+class ExpertRecord:
+    """On-disk location of one packed `(layer, expert)` record."""
+
+    offset: int
+    size: int
+
+
+class PreadExpertStore:
+    """Minimal explicit-read store used by the bounded-cache transition."""
+
+    def __init__(self, path: str | Path, records: dict[BundleKey, ExpertRecord]) -> None:
+        self.path = Path(path)
+        self.records = dict(records)
+        self._fd = os.open(self.path, os.O_RDONLY)
+
+    def read(self, key: BundleKey) -> bytes:
+        """Read exactly one indexed record; never maps the whole store."""
+
+        record = self.records[key]
+        if record.offset < 0 or record.size <= 0:
+            raise ValueError(f"invalid record metadata for {key}")
+        payload = os.pread(self._fd, record.size, record.offset)
+        if len(payload) != record.size:
+            raise OSError(f"short pread for {key}: {len(payload)} != {record.size}")
+        return payload
+
+    def close(self) -> None:
+        if self._fd >= 0:
+            os.close(self._fd)
+            self._fd = -1
+
+    def __enter__(self) -> "PreadExpertStore":
+        return self
+
+    def __exit__(self, _type: object, _value: object, _traceback: object) -> None:
+        self.close()
 
 
 class BoundedExpertCache:

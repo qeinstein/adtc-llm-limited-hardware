@@ -1,0 +1,43 @@
+
+
+Loading model... |-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\ 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b1-3057bb66c
+model      : /tmp/native-sparse-route-corpus/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf
+ftype      : IQ2_XXS - 2.0625 bpw
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> Give three polite ways to ask someone to clarify their request.
+
+[Start thinking]
+
+Thinking Process:
+
+1.  **Analyze the Request:**
+    *   Task: Provide three polite ways to ask someone to clarify their request.
+    *   Tone: Polite, professional, courteous.
+    *   Quantity: Exactly three options.
+
+2.  **Brainstorming Options:**
+
+[ Prompt: 7.7 t/s | Generation: 5.1 t/s ]
+
+
+Exiting...

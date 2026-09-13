@@ -1,0 +1,30 @@
+{
+  "schema": "native-sparse-lowbit-ceiling-analysis/v2",
+  "correctness": {
+    "exact_dot_checksum_match": true,
+    "routes_or_weights_changed": false,
+    "native_k": 8
+  },
+  "results": [
+    {
+      "shape": [512, 2048],
+      "control_gmacs": 6.569664,
+      "candidate_gmacs": 4.406575,
+      "candidate_delta_fraction": -0.3292541292827153,
+      "control_bytes": 2162688,
+      "candidate_bytes": 2293760,
+      "candidate_overhead_fraction": 0.06060606060606055
+    },
+    {
+      "shape": [2048, 512],
+      "control_gmacs": 6.210729,
+      "candidate_gmacs": 4.229075,
+      "candidate_delta_fraction": -0.31906946833455464,
+      "control_bytes": 2162688,
+      "candidate_bytes": 2293760,
+      "candidate_overhead_fraction": 0.06060606060606055
+    }
+  ],
+  "decision": "reject_as_compute_optimization",
+  "next": "different LUT arithmetic/access schedule or non-MoE matrix kernel"
+}

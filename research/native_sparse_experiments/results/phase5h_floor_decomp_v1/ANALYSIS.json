@@ -1,0 +1,29 @@
+{
+  "schema": "native-sparse-floor-decomp-analysis/v1",
+  "deduplication": "tensor name; loader emitted two identical records per tensor",
+  "rss_mib": {
+    "peak": 1609.96484375,
+    "anonymous": 536.90234375,
+    "file_backed": 1073.06640625,
+    "minor_faults": 194309,
+    "major_faults": 68
+  },
+  "inventory": {
+    "unique_tensors": 733,
+    "categories": {
+      "input_embeddings": {"tensors": 1, "logical_bytes": 286064640},
+      "lm_head": {"tensors": 1, "logical_bytes": 286064640},
+      "attention_deltanet_trunk": {"tensors": 330, "logical_bytes": 921070080},
+      "norms": {"tensors": 81, "logical_bytes": 663552},
+      "router": {"tensors": 40, "logical_bytes": 83886080},
+      "shared_expert": {"tensors": 160, "logical_bytes": 92405760},
+      "non_routed_total": {"tensors": 613, "logical_bytes": 1670154752},
+      "routed_expert_lazy": {"tensors": 120, "logical_bytes": 8975810560}
+    }
+  },
+  "correctness": {
+    "measurement_arm_valid_output": false,
+    "exact_control_hash": "a3c3c73a067cbb5fab9e68bd7d06c03d3c488e74467d33c40fae339836006c8c"
+  },
+  "decision": "bounded_expert_cache_structurally_reachable_under_4GiB; 2.5GiB_requires_staging_and_floor_reduction_measurement"
+}

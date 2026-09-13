@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import collections
+import heapq
 import json
 import math
 from dataclasses import dataclass
@@ -252,6 +253,10 @@ def _replay_summary(
         "fresh_requests_per_token": misses / token_count if token_count else 0.0,
         "max_cache_occupancy_bundles": min(capacity, len(unique_pairs)),
         "max_resident_bytes": max_resident_bytes,
+        # Planning estimate for a compact key/slot/LRU record.  Python object
+        # overhead is deliberately excluded; the production executor must
+        # measure its packed metadata structure separately.
+        "policy_metadata_bytes_estimate": min(capacity, len(unique_pairs)) * 16,
     }
 
 
@@ -397,10 +402,12 @@ def _online_policy_replay(
 ) -> dict[str, Any]:
     """Replay a deployable global policy with online-only metadata.
 
-    ``recency_frequency`` uses a logarithmic frequency term plus a decaying
-    recency term. ``least_stale`` estimates each bundle's reuse interval from
-    observed history and evicts the bundle whose current age is largest in
-    units of its expected interval. Both policies see only past requests.
+    ``recency_frequency`` is an online LFU/LRU hybrid: frequency is the
+    primary key and last use breaks ties. ``least_stale`` estimates each
+    bundle's reuse interval from observed history and evicts the bundle with
+    the most distant predicted next use. Versioned heaps keep both policies
+    O(log(cache)) per request on long traces. Both policies see only past
+    requests.
     """
 
     if capacity < 0:
@@ -409,25 +416,40 @@ def _online_policy_replay(
         raise ValueError(f"unknown online cache policy: {policy}")
     sizes = _normalize_bundle_bytes(bundle_bytes)
     entries: dict[tuple[int, int], dict[str, float]] = {}
+    eviction_heap: list[tuple[float, float, int, int, tuple[int, int]]] = []
     requests = hits = misses = resident_bytes = max_resident_bytes = 0
     misses_by_key: collections.Counter[tuple[int, int]] = collections.Counter()
     misses_by_token: list[int] = []
 
-    def victim_key(now: int) -> tuple[int, int]:
+    def push_priority(key: tuple[int, int]) -> None:
+        entry = entries[key]
         if policy == "recency_frequency":
-            def score(key: tuple[int, int]) -> tuple[float, float, int, int]:
-                entry = entries[key]
-                age = now - int(entry["last"])
-                value = math.log2(entry["frequency"] + 1.0) + math.exp(-age / half_life_requests)
-                return value, entry["last"], key[0], key[1]
-            return min(entries, key=score)
+            # Lower frequency is evicted first; older entries break ties.
+            heapq.heappush(eviction_heap,
+                (entry["frequency"], entry["last"], key[0], key[1], key))
+            return
+        # A large predicted next-use position is the least-stale candidate to
+        # evict. Negation turns the max selection into a min-heap operation.
+        predicted_next = entry["last"] + max(entry["expected_interval"], 1.0)
+        heapq.heappush(eviction_heap,
+            (-predicted_next, -entry["last"], -key[0], -key[1], key))
 
-        def stale_score(key: tuple[int, int]) -> tuple[float, float, int, int]:
-            entry = entries[key]
-            age = now - entry["last"]
-            expected = max(entry["expected_interval"], 1.0)
-            return age / expected, -entry["last"], key[0], key[1]
-        return max(entries, key=stale_score)
+    def victim_key() -> tuple[int, int]:
+        while eviction_heap:
+            first, second, layer, expert, key = heapq.heappop(eviction_heap)
+            entry = entries.get(key)
+            if entry is None:
+                continue
+            if policy == "recency_frequency":
+                if (first, second, layer, expert) == (
+                        entry["frequency"], entry["last"], key[0], key[1]):
+                    return key
+            else:
+                predicted_next = entry["last"] + max(entry["expected_interval"], 1.0)
+                if (first, second, layer, expert) == (
+                        -predicted_next, -entry["last"], -key[0], -key[1]):
+                    return key
+        raise RuntimeError("online cache eviction heap lost a resident key")
 
     for token_routes in routes:
         token_misses = 0
@@ -446,6 +468,7 @@ def _online_policy_replay(
                         entry["expected_interval"] = 0.75 * entry["expected_interval"] + 0.25 * interval
                 entry["frequency"] += 1
                 entry["last"] = now
+                push_priority(key)
                 continue
             misses += 1
             token_misses += 1
@@ -453,8 +476,9 @@ def _online_policy_replay(
             if capacity:
                 entries[key] = {"frequency": 1.0, "last": float(now), "expected_interval": 0.0}
                 resident_bytes += sizes[key[0]]
+                push_priority(key)
                 if len(entries) > capacity:
-                    evicted = victim_key(now)
+                    evicted = victim_key()
                     resident_bytes -= sizes[evicted[0]]
                     del entries[evicted]
             max_resident_bytes = max(max_resident_bytes, resident_bytes)
@@ -498,33 +522,45 @@ def belady_replay(
     future: dict[tuple[int, int], collections.deque[int]] = collections.defaultdict(collections.deque)
     for position, key in enumerate(sequence):
         future[key].append(position)
+    next_use: dict[tuple[int, int], int] = {
+        key: positions[0] if positions else len(sequence)
+        for key, positions in future.items()
+    }
     cache: set[tuple[int, int]] = set()
+    # Maximize next use with a min-heap over negated positions.  Heap entries
+    # are versioned by the current next_use value, so hits do not require a
+    # linear scan of the whole cache when the long route corpus is replayed.
+    eviction_heap: list[tuple[int, int, int, tuple[int, int]]] = []
     hits = misses = resident_bytes = max_resident_bytes = 0
     misses_by_key: collections.Counter[tuple[int, int]] = collections.Counter()
     misses_by_token: list[int] = []
-    position = 0
     for token_routes in routes:
         token_misses = 0
         for key in token_routes.requests:
             future[key].popleft()
+            next_use[key] = future[key][0] if future[key] else len(sequence)
             if key in cache:
                 hits += 1
+                heapq.heappush(eviction_heap, (-next_use[key], -key[0], -key[1], key))
             else:
                 misses += 1
                 token_misses += 1
                 misses_by_key[key] += 1
                 if capacity:
                     if len(cache) >= capacity:
-                        def next_use(candidate: tuple[int, int]) -> tuple[int, int, int]:
-                            upcoming = future[candidate]
-                            return (upcoming[0] if upcoming else math.inf, candidate[0], candidate[1])
-                        evicted = max(cache, key=next_use)
+                        while eviction_heap:
+                            neg_upcoming, neg_layer, neg_expert, candidate = heapq.heappop(eviction_heap)
+                            if candidate in cache and -neg_upcoming == next_use[candidate]:
+                                evicted = candidate
+                                break
+                        else:
+                            raise RuntimeError("Belady eviction heap lost a resident key")
                         cache.remove(evicted)
                         resident_bytes -= sizes[evicted[0]]
                     cache.add(key)
                     resident_bytes += sizes[key[0]]
+                    heapq.heappush(eviction_heap, (-next_use[key], -key[0], -key[1], key))
             max_resident_bytes = max(max_resident_bytes, resident_bytes)
-            position += 1
         misses_by_token.append(token_misses)
     unique_pairs = set(sequence)
     report = _replay_summary(
@@ -614,6 +650,47 @@ def static_popularity_replay(
     return report
 
 
+def _reuse_distance_summary(routes: Sequence[TokenRoutes]) -> dict[str, Any]:
+    """Return exact distinct-bundle reuse distances for the flattened trace."""
+
+    sequence = [key for route in routes for key in route.requests]
+    bit = [0] * (len(sequence) + 1)
+    last: dict[tuple[int, int], int] = {}
+
+    def update(position: int, delta: int) -> None:
+        index = position + 1
+        while index < len(bit):
+            bit[index] += delta
+            index += index & -index
+
+    def prefix(end_exclusive: int) -> int:
+        index = end_exclusive
+        total = 0
+        while index:
+            total += bit[index]
+            index -= index & -index
+        return total
+
+    distances: list[int] = []
+    for position, key in enumerate(sequence):
+        previous = last.get(key)
+        if previous is not None:
+            # Count currently most-recent positions strictly between the two
+            # touches; this is the number of distinct bundles an LRU would
+            # need to retain to guarantee a hit at this request.
+            distances.append(prefix(position) - prefix(previous + 1))
+            update(previous, -1)
+        update(position, 1)
+        last[key] = position
+    return {
+        "reuses": len(distances),
+        "mean_distinct_bundles": _mean(distances),
+        "p50_distinct_bundles": _percentile(distances, 0.50),
+        "p95_distinct_bundles": _percentile(distances, 0.95),
+        "max_distinct_bundles": max(distances, default=0),
+    }
+
+
 def analyze_routes(
     routes: Sequence[TokenRoutes],
     *,
@@ -632,6 +709,9 @@ def analyze_routes(
     token_request_counts: list[int] = []
     layer_overlap_counts: list[int] = []
     layer_overlap_ratios: list[float] = []
+    per_layer_requests = [0] * QWEN35_LAYERS
+    per_layer_unique: list[set[int]] = [set() for _ in range(QWEN35_LAYERS)]
+    per_layer_shared: list[list[int]] = [[] for _ in range(QWEN35_LAYERS)]
     token_overlap_counts: list[int] = []
     token_overlap_ratios: list[float] = []
 
@@ -639,6 +719,8 @@ def analyze_routes(
     for current in routes:
         token_request_counts.append(sum(len(experts) for experts in current.layers))
         for layer, expert in current.requests:
+            per_layer_requests[layer] += 1
+            per_layer_unique[layer].add(expert)
             popularity[expert] += 1
             layer_counts = layer_popularity.setdefault(str(layer), {})
             expert_key = str(expert)
@@ -655,6 +737,8 @@ def analyze_routes(
                 count = len(set(prev_layer) & set(curr_layer))
                 layer_overlap_counts.append(count)
                 layer_overlap_ratios.append(count / len(curr_layer))
+            for layer, (prev_layer, curr_layer) in enumerate(zip(previous.layers, current.layers)):
+                per_layer_shared[layer].append(len(set(prev_layer) & set(curr_layer)))
         previous = current
 
     requests = sum(token_request_counts)
@@ -731,6 +815,22 @@ def analyze_routes(
             "mean_shared_experts": _mean(layer_overlap_counts),
             "mean_retention_fraction": _mean(layer_overlap_ratios),
             "p50_shared_experts": _percentile(layer_overlap_counts, 0.50),
+        },
+        "per_layer": [
+            {
+                "layer": layer,
+                "request_count": per_layer_requests[layer],
+                "unique_bundles": len(per_layer_unique[layer]),
+                "mean_adjacent_shared_experts": _mean(per_layer_shared[layer]),
+                "mean_adjacent_retention_fraction": _mean(per_layer_shared[layer]) / QWEN35_TOP_K
+                if per_layer_shared[layer] else 0.0,
+            }
+            for layer in range(QWEN35_LAYERS)
+        ],
+        "reuse_distance": _reuse_distance_summary(routes),
+        "policy_metadata": {
+            "estimated_bytes_per_resident_bundle": 16,
+            "note": "compact production key/slot/LRU estimate; excludes Python objects and I/O buffers",
         },
         "lru": capacities_out,
         "partitioned_lru": partitioned_out,

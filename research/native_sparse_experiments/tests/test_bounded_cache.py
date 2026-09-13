@@ -2,7 +2,11 @@ from __future__ import annotations
 
 import pytest
 
-from research.native_sparse_experiments.bounded_cache import BoundedExpertCache
+from research.native_sparse_experiments.bounded_cache import (
+    BoundedExpertCache,
+    ExpertRecord,
+    PreadExpertStore,
+)
 
 
 def test_fixed_slot_budget_and_deterministic_lru() -> None:
@@ -45,3 +49,18 @@ def test_oversized_record_is_rejected_before_residency_can_grow() -> None:
         cache.load((2, 7), lambda _: b"x" * 17)
     assert len(cache) == 0
     assert cache.resident_bytes == 16
+
+
+def test_explicit_pread_store_feeds_fixed_cache_slots(tmp_path) -> None:
+    path = tmp_path / "experts.bin"
+    path.write_bytes(b"header" + b"A" * 16 + b"B" * 16)
+    records = {
+        (3, 4): ExpertRecord(offset=6, size=16),
+        (3, 5): ExpertRecord(offset=22, size=16),
+    }
+    with PreadExpertStore(path, records) as store:
+        cache = BoundedExpertCache(16, 16, alignment=1)
+        assert cache.load((3, 4), store.read) == b"A" * 16
+        assert cache.load((3, 5), store.read) == b"B" * 16
+        assert store._fd >= 0
+        assert cache.snapshot()["read_bytes"] == 32

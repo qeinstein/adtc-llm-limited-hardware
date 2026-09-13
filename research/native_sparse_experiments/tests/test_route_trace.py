@@ -120,6 +120,10 @@ def test_analyze_routes_exposes_all_three_replay_policies() -> None:
     assert report["static_popularity_oracle"][0]["policy"] == "static_popularity_oracle"
     assert report["partitioned_lru"][0]["capacity_bytes"] == 800
     assert report["static_popularity_oracle"][0]["capacity_bytes"] == 800
+    assert len(report["per_layer"]) == QWEN35_LAYERS
+    assert report["per_layer"][0]["request_count"] == 16
+    assert report["reuse_distance"]["reuses"] > 0
+    assert report["lru"][0]["policy_metadata_bytes_estimate"] == 128
 
 
 def test_analyze_routes_exposes_deployable_and_belady_policies() -> None:

@@ -1,0 +1,41 @@
+
+
+Loading model... |-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\ 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b1-3057bb66c
+model      : /tmp/native-sparse-route-corpus/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf
+ftype      : IQ2_XXS - 2.0625 bpw
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> A patient has chest pain after exertion. What key questions should be asked first?
+
+[Start thinking]
+
+Here's a thinking process that leads to the suggested response:
+
+1.  **Analyze the Request:**
+    *   **Patient Presentation:** Chest pain after exertion.
+    *   **Task:** Identify the *key questions* to ask *first*.
+    *   **Context:** Medical assessment (
+
+[ Prompt: 8.0 t/s | Generation: 5.1 t/s ]
+
+
+Exiting...

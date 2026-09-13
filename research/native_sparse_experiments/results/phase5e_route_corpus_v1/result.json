@@ -1,0 +1,293 @@
+{
+  "schema": "native-sparse-route-corpus/v1",
+  "status": "ok",
+  "hypothesis": "Cache-policy conclusions should be tested against diverse exact native routes rather than the original 23-token smoke trace.",
+  "runtime": {
+    "llama_commit": "3057bb66c86c46d5781e50e85462a760ba7d1feb",
+    "runtime_patch_sha256": "183df4972c6663762f49bf6c8d4d70d6f88040a6b61f4fec62c86beff27ffd96"
+  },
+  "model": {
+    "file": "Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf",
+    "size_bytes": 10656955008,
+    "sha256": "2a809de317cfd49ac9130b95619ee6ac039a855e467015b3e996eb61af84718b",
+    "repo_commit": "bc014a17be43adabd7066b7a86075ff935c6a4e2"
+  },
+  "hardware": {
+    "platform": "Linux-6.12.90+-x86_64-with-glibc2.35",
+    "python": "3.12.13",
+    "cpu_count": 4,
+    "threads": 4,
+    "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           46 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               GenuineIntel\nModel name:                              Intel(R) Xeon(R) CPU @ 2.20GHz\nCPU family:                              6\nModel:                                   79\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                0\nBogoMIPS:                                4399.99\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc cpuid tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch pti ssbd ibrs ibpb stibp fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm rdseed adx smap xsaveopt arat md_clear arch_capabilities\nHypervisor vendor:                       KVM\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                512 KiB (2 instances)\nL3 cache:                                55 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Indirect target selection: Mitigation; Aligned branch/return thunks\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Mitigation; PTE Inversion\nVulnerability Mds:                       Mitigation; Clear CPU buffers; SMT Host state unknown\nVulnerability Meltdown:                  Mitigation; PTI\nVulnerability Mmio stale data:           Vulnerable: Clear CPU buffers attempted, no microcode; SMT Host state unknown\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Mitigation; IBRS\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; IBRS; IBPB conditional; STIBP conditional; RSB filling; PBRSB-eIBRS Not affected; BHI SW loop, KVM SW loop\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Mitigation; Clear CPU buffers; SMT Host state unknown\nVulnerability Vmscape:                   Not affected\n"
+  },
+  "decode": {
+    "tokens_requested_per_prompt": 64,
+    "prompts": 32,
+    "corpus_tokens": 2016,
+    "route_shape": [
+      40,
+      8
+    ],
+    "expert_count": 256
+  },
+  "prompt_results": [
+    {
+      "prompt_id": 0,
+      "category": "clinical",
+      "prompt": "Explain why oral rehydration solution helps a child with watery diarrhoea.",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_00.routes.jsonl"
+    },
+    {
+      "prompt_id": 1,
+      "category": "clinical",
+      "prompt": "What are the danger signs in a child with pneumonia that require urgent care?",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_01.routes.jsonl"
+    },
+    {
+      "prompt_id": 2,
+      "category": "clinical",
+      "prompt": "Give a short differential diagnosis for fever and neck stiffness.",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_02.routes.jsonl"
+    },
+    {
+      "prompt_id": 3,
+      "category": "clinical",
+      "prompt": "How should a community health worker counsel a mother about malaria prevention?",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_03.routes.jsonl"
+    },
+    {
+      "prompt_id": 4,
+      "category": "clinical",
+      "prompt": "A patient has chest pain after exertion. What key questions should be asked first?",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_04.routes.jsonl"
+    },
+    {
+      "prompt_id": 5,
+      "category": "clinical",
+      "prompt": "Describe safe first aid for a minor burn while waiting for medical review.",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_05.routes.jsonl"
+    },
+    {
+      "prompt_id": 6,
+      "category": "mcqa",
+      "prompt": "Which intervention most directly prevents cholera: A clean water B antibiotics C vitamins D bed rest?",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_06.routes.jsonl"
+    },
+    {
+      "prompt_id": 7,
+      "category": "mcqa",
+      "prompt": "A patient is hypotensive and tachycardic. Which finding is most concerning? A dry lips B shock C mild cough D rash.",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_07.routes.jsonl"
+    },
+    {
+      "prompt_id": 8,
+      "category": "mcqa",
+      "prompt": "What is the best first step for suspected hypoglycaemia: A give glucose B restrict fluids C induce vomiting D give iron?",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_08.routes.jsonl"
+    },
+    {
+      "prompt_id": 9,
+      "category": "mcqa",
+      "prompt": "Which organ primarily filters blood: A heart B liver C kidney D lung?",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_09.routes.jsonl"
+    },
+    {
+      "prompt_id": 10,
+      "category": "reasoning",
+      "prompt": "A clinic has two nurses and four rooms. Propose a simple morning patient-flow plan and explain it.",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_10.routes.jsonl"
+    },
+    {
+      "prompt_id": 11,
+      "category": "reasoning",
+      "prompt": "Compare the risks and benefits of sending a patient to hospital versus monitoring at home.",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_11.routes.jsonl"
+    },
+    {
+      "prompt_id": 12,
+      "category": "reasoning",
+      "prompt": "If a medicine works for 8 hours and is taken twice daily, explain a practical schedule.",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_12.routes.jsonl"
+    },
+    {
+      "prompt_id": 13,
+      "category": "reasoning",
+      "prompt": "A village has intermittent clean water. Suggest a low-cost plan with immediate and long-term actions.",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_13.routes.jsonl"
+    },
+    {
+      "prompt_id": 14,
+      "category": "reasoning",
+      "prompt": "What evidence would distinguish a true outbreak from an increase in reporting?",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_14.routes.jsonl"
+    },
+    {
+      "prompt_id": 15,
+      "category": "general",
+      "prompt": "Write a concise explanation of why the sky appears blue.",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_15.routes.jsonl"
+    },
+    {
+      "prompt_id": 16,
+      "category": "general",
+      "prompt": "How do I make a weekly study plan when I work irregular hours?",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_16.routes.jsonl"
+    },
+    {
+      "prompt_id": 17,
+      "category": "general",
+      "prompt": "Give three polite ways to ask someone to clarify their request.",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_17.routes.jsonl"
+    },
+    {
+      "prompt_id": 18,
+      "category": "general",
+      "prompt": "Summarize the idea of opportunity cost in plain language.",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_18.routes.jsonl"
+    },
+    {
+      "prompt_id": 19,
+      "category": "general",
+      "prompt": "What is the difference between a fact, an opinion, and a hypothesis?",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_19.routes.jsonl"
+    },
+    {
+      "prompt_id": 20,
+      "category": "general",
+      "prompt": "Write a short encouraging message for someone learning a difficult skill.",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_20.routes.jsonl"
+    },
+    {
+      "prompt_id": 21,
+      "category": "swahili",
+      "prompt": "Eleza kwa kifupi kwa nini maji ya kunywa yenye chumvi na sukari husaidia mtoto mwenye kuharisha.",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_21.routes.jsonl"
+    },
+    {
+      "prompt_id": 22,
+      "category": "swahili",
+      "prompt": "Ni dalili zipi za hatari zinahitaji mtoto apelekwe hospitali haraka?",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_22.routes.jsonl"
+    },
+    {
+      "prompt_id": 23,
+      "category": "swahili",
+      "prompt": "Andika mpango mfupi wa usafi wa mikono kwa shule ya kijijini.",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_23.routes.jsonl"
+    },
+    {
+      "prompt_id": 24,
+      "category": "swahili",
+      "prompt": "Tofautisha ukweli, maoni, na dhana kwa lugha rahisi ya Kiswahili.",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_24.routes.jsonl"
+    },
+    {
+      "prompt_id": 25,
+      "category": "swahili",
+      "prompt": "Mweleze mgonjwa kwa heshima kwa nini anatakiwa kufuata dozi aliyopewa.",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_25.routes.jsonl"
+    },
+    {
+      "prompt_id": 26,
+      "category": "instruction",
+      "prompt": "Answer in exactly three bullet points: how to prepare for a job interview.",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_26.routes.jsonl"
+    },
+    {
+      "prompt_id": 27,
+      "category": "instruction",
+      "prompt": "Give a two-sentence answer and one caveat about using online medical advice.",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_27.routes.jsonl"
+    },
+    {
+      "prompt_id": 28,
+      "category": "instruction",
+      "prompt": "Create a small table comparing prevention, diagnosis, and treatment.",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_28.routes.jsonl"
+    },
+    {
+      "prompt_id": 29,
+      "category": "instruction",
+      "prompt": "Ask one useful clarification question before answering an underspecified request.",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_29.routes.jsonl"
+    },
+    {
+      "prompt_id": 30,
+      "category": "short",
+      "prompt": "Hello.",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_30.routes.jsonl"
+    },
+    {
+      "prompt_id": 31,
+      "category": "short",
+      "prompt": "What should I do next?",
+      "returncode": 0,
+      "decode_tokens": 63,
+      "trace_file": "prompt_31.routes.jsonl"
+    }
+  ],
+  "corpus_file": "route_corpus.jsonl",
+  "corpus_sha256": "17c2861f95cd56eeb8f79d6a6ab5462b809f46e10e5d02f53558a760357fd0d0",
+  "wall_sec": 1144.9961252212524
+}

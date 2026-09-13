@@ -8,9 +8,10 @@ accounting prototype; it intentionally does not claim model throughput.
 
 ## Contract
 
-`BoundedExpertCache` accepts exact `(layer, expert)` keys, calls a reader only
-on a miss, copies the packed record into one fixed-size slot, and evicts the
-oldest resident key deterministically.  The slot budget is
+`PreadExpertStore` indexes packed records by byte offset and performs one
+explicit `pread` per cache miss.  `BoundedExpertCache` accepts exact
+`(layer, expert)` keys, copies the returned record into one fixed-size slot,
+and evicts the oldest resident key deterministically.  The slot budget is
 `floor(capacity_bytes / slot_bytes) * slot_bytes`; remainder bytes are not
 silently used.  The prototype is single-threaded for batch-1 decode and keeps
 I/O scheduling and the expert kernel separate.
@@ -41,8 +42,8 @@ trace and compute-representation decision are still pending.
 ## Correctness and limitation
 
 The unit tests cover hit/miss behavior, deterministic LRU order, fixed-slot
-accounting, zero-capacity behavior, and oversized-record rejection.  No model
-weights or routes are changed.  This prototype is evidence that bounded storage
-can be enforced cleanly, not evidence of end-to-end speed or physical NVMe
-traffic; those require a Kaggle executor experiment after representation and
-cache policy selection.
+accounting, zero-capacity behavior, oversized-record rejection, and an actual
+small-file `pread` into a cache slot.  No model weights or routes are changed.
+This prototype is evidence that bounded storage can be enforced cleanly, not
+evidence of end-to-end speed or physical NVMe traffic; those require a Kaggle
+executor experiment after representation and cache policy selection.

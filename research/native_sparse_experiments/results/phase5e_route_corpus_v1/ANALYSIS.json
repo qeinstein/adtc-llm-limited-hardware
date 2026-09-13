@@ -1,0 +1,49 @@
+{
+  "schema": "native-sparse-route-corpus-cache-analysis/v1",
+  "corpus": {
+    "tokens": 2016,
+    "requests": 645120,
+    "requests_per_token": 320,
+    "unique_bundles": 9577,
+    "categories": {
+      "clinical": 378,
+      "mcqa": 252,
+      "reasoning": 315,
+      "general": 378,
+      "swahili": 315,
+      "instruction": 252,
+      "short": 126
+    },
+    "mean_adjacent_shared_requests": 100.26550868486352,
+    "mean_adjacent_jaccard": 0.1956084994869658,
+    "mean_same_layer_retention": 0.3133297146401985,
+    "reuse_distance_p50": 842.0,
+    "reuse_distance_p95": 5310.0,
+    "corpus_sha256": "17c2861f95cd56eeb8f79d6a6ab5462b809f46e10e5d02f53558a760357fd0d0"
+  },
+  "bundle_bytes": 876544,
+  "budgets": {
+    "floor_mib": 1612.9,
+    "reserve_mib": 256,
+    "slots": {"4096": 2664, "3072": 1439, "2560": 826}
+  },
+  "policy_summary": {
+    "global_lru": {
+      "4096": {"hit_rate": 0.7719788566468254, "fresh_bytes_per_token": 63958580.82539683},
+      "3072": {"hit_rate": 0.618980964781746, "fresh_bytes_per_token": 106873583.74603175},
+      "2560": {"hit_rate": 0.4879355778769841, "fresh_bytes_per_token": 143631038.98412699}
+    },
+    "partitioned_lru": {
+      "4096": {"hit_rate": 0.7632316468253968, "fresh_bytes_per_token": 66412121.396825396},
+      "3072": {"hit_rate": 0.6209061879960317, "fresh_bytes_per_token": 106333570.03174603},
+      "2560": {"hit_rate": 0.49123418898809523, "fresh_bytes_per_token": 142705798.0952381}
+    },
+    "belady_oracle": {
+      "4096": {"hit_rate": 0.8937437996031746, "fresh_bytes_per_token": 29804235.174603175},
+      "3072": {"hit_rate": 0.7977585565476191, "fresh_bytes_per_token": 56727527.61904762},
+      "2560": {"hit_rate": 0.6995039682539682, "fresh_bytes_per_token": 84287357.96825397}
+    }
+  },
+  "decision": "byte_bounded_global_lru_first; defer_complex_policy",
+  "physical_io_measured": false
+}

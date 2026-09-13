@@ -1,0 +1,40 @@
+
+
+Loading model... |-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/ 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b1-3057bb66c
+model      : /tmp/native-sparse-route-corpus/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf
+ftype      : IQ2_XXS - 2.0625 bpw
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> Mweleze mgonjwa kwa heshima kwa nini anatakiwa kufuata dozi aliyopewa.
+
+[Start thinking]
+
+Here's a thinking process that leads to the suggested response:
+
+1.  **Analyze the Request:**
+    *   **Topic:** Explaining to a patient why they need to follow their prescribed dosage (magonjwa, utafiti, matumizi ya dawa).
+    *   **
+
+[ Prompt: 8.9 t/s | Generation: 5.1 t/s ]
+
+
+Exiting...

@@ -1,0 +1,43 @@
+
+
+Loading model... |-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\ 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b1-3057bb66c
+model      : /tmp/native-sparse-route-corpus/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf
+ftype      : IQ2_XXS - 2.0625 bpw
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> Create a small table comparing prevention, diagnosis, and treatment.
+
+[Start thinking]
+
+Thinking Process:
+
+1.  **Analyze the Request:**
+    *   Task: Create a small table.
+    *   Content: Compare prevention, diagnosis, and treatment.
+    *   Constraint: "Small table" (implies concise, not overly detailed).
+
+2.  **Determine
+
+[ Prompt: 7.3 t/s | Generation: 5.1 t/s ]
+
+
+Exiting...

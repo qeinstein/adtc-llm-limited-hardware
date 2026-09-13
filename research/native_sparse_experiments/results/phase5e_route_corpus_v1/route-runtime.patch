@@ -1,0 +1,49 @@
+diff --git a/ggml/src/ggml-cpu/ggml-cpu.c b/ggml/src/ggml-cpu/ggml-cpu.c
+index 87a329f26..9ad8dba2c 100644
+--- a/ggml/src/ggml-cpu/ggml-cpu.c
++++ b/ggml/src/ggml-cpu/ggml-cpu.c
+@@ -571,6 +571,35 @@ struct ggml_state {
+     struct ggml_numa_nodes numa;
+ };
+ 
++
++static void phase5_route_trace(const struct ggml_compute_params * params,
++                               const struct ggml_tensor * tensor) {
++    if (params->ith != 0 || tensor->op != GGML_OP_MUL_MAT_ID) return;
++    const char * path = getenv("GGML_ROUTE_CORPUS_TRACE");
++    if (path == NULL || path[0] == '\0') return;
++    const struct ggml_tensor * weights = tensor->src[0];
++    const struct ggml_tensor * ids = tensor->src[2];
++    if (weights == NULL || ids == NULL || ids->type != GGML_TYPE_I32 ||
++            !ggml_is_contiguous(ids) || strstr(weights->name, "ffn_down_exps") == NULL) return;
++    static FILE * fp = NULL;
++    static uint64_t event_id = 0;
++    if (fp == NULL) {
++        fp = fopen(path, "a");
++        if (fp == NULL) return;
++        setvbuf(fp, NULL, _IOLBF, 0);
++    }
++    struct timespec ts;
++    clock_gettime(CLOCK_MONOTONIC, &ts);
++    const int64_t n = ggml_nelements(ids);
++    const int32_t * values = (const int32_t *) ids->data;
++    fprintf(fp, "{\"event\":%" PRIu64 ",\"mono_ns\":%" PRIu64
++        ",\"weight\":\"%s\",\"weight_nbytes\":%zu,\"shape\":[%" PRId64 ",%" PRId64 ",%" PRId64 ",%" PRId64 "] ,\"ids\":[",
++        event_id++, (uint64_t)ts.tv_sec * (uint64_t)1000000000 + (uint64_t)ts.tv_nsec,
++        weights->name, ggml_nbytes(weights), ids->ne[0], ids->ne[1], ids->ne[2], ids->ne[3]);
++    for (int64_t i = 0; i < n; ++i) fprintf(fp, "%s%d", i ? "," : "", values[i]);
++    fprintf(fp, "]}\n");
++}
++
+ static struct ggml_state g_state = {0};
+ 
+ void ggml_barrier(struct ggml_threadpool * tp) {
+@@ -1740,6 +1769,8 @@ static void ggml_compute_forward(struct ggml_compute_params * params, struct ggm
+         return;
+     }
+ 
++    phase5_route_trace(params, tensor);
++
+     // extra_buffer op?
+     if (ggml_cpu_extra_compute_forward(params, tensor)) {
+         return;

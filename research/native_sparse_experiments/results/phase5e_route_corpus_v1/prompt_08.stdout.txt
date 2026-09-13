@@ -1,0 +1,42 @@
+
+
+Loading model... |-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\ 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b1-3057bb66c
+model      : /tmp/native-sparse-route-corpus/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf
+ftype      : IQ2_XXS - 2.0625 bpw
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> What is the best first step for suspected hypoglycaemia: A give glucose B restrict fluids C induce vomiting D give iron?
+
+[Start thinking]
+
+Here's a thinking process that leads to the correct answer:
+
+1.  **Analyze the Request:**
+    *   **Question:** What is the best first step for suspected hypoglycaemia?
+    *   **Options:**
+        *   A: Give glucose
+        *   B:
+
+[ Prompt: 8.4 t/s | Generation: 5.0 t/s ]
+
+
+Exiting...
