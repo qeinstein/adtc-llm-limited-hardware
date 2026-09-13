@@ -65,3 +65,9 @@ generation checks. This is a **PASS for trainability only**, not a quality
 candidate: the deliberately overfit generations became repetitive referral
 text. No real-data training is authorized until prompt and small-data quality
 probes provide evidence.
+
+Proof v3 is the current implementation confirmation, recorded in
+[`falcon-trainability-proof-v3-20260913.json`](experiments/falcon-trainability-proof-v3-20260913.json).
+It repeats the same pass with the instrumented loss summary and all 16 SFT
+fixture generations: 16/16 generations changed, SFT loss fell 61.15%, and
+MCQA loss fell 94.27%. The quality rejection remains unchanged.
