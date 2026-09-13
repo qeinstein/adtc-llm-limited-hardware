@@ -8,7 +8,9 @@ import pytest
 from research.native_sparse_experiments.route_trace import (
     QWEN35_LAYERS,
     TraceFormatError,
+    _online_policy_replay,
     analyze_routes,
+    belady_replay,
     lru_replay,
     partitioned_lru_replay,
     read_trace,
@@ -118,3 +120,22 @@ def test_analyze_routes_exposes_all_three_replay_policies() -> None:
     assert report["static_popularity_oracle"][0]["policy"] == "static_popularity_oracle"
     assert report["partitioned_lru"][0]["capacity_bytes"] == 800
     assert report["static_popularity_oracle"][0]["capacity_bytes"] == 800
+
+
+def test_analyze_routes_exposes_deployable_and_belady_policies() -> None:
+    routes = [validate_record(make_record(0)), validate_record(make_record(1))]
+    report = analyze_routes(routes, capacities=[8], expert_bundle_bytes=100)
+    assert report["recency_frequency"][0]["policy"] == "recency_frequency"
+    assert report["least_stale"][0]["policy"] == "least_stale"
+    assert report["belady_oracle"][0]["offline_next_use_oracle"] is True
+    assert report["lru"][0]["p95_miss_bytes"] == 100
+
+
+def test_online_policies_and_belady_are_deterministic() -> None:
+    routes = [validate_record(make_record(i)) for i in range(3)]
+    for policy in ("recency_frequency", "least_stale"):
+        first = _online_policy_replay(routes, 8, bundle_bytes=100, policy=policy)
+        second = _online_policy_replay(routes, 8, bundle_bytes=100, policy=policy)
+        assert first == second
+    report = belady_replay(routes, 8, bundle_bytes=100)
+    assert report["fresh_expert_bytes_total"] == report["miss_count"] * 100

@@ -210,6 +210,19 @@ def _replay_byte_fields(
         "fresh_expert_bytes_total": fresh_bytes,
         "fresh_expert_bytes_per_token": fresh_bytes / token_count if token_count else 0.0,
         "misses_by_token": list(misses_by_token),
+        "mean_miss_bytes": (
+            sum(bundle_bytes[layer] * count for (layer, _), count in misses_by_key.items())
+            / sum(misses_by_key.values())
+            if misses_by_key else 0.0
+        ),
+        "p50_miss_bytes": _percentile(
+            [bundle_bytes[layer] for (layer, _), count in misses_by_key.items() for _ in range(count)],
+            0.50,
+        ),
+        "p95_miss_bytes": _percentile(
+            [bundle_bytes[layer] for (layer, _), count in misses_by_key.items() for _ in range(count)],
+            0.95,
+        ),
     }
 
 
@@ -374,6 +387,169 @@ def partitioned_lru_replay(
     return report
 
 
+def _online_policy_replay(
+    routes: Sequence[TokenRoutes],
+    capacity: int,
+    *,
+    bundle_bytes: BundleBytes | None,
+    policy: str,
+    half_life_requests: float = 320.0,
+) -> dict[str, Any]:
+    """Replay a deployable global policy with online-only metadata.
+
+    ``recency_frequency`` uses a logarithmic frequency term plus a decaying
+    recency term. ``least_stale`` estimates each bundle's reuse interval from
+    observed history and evicts the bundle whose current age is largest in
+    units of its expected interval. Both policies see only past requests.
+    """
+
+    if capacity < 0:
+        raise ValueError("cache capacity must be non-negative")
+    if policy not in {"recency_frequency", "least_stale"}:
+        raise ValueError(f"unknown online cache policy: {policy}")
+    sizes = _normalize_bundle_bytes(bundle_bytes)
+    entries: dict[tuple[int, int], dict[str, float]] = {}
+    requests = hits = misses = resident_bytes = max_resident_bytes = 0
+    misses_by_key: collections.Counter[tuple[int, int]] = collections.Counter()
+    misses_by_token: list[int] = []
+
+    def victim_key(now: int) -> tuple[int, int]:
+        if policy == "recency_frequency":
+            def score(key: tuple[int, int]) -> tuple[float, float, int, int]:
+                entry = entries[key]
+                age = now - int(entry["last"])
+                value = math.log2(entry["frequency"] + 1.0) + math.exp(-age / half_life_requests)
+                return value, entry["last"], key[0], key[1]
+            return min(entries, key=score)
+
+        def stale_score(key: tuple[int, int]) -> tuple[float, float, int, int]:
+            entry = entries[key]
+            age = now - entry["last"]
+            expected = max(entry["expected_interval"], 1.0)
+            return age / expected, -entry["last"], key[0], key[1]
+        return max(entries, key=stale_score)
+
+    for token_routes in routes:
+        token_misses = 0
+        for key in token_routes.requests:
+            now = requests
+            requests += 1
+            entry = entries.get(key)
+            if entry is not None:
+                hits += 1
+                previous = entry["last"]
+                interval = now - previous
+                if interval > 0:
+                    if entry["expected_interval"] == 0:
+                        entry["expected_interval"] = interval
+                    else:
+                        entry["expected_interval"] = 0.75 * entry["expected_interval"] + 0.25 * interval
+                entry["frequency"] += 1
+                entry["last"] = now
+                continue
+            misses += 1
+            token_misses += 1
+            misses_by_key[key] += 1
+            if capacity:
+                entries[key] = {"frequency": 1.0, "last": float(now), "expected_interval": 0.0}
+                resident_bytes += sizes[key[0]]
+                if len(entries) > capacity:
+                    evicted = victim_key(now)
+                    resident_bytes -= sizes[evicted[0]]
+                    del entries[evicted]
+            max_resident_bytes = max(max_resident_bytes, resident_bytes)
+        misses_by_token.append(token_misses)
+
+    unique_pairs = {key for route in routes for key in route.requests}
+    report = _replay_summary(
+        policy=policy,
+        capacity=capacity,
+        requests=requests,
+        hits=hits,
+        misses=misses,
+        misses_by_token=misses_by_token,
+        unique_pairs=unique_pairs,
+        capacity_bytes=capacity * sizes[0] if len(set(sizes)) == 1 else None,
+        max_resident_bytes=max_resident_bytes,
+        token_count=len(routes),
+    )
+    report["half_life_requests"] = half_life_requests
+    report.update(_replay_byte_fields(
+        misses_by_key=misses_by_key,
+        misses_by_token=misses_by_token,
+        bundle_bytes=sizes,
+        token_count=len(routes),
+    ))
+    return report
+
+
+def belady_replay(
+    routes: Sequence[TokenRoutes],
+    capacity: int,
+    *,
+    bundle_bytes: BundleBytes | None = None,
+) -> dict[str, Any]:
+    """Replay the offline next-use (Belady) oracle at a bundle budget."""
+
+    if capacity < 0:
+        raise ValueError("cache capacity must be non-negative")
+    sizes = _normalize_bundle_bytes(bundle_bytes)
+    sequence = list(key for route in routes for key in route.requests)
+    future: dict[tuple[int, int], collections.deque[int]] = collections.defaultdict(collections.deque)
+    for position, key in enumerate(sequence):
+        future[key].append(position)
+    cache: set[tuple[int, int]] = set()
+    hits = misses = resident_bytes = max_resident_bytes = 0
+    misses_by_key: collections.Counter[tuple[int, int]] = collections.Counter()
+    misses_by_token: list[int] = []
+    position = 0
+    for token_routes in routes:
+        token_misses = 0
+        for key in token_routes.requests:
+            future[key].popleft()
+            if key in cache:
+                hits += 1
+            else:
+                misses += 1
+                token_misses += 1
+                misses_by_key[key] += 1
+                if capacity:
+                    if len(cache) >= capacity:
+                        def next_use(candidate: tuple[int, int]) -> tuple[int, int, int]:
+                            upcoming = future[candidate]
+                            return (upcoming[0] if upcoming else math.inf, candidate[0], candidate[1])
+                        evicted = max(cache, key=next_use)
+                        cache.remove(evicted)
+                        resident_bytes -= sizes[evicted[0]]
+                    cache.add(key)
+                    resident_bytes += sizes[key[0]]
+            max_resident_bytes = max(max_resident_bytes, resident_bytes)
+            position += 1
+        misses_by_token.append(token_misses)
+    unique_pairs = set(sequence)
+    report = _replay_summary(
+        policy="belady_oracle",
+        capacity=capacity,
+        requests=len(sequence),
+        hits=hits,
+        misses=misses,
+        misses_by_token=misses_by_token,
+        unique_pairs=unique_pairs,
+        capacity_bytes=capacity * sizes[0] if len(set(sizes)) == 1 else None,
+        max_resident_bytes=max_resident_bytes,
+        token_count=len(routes),
+    )
+    report["offline_next_use_oracle"] = True
+    report["deployable_prediction"] = False
+    report.update(_replay_byte_fields(
+        misses_by_key=misses_by_key,
+        misses_by_token=misses_by_token,
+        bundle_bytes=sizes,
+        token_count=len(routes),
+    ))
+    return report
+
+
 def static_popularity_replay(
     routes: Sequence[TokenRoutes],
     total_capacity: int,
@@ -500,6 +676,24 @@ def analyze_routes(
         static_popularity_replay(routes, capacity, bundle_bytes=bundle_sizes)
         for capacity in capacity_values
     ]
+    recency_frequency_out = [
+        _online_policy_replay(
+            routes, capacity, bundle_bytes=bundle_sizes,
+            policy="recency_frequency",
+        )
+        for capacity in capacity_values
+    ]
+    least_stale_out = [
+        _online_policy_replay(
+            routes, capacity, bundle_bytes=bundle_sizes,
+            policy="least_stale",
+        )
+        for capacity in capacity_values
+    ]
+    belady_out = [
+        belady_replay(routes, capacity, bundle_bytes=bundle_sizes)
+        for capacity in capacity_values
+    ]
     bundle_bytes_output: int | list[int]
     if len(set(bundle_sizes)) == 1:
         bundle_bytes_output = bundle_sizes[0]
@@ -540,7 +734,10 @@ def analyze_routes(
         },
         "lru": capacities_out,
         "partitioned_lru": partitioned_out,
+        "recency_frequency": recency_frequency_out,
+        "least_stale": least_stale_out,
         "static_popularity_oracle": static_out,
+        "belady_oracle": belady_out,
     }
 
 

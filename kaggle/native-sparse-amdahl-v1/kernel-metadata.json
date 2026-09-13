@@ -1,0 +1,13 @@
+{
+  "id": "toheebogunade/jamii-native-sparse-amdahl-v1",
+  "title": "Jamii Native Sparse End-to-End Amdahl Profile v1",
+  "code_file": "amdahl_profile.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_internet": true,
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": []
+}

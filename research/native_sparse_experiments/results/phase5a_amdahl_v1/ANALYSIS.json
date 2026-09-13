@@ -1,0 +1,43 @@
+{
+  "profile_operator_work": {
+    "routed_moe": {
+      "cycles": 130869798308,
+      "share": 46.975169091431724
+    },
+    "gated_delta_net": {
+      "cycles": 14953945986,
+      "share": 5.367656635515312
+    },
+    "full_attention": {
+      "cycles": 768233074,
+      "share": 0.27575406258247703
+    },
+    "router": {
+      "cycles": 6322953748,
+      "share": 2.269597915712881
+    },
+    "shared_expert": {
+      "cycles": 10639455496,
+      "share": 3.8189882419556738
+    },
+    "other_matmul": {
+      "cycles": 93729762146,
+      "share": 33.64390778188336
+    },
+    "normalization": {
+      "cycles": 218154968,
+      "share": 0.07830581725065155
+    },
+    "other_ops": {
+      "cycles": 21091261426,
+      "share": 7.570620453667929
+    }
+  },
+  "profile_total_cycles": 278593565152,
+  "control_ms_per_token": 210.73025831525797,
+  "expert_removed_ms_per_token": 123.71899802952751,
+  "routed_wall_delta_ms_per_token": 87.01126028573046,
+  "routed_wall_fraction": 0.4129034955936861,
+  "expert_infinite_speed_tok_s": 8.082833,
+  "expert_only_speedup": 1.7032974860090917
+}
