@@ -60,3 +60,11 @@ def test_prompt_weight_matrix_is_bounded_and_selection_gated():
     assert "falcon_probe_heldout.json" in source
     assert "No validation-selected prompt" in source
     assert "persist_checkpoint.py" not in source
+
+
+def test_production_notebook_can_pin_selected_system_prompt():
+    notebook = json.loads(Path("kaggle/phase04-falcon-production/phase04_falcon_production.ipynb").read_text())
+    source = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"])
+    assert "FALCON_SYSTEM_PROMPT_FILE" in source
+    assert "system_prompt_id" in source
+    assert "falcon-selected-prompt-config.json" in source
