@@ -4,6 +4,7 @@ from pathlib import Path
 
 from scripts.benchmark_falcon_deployment import bench_once, parse_time_report
 from scripts.falcon_trainability_probe import tiny_rows
+from scripts.score_falcon_battery import rule_result
 
 
 def test_deployment_time_report_parser(tmp_path: Path):
@@ -68,3 +69,14 @@ def test_production_notebook_can_pin_selected_system_prompt():
     assert "FALCON_SYSTEM_PROMPT_FILE" in source
     assert "system_prompt_id" in source
     assert "falcon-selected-prompt-config.json" in source
+
+
+def test_hallucinated_official_criteria_are_a_hard_veto():
+    rubric = json.loads(Path("docs/research/falcon_generation_rubric.json").read_text())
+    text = (
+        "Grade-Blue is not part of WHO terminology, but the WHO 2021 criteria "
+        "for diagnosing mild pneumonia are as follows."
+    )
+    result = rule_result("h10", text, rubric["rules"]["h10"], 12)
+    assert result["passed"] is False
+    assert any(failure.startswith("forbidden:") for failure in result["failures"])
