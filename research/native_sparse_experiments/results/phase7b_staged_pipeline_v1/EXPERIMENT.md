@@ -12,7 +12,7 @@ storage penalty.
 - Model: Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf, SHA-256
   `2a809de317cfd49ac9130b95619ee6ac039a855e467015b3e996eb61af84718b`
 - llama.cpp: `3057bb66c86c46d5781e50e85462a760ba7d1feb`
-- Research source: `69464e6b35113baa387b5140547aa1b5ff7780df`
+- Research source: `68b1a53` (the v10 provenance annotation commit)
 - Kaggle: 4-vCPU Intel Xeon, AVX2, CPU-only, four threads, inherited affinity
 - Runtime: `--poll 0`, resident control or `-lzm on` plus explicit 2,000,000,000-byte
   bounded cache (2,281 slots of 876,544 bytes)

@@ -4,7 +4,7 @@
   "decision": "KEEP / EXPLOIT ONCE",
   "model_sha256": "2a809de317cfd49ac9130b95619ee6ac039a855e467015b3e996eb61af84718b",
   "llama_commit": "3057bb66c86c46d5781e50e85462a760ba7d1feb",
-  "research_source_commit": "69464e6b35113baa387b5140547aa1b5ff7780df",
+  "research_source_commit": "68b1a53",
   "hardware": "Kaggle 4-vCPU Intel Xeon AVX2",
   "cache_capacity_bytes": 2000000000,
   "bundle_bytes": 876544,
