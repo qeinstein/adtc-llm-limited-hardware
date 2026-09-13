@@ -1,6 +1,6 @@
 {
   "id": "toheebogunade/jamii-native-sparse-ik-llama-v1",
-  "title": "Jamii Native Sparse ik_llama.cpp Compatibility Probe",
+  "title": "Jamii native sparse ik llama v1",
   "code_file": "ik_llama_probe.py",
   "language": "python",
   "kernel_type": "script",
