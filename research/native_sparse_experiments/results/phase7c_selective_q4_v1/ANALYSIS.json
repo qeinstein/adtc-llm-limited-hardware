@@ -1,7 +1,7 @@
 {
   "schema": "native-sparse-selective-q4/v1",
-  "status": "blocked_before_benchmark",
-  "decision": "FOLLOW-UP ONCE",
+  "status": "quality_gate_pending",
+  "decision": "QUALITY GATE RUNNING",
   "model_sha256": "2a809de317cfd49ac9130b95619ee6ac039a855e467015b3e996eb61af84718b",
   "llama_commit": "3057bb66c86c46d5781e50e85462a760ba7d1feb",
   "target_regex": "attn_(qkv|gate|q|k|v|output)\\\\.weight=q4_k",
@@ -17,8 +17,23 @@
       "offending_tensor": "blk.0.ffn_down_exps.weight",
       "offending_source_type": "iq2_s",
       "performance_valid": false
+    },
+    {
+      "id": "attempt_v3_valid",
+      "status": "completed",
+      "performance_valid": true,
+      "control_mean_tok_s": 4.2,
+      "candidate_mean_tok_s": 4.5,
+      "throughput_delta_fraction": 0.0714285714285714,
+      "control_peak_rss_mib": 10430.3984375,
+      "candidate_peak_rss_mib": 10307.76953125,
+      "candidate_storage_bytes": 10528504448,
+      "candidate_storage_delta_fraction": -0.0120532140657039,
+      "control_response_sha256": "a3c3c73a067cbb5fab9e68bd7d06c03d3c488e74467d33c40fae339836006c8c",
+      "candidate_response_sha256": "a3c3c73a067cbb5fab9e68bd7d06c03d3c488e74467d33c40fae339836006c8c"
     }
   ],
   "corrective_action": "Skip imatrix requirement for selective-only tensors whose target type equals source type; rerun explicit Q5_K-to-Q4_K overrides.",
-  "quality": "not_run"
+  "quality": "pending_initial_held_out_gate",
+  "valid_attempt_raw": "raw/attempt_v3_valid/"
 }

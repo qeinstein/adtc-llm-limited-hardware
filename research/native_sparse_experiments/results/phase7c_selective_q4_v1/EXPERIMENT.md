@@ -20,7 +20,19 @@ non-selected tensor types were intended to remain unchanged.
 
 ## Result
 
-No valid performance or quality result was produced.
+The first two attempts below produced no valid performance result. The
+corrected third attempt completed the planned resident A/B:
+
+| arm | samples tok/s | mean tok/s | ms/token | peak RSS MiB | file size |
+|---|---|---:|---:|---:|---:|
+| exact IQ2_XXS control | 4.2, 4.2, 4.2 | 4.200 | 238.095 | 10,430.4 | 10,656,955,008 B |
+| selective attention/GDN Q4_K | 4.5, 4.5, 4.5 | 4.500 | 222.222 | 10,307.8 | 10,528,504,448 B |
+
+The candidate is 7.1429% faster in this three-repeat run, uses 122.6 MiB
+less peak RSS, and is 1.2053% smaller on disk. The candidate model SHA-256
+is `86f27f69e0cea7f8cd0420452f1b600c57cedce6589f60c2cfee06a8c0395d39`.
+This is a meaningful but not yet accepted frontier movement because the
+candidate changes selected projection weights.
 
 Attempt 1 stopped in the harness because its source patch anchor did not
 match the pinned quantizer.  Attempt 2 fixed that anchor, built the pinned
@@ -41,21 +53,23 @@ are numerically unsuitable.
 ## Corrective action
 
 The harness now also suppresses the imatrix requirement when the target type
-equals the source type in the selective-only mode.  This preserves unchanged
+equals the source type in the selective-only mode. This preserves unchanged
 tensors by copy and permits only the explicit Q5_K-to-Q4_K overrides to be
-requantized.  A third submission is required before this branch can be
-classified.  No model binary is stored in this repository.
+requantized. No model binary is stored in this repository.
 
 ## Decision
 
-`FOLLOW-UP ONCE`: the implementation blocker is narrow and mechanically
-correctable.  Do not treat either failed attempt as a quantization result.
-If the corrected A/B produces less than 3% whole-runtime improvement, kill
-the selective-Q4 branch under the experiment value rule; if it wins, run the
-held-out capability gate before keeping it.
+`QUALITY GATE RUNNING`: the corrected A/B exceeds the 3% keep threshold, but
+the selective-Q4 branch is not accepted until the held-out clinical/safety,
+English/Kiswahili instruction, and basic MCQ gate is complete. If that gate
+shows a material capability or safety regression, kill the branch despite the
+speed/RSS win. The quality gate is a small initial screen, not a broad model
+quality claim.
 
 ## Artifacts
 
 - Raw attempt 1: `raw/attempt_v1_harness_anchor_failure/`
 - Raw attempt 2: `raw/attempt_v2_source_imatrix_failure/`
+- Valid third attempt: `raw/attempt_v3_valid/`
 - Corrected harness: `kaggle/native-sparse-selective-q4-v1/`
+- Quality gate harness: `kaggle/native-sparse-selective-q4-quality-v1/`

@@ -1,0 +1,41 @@
+diff --git a/src/llama-quant.cpp b/src/llama-quant.cpp
+index 34ff25db5..7b47f65c7 100644
+--- a/src/llama-quant.cpp
++++ b/src/llama-quant.cpp
+@@ -7,6 +7,7 @@
+ #include <algorithm>
+ #include <cmath>
+ #include <cstring>
++#include <cstdlib>
+ #include <cinttypes>
+ #include <fstream>
+ #include <mutex>
+@@ -726,6 +727,13 @@ static ggml_type llama_tensor_get_type(quantize_state_impl & qs, const llama_mod
+             }
+         }
+ 
++        // Controlled requantization arm: an explicit --tensor-type override
++        // selects the challenger tensors, while all other quantized source
++        // tensors retain their original GGML type byte-for-byte.
++        if (!manual && std::getenv("JAMII_SELECTIVE_REQUANT_ONLY") != nullptr) {
++            return tensor->type;
++        }
++
+         // if not manual - use the standard logic for choosing the quantization type based on the selected mixture
+         if (!manual && !params->pure) {
+             new_type = llama_tensor_get_type_impl(qs, new_type, tensor, params->ftype, tm.category);
+@@ -1094,6 +1102,14 @@ static void llama_model_quantize_impl(const std::string & fname_inp, const std::
+ 
+         metadata[i].requires_imatrix = tensor_requires_imatrix(tensor->name, metadata[i].target_type, ftype);
+ 
++        // In the selective-only arm, an unmatched tensor is copied
++        // because its target type equals its source type.  Do not
++        // require an imatrix for a tensor that is not requantized.
++        if (std::getenv("JAMII_SELECTIVE_REQUANT_ONLY") != nullptr &&
++                metadata[i].target_type == tensor->type) {
++            metadata[i].requires_imatrix = false;
++        }
++
+         if (params->imatrix) {
+             metadata[i].remapped_imatrix_name = remap_imatrix(tensor->name, mapped);
+         } else if (metadata[i].allows_quantization && metadata[i].requires_imatrix) {
