@@ -1,0 +1,22 @@
+[{"stream_name":"stdout","time":1.229923758,"data":"+ lscpu\n"}
+,{"stream_name":"stdout","time":1.268484303,"data":"+ df -h /tmp\n"}
+,{"stream_name":"stdout","time":1.282520541,"data":"+ git clone --filter=blob:none --no-checkout https://github.com/ikawrakow/ik_llama.cpp.git /tmp/native-sparse-ik-llama-v1/ik_llama.cpp\n"}
+,{"stream_name":"stdout","time":2.691989736,"data":"+ git fetch --depth 1 origin 3bb386eb68ffee0a5dc7db21da0735d594929eeb\n"}
+,{"stream_name":"stdout","time":3.336845549,"data":"+ git checkout --detach 3bb386eb68ffee0a5dc7db21da0735d594929eeb\n"}
+,{"stream_name":"stdout","time":9.58953381,"data":"+ git rev-parse HEAD\n"}
+,{"stream_name":"stdout","time":9.594178498,"data":"+ git status --short --branch\n"}
+,{"stream_name":"stdout","time":10.123203618,"data":"+ git log --oneline --decorate -5\n"}
+,{"stream_name":"stdout","time":14.839217347,"data":"+ cmake -S /tmp/native-sparse-ik-llama-v1/ik_llama.cpp -B /tmp/native-sparse-ik-llama-v1/ik_llama.cpp/build-native -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DGGML_NATIVE=ON -DGGML_CUDA=OFF -DGGML_METAL=OFF -DGGML_VULKAN=OFF -DLLAMA_CURL=OFF\n"}
+,{"stream_name":"stdout","time":17.54894447,"data":"+ cmake --build /tmp/native-sparse-ik-llama-v1/ik_llama.cpp/build-native --config Release -j4 --target llama-cli\n"}
+,{"stream_name":"stdout","time":635.985642008,"data":"+ cmake --build /tmp/native-sparse-ik-llama-v1/ik_llama.cpp/build-native --config Release -j4 --target llama-bench\n"}
+,{"stream_name":"stdout","time":650.239229339,"data":"+ /tmp/native-sparse-ik-llama-v1/ik_llama.cpp/build-native/bin/llama-cli --version\n"}
+,{"stream_name":"stdout","time":650.250000628,"data":"+ /tmp/native-sparse-ik-llama-v1/ik_llama.cpp/build-native/bin/llama-cli --help\n"}
+,{"stream_name":"stdout","time":650.255906975,"data":"ERROR: command exited 1: /tmp/native-sparse-ik-llama-v1/ik_llama.cpp/build-native/bin/llama-cli --help\n"}
+,{"stream_name":"stdout","time":650.257003036,"data":"{\"status\": \"failed\", \"blockers\": [], \"smoke_equal\": null, \"bench_status\": null, \"error\": \"RuntimeError('command exited 1: /tmp/native-sparse-ik-llama-v1/ik_llama.cpp/build-native/bin/llama-cli --help')\"}\n"}
+,{"stream_name":"stderr","time":653.347398761,"data":"/usr/local/lib/python3.12/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":653.347476913,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":653.86931052,"data":"/usr/local/lib/python3.12/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":653.8693498,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":656.230160446,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":658.102445909,"data":"[NbConvertApp] Writing 397055 bytes to __results__.html\n"}
+]
