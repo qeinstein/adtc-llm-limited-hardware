@@ -1,0 +1,3 @@
+
+--- STDERR ---
+HEAD is now at 3bb386eb ggml: drop debugger invocation from backtrace path (fork unsafe with live CUDA ctx) (#2416)
