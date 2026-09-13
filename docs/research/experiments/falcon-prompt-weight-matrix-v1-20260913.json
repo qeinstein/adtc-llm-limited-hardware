@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0.0",
+  "experiment_id": "falcon-prompt-weight-matrix-v1-20260913",
+  "status": "ABORTED_BEFORE_MODEL_LOAD",
+  "decision": "REJECT",
+  "kaggle_kernel": "toheebogunade/jamii-afya-falcon-prompt-weight-matrix",
+  "kaggle_kernel_version": 1,
+  "repo_sha": "e2de0c0",
+  "reason": "The validation-selected SYS-C01 prompt was manually found to deny a fabricated protocol and then invent WHO 2021 criteria. The kernel was deleted during dependency setup before model load so its matrix could not consume GPU time under the outdated gate.",
+  "source_preserved": "kaggle/phase04-falcon-prompt-weight-matrix/",
+  "frozen_battery_touched": false,
+  "checkpoint_persisted": false
+}
