@@ -1,0 +1,24 @@
+{
+  "schema": "native-sparse-selective-q4/v1",
+  "status": "blocked_before_benchmark",
+  "decision": "FOLLOW-UP ONCE",
+  "model_sha256": "2a809de317cfd49ac9130b95619ee6ac039a855e467015b3e996eb61af84718b",
+  "llama_commit": "3057bb66c86c46d5781e50e85462a760ba7d1feb",
+  "target_regex": "attn_(qkv|gate|q|k|v|output)\\\\.weight=q4_k",
+  "attempts": [
+    {
+      "id": "attempt_v1_harness_anchor_failure",
+      "status": "harness_error",
+      "performance_valid": false
+    },
+    {
+      "id": "attempt_v2_source_imatrix_failure",
+      "status": "quantizer_preflight_error",
+      "offending_tensor": "blk.0.ffn_down_exps.weight",
+      "offending_source_type": "iq2_s",
+      "performance_valid": false
+    }
+  ],
+  "corrective_action": "Skip imatrix requirement for selective-only tensors whose target type equals source type; rerun explicit Q5_K-to-Q4_K overrides.",
+  "quality": "not_run"
+}

@@ -39,7 +39,7 @@ MODEL_URL = (
     "https://huggingface.co/unsloth/Qwen3.5-35B-A3B-GGUF/resolve/"
     f"{MODEL_REPO_COMMIT}/{MODEL_FILE}"
 )
-RESEARCH_BASE_COMMIT = "ff24614"
+RESEARCH_BASE_COMMIT = "ce5c119"
 PROMPT = "Give one concise reason oral rehydration solution helps a child with watery diarrhoea."
 THREADS = 4
 N_GEN = 64
@@ -103,6 +103,18 @@ def patch_quantizer() -> dict:
         if (!manual && !params->pure) {
 """
     replace_once(path, old, new)
+    replace_once(path,
+        "        metadata[i].requires_imatrix = tensor_requires_imatrix(tensor->name, metadata[i].target_type, ftype);\n\n"
+        "        if (params->imatrix) {",
+        "        metadata[i].requires_imatrix = tensor_requires_imatrix(tensor->name, metadata[i].target_type, ftype);\n\n"
+        "        // In the selective-only arm, an unmatched tensor is copied\n"
+        "        // because its target type equals its source type.  Do not\n"
+        "        // require an imatrix for a tensor that is not requantized.\n"
+        "        if (std::getenv(\"JAMII_SELECTIVE_REQUANT_ONLY\") != nullptr &&\n"
+        "                metadata[i].target_type == tensor->type) {\n"
+        "            metadata[i].requires_imatrix = false;\n"
+        "        }\n\n"
+        "        if (params->imatrix) {")
     diff = subprocess.run(["git", "diff", "--", "src/llama-quant.cpp"], cwd=LLAMA,
                           text=True, stdout=subprocess.PIPE, check=True).stdout
     (OUT / "quantizer.patch").write_text(diff, encoding="utf-8")
