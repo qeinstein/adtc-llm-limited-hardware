@@ -134,7 +134,12 @@ logical bytes per token respectively.
   and LM head, 0.8578 GiB attention/DeltaNet trunk, 0.0861 GiB shared expert,
   0.0781 GiB router).  The skip-MoE process measured 1,609.96 MiB RSS.
 
-The next compute decision is to split the 33.64% `other_matmul` term by
-weight family and test the LM head's Amdahl contribution.  The exact control
-and native routes remain unchanged; no model representation change is
-justified yet.
+- `phase5a_amdahl_v2`: splitting that matrix bucket and removing only the LM
+  head gives 5.385 tok/s versus the 4.733 tok/s control, a 12.11% wall-time
+  saving.  Routed-expert removal reaches 8.174 tok/s.  Treating both savings
+  as additive gives only a theoretical 10.34 tok/s ceiling.  Attention
+  projection matmuls are 24.76% of summed operator work and are now the next
+  compute target.
+
+The exact control and native routes remain unchanged; no model
+representation change is justified yet.
