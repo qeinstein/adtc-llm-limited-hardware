@@ -48,10 +48,11 @@ Stage B/C initialize from the previous stage's selected adapter/checkpoint but
 start fresh optimizer/scheduler state; `--resume-from-checkpoint` is reserved
 for resuming the same stage. The stages are separate checkpointed runs. Each
 stage writes `checkpoint_selection.json` from complete checkpoints and then
-tests the best loss-ranked candidates with the frozen generation gate. The
-first candidate that passes is recorded in `quality_selection.json` and is the
-only one eligible for persistence. A stage with no evaluation or no quality
-passing candidate is not promotable.
+tests up to the best loss-ranked candidates with the frozen generation gate.
+All tested candidates are retained in `quality_selection.json`; among those
+that pass the hard safety veto, the candidate with the highest frozen-battery
+pass rate wins, with eval loss as a tie-breaker. A stage with no evaluation or
+no quality-passing candidate is not promotable.
 
 ## Observability and resume
 
