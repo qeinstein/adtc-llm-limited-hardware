@@ -101,7 +101,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--model", default="tiiuae/Falcon-H1-1.5B-Deep-Instruct")
     ap.add_argument("--revision", default=None)
     ap.add_argument("--output-dir", required=True, type=Path)
-    ap.add_argument("--steps", type=int, default=12)
+    ap.add_argument("--steps", type=int, default=64)
     ap.add_argument("--learning-rate", type=float, default=1e-3)
     ap.add_argument("--lora-r", type=int, default=16)
     ap.add_argument("--lora-alpha", type=int, default=32)
@@ -206,6 +206,7 @@ def main(argv: list[str] | None = None) -> int:
         initial_logits = model(input_ids=probe_ids, attention_mask=torch.ones_like(probe_ids)).logits.float()
     model.train()
 
+    loss_history: list[dict[str, Any]] = []
     for step in range(1, args.steps + 1):
         row = prepared[(step - 1) % len(prepared)]
         optimizer.zero_grad(set_to_none=True)
@@ -218,6 +219,7 @@ def main(argv: list[str] | None = None) -> int:
             raise FloatingPointError(f"invalid gradient norm at step {step}: {grad_norm}")
         optimizer.step()
         record = {"timestamp_utc": stamp(), "event": "train_step", "step": step, "example_id": row["example_id"], "format": row["format"], "loss": float(loss.detach().cpu()), "grad_norm": grad_norm, "learning_rate": args.learning_rate}
+        loss_history.append(record)
         append_jsonl(metrics, record)
         print(json.dumps(record, ensure_ascii=False), flush=True)
 
@@ -268,13 +270,24 @@ def main(argv: list[str] | None = None) -> int:
         return tokenizer.decode(generated[0, encoded.shape[-1]:], skip_special_tokens=True)
 
     generations = []
-    for row in train_rows[:4]:
+    for row in train_rows:
         model.disable_adapter_layers()
         stock_text = generate_text(model, row)
         model.enable_adapter_layers()
         adapter_text = generate_text(model, row)
         generations.append({"id": row["example_id"], "stock": stock_text, "adapter": adapter_text, "changed": stock_text != adapter_text})
     write_json(out_dir / "generations.json", generations)
+    loss_summary: dict[str, Any] = {}
+    for fmt in ("sft", "mcqa"):
+        values = [float(item["loss"]) for item in loss_history if item["format"] == fmt]
+        window = max(1, min(4, len(values) // 2))
+        loss_summary[fmt] = {
+            "steps": len(values),
+            "first_mean": sum(values[:window]) / max(1, len(values[:window])),
+            "last_mean": sum(values[-window:]) / max(1, len(values[-window:])),
+        }
+        loss_summary[fmt]["drop"] = loss_summary[fmt]["first_mean"] - loss_summary[fmt]["last_mean"]
+        loss_summary[fmt]["drop_percent"] = 100 * loss_summary[fmt]["drop"] / max(abs(loss_summary[fmt]["first_mean"]), 1e-12)
     manifest = {
         "schema_version": "1.0.0",
         "experiment_id": "falcon-trainability-proof",
@@ -299,10 +312,16 @@ def main(argv: list[str] | None = None) -> int:
         "adapter_on_restored_max_abs": float((adapter_logits - restored_logits).abs().max().cpu()),
         "reloaded_adapter_max_abs": float((adapter_logits - reload_logits).abs().max().cpu()),
         "merged_vs_unmerged_max_abs": float((adapter_logits - merged_logits).abs().max().cpu()),
+        "loss_summary": loss_summary,
         "changed_generation_count": sum(int(item["changed"]) for item in generations),
         "generation_count": len(generations),
         "adapter_dir": str(adapter_reload_dir),
-        "status": "pass" if adapter_delta_l2 > 0 and float(logit_delta.abs().max().cpu()) > 1e-6 and any(item["changed"] for item in generations) else "fail",
+        "status": "pass" if (
+            adapter_delta_l2 > 0
+            and float(logit_delta.abs().max().cpu()) > 1e-6
+            and all(value["drop"] > 0 for value in loss_summary.values())
+            and any(item["changed"] for item in generations)
+        ) else "fail",
     }
     write_json(out_dir / "trainability_manifest.json", manifest)
     print(json.dumps({"timestamp_utc": stamp(), "event": "probe_complete", **manifest}, ensure_ascii=False), flush=True)

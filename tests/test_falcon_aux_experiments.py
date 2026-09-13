@@ -25,6 +25,8 @@ def test_trainability_fixture_contains_sft_and_mcqa():
     rows = tiny_rows()
     assert len(rows) == 32
     assert {row["format"] for row in rows} == {"sft", "mcqa"}
+    assert sum(row["format"] == "sft" for row in rows) == 16
+    assert sum(row["format"] == "mcqa" for row in rows) == 16
     assert len({row["example_id"] for row in rows}) == len(rows)
 
 
