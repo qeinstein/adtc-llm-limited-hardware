@@ -123,6 +123,28 @@ def near_holdout(text: str, holdouts: list[str] | dict[str, Any]) -> str | None:
     return None
 
 
+def assign_prompt_group_splits(rows: list[dict[str, Any]], seed: str, dev_fraction: float) -> None:
+    """Assign a whole prompt group to one split.
+
+    MCQA letter permutations and repeated answers share the same question
+    context but have different full identities. Splitting by row would leak
+    those variants across train/dev. Grouping by ``prompt_identity`` keeps all
+    exact prompt duplicates together while retaining deterministic assignment.
+    """
+    groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for row in rows:
+        groups[str(row.get("prompt_identity") or row["identity"])].append(row)
+    for prompt_identity in sorted(groups):
+        bucket = int(digest(seed + "\0" + prompt_identity)[:8], 16) / 0xFFFFFFFF
+        split = "dev" if bucket < dev_fraction else "train"
+        for row in groups[prompt_identity]:
+            row["split"] = split
+    if rows and not any(row["split"] == "dev" for row in rows):
+        first_group = groups[sorted(groups)[0]]
+        for row in first_group:
+            row["split"] = "dev"
+
+
 def chat_prompt(tokenizer: Any, row: dict[str, Any], system: str) -> tuple[list[int], list[int]]:
     from scripts.falcon_format import render_completion
 
@@ -204,6 +226,8 @@ def normalize_row(spec: dict[str, Any], row: dict[str, Any], tokenizer: Any, max
         raise ValueError(f"unsupported format: {fmt}")
     base["example_id"] = digest(spec["name"] + "\0" + identity)[:24]
     base["identity"] = canonical(identity)
+    prompt_text = (content + "\n" + base["input"]) if fmt == "alpaca" else context
+    base["prompt_identity"] = canonical(prompt_text)
     return base
 
 
@@ -287,11 +311,19 @@ def main(argv: list[str] | None = None) -> int:
     rows = list(unique.values())
     dev_fraction = float(config["data"]["dev_fraction"])
     seed = str(config["data"]["split_seed"])
+    assign_prompt_group_splits(rows, seed, dev_fraction)
+    prompt_groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for row in rows:
-        bucket = int(digest(seed + "\0" + row["example_id"])[:8], 16) / 0xFFFFFFFF
-        row["split"] = "dev" if bucket < dev_fraction else "train"
-    if not any(row["split"] == "dev" for row in rows) and rows:
-        rows[0]["split"] = "dev"
+        prompt_groups[str(row.get("prompt_identity") or row["identity"])].append(row)
+    cross_split_prompt_groups = [
+        {
+            "prompt_identity": key,
+            "splits": sorted({str(row["split"]) for row in values}),
+            "example_ids": [str(row["example_id"]) for row in values],
+        }
+        for key, values in prompt_groups.items()
+        if len({str(row["split"]) for row in values}) > 1
+    ]
     for split in ("train", "dev"):
         with (out_dir / f"{split}.jsonl").open("w", encoding="utf-8") as handle:
             for row in sorted((x for x in rows if x["split"] == split), key=lambda x: x["example_id"]):
@@ -339,6 +371,8 @@ def main(argv: list[str] | None = None) -> int:
             "rejected_invalid": sum(x.get("type") == "invalid" for x in rejected),
             "rejected_quality": sum(x.get("type") == "quality_excluded" for x in rejected),
             "exact_duplicates_dropped": len(duplicates),
+            "prompt_duplicate_groups": sum(len(values) > 1 for values in prompt_groups.values()),
+            "cross_split_prompt_duplicate_groups": len(cross_split_prompt_groups),
         },
         "token_totals": dict(tokens),
         "token_shares_percent": {key: round(100 * value / max(1, sum(tokens.values())), 4) for key, value in tokens.items()},
@@ -354,6 +388,7 @@ def main(argv: list[str] | None = None) -> int:
         "missing_sources": missing,
         "rejected_examples": rejected,
         "duplicate_examples": duplicates[:100],
+        "cross_split_prompt_duplicate_examples": cross_split_prompt_groups[:100],
         "final_holdout_count": len(holdouts),
         "final_holdout_sha256": digest("\n".join(sorted(holdouts))),
         "source_files": source_files,
@@ -367,7 +402,7 @@ def main(argv: list[str] | None = None) -> int:
     print(json.dumps({"out_dir": str(out_dir), "counts": manifest["counts"], "token_totals": manifest["token_totals"], "facets": manifest["facets"], "missing_sources": missing}, indent=2))
     required_missing = [x for x in missing if x["required"]]
     hard_rejected = [x for x in rejected if x.get("type") not in {"length", "quality_excluded"}]
-    return 2 if required_missing or hard_rejected else 0
+    return 2 if required_missing or hard_rejected or cross_split_prompt_groups else 0
 
 
 if __name__ == "__main__":

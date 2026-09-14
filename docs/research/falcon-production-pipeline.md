@@ -48,11 +48,14 @@ Stage B/C initialize from the previous stage's selected adapter/checkpoint but
 start fresh optimizer/scheduler state; `--resume-from-checkpoint` is reserved
 for resuming the same stage. The stages are separate checkpointed runs. Each
 stage writes `checkpoint_selection.json` from complete checkpoints and then
-tests up to the best loss-ranked candidates with the frozen generation gate.
-All tested candidates are retained in `quality_selection.json`; among those
-that pass the hard safety veto, the candidate with the highest frozen-battery
-pass rate wins, with eval loss as a tie-breaker. A stage with no evaluation or
-no quality-passing candidate is not promotable.
+tests up to the best loss-ranked candidates on development and validation
+batteries. `scripts/select_falcon_candidate.py` selects using only those
+reports; the frozen final battery is deliberately absent from this ranking.
+Only the selected checkpoint is evaluated once against the frozen clinical /
+safety gate, which requires a complete report, no critical failure, and a
+100% default pass rate before durable promotion. All reports and the one-shot
+frozen result are retained in `quality_selection.json`. A stage with no
+complete dev/validation candidate or a failed frozen gate is not promotable.
 
 ## Observability and resume
 
@@ -64,6 +67,10 @@ loss-token/example throughput, GPU memory, elapsed time, and ETA. A background
 heartbeat reports even when a single forward/backward step is slow. Hugging Face Trainer checkpoints retain
 adapter weights, optimizer, scheduler, scaler/RNG state, and global step; the
 `latest` resume path passes the checkpoint to `trainer.train(resume_from_checkpoint=...)`.
+The token-share sampler uses a private deterministic generator and writes
+`sampler_state.json` into each complete checkpoint. On resume, Trainer replays
+the same sampled-index prefix and skips the already-consumed batches, rather
+than silently drawing a new replacement sequence from global RNG state.
 
 Long runs refuse to start unless `FALCON_CHECKPOINT_DATASET` names an existing
 private Kaggle Dataset. Every configured persistence interval uploads the
@@ -98,6 +105,12 @@ P100 resume gate measured roughly 8--13 loss tokens/sec and about 145 seconds
 per optimizer step at effective batch 16, so one full epoch is not an
 acceptable production schedule. A bounded pilot must establish the stage
 step budget and quality curve before any long run.
+
+The builder now assigns splits by normalized prompt identity rather than by
+full row identity. This keeps MCQA letter permutations and repeated answers
+together, records prompt-duplicate groups in `data_manifest.json`, and fails
+closed if an exact prompt group crosses train/dev. Final-holdout exact and
+high-similarity checks remain separate and never become training rows.
 
 ## Archived bounded pilot
 
@@ -189,6 +202,6 @@ The frozen generation battery is now backed by
 `scripts/score_falcon_battery.py`. It is a conservative machine veto layer,
 not a substitute for clinical review: missing output, critical safety failure,
 or fabricated-protocol acceptance rejects promotion while preserving every raw
-generation. The Kaggle notebook runs it after persisted evaluations and before
-selected-stage checkpoint persistence, so a low dev loss cannot silently
-promote an unsafe candidate.
+generation. The Kaggle notebook now runs development/validation reports first,
+selects without reading the frozen battery, then runs the frozen gate once and
+only persists the selected checkpoint after that gate passes.

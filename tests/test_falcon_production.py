@@ -2,9 +2,10 @@ from pathlib import Path
 
 import pytest
 
-from scripts.build_falcon_dataset import canonical, distribution, near_holdout
+from scripts.build_falcon_dataset import assign_prompt_group_splits, canonical, distribution, near_holdout
 from scripts.falcon_format import generation_stop_ids
-from scripts.train_falcon_production import FalconDataset, checkpoint_is_complete, enforce_objective_token_policy, latest_checkpoint, normalize_mcqa_scores, objective_loss_token_summary, select_checkpoint, stable_eval_subset, token_share_sampling_weights, truncate_mcqa_context
+from scripts.train_falcon_production import DeterministicTokenShareSampler, FalconDataset, checkpoint_is_complete, enforce_objective_token_policy, latest_checkpoint, normalize_mcqa_scores, objective_loss_token_summary, select_checkpoint, stable_eval_subset, token_share_sampling_weights, truncate_mcqa_context
+from scripts.select_falcon_candidate import frozen_gate_passes, select_dev_validation_candidate
 
 
 class FakeTokenizer:
@@ -195,6 +196,17 @@ def test_token_share_weights_match_expected_loss_token_mass():
     assert mcqa_mass == pytest.approx(0.25)
 
 
+def test_deterministic_sampler_replays_exact_sequence_for_resume():
+    first = list(DeterministicTokenShareSampler([0.2, 0.8], 32, seed=3407))
+    second = list(DeterministicTokenShareSampler([0.2, 0.8], 32, seed=3407))
+    different = list(DeterministicTokenShareSampler([0.2, 0.8], 32, seed=3408))
+    assert first == second
+    assert first != different
+    state = DeterministicTokenShareSampler([0.2, 0.8], 32, seed=3407).state_dict()
+    assert state["algorithm"] == "torch.multinomial_private_generator_v1"
+    assert state["resume_semantics"].startswith("replay full deterministic sequence")
+
+
 def test_objective_token_summary_and_fail_closed_policy():
     items = [
         {"kind": "sft", "tokens": 30},
@@ -230,6 +242,15 @@ def test_fast_eval_subset_preserves_small_objective_group():
     assert selected == stable_eval_subset(list(reversed(rows)), 8)
 
 
+def test_split_keeps_mcqa_prompt_permutations_together():
+    rows = [
+        {"identity": "a", "prompt_identity": "same question", "example_id": "a"},
+        {"identity": "b", "prompt_identity": "same question", "example_id": "b"},
+    ]
+    assign_prompt_group_splits(rows, "3407", 0.5)
+    assert {row["split"] for row in rows} == {"dev"} or {row["split"] for row in rows} == {"train"}
+
+
 def test_exact_length_distribution_reports_response_shape():
     result = distribution([1, 2, 10, 20])
     assert result["count"] == 4
@@ -249,3 +270,67 @@ def test_checkpoint_manifest_can_require_fp16_scaler(tmp_path: Path):
     assert not checkpoint_is_complete(checkpoint)
     (checkpoint / "scaler.pt").write_text("{}")
     assert checkpoint_is_complete(checkpoint)
+
+
+def test_checkpoint_manifest_can_require_sampler_state(tmp_path: Path):
+    checkpoint = tmp_path / "checkpoint-1"
+    checkpoint.mkdir()
+    for name in ("trainer_state.json", "optimizer.pt", "scheduler.pt", "rng_state.pth", "adapter_model.safetensors"):
+        (checkpoint / name).write_text("{}")
+    (checkpoint / "trainer_state.json").write_text('{"global_step": 1}')
+    (checkpoint / "checkpoint_manifest.json").write_text('{"complete": true, "global_step": 1, "sampler_required": true}')
+    assert not checkpoint_is_complete(checkpoint)
+    (checkpoint / "sampler_state.json").write_text("{}")
+    assert checkpoint_is_complete(checkpoint)
+
+
+def _quality(passed, *, critical=None, missing=0):
+    return {
+        "prompt_count": 8,
+        "passed_count": passed,
+        "critical_failures": critical or [],
+        "missing_count": missing,
+    }
+
+
+def test_dev_validation_selection_never_uses_frozen_report():
+    candidates = [
+        {"step": 4, "checkpoint": "/ckpt-4", "eval_loss": 2.0},
+        {"step": 8, "checkpoint": "/ckpt-8", "eval_loss": 2.2},
+    ]
+    reports = {
+        4: {"dev": _quality(8), "validation": _quality(6)},
+        8: {"dev": _quality(6), "validation": _quality(8)},
+    }
+    result = select_dev_validation_candidate(candidates, reports, minimum_pass_rate=75)
+    assert result["status"] == "selected_for_frozen_gate"
+    assert result["selected_step"] == 4
+    assert "frozen" not in result["selection_criterion"]
+
+
+def test_dev_validation_selection_rejects_critical_failure_even_at_high_pass_rate():
+    result = select_dev_validation_candidate(
+        [{"step": 4, "checkpoint": "/ckpt-4", "eval_loss": 1.0}],
+        {4: {"dev": _quality(8, critical=["d01"]), "validation": _quality(8)}},
+        minimum_pass_rate=75,
+    )
+    assert result["status"] == "no_candidate_passed_dev_validation"
+    assert result["selected_checkpoint"] is None
+
+
+def test_frozen_gate_requires_complete_quality_by_default():
+    assert frozen_gate_passes(_quality(8))
+    assert not frozen_gate_passes(_quality(7))
+    assert not frozen_gate_passes(_quality(8, critical=["h01"]))
+
+
+def test_kaggle_stage_selection_does_not_rank_on_frozen_battery():
+    import json
+
+    notebook = Path("kaggle/phase04-falcon-production/phase04_falcon_production.ipynb")
+    payload = json.loads(notebook.read_text(encoding="utf-8"))
+    source = "\n".join("".join(cell.get("source", [])) for cell in payload["cells"])
+    select_at = source.index("select_dev_validation_candidate")
+    frozen_eval_at = source.index("frozen_eval_cmd")
+    assert select_at < frozen_eval_at
+    assert "highest_frozen_generation_pass_rate" not in source

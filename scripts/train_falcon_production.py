@@ -376,6 +376,8 @@ def checkpoint_is_complete(path: Path, *, require_scaler: bool = False) -> bool:
         if manifest.get("global_step") != state["global_step"]:
             return False
         require_scaler = require_scaler or manifest.get("scaler_required") is True
+        if manifest.get("sampler_required") is True and not (path / "sampler_state.json").is_file():
+            return False
     return not require_scaler or (path / "scaler.pt").is_file()
 
 
@@ -468,6 +470,50 @@ def token_share_sampling_weights(items: list[dict[str, Any]], shares: dict[str, 
         float(shares.get(item["kind"], 0.0)) / max(1, totals[item["kind"]])
         for item in items
     ]
+
+
+class DeterministicTokenShareSampler:
+    """Replacement sampler whose sequence is reproducible across a resume.
+
+    A plain ``WeightedRandomSampler`` draws from global torch RNG state when
+    its iterator is rebuilt.  After a checkpoint resume, Trainer skips the
+    consumed batches but the rebuilt sampler can otherwise produce a different
+    sequence.  This sampler uses a private fixed-seed generator, so the same
+    prefix is replayed and Trainer's skip logic lands on the same next batch.
+    """
+
+    algorithm = "torch.multinomial_private_generator_v1"
+
+    def __init__(self, weights: list[float], num_samples: int, seed: int):
+        if not weights or num_samples <= 0:
+            raise ValueError("sampler requires positive weights and num_samples")
+        self.weights = [float(value) for value in weights]
+        if any(value < 0 or not math.isfinite(value) for value in self.weights) or not any(self.weights):
+            raise ValueError("sampler weights must be finite, non-negative, and not all zero")
+        self.num_samples = int(num_samples)
+        self.seed = int(seed)
+
+    def __iter__(self):
+        import torch
+
+        generator = torch.Generator()
+        generator.manual_seed(self.seed)
+        values = torch.tensor(self.weights, dtype=torch.double)
+        indices = torch.multinomial(values, self.num_samples, replacement=True, generator=generator)
+        return iter(indices.tolist())
+
+    def __len__(self) -> int:
+        return self.num_samples
+
+    def state_dict(self) -> dict[str, Any]:
+        encoded = json.dumps(self.weights, separators=(",", ":"), allow_nan=False).encode("utf-8")
+        return {
+            "algorithm": self.algorithm,
+            "seed": self.seed,
+            "num_samples": self.num_samples,
+            "weights_sha256": hashlib.sha256(encoded).hexdigest(),
+            "resume_semantics": "replay full deterministic sequence; Trainer skips consumed batches",
+        }
 
 
 def run_streamed(command: list[str], log_path: Path) -> int:
@@ -634,8 +680,17 @@ def main(argv: list[str] | None = None) -> int:
         train_data.items,
         config["data"].get("objective_token_policy", {}),
     )
+    sampling_weights = token_share_sampling_weights(
+        train_data.items,
+        stage_cfg.get("sampling_token_share", stage_cfg["objective_weights"]),
+    )
+    sampler_metadata = DeterministicTokenShareSampler(
+        sampling_weights,
+        len(sampling_weights),
+        seed,
+    ).state_dict()
     total_tokens = sum(item["tokens"] for item in train_data.items)
-    event(event_path, "dataset_ready", train_items=len(train_data), dev_items=len(dev_data), dev_rows_available=len(dev_rows), fast_eval_max_rows=fast_eval_limit, objective_counts=dict(objective_counts), train_tokens=total_tokens, objective_loss_token_totals=train_objective_tokens["loss_token_totals"], objective_loss_token_shares_percent=train_objective_tokens["loss_token_shares_percent"], objective_token_policy=config["data"].get("objective_token_policy", {}), max_len=max_len, mcqa_context_max_tokens=mcqa_context_max_tokens, train_mcqa_context_truncated=train_data.mcqa_context_truncated, dev_mcqa_context_truncated=dev_data.mcqa_context_truncated)
+    event(event_path, "dataset_ready", train_items=len(train_data), dev_items=len(dev_data), dev_rows_available=len(dev_rows), fast_eval_max_rows=fast_eval_limit, objective_counts=dict(objective_counts), train_tokens=total_tokens, objective_loss_token_totals=train_objective_tokens["loss_token_totals"], objective_loss_token_shares_percent=train_objective_tokens["loss_token_shares_percent"], objective_token_policy=config["data"].get("objective_token_policy", {}), sampler=sampler_metadata, max_len=max_len, mcqa_context_max_tokens=mcqa_context_max_tokens, train_mcqa_context_truncated=train_data.mcqa_context_truncated, dev_mcqa_context_truncated=dev_data.mcqa_context_truncated)
 
     # A dry run is still a real tokenizer/data preflight.  Returning before
     # model construction makes it cheap enough to run on Kaggle while proving
@@ -677,6 +732,7 @@ def main(argv: list[str] | None = None) -> int:
         "post_tokenization_objective_loss_token_totals": train_objective_tokens["loss_token_totals"],
         "post_tokenization_objective_loss_token_shares_percent": train_objective_tokens["loss_token_shares_percent"],
         "objective_token_policy": config["data"].get("objective_token_policy", {}),
+        "sampler": sampler_metadata,
         "init_adapter": args.init_adapter,
         "resume_from_checkpoint": args.resume_from_checkpoint,
         "quantize": args.quantize, "compute_dtype": compute_dtype, "started_utc": now(),
@@ -874,14 +930,14 @@ def main(argv: list[str] | None = None) -> int:
             # The production sampler must use the pre-tokenized dataset bound
             # to this trainer in either case.
             del train_dataset
-            from torch.utils.data import WeightedRandomSampler
             # Objective weights describe desired *loss-token* exposure, not
             # row frequency.  The helper gives every objective a total
             # expected token mass equal to its configured share.
             weights = token_share_sampling_weights(self.train_dataset.items, self.sampling_token_share)
             if not any(weight > 0 for weight in weights):
                 raise RuntimeError("all sampler weights are zero")
-            return WeightedRandomSampler(torch.tensor(weights, dtype=torch.double), num_samples=len(weights), replacement=True)
+            self._production_sampler = DeterministicTokenShareSampler(weights, len(weights), seed)
+            return self._production_sampler
 
     from transformers import TrainerCallback
 
@@ -918,10 +974,11 @@ def main(argv: list[str] | None = None) -> int:
             del control, kwargs
             path = Path(args_.output_dir) / f"checkpoint-{state.global_step}"
             if path.exists():
+                atomic_json(path / "sampler_state.json", sampler_metadata)
                 if not checkpoint_is_complete(path, require_scaler=bool(args_.fp16)):
                     raise RuntimeError(f"Trainer produced an incomplete checkpoint: {path}")
                 files = [str(x.relative_to(path)) for x in path.rglob("*") if x.is_file()]
-                atomic_json(path / "checkpoint_manifest.json", {"timestamp_utc": now(), "global_step": int(state.global_step), "files": files, "complete": True, "scaler_required": bool(args_.fp16), "scaler_present": (path / "scaler.pt").is_file()})
+                atomic_json(path / "checkpoint_manifest.json", {"timestamp_utc": now(), "global_step": int(state.global_step), "files": files, "complete": True, "scaler_required": bool(args_.fp16), "scaler_present": (path / "scaler.pt").is_file(), "sampler_required": True, "sampler": sampler_metadata})
                 event(event_path, "checkpoint_saved", checkpoint_path=str(path), global_step=int(state.global_step), file_count=len(files))
                 self._persist(path, int(state.global_step), args_)
 
@@ -1013,8 +1070,9 @@ def main(argv: list[str] | None = None) -> int:
             if torch.cuda.is_available():
                 rng["cuda"] = torch.cuda.get_rng_state_all()
             torch.save(rng, path / "rng_state.pth")
+        atomic_json(path / "sampler_state.json", sampler_metadata)
         files = [str(x.relative_to(path)) for x in path.rglob("*") if x.is_file()]
-        atomic_json(path / "checkpoint_manifest.json", {"timestamp_utc": now(), "global_step": step, "files": files, "complete": True, "terminal": True, "scaler_required": bool(train_args.fp16), "scaler_present": (path / "scaler.pt").is_file()})
+        atomic_json(path / "checkpoint_manifest.json", {"timestamp_utc": now(), "global_step": step, "files": files, "complete": True, "terminal": True, "scaler_required": bool(train_args.fp16), "scaler_present": (path / "scaler.pt").is_file(), "sampler_required": True, "sampler": sampler_metadata})
         if not checkpoint_is_complete(path, require_scaler=bool(train_args.fp16)):
             raise RuntimeError(f"terminal checkpoint failed completeness validation: {path}")
         return path
@@ -1029,7 +1087,7 @@ def main(argv: list[str] | None = None) -> int:
     trainer._training_started = time.monotonic()
     progress.started = trainer._training_started
     progress.start()
-    event(event_path, "train_start", optimizer_steps_estimate=estimated_steps, configured_max_steps=configured_max_steps, effective_max_steps=effective_max_steps, steps_per_epoch=steps_per_epoch, effective_batch_size=per_device * grad_accum, objective_weights=stage_cfg["objective_weights"], sampling_token_share=stage_cfg.get("sampling_token_share", stage_cfg["objective_weights"]), resume=resume, init_adapter=args.init_adapter)
+    event(event_path, "train_start", optimizer_steps_estimate=estimated_steps, configured_max_steps=configured_max_steps, effective_max_steps=effective_max_steps, steps_per_epoch=steps_per_epoch, effective_batch_size=per_device * grad_accum, objective_weights=stage_cfg["objective_weights"], sampling_token_share=stage_cfg.get("sampling_token_share", stage_cfg["objective_weights"]), sampler=sampler_metadata, resume=resume, init_adapter=args.init_adapter)
     try:
         trainer.train(resume_from_checkpoint=resume)
         terminal_checkpoint = save_terminal_checkpoint()
