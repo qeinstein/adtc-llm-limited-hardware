@@ -95,10 +95,20 @@ def main() -> int:
         run(["git", "clone", "--depth", "1", "--branch", "research/edge35-adaptive-streaming", "https://github.com/qeinstein/adtc-llm-limited-hardware.git", str(ROOT)], cwd=WORK)
     run([sys.executable, "-m", "pip", "install", "-q", "-r", "requirements-falcon-production.txt"], cwd=ROOT)
     checkpoint_root = WORK / "checkpoint"
-    if checkpoint_root.exists():
-        shutil.rmtree(checkpoint_root)
-    run([sys.executable, "scripts/verify_persisted_checkpoint.py", "--dataset", CHECKPOINT_DATASET, "--out-dir", str(checkpoint_root)], cwd=ROOT)
-    adapter = find_promoted_adapter(checkpoint_root)
+    deadline = time.monotonic() + int(os.environ.get("FALCON_FINALIZE_WAIT_SECONDS", "3600"))
+    while True:
+        if checkpoint_root.exists():
+            shutil.rmtree(checkpoint_root)
+        try:
+            run([sys.executable, "scripts/verify_persisted_checkpoint.py", "--dataset", CHECKPOINT_DATASET, "--out-dir", str(checkpoint_root)], cwd=ROOT)
+            adapter = find_promoted_adapter(checkpoint_root)
+            break
+        except RuntimeError as exc:
+            remaining = int(deadline - time.monotonic())
+            if remaining <= 0:
+                raise
+            emit("waiting_for_promoted_adapter", reason=str(exc), retry_seconds=min(45, remaining))
+            time.sleep(min(45, remaining))
     emit("promoted_adapter_selected", adapter=str(adapter))
 
     export_dir = WORK / "export"
