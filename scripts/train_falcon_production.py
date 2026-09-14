@@ -1112,8 +1112,8 @@ def main(argv: list[str] | None = None) -> int:
             raise RuntimeError("no complete held-out-evaluated checkpoint is promotable")
         final_adapter = checkpoint_dir / "final-adapter"
         materialize_selected_adapter(Path(selection["selected_checkpoint"]), final_adapter, tokenizer)
-        event(event_path, "train_complete", global_step=int(trainer.state.global_step), selected_step=int(selection["selected_step"]), final_adapter=str(final_adapter))
-        atomic_json(stage_dir / "final_summary.json", {"status": "complete", "stage": args.stage, "global_step": int(trainer.state.global_step), "selected_step": int(selection["selected_step"]), "completed_utc": now(), "trainable_parameters": trainable, "total_parameters": total, "checkpoint_selection": selection, "final_adapter": str(final_adapter)})
+        event(event_path, "train_complete", promotion_status="quality_gate_pending", global_step=int(trainer.state.global_step), selected_step=int(selection["selected_step"]), final_adapter=str(final_adapter))
+        atomic_json(stage_dir / "final_summary.json", {"status": "training_complete_quality_gate_pending", "promotion_status": "not_promoted", "stage": args.stage, "global_step": int(trainer.state.global_step), "selected_step": int(selection["selected_step"]), "completed_utc": now(), "trainable_parameters": trainable, "total_parameters": total, "checkpoint_selection": selection, "final_adapter": str(final_adapter)})
     except Exception as exc:  # noqa: BLE001 - preserve a machine-readable failure
         event(event_path, "train_failed", error_type=type(exc).__name__, error=str(exc))
         atomic_json(stage_dir / "final_summary.json", {"status": "failed", "stage": args.stage, "failed_utc": now(), "error_type": type(exc).__name__, "error": str(exc)})

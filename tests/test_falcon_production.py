@@ -414,3 +414,6 @@ def test_export_requires_promoted_input_and_both_frozen_reports():
     assert "export_manifest['deployment_model']" in source
     assert "Falcon-H1-1.5B-Deep-Instruct-Q4_K_M.gguf" not in source
     assert "exported_and_frozen_gate_passed" in source
+    trainer = Path("scripts/train_falcon_production.py").read_text(encoding="utf-8")
+    assert "training_complete_quality_gate_pending" in trainer
+    assert "promotion_status': 'promoted_after_frozen_gate'" in source
