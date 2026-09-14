@@ -181,6 +181,44 @@ def normalize_mcqa_scores(scores: list[Any], token_lengths: list[int]) -> list[A
     return [score / max(1, int(length)) for score, length in zip(scores, token_lengths)]
 
 
+def objective_loss_token_summary(items: list[dict[str, Any]]) -> dict[str, Any]:
+    """Summarize the tokens that actually contribute to each objective."""
+    totals: Counter[str] = Counter()
+    for item in items:
+        totals[str(item["kind"])] += max(0, int(item.get("tokens", 0)))
+    denominator = max(1, sum(totals.values()))
+    return {
+        "loss_token_totals": dict(sorted(totals.items())),
+        "loss_token_shares_percent": {
+            key: round(100.0 * value / denominator, 4)
+            for key, value in sorted(totals.items())
+        },
+    }
+
+
+def enforce_objective_token_policy(items: list[dict[str, Any]], policy: dict[str, Any]) -> dict[str, Any]:
+    """Fail closed if raw objective-token balance violates the config policy."""
+    summary = objective_loss_token_summary(items)
+    shares = {
+        key: float(value) / 100.0
+        for key, value in summary["loss_token_shares_percent"].items()
+    }
+    violations: list[str] = []
+    for key, minimum in policy.get("minimum_raw_loss_token_share", {}).items():
+        if shares.get(str(key), 0.0) < float(minimum):
+            violations.append(f"{key}={shares.get(str(key), 0.0):.4f} < minimum {float(minimum):.4f}")
+    for key, maximum in policy.get("maximum_raw_loss_token_share", {}).items():
+        if shares.get(str(key), 0.0) > float(maximum):
+            violations.append(f"{key}={shares.get(str(key), 0.0):.4f} > maximum {float(maximum):.4f}")
+    if violations:
+        raise RuntimeError(
+            "raw objective-token mixture violates fail-closed policy: "
+            + "; ".join(violations)
+            + f"; summary={json.dumps(summary, sort_keys=True)}"
+        )
+    return summary
+
+
 class FalconDataset:
     """Pre-tokenized fail-closed mixed SFT/MCQA dataset."""
 
@@ -570,9 +608,6 @@ def main(argv: list[str] | None = None) -> int:
     train_rows = load_jsonl(data_dir / "train.jsonl")
     dev_rows = load_jsonl(data_dir / "dev.jsonl")
     event(event_path, "startup", experiment_id=config["experiment_id"], stage=args.stage, train_rows=len(train_rows), dev_rows=len(dev_rows), seed=seed)
-    if args.dry_run:
-        print(json.dumps({"train_rows": len(train_rows), "dev_rows": len(dev_rows), "stage": stage_cfg}, indent=2))
-        return 0
 
     import torch
     from scripts.train_lora import get_cuda_capability, patch_peft_transformers_compat, resolve_precision
@@ -595,8 +630,28 @@ def main(argv: list[str] | None = None) -> int:
     eval_rows = stable_eval_subset(dev_rows, fast_eval_limit)
     dev_data = FalconDataset(eval_rows, tokenizer, max_len, config["data"]["system_prompt"], mcqa_context_max_tokens)
     objective_counts = Counter(item["kind"] for item in train_data.items)
+    train_objective_tokens = enforce_objective_token_policy(
+        train_data.items,
+        config["data"].get("objective_token_policy", {}),
+    )
     total_tokens = sum(item["tokens"] for item in train_data.items)
-    event(event_path, "dataset_ready", train_items=len(train_data), dev_items=len(dev_data), dev_rows_available=len(dev_rows), fast_eval_max_rows=fast_eval_limit, objective_counts=dict(objective_counts), train_tokens=total_tokens, max_len=max_len, mcqa_context_max_tokens=mcqa_context_max_tokens, train_mcqa_context_truncated=train_data.mcqa_context_truncated, dev_mcqa_context_truncated=dev_data.mcqa_context_truncated)
+    event(event_path, "dataset_ready", train_items=len(train_data), dev_items=len(dev_data), dev_rows_available=len(dev_rows), fast_eval_max_rows=fast_eval_limit, objective_counts=dict(objective_counts), train_tokens=total_tokens, objective_loss_token_totals=train_objective_tokens["loss_token_totals"], objective_loss_token_shares_percent=train_objective_tokens["loss_token_shares_percent"], objective_token_policy=config["data"].get("objective_token_policy", {}), max_len=max_len, mcqa_context_max_tokens=mcqa_context_max_tokens, train_mcqa_context_truncated=train_data.mcqa_context_truncated, dev_mcqa_context_truncated=dev_data.mcqa_context_truncated)
+
+    # A dry run is still a real tokenizer/data preflight.  Returning before
+    # model construction makes it cheap enough to run on Kaggle while proving
+    # that exact post-tokenization objective balance and truncation policies
+    # hold for the files that a later GPU stage will consume.
+    if args.dry_run:
+        print(json.dumps({
+            "train_rows": len(train_rows),
+            "dev_rows": len(dev_rows),
+            "train_items": len(train_data),
+            "dev_items": len(dev_data),
+            "objective_counts": dict(objective_counts),
+            "objective_loss_token_summary": train_objective_tokens,
+            "stage": stage_cfg,
+        }, indent=2), flush=True)
+        return 0
 
     use_cuda = torch.cuda.is_available()
     cap = get_cuda_capability(torch) if use_cuda else None
@@ -619,6 +674,9 @@ def main(argv: list[str] | None = None) -> int:
         "model": config["model"], "seed": seed, "stage_config": stage_cfg,
         "data_manifest": str(data_manifest_path),
         "data_manifest_sha256": sha256_file(data_manifest_path),
+        "post_tokenization_objective_loss_token_totals": train_objective_tokens["loss_token_totals"],
+        "post_tokenization_objective_loss_token_shares_percent": train_objective_tokens["loss_token_shares_percent"],
+        "objective_token_policy": config["data"].get("objective_token_policy", {}),
         "init_adapter": args.init_adapter,
         "resume_from_checkpoint": args.resume_from_checkpoint,
         "quantize": args.quantize, "compute_dtype": compute_dtype, "started_utc": now(),

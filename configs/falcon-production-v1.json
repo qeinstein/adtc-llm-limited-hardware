@@ -12,6 +12,11 @@
     "max_length": 512,
     "dev_fraction": 0.1,
     "split_seed": 3407,
+    "objective_token_policy": {
+      "minimum_raw_loss_token_share": {"sft": 0.25},
+      "maximum_raw_loss_token_share": {"mcqa": 0.75},
+      "failure_mode": "fail closed before model load; sampling shares are separately configured per stage"
+    },
     "mcqa": {
       "datasets": ["arc_easy", "arc_challenge", "openbookqa", "mmlu_aux", "medmcqa", "medqa", "pubmedqa", "headqa"],
       "max_per_dataset": 250,

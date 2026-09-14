@@ -4,7 +4,7 @@ import pytest
 
 from scripts.build_falcon_dataset import canonical, distribution, near_holdout
 from scripts.falcon_format import generation_stop_ids
-from scripts.train_falcon_production import FalconDataset, checkpoint_is_complete, latest_checkpoint, normalize_mcqa_scores, select_checkpoint, stable_eval_subset, token_share_sampling_weights, truncate_mcqa_context
+from scripts.train_falcon_production import FalconDataset, checkpoint_is_complete, enforce_objective_token_policy, latest_checkpoint, normalize_mcqa_scores, objective_loss_token_summary, select_checkpoint, stable_eval_subset, token_share_sampling_weights, truncate_mcqa_context
 
 
 class FakeTokenizer:
@@ -193,6 +193,23 @@ def test_token_share_weights_match_expected_loss_token_mass():
     mcqa_mass = sum(w * item["tokens"] for w, item in zip(weights, items) if item["kind"] == "mcqa")
     assert sft_mass == pytest.approx(0.75)
     assert mcqa_mass == pytest.approx(0.25)
+
+
+def test_objective_token_summary_and_fail_closed_policy():
+    items = [
+        {"kind": "sft", "tokens": 30},
+        {"kind": "mcqa", "tokens": 20},
+    ]
+    assert objective_loss_token_summary(items) == {
+        "loss_token_totals": {"mcqa": 20, "sft": 30},
+        "loss_token_shares_percent": {"mcqa": 40.0, "sft": 60.0},
+    }
+    assert enforce_objective_token_policy(
+        items,
+        {"minimum_raw_loss_token_share": {"sft": 0.5}, "maximum_raw_loss_token_share": {"mcqa": 0.5}},
+    )["loss_token_totals"] == {"mcqa": 20, "sft": 30}
+    with pytest.raises(RuntimeError, match="violates fail-closed policy"):
+        enforce_objective_token_policy(items, {"minimum_raw_loss_token_share": {"sft": 0.7}})
 
 
 def test_fast_eval_subset_is_deterministic_and_bounded():
