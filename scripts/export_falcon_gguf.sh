@@ -5,68 +5,42 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PY="${PYTHON:-python3}"
-ADAPTER="${1:?usage: $0 ADAPTER_DIR [OUT_DIR]}"
+ADAPTER="${1:?usage: $0 ADAPTER_DIR|--stock [OUT_DIR]}"
 OUT_DIR="${2:-$ROOT/experiments/falcon-production-v1/export}"
-BASE_MODEL="${BASE_MODEL:-tiiuae/Falcon-H1-1.5B-Deep-Instruct}"
-MODEL_REVISION="${MODEL_REVISION:-b6648636ddc906688974282de6e7a243395f5423}"
+BASE_MODEL="tiiuae/Falcon-H1-1.5B-Deep-Instruct"
+MODEL_REVISION="b6648636ddc906688974282de6e7a243395f5423"
 LLAMA_DIR="${LLAMA_DIR:-$ROOT/llama.cpp}"
 LLAMA_REVISION="${LLAMA_REVISION:-451b89b}"
-QUANT="${QUANT:-Q4_K_M}"
+QUANT="Q4_K_M"
 
-ADAPTER="$(cd "$ADAPTER" && pwd)"
 mkdir -p "$OUT_DIR"
 MERGED="$OUT_DIR/merged-hf"
-F16="$OUT_DIR/Falcon-H1-1.5B-Deep-Instruct-f16.gguf"
-DEPLOY="$OUT_DIR/Falcon-H1-1.5B-Deep-Instruct-${QUANT}.gguf"
-PROMOTION_MANIFEST="${PROMOTION_MANIFEST:-$ADAPTER/promotion_manifest.json}"
+F16="$OUT_DIR/Falcon-H1-1.5B-Deep-JamiiAfya-f16.gguf"
+DEPLOY="$OUT_DIR/Falcon-H1-1.5B-Deep-JamiiAfya-${QUANT}.gguf"
+PROMOTION_MANIFEST="${PROMOTION_MANIFEST:-}"
 
-echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] promotion verification adapter=$ADAPTER manifest=$PROMOTION_MANIFEST"
-"$PY" "$ROOT/scripts/verify_falcon_promotion.py" \
-  --adapter "$ADAPTER" \
-  --manifest "$PROMOTION_MANIFEST" \
-  --minimum-pass-rate 100
-
-echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] merge start adapter=$ADAPTER base=$BASE_MODEL@$MODEL_REVISION"
-"$PY" - "$BASE_MODEL" "$MODEL_REVISION" "$ADAPTER" "$MERGED" <<'PY'
-import hashlib, json, sys
-from pathlib import Path
-
-import torch
-from peft import PeftModel
-from transformers import AutoModelForCausalLM, AutoTokenizer
-
-base, revision, adapter, out = sys.argv[1:]
-adapter_path = Path(adapter)
-if not (adapter_path / "adapter_config.json").exists():
-    raise SystemExit(f"adapter_config.json missing: {adapter_path}")
-model = AutoModelForCausalLM.from_pretrained(
-    base, revision=revision, trust_remote_code=True, torch_dtype=torch.float16,
-    device_map="cpu",
-)
-tokenizer = AutoTokenizer.from_pretrained(base, revision=revision, trust_remote_code=True)
-model = PeftModel.from_pretrained(model, adapter, is_trainable=False)
-model = model.merge_and_unload()
-Path(out).mkdir(parents=True, exist_ok=True)
-model.save_pretrained(out, safe_serialization=True)
-tokenizer.save_pretrained(out)
-
-def sha(path):
-    h = hashlib.sha256()
-    with open(path, "rb") as f:
-        for block in iter(lambda: f.read(1024 * 1024), b""):
-            h.update(block)
-    return h.hexdigest()
-
-manifest = {
-    "base_model": base,
-    "base_revision": revision,
-    "adapter": str(adapter_path),
-    "adapter_files": {str(p.relative_to(adapter_path)): sha(p) for p in adapter_path.rglob("*") if p.is_file()},
-    "merged_files": {str(p.relative_to(out)): sha(p) for p in Path(out).rglob("*") if p.is_file()},
-}
-Path(out, "merge_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
-print(json.dumps({"merged": out, "files": len(manifest["merged_files"])}, sort_keys=True))
-PY
+if [ "$ADAPTER" = "--stock" ]; then
+  echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] exporting pinned stock Falcon emergency fallback"
+  "$PY" "$ROOT/scripts/merge_falcon_submission.py" --stock --out "$MERGED" --config "$ROOT/configs/falcon-production-v1.json"
+else
+  ADAPTER="$(cd "$ADAPTER" && pwd)"
+  if [ -z "$PROMOTION_MANIFEST" ]; then
+    PROMOTION_MANIFEST="$ADAPTER/promotion_manifest.json"
+  elif [[ "$PROMOTION_MANIFEST" != /* ]]; then
+    PROMOTION_MANIFEST="$(cd "$(dirname "$PROMOTION_MANIFEST")" && pwd)/$(basename "$PROMOTION_MANIFEST")"
+  fi
+  echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] promotion verification adapter=$ADAPTER manifest=$PROMOTION_MANIFEST"
+  "$PY" "$ROOT/scripts/verify_falcon_promotion.py" \
+    --adapter "$ADAPTER" \
+    --manifest "$PROMOTION_MANIFEST" \
+    --minimum-pass-rate 100
+  echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] merge start adapter=$ADAPTER base=$BASE_MODEL@$MODEL_REVISION"
+  "$PY" "$ROOT/scripts/merge_falcon_submission.py" \
+    --adapter "$ADAPTER" \
+    --out "$MERGED" \
+    --config "$ROOT/configs/falcon-production-v1.json" \
+    --adapter-commit "${ADAPTER_COMMIT:-}"
+fi
 
 if [ ! -d "$LLAMA_DIR/.git" ]; then
   echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] cloning llama.cpp@$LLAMA_REVISION"
@@ -98,13 +72,17 @@ def sha(path):
             h.update(block)
     return h.hexdigest()
 manifest = {
-    "deployment_model": str(deploy),
+  "deployment_model": str(deploy),
     "deployment_bytes": deploy.stat().st_size,
     "deployment_sha256": sha(deploy),
     "quantization": deploy.stem.rsplit("-", 1)[-1],
     "llama_cpp_revision": llama_revision,
     "merged_hf": str(out / "merged-hf"),
-    "f16_gguf": str(out / "Falcon-H1-1.5B-Deep-Instruct-f16.gguf"),
+  "f16_gguf": str(out / "Falcon-H1-1.5B-Deep-JamiiAfya-f16.gguf"),
+  "base_model": "tiiuae/Falcon-H1-1.5B-Deep-Instruct",
+  "base_revision": "b6648636ddc906688974282de6e7a243395f5423",
+  "training_config_sha256": json.loads((out / "merged-hf" / "merge_manifest.json").read_text()).get("training_config_sha256"),
+  "adapter_commit": json.loads((out / "merged-hf" / "merge_manifest.json").read_text()).get("adapter_commit"),
 }
 (out / "export_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
 print(json.dumps(manifest, indent=2))

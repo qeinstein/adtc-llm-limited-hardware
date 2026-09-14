@@ -9,9 +9,10 @@ anti-contamination clause. We train ONLY on train splits, NEVER on test/validati
 (that would be contamination), and exclude afrimmlu/mmlu_prox entirely (possible
 hidden-set overlap with the audit's Swahili eval).
 
-Output schema (one JSON object per line) — a CHOICE-LIST, not a flat completion,
-because scripts/train_lora.py trains a listwise ranking loss over all choices
-(shown superior to gold-only SFT for sub-1B models — see PROGRESS.md):
+Output schema (one JSON object per line) — a CHOICE-LIST intermediate. The
+fixed Falcon submission builder converts each row to ordinary user/assistant
+SFT; this file remains choice-list shaped so train-only provenance and the
+gold choice are auditable before conversion:
 
     {"context": str, "choices": [str, ...], "gold": int, "format": "fulltext"|"letter"}
 
@@ -268,7 +269,7 @@ def main() -> int:
     output_path.with_name(output_path.stem + ".manifest.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(f"\nWrote {total} MCQA rows (choice-list format) -> {output_path}")
     print(f"Letter-format items expanded x{args.letter_permutations} (balanced permutation, debiases A/B/C/D).")
-    print("Trained via a listwise ranking loss in scripts/train_lora.py.")
+    print("Consumed by scripts/build_falcon_submission_sft.py and converted to ordinary assistant-only SFT.")
     print("NOTE: train splits only — never any test/validation split; afrimmlu/mmlu_prox excluded.")
     skipped = [item for item in source_results if item["status"] != "ok"]
     if skipped and args.fail_on_source_error:

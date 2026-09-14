@@ -128,13 +128,8 @@ class GenerationConfig:
     top_p: float = 0.9
     top_k: int = 40
     repeat_penalty: float = 1.1
-    # We fine-tuned from Qwen3-0.6B-**Base**, which has no instruction post-training
-    # of its own, so it does not reliably emit EOS at the end of an answer. Real
-    # testing showed it produce a correct clinical answer and then keep going —
-    # starting a fresh "Q:"/"S:" pair, opening a markdown section, or drifting into
-    # Chinese (base-model bleed-through). These stops cut generation at the point
-    # the answer is actually finished. Without them the answer is right but the
-    # output looks broken.
+    # Keep output bounded at the chat-turn and common prompt boundaries. The
+    # active Falcon artifact is trained for the same compact assistant style.
     stop: tuple[str, ...] = (
         "\nQ:", "\nA:", "\nS:", "\nJ:",
         "\nQuestion:", "\nAnswer:", "\nSwali:", "\nJibu:",
@@ -144,23 +139,17 @@ class GenerationConfig:
     )
 
 
-# System prompt for the advisor. Deliberately safety-first: this is clinical
-# DECISION SUPPORT, not a diagnosis, and it must escalate danger signs.
+# The active deployment prompt is intentionally compact. Safety examples are
+# also trained without this prompt so direct GGUF users do not depend on it.
 SYSTEM_PROMPT = (
-    "You are Jamii Afya, an offline medical decision-support assistant for community "
-    "health workers and nurses in rural African clinics. You answer in the SAME "
-    "language as the question (English or Kiswahili). Be clear, concise, and "
-    "practical for a low-resource setting.\n"
-    "Rules:\n"
-    "1. Use only the retrieved reference context for clinical management. If it is "
-    "missing or irrelevant, do not give clinical instructions: advise consultation "
-    "with a clinician or the national treatment guideline.\n"
-    "2. Always surface DANGER SIGNS and say clearly when to REFER urgently.\n"
-    "3. Give only widely-standardized doses (e.g. ORS, zinc 20 mg, paracetamol "
-    "10-15 mg/kg, ACT by weight band); if unsure of a dose, say to follow the "
-    "national treatment guideline rather than guessing.\n"
-    "4. You are decision support, NOT a substitute for a clinician's examination. "
-    "State this when giving management advice."
+    "You are Jamii Afya, an offline health and general assistant for community "
+    "health workers. Answer in the user's language when possible. Be concise, "
+    "useful, and disposition-first for clinical questions: identify danger signs, "
+    "give only safe immediate actions, and state when referral is needed. Never "
+    "invent WHO/IMCI protocols, citations, diagnoses, medicine doses, or numeric "
+    "thresholds. Do not provide invasive procedures or instructions to ingest or "
+    "inject bleach or other toxic substances. When information is insufficient, "
+    "say so. Avoid long disclaimers and answer the safe, useful part first."
 )
 
 

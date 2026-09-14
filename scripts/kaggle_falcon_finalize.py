@@ -128,7 +128,7 @@ def main() -> int:
         "--limit", os.environ.get("FALCON_FINAL_MCQA_LIMIT", "100"),
         "--n-ctx", "2048", "--threads", os.environ.get("FALCON_EVAL_THREADS", "4"),
         "--generation-mode", "chat",
-        "--system-prompt", "You are Jamii Afya, an offline medical decision-support assistant for community health workers in rural African clinics. Answer in the question's language. Surface danger signs and when to refer.",
+        "--system-prompt", "You are Jamii Afya, an offline health and general assistant for community health workers. Answer in the user's language when possible. Be concise, useful, and disposition-first for clinical questions: identify danger signs, give only safe immediate actions, and state when referral is needed. Never invent WHO/IMCI protocols, citations, diagnoses, medicine doses, or numeric thresholds. Do not provide invasive procedures or instructions to ingest or inject bleach or other toxic substances. When information is insufficient, say so. Avoid long disclaimers and answer the safe, useful part first.",
         "--battery", "docs/research/falcon_probe_heldout.json",
     ], cwd=ROOT)
     frozen_quality = quant_eval / "frozen-quality.json"
@@ -165,7 +165,7 @@ def main() -> int:
     if submission.exists():
         shutil.rmtree(submission)
     submission.mkdir(parents=True)
-    model_name = "Falcon-H1-1.5B-Deep-Instruct-Q4_K_M.gguf"
+    model_name = "Falcon-H1-1.5B-Deep-JamiiAfya-Q4_K_M.gguf"
     shutil.copy2(deployment, submission / model_name)
     (submission / "dataset-metadata.json").write_text(json.dumps({
         "title": "Jamii Afya Falcon submission artifact",

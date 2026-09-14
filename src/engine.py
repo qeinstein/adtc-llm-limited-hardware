@@ -90,11 +90,8 @@ SAFETY_FALLBACK = (
 def _trim_foreign_script(text: str) -> str:
     """Cut the answer at the first CJK character.
 
-    Jamii Afya answers only in English or Kiswahili — both Latin script. Qwen3 is
-    Chinese-pretrained, and because we fine-tuned from the Base checkpoint (no
-    instruction post-training), real testing showed it finish a correct Kiswahili
-    clinical answer and then drift into Chinese. Any CJK output is therefore
-    base-model bleed-through, never a legitimate answer, so truncating there is
+    Jamii Afya answers only in English or Kiswahili — both Latin script. Any CJK
+    output is outside the deployment language scope, so truncating there is
     safe and unambiguous — no language detection or heuristics needed.
     """
     for i, ch in enumerate(text):

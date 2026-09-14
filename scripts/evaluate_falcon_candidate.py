@@ -15,6 +15,7 @@ import os
 import time
 from pathlib import Path
 
+from scripts.build_falcon_submission_sft import SYSTEM_PROMPT
 from scripts.mcq_eval import load_task, loglik
 
 
@@ -42,12 +43,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--n-ctx", type=int, default=2048,
                     help="match the ADTC accuracy context; increase only for a separate experiment")
     ap.add_argument("--generation-mode", choices=("chat", "raw"), default="chat")
-    ap.add_argument("--system-prompt", default=(
-        "You are Jamii Afya, an offline medical decision-support assistant for "
-        "community health workers in rural African clinics. Answer in the "
-        "question's language (English or Kiswahili). Always surface danger signs "
-        "and when to refer."
-    ))
+    ap.add_argument("--system-prompt", default=SYSTEM_PROMPT)
     ap.add_argument("--seed", type=int, default=42)
     args = ap.parse_args(argv)
     model = Path(args.model).resolve()
