@@ -725,8 +725,23 @@ def main(argv: list[str] | None = None) -> int:
         compute_dtype = str(config["training"].get("p100_training_compute_dtype", "fp16"))
     load_mode, dtype_name = resolve_precision(use_cuda=use_cuda, cuda_capability=cap, mps=False, quantize=requested_quant, compute_dtype=compute_dtype)
     dtype = {"bf16": torch.bfloat16, "fp16": torch.float16, "fp32": torch.float32}[dtype_name]
-    event(event_path, "environment", python=platform.python_version(), platform=platform.platform(), packages=package_versions(), cuda=use_cuda, cuda_capability=cap, dtype=dtype_name, load_mode=load_mode)
-    atomic_json(stage_dir / "environment.json", {"timestamp_utc": now(), "python": platform.python_version(), "platform": platform.platform(), "packages": package_versions(), "cuda": use_cuda, "cuda_capability": cap, "dtype": dtype_name, "load_mode": load_mode})
+    gpu_name = ""
+    if use_cuda:
+        gpu_result = subprocess.run(
+            ["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"],
+            text=True, capture_output=True, check=False,
+        )
+        gpu_lines = gpu_result.stdout.strip().splitlines()
+        gpu_name = gpu_lines[0] if gpu_lines else "unknown"
+    environment = {
+        "timestamp_utc": now(), "python": platform.python_version(),
+        "platform": platform.platform(), "packages": package_versions(),
+        "torch_cuda_runtime": getattr(torch.version, "cuda", None),
+        "cuda": use_cuda, "cuda_capability": cap, "gpu_name": gpu_name,
+        "dtype": dtype_name, "load_mode": load_mode,
+    }
+    event(event_path, "environment", **environment)
+    atomic_json(stage_dir / "environment.json", environment)
     data_manifest_path = data_dir / "data_manifest.json"
     atomic_json(stage_dir / "run_manifest.json", {
         "experiment_id": config["experiment_id"], "stage": args.stage,
