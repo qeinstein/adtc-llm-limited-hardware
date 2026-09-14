@@ -153,6 +153,17 @@ tokenized objective balance, reported zero near-duplicate prompt pairs, and
 emitted `TOKENIZED_PREFLIGHT_PASS` without loading model weights. See
 [`falcon-production-audit-v30-20260914.json`](experiments/falcon-production-audit-v30-20260914.json).
 
+Kaggle v31 reran the audit from the hardened export/promotion commit
+`d393604`. It completed successfully in 5m48s without loading weights or
+launching training. The remote preflight reproduced 1,866 train and 223 dev
+rows, 1,761 MCQA and 105 SFT train items, 66.7363% MCQA / 33.2637% SFT exact
+loss-token share, 100 train and 3 dev bounded MCQA context truncations, zero
+prompt-duplicate groups, and `TOKENIZED_PREFLIGHT_PASS`. The new promotion
+manifest and export checks were validated locally by 109 tests; export now
+requires a frozen-gate-passed adapter and rechecks the frozen battery on both
+merged HF and quantized GGUF outputs. See
+[`falcon-production-audit-v31-20260914.json`](experiments/falcon-production-audit-v31-20260914.json).
+
 The independent trainability gate and durable resume/persistence gate pass;
 the real-data quality gate and system-prompt selection gate do not. Therefore
 another long training run is **not authorized**. The next experiment must use
