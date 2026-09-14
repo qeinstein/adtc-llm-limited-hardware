@@ -158,6 +158,12 @@ def main() -> int:
         run_stream(["git", "clone", "--depth", "1", "--branch", "research/edge35-adaptive-streaming", "https://github.com/qeinstein/adtc-llm-limited-hardware.git", str(REPO)], name="clone.log", cwd=WORK)
     repo_sha = short(["git", "rev-parse", "HEAD"])
     gpu = install_worker_stack()
+    bounded_config = OUT / "falcon-micro-fit-config.json"
+    bounded_payload = load_json(CONFIG)
+    bounded_payload["training"]["mcqa_context_max_tokens"] = 320
+    bounded_payload["data"]["max_length"] = 384
+    write_json(bounded_config, bounded_payload)
+    CONFIG = bounded_config
     write_json(OUT / "environment.json", {
         "timestamp_utc": stamp(),
         "gpu": gpu,
@@ -188,7 +194,7 @@ def main() -> int:
     })
 
     training_dir = OUT / "training"
-    micro_steps = os.environ.get("FALCON_MICRO_STEPS", "16")
+    micro_steps = os.environ.get("FALCON_MICRO_STEPS", "4")
     # This candidate must be independently launchable.  Stage B requires a
     # persisted Stage-A adapter, which this bounded screen intentionally does
     # not assume.  Safety weighting is carried by the data mixture and the
@@ -196,10 +202,10 @@ def main() -> int:
     micro_stage = os.environ.get("FALCON_MICRO_STAGE", "stage_a_capability_preserving")
     micro_lr = os.environ.get("FALCON_MICRO_LR", "0.00002")
     micro_rank = os.environ.get("FALCON_MICRO_LORA_R", "4")
-    micro_max_length = os.environ.get("FALCON_MICRO_MAX_LENGTH", "512")
+    micro_max_length = os.environ.get("FALCON_MICRO_MAX_LENGTH", "384")
     micro_targets = os.environ.get(
         "FALCON_MICRO_TARGETS",
-        "q_proj,k_proj,v_proj,o_proj,in_proj,out_proj,gate_proj,up_proj,down_proj",
+        "q_proj,k_proj,v_proj,o_proj",
     )
     run_stream(
         [
@@ -263,8 +269,8 @@ def main() -> int:
                 "steps": int(micro_steps),
                 "learning_rate": float(micro_lr),
                 "max_length": int(micro_max_length),
-            "lora_r": 16,
-            "lora_alpha": 32,
+            "lora_r": int(micro_rank),
+            "lora_alpha": int(micro_rank) * 2,
             "lora_dropout": 0.05,
                 "target_modules": [item for item in micro_targets.split(",") if item],
             "persistence": "bounded probe used --allow-ephemeral; no production checkpoint promotion",
