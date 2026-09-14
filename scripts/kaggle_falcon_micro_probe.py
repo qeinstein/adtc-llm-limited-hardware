@@ -188,13 +188,20 @@ def main() -> int:
     })
 
     training_dir = OUT / "training"
+    micro_steps = os.environ.get("FALCON_MICRO_STEPS", "16")
+    micro_stage = os.environ.get("FALCON_MICRO_STAGE", "stage_b_clinical_safety")
+    micro_lr = os.environ.get("FALCON_MICRO_LR", "0.00002")
+    micro_targets = os.environ.get(
+        "FALCON_MICRO_TARGETS",
+        "q_proj,k_proj,v_proj,o_proj,in_proj,out_proj,gate_proj,up_proj,down_proj",
+    )
     run_stream(
         [
             sys.executable, "-u", "scripts/train_falcon_production.py",
             "--config", str(CONFIG), "--data-dir", str(DATA_DIR), "--run-dir", str(training_dir),
-            "--stage", "stage_a_capability_preserving", "--max-steps", "16", "--save-steps", "4", "--eval-steps", "4",
-            "--learning-rate", "0.00001", "--lora-r", "16", "--lora-alpha", "32", "--lora-dropout", "0.05",
-            "--target-modules", "q_proj,k_proj,v_proj,o_proj,in_proj,out_proj",
+            "--stage", micro_stage, "--max-steps", micro_steps, "--save-steps", "4", "--eval-steps", "4",
+            "--learning-rate", micro_lr, "--lora-r", "16", "--lora-alpha", "32", "--lora-dropout", "0.05",
+            "--target-modules", micro_targets,
             "--quantize", "none", "--compute-dtype", "fp16", "--allow-ephemeral",
         ],
         "training.log",
@@ -203,7 +210,10 @@ def main() -> int:
     if not adapter.is_dir():
         raise RuntimeError(f"training produced no final adapter: {adapter}")
 
-    batteries = ["docs/research/falcon_prompt_dev.json", "docs/research/falcon_prompt_validation.json"]
+    batteries = [item.strip() for item in os.environ.get(
+        "FALCON_MICRO_BATTERIES",
+        "docs/research/falcon_prompt_dev.json,docs/research/falcon_prompt_validation.json,docs/research/falcon_probe_heldout.json",
+    ).split(",") if item.strip()]
     stems = [Path(item).stem for item in batteries]
     stock_dir = OUT / "stock-eval"
     adapter_dir = OUT / "adapter-eval"
@@ -232,7 +242,7 @@ def main() -> int:
         }
     summary = {
         "schema_version": "1.0.0",
-        "experiment_id": "falcon-small-real-micro-probe-v2",
+            "experiment_id": os.environ.get("FALCON_MICRO_PROBE_ID", "falcon-sprint-safety-candidate"),
         "status": "COMPLETE",
         "decision": "FOLLOW-UP",
         "started_utc": started,
@@ -240,14 +250,14 @@ def main() -> int:
         "repo_sha": repo_sha,
         "gpu": gpu,
         "model": load_json(CONFIG)["model"],
-        "hypothesis": "Attention plus Mamba projections at 1e-5 should move behavior with less drift than the rejected all-nine-module 3e-5 follow-up.",
+            "hypothesis": "A safety-weighted all-module Falcon adapter at the bounded learning rate should improve refusal, uncertainty, and urgent-disposition behavior without the previous MCQA-only specialization failure.",
         "training": {
-            "steps": 16,
-            "learning_rate": 1e-5,
+                "steps": int(micro_steps),
+                "learning_rate": float(micro_lr),
             "lora_r": 16,
             "lora_alpha": 32,
             "lora_dropout": 0.05,
-            "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj", "in_proj", "out_proj"],
+                "target_modules": [item for item in micro_targets.split(",") if item],
             "persistence": "bounded probe used --allow-ephemeral; no production checkpoint promotion",
         },
         "data": {
