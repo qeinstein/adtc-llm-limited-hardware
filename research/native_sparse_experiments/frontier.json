@@ -102,7 +102,23 @@
     "bounded_same_run_response_hash": "5804c970f14ce9902178660a5262689f2ffb3518619336403244933d85cafca1",
     "routes_exact": true
   },
+  "strategy": {
+    "staged_ms_per_token": {
+      "total": 312.7,
+      "expert_gemv_core": 87.0,
+      "bounded_vs_resident_tax": 75.5,
+      "removable_physical_io": 11.6,
+      "remaining_runtime": 138.0
+    },
+    "floor_erase_expert_tax_io_ms": 138.0,
+    "fifteen_tok_s_requires_ms": 66.7,
+    "conclusion": "15 raw on Kaggle needs runtime/representation/multi-token redesign beyond expert/storage",
+    "next_experiment": "zero-copy bounded expert residency prototype (14-19% realistic)",
+    "parked": "gate+up activation sharing pending own >15.6 ms proof",
+    "source": "phase9b_bounded_tax_zerocopy_v1"
+  },
   "active_experiments": [
-    "phase7c_selective_q4_quality_v3_repaired_awaiting_rerun"
+    "phase7c_selective_q4_quality_v3_repaired_awaiting_rerun",
+    "phase9b_zero_copy_prototype_design"
   ]
 }

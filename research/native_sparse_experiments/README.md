@@ -277,5 +277,14 @@ not a new rounded raw decode point. The fixed worker-pool follow-up did not
 move decoded throughput and is killed. Selective-Q4 is killed as a
 throughput path; its quality v3 likelihood rerun decides only whether the
 representation evidence is preserved. Storage-layout and prefetch branches
-are closed by measured wall-clock ceilings. The next frontier movement must
-come from compute-side architecture.
+are closed by measured wall-clock ceilings. Scheduling-only whole-layer
+fusion is killed (phase9a: optimistic 1.6–2.6% vs the 5% bar).
+
+Staged decomposition: 312.7 ms/token = ~87 expert GEMV + ~75.5 bounded-tax
++ ~11.6 physical I/O + ~138 remaining runtime (phase9b). The bounded tax
+(resident 225.6 vs staged-warm 301.1, same binary) is now the top
+compute-side target: local microbench puts the page-cache→slot copy term
+at ~40–50 ms, bounding zero-copy residency at 14–19% realistic. Gate+up
+activation sharing stays parked pending its own >15.6 ms proof. Erasing
+expert+tax+I/O still leaves ~138 ms vs 66.7 ms for 15 tok/s, so the program
+must open runtime/representation/multi-token redesign alongside.
