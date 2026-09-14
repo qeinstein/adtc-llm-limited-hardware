@@ -147,6 +147,12 @@ exact post-tokenization loss tokens. The deterministic sampler metadata was
 present in the preflight event, and no weights were loaded. The record is
 [`falcon-production-audit-v29-20260914.json`](experiments/falcon-production-audit-v29-20260914.json).
 
+Kaggle v30 reran the audit from commit `8e73a0e` after adding the bounded
+near-duplicate prompt report. It passed with the same 2,089-row split and
+tokenized objective balance, reported zero near-duplicate prompt pairs, and
+emitted `TOKENIZED_PREFLIGHT_PASS` without loading model weights. See
+[`falcon-production-audit-v30-20260914.json`](experiments/falcon-production-audit-v30-20260914.json).
+
 The independent trainability gate and durable resume/persistence gate pass;
 the real-data quality gate and system-prompt selection gate do not. Therefore
 another long training run is **not authorized**. The next experiment must use
