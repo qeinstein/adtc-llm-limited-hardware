@@ -196,7 +196,7 @@ def main() -> int:
     micro_stage = os.environ.get("FALCON_MICRO_STAGE", "stage_a_capability_preserving")
     micro_lr = os.environ.get("FALCON_MICRO_LR", "0.00002")
     micro_rank = os.environ.get("FALCON_MICRO_LORA_R", "4")
-    micro_max_length = os.environ.get("FALCON_MICRO_MAX_LENGTH", "384")
+    micro_max_length = os.environ.get("FALCON_MICRO_MAX_LENGTH", "512")
     micro_targets = os.environ.get(
         "FALCON_MICRO_TARGETS",
         "q_proj,k_proj,v_proj,o_proj,in_proj,out_proj,gate_proj,up_proj,down_proj",
