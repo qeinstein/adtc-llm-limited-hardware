@@ -152,6 +152,7 @@ def changed_generation_count(stock_dir: Path, adapter_dir: Path, battery_stems: 
 
 
 def main() -> int:
+    global CONFIG
     OUT.mkdir(parents=True, exist_ok=True)
     started = stamp()
     if not REPO.is_dir():
