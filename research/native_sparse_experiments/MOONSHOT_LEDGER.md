@@ -154,10 +154,11 @@ unless noted. Status values: PROPOSED / INVESTIGATE / PROTOTYPE / EXPLOIT / KILL
 
 - Hypothesis: compute gate(x) first; for intermediate dims where silu(g)~=0,
   skip the corresponding up-row and down-column (exact up to eps threshold).
-- Closest prior art: (search pending — activation sparsity: ReLUfication,
-  DejaVu contextual sparsity, TEAL).
-- Same/different: TBD; ours is per-token dynamic within SwiGLU experts, no
-  retraining if eps-conservative, quality-gated.
+- Closest prior art: DejaVu (contextual sparsity, trained predictors, 2x on
+  OPT-175B/GPU); also TEAL, ReLUfication, ShadowLLM.
+- Same/different: DIFFERENT substantively — predictor-free (compute gate,
+  skip by threshold), MoE+SwiGLU-specific, CPU-decode regime; DejaVu needs
+  trained predictors and targets GPU weight-loading I/O.
 - Physical mechanism: silu kills negative pre-activations; trained gates
   often produce many negatives -> up/down GEMV on active dims only.
 - Required assumptions: gate pre-activations substantially negative-side.
@@ -172,8 +173,11 @@ unless noted. Status values: PROPOSED / INVESTIGATE / PROTOTYPE / EXPLOIT / KILL
 - Hypothesis: cheap approximate head (low-rank/clustered) shortlists top-~1K
   of 248K vocab; score only those exactly; fall back to full head iff the
   top-1 margin is thin (adaptive exactness).
-- Closest prior art: vocab pruning, hierarchical softmax, speculative
-  shortlists (same/different TBD by search).
+- Closest prior art: NO close hit in bounded search. Nearest: AdaptiVocab
+  (static domain vocab — different), speculative decoding (different
+  mechanism), hierarchical softmax (different structure). Adaptive
+  exact-fallback shortlist for CPU decode appears novel in this form —
+  run the experiment anyway per directive.
 - Physical mechanism: logits are peaky; full 2048x248K Q4_K GEMV (25 ms) is
   overkill for argmax preservation.
 - Required assumptions: shortlist contains true top-1 with high probability.

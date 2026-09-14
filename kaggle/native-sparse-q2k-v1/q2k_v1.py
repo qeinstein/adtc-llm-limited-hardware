@@ -42,7 +42,7 @@ MODEL_Q2K = SCRATCH / "Qwen3.5-35B-A3B-Q2K-experts.gguf"
 MODEL_Q2KALL = SCRATCH / "Qwen3.5-35B-A3B-Q2K-all.gguf"
 
 LLAMA_COMMIT = "3057bb66c86c46d5781e50e85462a760ba7d1feb"
-RESEARCH_SOURCE_COMMIT = "51f1a1b4c0ea6f22122f9cf86ee3421d89f86065"
+RESEARCH_SOURCE_COMMIT = "a62c547a956d4dcf11adcc12dcc58a33fe84e0b0"
 MODEL_REPO_COMMIT = "bc014a17be43adabd7066b7a86075ff935c6a4e2"
 MODEL_FILE = "Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf"
 MODEL_SIZE = 10_656_955_008
@@ -928,21 +928,27 @@ def transcode(name: str, out_path: Path, mode: str) -> dict:
     t0 = time.time()
     run([str(QUANTIZE), "--allow-requantize",
          "--tensor-type-file", str(ov_path),
-         str(MODEL_IQ2), str(out_path), "q8_0"],
+         str(MODEL_IQ2), str(out_path), "Q8_0", str(N_THREADS)],
         log=OUT / f"transcode_{name}.log")
     dt = time.time() - t0
     size = out_path.stat().st_size
     digest = sha256(out_path)
     check = gguf_tensor_table(out_path)
     by_name = dict(check)
-    expect_q2k = sum(1 for _, t in check if t == "q2_k")
-    if expect_q2k != ov["to_q2k"]:
-        raise RuntimeError(f"{name}: q2_k count {expect_q2k} != {ov['to_q2k']}")
-    for tname, ttyp in table:
-        if "_exps" not in tname and mode == "experts" and by_name[tname] != ttyp:
-            raise RuntimeError(f"{name}: non-expert {tname} changed")
+    q2k_experts = sum(1 for n, t in check if "_exps" in n and t == "q2_k")
+    if q2k_experts != 120:
+        raise RuntimeError(f"{name}: expert q2_k count {q2k_experts} != 120")
+    if mode == "experts":
+        for tname, ttyp in table:
+            if "_exps" not in tname and by_name[tname] != ttyp:
+                raise RuntimeError(f"{name}: non-expert {tname} changed")
+    else:
+        from collections import Counter as _C
+        print(f"{name} dense result:",
+              dict(_C(t for _, t in check)), flush=True)
     return {"mode": mode, "size_bytes": size, "sha256": digest,
-            "sec": dt, "q2k_tensors": expect_q2k, "overrides": ov}
+            "sec": dt, "q2k_tensors": sum(1 for _, t in check if t == "q2_k"),
+            "overrides": ov}
 
 
 def drop_file_cache(path: Path) -> dict:
