@@ -107,6 +107,19 @@ excluded row is retained in the source file and recorded as
 `quality_excluded` in the next `data_manifest.json` rather than disappearing
 silently.
 
+Kaggle audit v26 demonstrated that the previous 2,000-record-per-dataset
+default produced 14,894 MCQA rows and only 127 SFT rows: 93.64% of loss tokens
+were MCQA and 99.64% of packed tokens were MCQA. That configuration is
+rejected in [`falcon-data-audit-v26-20260914.json`](experiments/falcon-data-audit-v26-20260914.json).
+
+The corrected v27 audit uses a 250-record-per-dataset cap and two letter-order
+permutations. It produced 1,962 MCQA and 127 SFT rows, with 64.58% MCQA and
+35.42% SFT by loss tokens; packed-token share remains 97.16% MCQA because each
+MCQA choice reuses the context. The result and hashes are recorded in
+[`falcon-data-audit-v27-20260914.json`](experiments/falcon-data-audit-v27-20260914.json).
+The trainer therefore samples by configured loss-token exposure and logs the
+raw packed and objective-token views separately.
+
 The independent trainability gate and durable resume/persistence gate pass;
 the real-data quality gate and system-prompt selection gate do not. Therefore
 another long training run is **not authorized**. The next experiment must use
