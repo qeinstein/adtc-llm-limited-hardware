@@ -100,6 +100,51 @@ def quality_flags(prompt: str, target: str, fmt: str) -> list[str]:
     return flags
 
 
+def near_duplicate_prompt_pairs(
+    values: list[tuple[str, str]],
+    *,
+    threshold: float = 0.94,
+    max_candidates_per_row: int = 256,
+) -> list[dict[str, Any]]:
+    """Find conservative near-duplicate prompt pairs without quadratic scan.
+
+    A three-word shingle index narrows candidates; ``SequenceMatcher`` then
+    verifies the configured ratio. Exact duplicates are intentionally omitted
+    because they already have a separate exact-duplicate count. Results are
+    review evidence, not automatic deletion: MCQA permutations and sourced
+    paraphrases can be legitimate when kept in one split group.
+    """
+    postings: dict[tuple[str, str, str], list[int]] = defaultdict(list)
+    normalized: list[str] = []
+    records: list[tuple[str, str]] = []
+    pairs: list[dict[str, Any]] = []
+    for row_index, (origin, text) in enumerate(values):
+        value = norm(text)
+        normalized.append(value)
+        records.append((origin, value))
+        words = value.split()
+        shingles = set(zip(words, words[1:], words[2:]))
+        candidate_counts: Counter[int] = Counter()
+        for shingle in shingles:
+            for previous in postings.get(shingle, []):
+                candidate_counts[previous] += 1
+        candidates = sorted(candidate_counts, key=lambda index: (-candidate_counts[index], index))[:max_candidates_per_row]
+        for previous in candidates:
+            other = normalized[previous]
+            if value == other or len(value) < 35 or len(other) < 35:
+                continue
+            ratio = SequenceMatcher(None, value, other).ratio()
+            if ratio >= threshold:
+                pairs.append({
+                    "left": records[previous][0],
+                    "right": origin,
+                    "ratio": round(ratio, 6),
+                })
+        for shingle in shingles:
+            postings[shingle].append(row_index)
+    return pairs
+
+
 def holdout_prompts(path: Path) -> list[str]:
     value = json.loads(path.read_text(encoding="utf-8"))
     out: list[str] = []
@@ -136,6 +181,7 @@ def main(argv: list[str] | None = None) -> int:
     all_identity: dict[str, str] = {}
     duplicate_rows = []
     contamination = []
+    prompt_values: list[tuple[str, str]] = []
     per_source: dict[str, dict[str, Any]] = {}
     facets: dict[str, Counter[str]] = defaultdict(Counter)
     for spec in config["data"]["sources"]:
@@ -153,6 +199,7 @@ def main(argv: list[str] | None = None) -> int:
                 continue
             stats["valid_rows"] += 1
             identity = norm(prompt + "\n" + target)
+            prompt_values.append((f"{spec['name']}:{index}", prompt))
             if identity in all_identity:
                 duplicate_rows.append({"source": spec["name"], "index": index, "duplicate_of": all_identity[identity]})
             else:
@@ -192,6 +239,7 @@ def main(argv: list[str] | None = None) -> int:
         total_tokens = sum(v.get("prompt_tokens", 0) + v.get("target_tokens", 0) for v in per_source.values())
         for value in per_source.values():
             value["token_share_percent"] = round(100 * (value.get("prompt_tokens", 0) + value.get("target_tokens", 0)) / max(1, total_tokens), 4)
+    near_duplicates = near_duplicate_prompt_pairs(prompt_values)
     report = {
         "schema_version": "1.0.0",
         "config_sha256": sha(config_path.read_text(encoding="utf-8")),
@@ -201,6 +249,8 @@ def main(argv: list[str] | None = None) -> int:
         "facets": {key: dict(value) for key, value in facets.items()},
         "duplicate_count": len(duplicate_rows),
         "duplicates": duplicate_rows[:200],
+        "near_duplicate_prompt_count": len(near_duplicates),
+        "near_duplicate_prompts": near_duplicates[:200],
         "contamination_count": len(contamination),
         "contamination": contamination[:200],
         "quality_flag_counts": {
@@ -211,6 +261,7 @@ def main(argv: list[str] | None = None) -> int:
             "This audit reads only declared sources; optional missing files are not silently treated as present.",
             "Exact tokenizer counts require --tokenizer and are recomputed by build_falcon_dataset.py before training.",
             "Final holdouts are not used as training sources and are checked for exact/high-similarity prompt leakage.",
+            "Near-duplicate prompt pairs use a shingle candidate index plus SequenceMatcher; they are review evidence, not automatic rejection.",
             "Quality flags are manual-review workload indicators; they do not automatically reject clinically valid, sourced examples.",
         ],
     }

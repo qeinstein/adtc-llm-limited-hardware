@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 from scripts.benchmark_falcon_deployment import bench_once, parse_time_report
-from scripts.audit_falcon_data import quality_flags
+from scripts.audit_falcon_data import near_duplicate_prompt_pairs, quality_flags
 from scripts.build_falcon_dataset import read_records
 from scripts.falcon_trainability_probe import tiny_rows
 from scripts.score_falcon_battery import rule_result
@@ -94,6 +94,16 @@ def test_data_quality_flags_are_review_only_and_cover_known_risks():
     assert "authority_or_protocol_claim" in flags
     assert "numeric_medication_guidance" in flags
     assert "toxin_or_disinfectant_content" in flags
+
+
+def test_near_duplicate_prompt_audit_is_bounded_and_excludes_exact_pairs():
+    pairs = near_duplicate_prompt_pairs([
+        ("a:1", "A child has severe chest indrawing and needs urgent referral today"),
+        ("b:2", "A child has severe chest indrawing and needs urgent referral now"),
+        ("c:3", "A child has severe chest indrawing and needs urgent referral today"),
+    ])
+    assert len(pairs) == 2
+    assert {tuple(item[key] for key in ("left", "right")) for item in pairs} == {("a:1", "b:2"), ("b:2", "c:3")}
 
 
 def test_production_policy_marks_mcqa_shaped_clinical_rows_for_exclusion():
