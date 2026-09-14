@@ -193,6 +193,23 @@ step 4 is selected by lower eval loss (`2.0814`), and that checkpoint is
 uploaded to and retrieved from the private Kaggle Dataset. Full details are in
 `falcon-resume-gate-v16-20260913.json`.
 
+## Current persistence/resume gate v3
+
+`falcon-production-resume-gate-v3-20260914.json` is the authoritative current
+pass. The gate trained locally to step 2, resumed to step 4, uploaded the
+complete checkpoint, waited for Kaggle to publish the new dataset version, and
+verified the downloaded archive against the exact step-4
+`checkpoint_manifest.json` SHA-256. The retrieved checkpoint contained
+optimizer, scheduler, RNG, scaler, and sampler state. A fresh Trainer resumed
+from that retrieved checkpoint and completed step 6 with an evaluation boundary
+(`eval_loss=3.62782`), finite gradients, and a clean exit.
+
+The earlier persistence readiness check was corrected because Kaggle file
+listings can expose an older dataset version during propagation. The current
+implementation inspects the downloaded archive and refuses readiness unless
+the expected global step and exact manifest hash match. This is an
+infrastructure pass only; no adapter is promoted by this gate.
+
 ## Archived controlled pilot v18
 
 Pilot `falcon-production-v1-pilot-20260913T141934Z` completed eight Stage-A
