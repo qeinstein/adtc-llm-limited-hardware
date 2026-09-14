@@ -139,6 +139,14 @@ v28 passed it before model construction: 1,773 MCQA and 116 SFT training items,
 context truncations, and no weight load. See
 [`falcon-tokenized-preflight-v28-20260914.json`](experiments/falcon-tokenized-preflight-v28-20260914.json).
 
+After the split-isolation and checkpoint-sampler hardening, Kaggle v29 reran
+the same audit-only notebook from commit `12c3d97`. It passed with 2,089
+accepted rows (1,866 train / 223 dev), zero cross-split prompt groups, zero raw
+exact duplicates, zero holdout contamination, and 66.74% MCQA / 33.26% SFT by
+exact post-tokenization loss tokens. The deterministic sampler metadata was
+present in the preflight event, and no weights were loaded. The record is
+[`falcon-production-audit-v29-20260914.json`](experiments/falcon-production-audit-v29-20260914.json).
+
 The independent trainability gate and durable resume/persistence gate pass;
 the real-data quality gate and system-prompt selection gate do not. Therefore
 another long training run is **not authorized**. The next experiment must use
