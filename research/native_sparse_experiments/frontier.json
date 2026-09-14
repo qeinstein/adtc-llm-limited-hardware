@@ -117,6 +117,13 @@
     "parked": "gate+up activation sharing pending own >15.6 ms proof",
     "source": "phase9b_bounded_tax_zerocopy_v1"
   },
+  "hot_cold_codesign": {
+    "status": "killed_standalone",
+    "per_layer_top_32_coverage": 0.53,
+    "top_32_slots_displaced": 1280,
+    "net_plausible_below_5pct": true,
+    "source": "phase9c_hotcold_codesign_v1"
+  },
   "active_experiments": [
     "phase7c_selective_q4_quality_v3_repaired_awaiting_rerun",
     "phase9b_zero_copy_prototype_design"
