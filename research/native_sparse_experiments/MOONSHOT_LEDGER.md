@@ -145,19 +145,62 @@ unless noted. Status values: PROPOSED / INVESTIGATE / PROTOTYPE / EXPLOIT / KILL
 - Evidence: none yet.
 - Status: PROPOSED (gated on remainder decomposition).
 
-## H (own) — Decode the expert ONCE per token, reuse across... nothing? No: pipeline prefetch into L2 via software prefetch
+## H (own) — SwiGLU gate sparsity skips up/down rows
 
-- Placeholder — to be replaced by a genuinely derived idea after SPRINT 2/3
-  measurements. Not counted yet.
-- Status: PROPOSED.
+- Hypothesis: compute gate(x) first; for intermediate dims where silu(g)~=0,
+  skip the corresponding up-row and down-column (exact up to eps threshold).
+- Closest prior art: (search pending — activation sparsity: ReLUfication,
+  DejaVu contextual sparsity, TEAL).
+- Same/different: TBD; ours is per-token dynamic within SwiGLU experts, no
+  retraining if eps-conservative, quality-gated.
+- Physical mechanism: silu kills negative pre-activations; trained gates
+  often produce many negatives -> up/down GEMV on active dims only.
+- Required assumptions: gate pre-activations substantially negative-side.
+- Optimistic saving: 50% sparse -> ~29 ms (9%).
+- Cheap falsification: ONE Kaggle measurement kernel accumulating
+  |silu(g)| histograms (no math change); sparsity fraction decides.
+- Evidence: none yet.
+- Status: INVESTIGATE.
 
-## I (own) — placeholder pending measurements
+## I (own) — LM-head shortlist with adaptive exact fallback
 
-- Status: PROPOSED.
+- Hypothesis: cheap approximate head (low-rank/clustered) shortlists top-~1K
+  of 248K vocab; score only those exactly; fall back to full head iff the
+  top-1 margin is thin (adaptive exactness).
+- Closest prior art: vocab pruning, hierarchical softmax, speculative
+  shortlists (same/different TBD by search).
+- Physical mechanism: logits are peaky; full 2048x248K Q4_K GEMV (25 ms) is
+  overkill for argmax preservation.
+- Required assumptions: shortlist contains true top-1 with high probability.
+- Optimistic saving: 25 -> ~3 ms = 22 ms (7%).
+- Cheap falsification: ONE Kaggle kernel capturing full logits for 64 tokens,
+  then OFFLINE shortlist-hit-rate eval at various ranks/costs.
+- Evidence: none yet.
+- Status: INVESTIGATE.
 
-## J (own) — placeholder pending measurements
+## J (own) — Static per-pattern fused expert blobs — KILLED
 
-- Status: PROPOSED.
+- Hypothesis: top-8 SETS cluster into few frequent patterns/layer; precompute
+  fused interleaved blobs per pattern (layout-only, same bytes).
+- Cheap falsification: DONE offline. Diverse corpus: 1714 distinct
+  sets/layer (of 2016), top-50 covers 13.9%. Single prompt: top-10 covers
+  17.7%. Needs 70%+ -> structurally dead.
+- Status: KILLED (same-day falsification).
+
+## J2 (own) — Uniform-Q2 system: dense trunk to Q2_K as well
+
+- Hypothesis: Q2_K's 2x decode win applies to the 73 ms dense GEMV
+  (attention proj + LM head) too; quality may survive since Q2_K keeps
+  imatrix-optimized scales.
+- Closest prior art: uniform low-bit LLMs (same/different TBD).
+- Same/different: TBD by quality gate, not by speed reasoning.
+- Physical mechanism: same decode-uop win as experts, on resident dense.
+- Required assumptions: quality gate passes (risky; dense is sensitive).
+- Optimistic saving: 73 x 0.4 + 39 = ~68 ms (+22%) combined with Q2_K experts.
+- Cheap falsification: FREE — one extra arm (all-Q2_K) in the already-planned
+  Q2_K transcode kernel + likelihood gate. Zero extra Kaggle cost.
+- Evidence: none yet.
+- Status: PROTOTYPE-QUEUED (rides the Q2_K kernel).
 
 ## Promotion rule
 
