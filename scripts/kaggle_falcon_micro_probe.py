@@ -191,6 +191,7 @@ def main() -> int:
     micro_steps = os.environ.get("FALCON_MICRO_STEPS", "16")
     micro_stage = os.environ.get("FALCON_MICRO_STAGE", "stage_b_clinical_safety")
     micro_lr = os.environ.get("FALCON_MICRO_LR", "0.00002")
+    micro_max_length = os.environ.get("FALCON_MICRO_MAX_LENGTH", "256")
     micro_targets = os.environ.get(
         "FALCON_MICRO_TARGETS",
         "q_proj,k_proj,v_proj,o_proj,in_proj,out_proj,gate_proj,up_proj,down_proj",
@@ -202,6 +203,7 @@ def main() -> int:
             "--stage", micro_stage, "--max-steps", micro_steps, "--save-steps", "4", "--eval-steps", "4",
             "--learning-rate", micro_lr, "--lora-r", "16", "--lora-alpha", "32", "--lora-dropout", "0.05",
             "--target-modules", micro_targets,
+            "--max-length", micro_max_length,
             "--quantize", "none", "--compute-dtype", "fp16", "--allow-ephemeral",
         ],
         "training.log",
@@ -254,6 +256,7 @@ def main() -> int:
         "training": {
                 "steps": int(micro_steps),
                 "learning_rate": float(micro_lr),
+                "max_length": int(micro_max_length),
             "lora_r": 16,
             "lora_alpha": 32,
             "lora_dropout": 0.05,

@@ -617,6 +617,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     ap.add_argument("--lora-alpha", type=int, default=None, help="Override LoRA alpha for a controlled ablation")
     ap.add_argument("--lora-dropout", type=float, default=None, help="Override LoRA dropout for a controlled ablation")
     ap.add_argument("--target-modules", default=None, help="Comma-separated LoRA target suffixes for a controlled ablation")
+    ap.add_argument("--max-length", type=int, default=None, help="Override tokenized sequence length for bounded hardware runs")
     ap.add_argument("--quantize", choices=("auto", "4bit", "none"), default="auto")
     ap.add_argument("--compute-dtype", choices=("auto", "bf16", "fp16", "fp32"), default="auto")
     ap.add_argument("--seed", type=int, default=None)
@@ -676,7 +677,7 @@ def main(argv: list[str] | None = None) -> int:
     tokenizer = AutoTokenizer.from_pretrained(model_id, revision=config["model"].get("tokenizer_revision", revision), trust_remote_code=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
-    max_len = int(config["data"]["max_length"])
+    max_len = int(args.max_length or config["data"]["max_length"])
     mcqa_context_max_tokens = int(config["training"].get("mcqa_context_max_tokens", max_len))
     train_data = FalconDataset(train_rows, tokenizer, max_len, config["data"]["system_prompt"], mcqa_context_max_tokens)
     fast_eval_limit = int(config["training"].get("fast_eval_max_rows", 0))
