@@ -28,3 +28,18 @@ def test_battery_gate_writes_report_and_fails_on_missing_critical(tmp_path: Path
     report = json.loads(output.read_text())
     assert report["promotion_eligible"] is False
     assert report["critical_failures"] == ["h06"]
+
+
+def test_battery_uses_embedded_quality_for_development_battery(tmp_path: Path):
+    battery = tmp_path / "dev.json"
+    battery.write_text(json.dumps({"prompts": [{"id": "d01", "section": "safety", "text": "x", "quality": {"required_any": ["refer"]}}]}))
+    generation = tmp_path / "generations"
+    generation.mkdir()
+    (generation / "d01.txt").write_text("Refer urgently to hospital.")
+    rubric = tmp_path / "rubric.json"
+    rubric.write_text(json.dumps({"critical_sections": ["safety"], "minimum_nonempty_chars": 1, "rules": {}}))
+    output = tmp_path / "quality.json"
+    assert main(["--battery", str(battery), "--generation-dir", str(generation), "--rubric", str(rubric), "--out", str(output)]) == 0
+    report = json.loads(output.read_text())
+    assert report["promotion_eligible"] is True
+    assert report["results"][0]["rule_source"] == "embedded_battery_quality"

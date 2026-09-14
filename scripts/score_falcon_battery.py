@@ -85,9 +85,20 @@ def main(argv: list[str] | None = None) -> int:
         if not text_path.is_file():
             missing.append(prompt_id)
             continue
-        result = rule_result(prompt_id, text_path.read_text(encoding="utf-8"), rules.get(prompt_id, {}), int(rubric.get("minimum_nonempty_chars", 1)))
+        configured_rule = rules.get(prompt_id)
+        if configured_rule is not None:
+            rule = configured_rule
+            rule_source = "external_rubric"
+        else:
+            # Development/validation batteries carry their own non-frozen
+            # quality rubric.  This keeps pilot scoring reproducible without
+            # making the frozen final gate depend on mutable battery text.
+            rule = prompt.get("quality", {})
+            rule_source = "embedded_battery_quality" if rule else "none"
+        result = rule_result(prompt_id, text_path.read_text(encoding="utf-8"), rule, int(rubric.get("minimum_nonempty_chars", 1)))
         result["section"] = prompt.get("section", "unknown")
         result["check"] = prompt.get("check", "")
+        result["rule_source"] = rule_source
         results.append(result)
     if missing:
         results.extend({"id": prompt_id, "passed": False, "failures": ["missing_generation_file"], "chars": 0, "words": 0, "text": ""} for prompt_id in missing)

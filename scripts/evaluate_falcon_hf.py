@@ -64,7 +64,7 @@ def main(argv: list[str] | None = None) -> int:
     events = out_dir / "eval_events.jsonl"
     random.seed(args.seed)
 
-    from scripts.train_falcon_production import stable_eval_subset, truncate_mcqa_context
+    from scripts.train_falcon_production import normalize_mcqa_scores, stable_eval_subset, truncate_mcqa_context
 
     rows = load_rows(data_dir / "dev.jsonl")
     if args.max_dev:
@@ -144,7 +144,7 @@ def main(argv: list[str] | None = None) -> int:
             logp = logits[:-1].log_softmax(dim=-1)
             score = sum(float(logp[len(ctx) + i - 1, token].detach().cpu()) for i, token in enumerate(continuation))
             scores.append(score)
-        normalized = [score / max(1, len(str(choice))) for score, choice in zip(scores, row["choices"])]
+        normalized = normalize_mcqa_scores(scores, [len(list(tokenizer(" " + str(choice), add_special_tokens=False)["input_ids"])) for choice in row["choices"]])
         gold = int(row["gold"])
         return max(range(len(scores)), key=scores.__getitem__) == gold, max(range(len(normalized)), key=normalized.__getitem__) == gold
 

@@ -33,7 +33,7 @@
     "lora_r": 16,
     "lora_alpha": 32,
     "lora_dropout": 0.05,
-    "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj"],
+    "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj", "in_proj", "out_proj", "gate_proj", "up_proj", "down_proj"],
     "objective_weights": {"sft": 1.0, "mcqa": 0.15},
     "sampling_token_share": {"sft": 0.9, "mcqa": 0.1},
     "quantize": "none",

@@ -166,6 +166,21 @@ def truncate_mcqa_context(context_ids: list[int], limit: int | None) -> tuple[li
     return context_ids[:head] + context_ids[-tail:], True
 
 
+def normalize_mcqa_scores(scores: list[Any], token_lengths: list[int]) -> list[Any]:
+    """Length-normalize MCQA continuation scores by continuation tokens.
+
+    Character length is not a valid proxy for tokenizer length and made the
+    training and evaluation implementations disagree for multilingual and
+    subword-heavy choices.  Keep this helper shared by both paths so the
+    ranking objective and reported ``acc_norm`` use the same definition.
+    """
+    if len(scores) != len(token_lengths):
+        raise ValueError("scores and token_lengths must have equal length")
+    if any(int(length) <= 0 for length in token_lengths):
+        raise ValueError("MCQA continuations must contain at least one token")
+    return [score / max(1, int(length)) for score, length in zip(scores, token_lengths)]
+
+
 class FalconDataset:
     """Pre-tokenized fail-closed mixed SFT/MCQA dataset."""
 
@@ -631,6 +646,13 @@ def main(argv: list[str] | None = None) -> int:
     missing_targets = [name for name in targets if name not in linear_suffixes]
     if missing_targets:
         raise RuntimeError(f"Configured Falcon LoRA targets not present as Linear modules: {missing_targets}; available={sorted(linear_suffixes)}")
+    # The initial manifest is written before model inspection so a failed load
+    # still leaves provenance.  Complete it with the resolved adapter surface
+    # and objective semantics once the model has actually been inspected.
+    run_manifest = json.loads((stage_dir / "run_manifest.json").read_text(encoding="utf-8"))
+    run_manifest["resolved_lora_target_modules"] = targets
+    run_manifest["mcqa_length_normalization"] = "continuation_token_count"
+    atomic_json(stage_dir / "run_manifest.json", run_manifest)
     lora_cfg = LoraConfig(r=int(stage_cfg["lora_r"]), lora_alpha=int(stage_cfg["lora_alpha"]), lora_dropout=float(stage_cfg["lora_dropout"]), bias="none", task_type="CAUSAL_LM", target_modules=targets)
     if args.init_adapter:
         init_adapter = Path(args.init_adapter).resolve()
@@ -705,7 +727,7 @@ def main(argv: list[str] | None = None) -> int:
             losses = []
             for item, item_spans in zip(batch, choices_per_item):
                 sums = [token_logp[a:b].sum() for a, b in item_spans]
-                norms = [value / max(1, len(str(choice))) for value, choice in zip(sums, item["choices"])]
+                norms = normalize_mcqa_scores(sums, [len(choice) for choice in item["choice_ids"]])
                 ranking = -torch.stack(norms).log_softmax(dim=0)[item["gold"]]
                 gold_a, gold_b = item_spans[item["gold"]]
                 aux = -(token_logp[gold_a:gold_b].mean())

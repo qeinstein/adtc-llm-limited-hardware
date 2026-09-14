@@ -4,7 +4,7 @@ import pytest
 
 from scripts.build_falcon_dataset import canonical, distribution, near_holdout
 from scripts.falcon_format import generation_stop_ids
-from scripts.train_falcon_production import FalconDataset, checkpoint_is_complete, latest_checkpoint, select_checkpoint, stable_eval_subset, token_share_sampling_weights, truncate_mcqa_context
+from scripts.train_falcon_production import FalconDataset, checkpoint_is_complete, latest_checkpoint, normalize_mcqa_scores, select_checkpoint, stable_eval_subset, token_share_sampling_weights, truncate_mcqa_context
 
 
 class FakeTokenizer:
@@ -118,6 +118,12 @@ def test_mcqa_dataset_records_bounded_context_truncation():
     assert dataset.mcqa_context_truncated == 1
     assert dataset[0]["context_truncated"] is True
     assert len(dataset[0]["context_ids"]) == 6
+
+
+def test_mcqa_length_normalization_uses_token_lengths_not_characters():
+    assert normalize_mcqa_scores([10.0, 20.0], [2, 4]) == [5.0, 5.0]
+    with pytest.raises(ValueError, match="equal length"):
+        normalize_mcqa_scores([1.0], [1, 2])
 
 
 def test_holdout_gate_catches_exact_and_near_duplicates():
