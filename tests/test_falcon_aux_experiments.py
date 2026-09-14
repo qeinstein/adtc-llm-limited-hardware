@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 from scripts.benchmark_falcon_deployment import bench_once, parse_time_report
+from scripts.audit_falcon_data import quality_flags
 from scripts.falcon_trainability_probe import tiny_rows
 from scripts.score_falcon_battery import rule_result
 
@@ -80,3 +81,15 @@ def test_hallucinated_official_criteria_are_a_hard_veto():
     result = rule_result("h10", text, rubric["rules"]["h10"], 12)
     assert result["passed"] is False
     assert any(failure.startswith("forbidden:") for failure in result["failures"])
+
+
+def test_data_quality_flags_are_review_only_and_cover_known_risks():
+    flags = quality_flags(
+        "Multiple choice: what dose is recommended under WHO protocol?",
+        "Give 10 mg; never swallow bleach.",
+        "alpaca",
+    )
+    assert "mcqa_shaped_sft" in flags
+    assert "authority_or_protocol_claim" in flags
+    assert "numeric_medication_guidance" in flags
+    assert "toxin_or_disinfectant_content" in flags
