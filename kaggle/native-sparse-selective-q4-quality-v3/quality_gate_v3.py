@@ -55,9 +55,12 @@ def load_base():
 
 
 def run_eval(binary: Path, model: Path, dataset: Path, label: str) -> dict:
+    # OOM repair (v3 failed rc=-9 at -c 2048 -b 2048 -ub 512 -np 16):
+    # batch x parallel 32768 -> 512 (64x), context 2048 -> 512 (4x).
+    # Pinned 100-task likelihood eval, matched control/challenger unchanged.
     cmd = [
         str(binary), "-m", str(model), "-f", str(dataset), "-ngl", "0",
-        "-t", "4", "-c", "2048", "-b", "2048", "-ub", "512", "-np", "16",
+        "-t", "4", "-c", "512", "-b", "256", "-ub", "64", "-np", "2",
         "--multiple-choice", "--multiple-choice-tasks", str(N_TASKS),
         "--no-repack", "--no-warmup",
     ]
@@ -122,8 +125,9 @@ def main() -> None:
         "hypothesis": "Selective attention/GDN Q4_K preserves matched broad multiple-choice likelihood accuracy within two percentage points.",
         "research_source_commit": RESEARCH_COMMIT,
         "runtime": {"llama_commit": base.LLAMA_COMMIT, "threads": 4,
-                    "context": 2048, "batch": 2048, "ubatch": 512,
-                    "parallel": 16, "repack": False},
+                    "context": 512, "batch": 256, "ubatch": 64,
+                    "parallel": 2, "repack": False,
+                    "oom_repair": "c2048/b2048/ub512/np16 -> c512/b256/ub64/np2"},
         "build": build_info,
         "model": model_info,
         "challenger": challenger_info,
