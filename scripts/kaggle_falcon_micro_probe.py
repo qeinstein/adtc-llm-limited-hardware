@@ -189,8 +189,13 @@ def main() -> int:
 
     training_dir = OUT / "training"
     micro_steps = os.environ.get("FALCON_MICRO_STEPS", "16")
-    micro_stage = os.environ.get("FALCON_MICRO_STAGE", "stage_b_clinical_safety")
+    # This candidate must be independently launchable.  Stage B requires a
+    # persisted Stage-A adapter, which this bounded screen intentionally does
+    # not assume.  Safety weighting is carried by the data mixture and the
+    # explicit low-LR/all-target ablation below.
+    micro_stage = os.environ.get("FALCON_MICRO_STAGE", "stage_a_capability_preserving")
     micro_lr = os.environ.get("FALCON_MICRO_LR", "0.00002")
+    micro_rank = os.environ.get("FALCON_MICRO_LORA_R", "8")
     micro_max_length = os.environ.get("FALCON_MICRO_MAX_LENGTH", "256")
     micro_targets = os.environ.get(
         "FALCON_MICRO_TARGETS",
@@ -201,7 +206,8 @@ def main() -> int:
             sys.executable, "-u", "scripts/train_falcon_production.py",
             "--config", str(CONFIG), "--data-dir", str(DATA_DIR), "--run-dir", str(training_dir),
             "--stage", micro_stage, "--max-steps", micro_steps, "--save-steps", "4", "--eval-steps", "4",
-            "--learning-rate", micro_lr, "--lora-r", "16", "--lora-alpha", "32", "--lora-dropout", "0.05",
+            "--learning-rate", micro_lr, "--lora-r", micro_rank,
+            "--lora-alpha", str(int(micro_rank) * 2), "--lora-dropout", "0.05",
             "--target-modules", micro_targets,
             "--max-length", micro_max_length,
             "--quantize", "none", "--compute-dtype", "fp16", "--allow-ephemeral",
