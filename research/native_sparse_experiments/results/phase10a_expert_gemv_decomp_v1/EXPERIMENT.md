@@ -26,8 +26,13 @@ Rows/token: 163,840 gate + 163,840 up @K2048, 655,360 down @K512 = 983,040.
 | Q5_K x Q8_K | 5.50 | 538.1 | 148.5 | 68.4 |
 | IQ3_XXS x Q8_K | 3.44 | 724.1 | 184.3 | 89.5 |
 
-Validation: baseline /4-ideal 81.9 ms vs measured 87 ms expert core (phase5a)
-— within 6%. Methodology confirmed.
+Validation: pure-XXS /4-ideal 81.9 ms vs measured 87 ms expert core
+(phase5a) — within 6%. CORRECTION (tensor inventory 2026-09-14): our file
+uses IQ2_XXS for gate/up but IQ2_S for down. True mixed baseline: gate/up
+@XXS 583.0 ns + down @S 142.6 ns → 71.1 ms /4-ideal. Q2_K ratio-scaled:
+38.9/71.1 = 0.547 → projected Q2_K core = 87 × 0.547 ≈ 47.6 ms
+(saving ≈ 39 ms, ≈ +11.5% end-to-end). Methodology confirmed; use RATIOS,
+not absolute N100 ms, for Kaggle projections.
 
 Activation quantize (q8_K): 8.3 us/2048-row, 3.3 us/512-row → ~0.7 ms/token
 total (0.2%). Activation prep/sharing upside ≈ 0. Kills the activation side
@@ -46,10 +51,12 @@ of Hypothesis B.
 
 ## Decisions
 
-- Q2_K PROMOTED to top representation branch: projected expert core 87→~40
-  ms, end-to-end ~3.7 tok/s (+15%) at +27% bytes. Full-system: 1792 slots,
-  67.0% hit (vs 73.3%), 117.8 MB fresh/token (vs 74.9) on diverse corpus.
-  Next Kaggle experiment after zero-copy. Needs Q2_K weights + quality gate.
+- Q2_K PROMOTED to top representation branch: ratio-scaled expert core
+  87→~48 ms, end-to-end ~3.57 tok/s (+11.5%) at +27% bytes. Full-system:
+  1792 slots, 67.0% hit (vs 73.3%), 117.8 MB fresh/token (vs 74.9) on
+  diverse corpus. Next Kaggle experiment after zero-copy. TRUE Q2_K via
+  on-Kaggle transcode (UD-Q2_K_XL file killed: zero Q2_K tensors) +
+  likelihood quality gate.
 - IQ3_XXS (89.5) is SLOWER than IQ2_XXS: kills "3-bit with cheaper decode"
   for the IQ family. Bits don't predict speed; decode structure does.
 - Q8_0 ceiling (64.1) caps Hypothesis A at ~18 ms even at 100% L1 hits:

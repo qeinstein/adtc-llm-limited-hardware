@@ -64,8 +64,11 @@ unless noted. Status values: PROPOSED / INVESTIGATE / PROTOTYPE / EXPLOIT / KILL
 - Optimistic saving: TBD (acceptance-rate × verification-efficiency).
 - Cheap falsification: (1) check checkpoint for MTP tensors; (2) existing
   llama.cpp MTP bench on Kaggle CPU, N=2/3/4.
-- Evidence: none yet.
-- Status: PROPOSED.
+- Evidence: (1) DONE — our checkpoint has 0 MTP tensors (733-tensor
+  inventory). MTP weights exist separately: unsloth/Qwen3.5-35B-A3B-MTP-GGUF
+  (same quant names, MTP-inclusive). Benchmark needs that file + llama.cpp
+  MTP draft flags. Queued as Kaggle kernel after v2/Q2_K.
+- Status: INVESTIGATE (weights located; bench pending).
 
 ## D — IQ2 is the wrong computational representation
 
@@ -80,17 +83,18 @@ unless noted. Status values: PROPOSED / INVESTIGATE / PROTOTYPE / EXPLOIT / KILL
   or cheaper integer arithmetic.
 - Required assumptions: decode is a large share of 87 ms (phase3 says
   ~88.6% of IQP cycles are decode/materialize — supportive).
-- Optimistic saving: Q2_K ≈ 40.2 vs IQ2_XXS 81.9 /4-ideal ms (exact-shape
-  AVX2 microbench; baseline reproduces the measured 87 ms within 6%).
-  Projected end-to-end ≈ 3.7 tok/s (+15%) at +27% bytes. Q4_K 54.1,
-  Q4_0 58.5, MXFP4 62.4, Q8_0 64.1, IQ3_XXS 89.5 (worse than baseline!).
-- Cheap falsification: DONE (ubench2, real ggml kernels, streaming weights,
-  hot activations, interleaved min-of-7). Q2_K full-system: 1792 slots,
-  67.0% hit (vs 73.3%), 117.8 MB fresh/token (vs 74.9) on diverse corpus.
-- Evidence: microbench + corpus replay; needs Kaggle A/B + quality gate.
-- Status: PROTOTYPE (top representation branch; next Kaggle experiment
-  after zero-copy; needs Q2_K weights: requant from F16/Q8 source or
-  IQ2->Q2_K transcode).
+- Optimistic saving (CORRECTED for mixed baseline): our file uses XXS for
+  gate/up but faster IQ2_S for down. True mixed baseline /4-ideal = 71.1 ms;
+  Q2_K = 38.9 ms (ratio 0.547). Ratio-scaled to the measured 87 ms core:
+  Q2_K core ≈ 47.6 ms, saving ≈ 39 ms → ≈3.57 tok/s (+11.5%) at +27% bytes.
+- Cheap falsification: DONE (ubench2 + corpus replay: 1792 slots, 67.0% hit,
+  117.8 MB fresh/token). UD-Q2_K_XL download KILLED as Q2_K source: contains
+  ZERO Q2_K tensors (39 layers XS/XS/IQ3_XXS + L10 higher; all slower than
+  XXS per shootout; non-uniform layer 10 breaks bounded cache).
+- Evidence: microbench + corpus replay + both-file tensor inventories.
+- Status: PROTOTYPE (top representation branch; TRUE Q2_K via on-Kaggle
+  IQ2_XXS->Q2_K transcode with llama-quantize; needs Kaggle A/B +
+  likelihood quality gate; fallback: requant from Q4_K_M if gate fails).
 
 ## E — Shared basis / expert residuals
 
