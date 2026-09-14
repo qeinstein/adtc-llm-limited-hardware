@@ -106,11 +106,16 @@ unless noted. Status values: PROPOSED / INVESTIGATE / PROTOTYPE / EXPLOIT / KILL
 - Physical mechanism: common GEMV once per token + tiny per-expert residual;
   attacks compute AND storage.
 - Required assumptions: trained experts share strong subspace structure.
-- Optimistic saving: TBD (depends on residual rank needed).
-- Cheap falsification: OFFLINE weight analysis — sample early/mid/late layers,
-  expert-mean residuals, pairwise similarity, shared-PCA energy. No Kaggle.
-- Evidence: none yet.
-- Status: PROPOSED.
+- Optimistic saving: none — no structure found (see below).
+- Cheap falsification: DONE offline. Range-fetched 96 expert slices
+  (L0/10/20/30 x gate/up/down x 8 experts), dequantized via libggml,
+  stacked-SVD + cosine analysis. Results (L0 all kinds, L10 gate/up):
+  pairwise cosine mean ~0.000 (max 0.009); mean-residual energy 0.87
+  (shared mean captures only ~13%); shared-subspace energy at rank 64
+  only 0.11-0.23; rank-64 reconstruction error 0.88-0.94. Experts are
+  effectively independent full-rank matrices in all families/layers.
+- Evidence: /tmp/zc_svd.py + slices (scratch); consistent across 5/5 cells.
+- Status: KILLED (no shared structure; B+Delta / U*C both dead).
 
 ## F — Why must K remain 8?
 
