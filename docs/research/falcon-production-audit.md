@@ -164,6 +164,13 @@ requires a frozen-gate-passed adapter and rechecks the frozen battery on both
 merged HF and quantized GGUF outputs. See
 [`falcon-production-audit-v31-20260914.json`](experiments/falcon-production-audit-v31-20260914.json).
 
+Kaggle v32 reran the same audit from `0ab2a83` after the notebook was changed
+to consume the generated deployment manifest rather than assuming a fixed
+Q4_K_M filename. It completed in 5m37s with no weight load or training, and
+again emitted `TOKENIZED_PREFLIGHT_PASS` with the same split, contamination,
+and objective-balance results. The record is
+[`falcon-production-audit-v32-20260914.json`](experiments/falcon-production-audit-v32-20260914.json).
+
 The independent trainability gate and durable resume/persistence gate pass;
 the real-data quality gate and system-prompt selection gate do not. Therefore
 another long training run is **not authorized**. The next experiment must use
