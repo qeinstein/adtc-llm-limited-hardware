@@ -173,7 +173,9 @@
   "active_experiments": [
     "phase7c_selective_q4_quality_v3_repaired_awaiting_rerun",
     "mtp-probe-v2_v2running (resilient download fix; curl-56 was transient)",
-    "remainder-bypass_H_I_sparsity_probes (next main-sprint designs)",
+    "remainder-bypass-v1_running (GDN/shared/scores wall truth + sanity repros + overhead bound)",
+    "H_gate-sparsity_probe (design next: |silu(g)| histogram hook)",
+    "I_lmhead-shortlist_probe (design next: --save-all-logits is perplexity-only; peakiness-first falsification)",
     "q2k-quality-v1_stood_down (no Q2K winner; file kept as pattern)"
   ]
 }
