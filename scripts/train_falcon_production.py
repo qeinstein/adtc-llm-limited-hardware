@@ -452,6 +452,13 @@ def materialize_selected_adapter(selected_checkpoint: Path, destination: Path, t
     destination.mkdir(parents=True, exist_ok=True)
     for path in adapter_files:
         shutil.copy2(path, destination / path.name)
+    # The frozen gate is evaluated after this directory is materialized.  If a
+    # stage has already written a promotion manifest, carry it with the exact
+    # adapter payload so export cannot accidentally consume an ungated
+    # ``final-adapter`` directory.
+    promotion_manifest = selected_checkpoint / "promotion_manifest.json"
+    if promotion_manifest.is_file():
+        shutil.copy2(promotion_manifest, destination / promotion_manifest.name)
     tokenizer.save_pretrained(str(destination))
 
 
@@ -978,7 +985,7 @@ def main(argv: list[str] | None = None) -> int:
                 if not checkpoint_is_complete(path, require_scaler=bool(args_.fp16)):
                     raise RuntimeError(f"Trainer produced an incomplete checkpoint: {path}")
                 files = [str(x.relative_to(path)) for x in path.rglob("*") if x.is_file()]
-                atomic_json(path / "checkpoint_manifest.json", {"timestamp_utc": now(), "global_step": int(state.global_step), "files": files, "complete": True, "scaler_required": bool(args_.fp16), "scaler_present": (path / "scaler.pt").is_file(), "sampler_required": True, "sampler": sampler_metadata})
+                atomic_json(path / "checkpoint_manifest.json", {"timestamp_utc": now(), "global_step": int(state.global_step), "files": files, "complete": True, "promotion_status": "resumable_not_promoted", "scaler_required": bool(args_.fp16), "scaler_present": (path / "scaler.pt").is_file(), "sampler_required": True, "sampler": sampler_metadata})
                 event(event_path, "checkpoint_saved", checkpoint_path=str(path), global_step=int(state.global_step), file_count=len(files))
                 self._persist(path, int(state.global_step), args_)
 
@@ -1072,7 +1079,7 @@ def main(argv: list[str] | None = None) -> int:
             torch.save(rng, path / "rng_state.pth")
         atomic_json(path / "sampler_state.json", sampler_metadata)
         files = [str(x.relative_to(path)) for x in path.rglob("*") if x.is_file()]
-        atomic_json(path / "checkpoint_manifest.json", {"timestamp_utc": now(), "global_step": step, "files": files, "complete": True, "terminal": True, "scaler_required": bool(train_args.fp16), "scaler_present": (path / "scaler.pt").is_file(), "sampler_required": True, "sampler": sampler_metadata})
+        atomic_json(path / "checkpoint_manifest.json", {"timestamp_utc": now(), "global_step": step, "files": files, "complete": True, "terminal": True, "promotion_status": "resumable_not_promoted", "scaler_required": bool(train_args.fp16), "scaler_present": (path / "scaler.pt").is_file(), "sampler_required": True, "sampler": sampler_metadata})
         if not checkpoint_is_complete(path, require_scaler=bool(train_args.fp16)):
             raise RuntimeError(f"terminal checkpoint failed completeness validation: {path}")
         return path

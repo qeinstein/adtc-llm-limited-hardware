@@ -18,6 +18,13 @@ mkdir -p "$OUT_DIR"
 MERGED="$OUT_DIR/merged-hf"
 F16="$OUT_DIR/Falcon-H1-1.5B-Deep-Instruct-f16.gguf"
 DEPLOY="$OUT_DIR/Falcon-H1-1.5B-Deep-Instruct-${QUANT}.gguf"
+PROMOTION_MANIFEST="${PROMOTION_MANIFEST:-$ADAPTER/promotion_manifest.json}"
+
+echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] promotion verification adapter=$ADAPTER manifest=$PROMOTION_MANIFEST"
+"$PY" "$ROOT/scripts/verify_falcon_promotion.py" \
+  --adapter "$ADAPTER" \
+  --manifest "$PROMOTION_MANIFEST" \
+  --minimum-pass-rate 100
 
 echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] merge start adapter=$ADAPTER base=$BASE_MODEL@$MODEL_REVISION"
 "$PY" - "$BASE_MODEL" "$MODEL_REVISION" "$ADAPTER" "$MERGED" <<'PY'

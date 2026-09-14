@@ -56,6 +56,13 @@ safety gate, which requires a complete report, no critical failure, and a
 100% default pass rate before durable promotion. All reports and the one-shot
 frozen result are retained in `quality_selection.json`. A stage with no
 complete dev/validation candidate or a failed frozen gate is not promotable.
+Technical checkpoints may be uploaded during training for interruption
+recovery, but their manifest explicitly says `resumable_not_promoted`; they
+cannot be passed to export. After the frozen gate passes, the stage writes
+`promotion_manifest.json` into the selected checkpoint and `final-adapter`,
+including the gate summary, repository/config/data hashes, selected step, and
+adapter payload hashes. Export refuses any adapter without that manifest or
+with a mismatched payload.
 
 ## Observability and resume
 
@@ -91,6 +98,18 @@ tokenizer vocabulary. It never uses `convert_tokens_to_ids` as an existence
 test, so PAD/unknown IDs cannot terminate generation. The first remote smoke
 run exposed this exact failure and is not accepted as evidence; a corrected
 smoke must pass before training resumes.
+
+## Export contract
+
+`scripts/export_falcon_gguf.sh` first runs
+`scripts/verify_falcon_promotion.py`. It requires a promoted adapter manifest,
+then merges and quantizes only that payload. The Kaggle export mode scores the
+frozen battery on both the merged HF model and the exact quantized GGUF with
+`--report-only`, parses both reports, and requires 100% pass rate with zero
+missing or critical items before emitting `EXPORT_COMPLETE`. The resulting
+`export_quality_summary.json` records both quality reports and the verified
+input manifest. Thus a later quantization regression cannot be hidden by a
+successful conversion.
 
 ## Current gate
 

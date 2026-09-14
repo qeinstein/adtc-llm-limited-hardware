@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -6,6 +7,7 @@ from scripts.build_falcon_dataset import assign_prompt_group_splits, canonical, 
 from scripts.falcon_format import generation_stop_ids
 from scripts.train_falcon_production import DeterministicTokenShareSampler, FalconDataset, checkpoint_is_complete, enforce_objective_token_policy, latest_checkpoint, normalize_mcqa_scores, objective_loss_token_summary, select_checkpoint, stable_eval_subset, token_share_sampling_weights, truncate_mcqa_context
 from scripts.select_falcon_candidate import frozen_gate_passes, select_dev_validation_candidate
+from scripts.verify_falcon_promotion import build_promotion_manifest, verify_frozen_quality_report, verify_promoted_adapter
 
 
 class FakeTokenizer:
@@ -334,3 +336,79 @@ def test_kaggle_stage_selection_does_not_rank_on_frozen_battery():
     frozen_eval_at = source.index("frozen_eval_cmd")
     assert select_at < frozen_eval_at
     assert "highest_frozen_generation_pass_rate" not in source
+
+
+def _promotable_quality():
+    return {
+        "battery": "docs/research/falcon_probe_heldout.json",
+        "prompt_count": 8,
+        "scored_count": 8,
+        "passed_count": 8,
+        "failed_count": 0,
+        "missing_count": 0,
+        "pass_rate_percent": 100.0,
+        "critical_failures": [],
+    }
+
+
+def test_promotion_manifest_is_required_and_binds_adapter_payload(tmp_path: Path):
+    adapter = tmp_path / "adapter"
+    adapter.mkdir()
+    (adapter / "adapter_config.json").write_text("{}")
+    (adapter / "adapter_model.safetensors").write_bytes(b"weights")
+    quality = _promotable_quality()
+    selection = {
+        "status": "selected_and_frozen_gate_passed",
+        "selected_step": 8,
+        "selected_eval_loss": 2.0,
+        "selection_criterion": "dev_validation",
+        "minimum_pass_rate_percent": 75.0,
+        "selected_dev_validation_pass_rate_percent": 100.0,
+        "frozen_gate": {"status": "passed"},
+    }
+    manifest = build_promotion_manifest(
+        adapter,
+        quality_selection=selection,
+        frozen_report=quality,
+        experiment_id="test-exp",
+        stage="stage_a_capability_preserving",
+        repo_sha="deadbeef",
+    )
+    manifest_path = adapter / "promotion_manifest.json"
+    manifest_path.write_text(json.dumps(manifest))
+    checked = verify_promoted_adapter(adapter)
+    assert checked["status"] == "selected_and_frozen_gate_passed"
+    assert checked["selected_step"] == 8
+    (adapter / "adapter_model.safetensors").write_bytes(b"tampered")
+    with pytest.raises(ValueError, match="hash mismatch"):
+        verify_promoted_adapter(adapter)
+
+
+def test_promotion_manifest_rejects_failed_frozen_quality(tmp_path: Path):
+    adapter = tmp_path / "adapter"
+    adapter.mkdir()
+    (adapter / "adapter_config.json").write_text("{}")
+    (adapter / "adapter_model.safetensors").write_bytes(b"weights")
+    selection = {"status": "selected_and_frozen_gate_passed", "selected_step": 8, "frozen_gate": {"status": "passed"}}
+    with pytest.raises(ValueError, match="frozen quality report"):
+        build_promotion_manifest(
+            adapter,
+            quality_selection=selection,
+            frozen_report={**_promotable_quality(), "passed_count": 7, "pass_rate_percent": 87.5},
+            experiment_id="test-exp",
+            stage="stage_a_capability_preserving",
+            repo_sha="deadbeef",
+        )
+
+
+def test_export_requires_promoted_input_and_both_frozen_reports():
+    import json
+
+    notebook = json.loads(Path("kaggle/phase04-falcon-production/phase04_falcon_production.ipynb").read_text(encoding="utf-8"))
+    source = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"])
+    assert "verify_promoted_adapter" in source
+    assert "verify_frozen_quality_report(merged_quality_path" in source
+    assert "verify_frozen_quality_report(quantized_quality_path" in source
+    assert "--report-only" in source
+    assert "export must include the frozen clinical/safety battery" in source
+    assert "exported_and_frozen_gate_passed" in source

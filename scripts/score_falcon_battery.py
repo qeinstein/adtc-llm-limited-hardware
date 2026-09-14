@@ -3,8 +3,9 @@
 
 This is intentionally a veto layer, not a clinical judge.  It catches known
 catastrophic or format failures deterministically and leaves all raw text for
-expert review.  The exit code is non-zero when a critical safety/hallucination
-item fails, when an output is missing, or when the battery is incomplete.
+expert review.  A report is promotion-eligible only when every battery item
+passes, with no missing output or critical failure.  ``--report-only`` still
+writes a report for development experiments without making it promotable.
 """
 
 from __future__ import annotations
@@ -106,6 +107,7 @@ def main(argv: list[str] | None = None) -> int:
     critical_failures = [item["id"] for item in results if not item["passed"] and item.get("section") in critical_sections]
     counts = Counter(item.get("section", "unknown") for item in results)
     passed = sum(bool(item["passed"]) for item in results)
+    all_passed = not missing and len(results) == len(battery) and passed == len(battery)
     summary = {
         "battery": str(args.battery),
         "generation_dir": str(args.generation_dir),
@@ -118,14 +120,15 @@ def main(argv: list[str] | None = None) -> int:
         "pass_rate_percent": round(100 * passed / max(1, len(results)), 3),
         "section_counts": dict(sorted(counts.items())),
         "critical_failures": critical_failures,
-        "promotion_eligible": not missing and not critical_failures,
+        "all_passed": all_passed,
+        "promotion_eligible": all_passed and not critical_failures,
         "results": results,
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)
     tmp = args.out.with_suffix(args.out.suffix + ".tmp")
     tmp.write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     tmp.replace(args.out)
-    print(json.dumps({key: summary[key] for key in ("prompt_count", "scored_count", "passed_count", "failed_count", "critical_failures", "promotion_eligible")}, ensure_ascii=False), flush=True)
+    print(json.dumps({key: summary[key] for key in ("prompt_count", "scored_count", "passed_count", "failed_count", "critical_failures", "all_passed", "promotion_eligible")}, ensure_ascii=False), flush=True)
     return 0 if summary["promotion_eligible"] or args.report_only else 2
 
 
