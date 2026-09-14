@@ -10,7 +10,10 @@ OUT_DIR="${2:-$ROOT/experiments/falcon-production-v1/export}"
 BASE_MODEL="tiiuae/Falcon-H1-1.5B-Deep-Instruct"
 MODEL_REVISION="b6648636ddc906688974282de6e7a243395f5423"
 LLAMA_DIR="${LLAMA_DIR:-$ROOT/llama.cpp}"
-LLAMA_REVISION="${LLAMA_REVISION:-451b89b}"
+# Keep the converter on the same tracked upstream line used by the official
+# scalar profiler build.  The former short ref (451b89b) was pruned upstream
+# and made export fail after a completed training run.
+LLAMA_REVISION="${LLAMA_REVISION:-master}"
 QUANT="Q4_K_M"
 
 mkdir -p "$OUT_DIR"
