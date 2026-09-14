@@ -100,6 +100,13 @@ toxin/disinfectant examples, 5 invasive-procedure examples, and 74 repeated
 disclaimer rows for manual review. These are review flags, not automatic
 deletions.
 
+The executable production data policy now excludes only the 15
+`mcqa_shaped_sft` rows from `project_clinical_generation`; the public MCQA
+train-only source remains available as the explicit MCQA objective. Each
+excluded row is retained in the source file and recorded as
+`quality_excluded` in the next `data_manifest.json` rather than disappearing
+silently.
+
 The independent trainability gate and durable resume/persistence gate pass;
 the real-data quality gate and system-prompt selection gate do not. Therefore
 another long training run is **not authorized**. The next experiment must use

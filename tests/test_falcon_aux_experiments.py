@@ -4,6 +4,7 @@ from pathlib import Path
 
 from scripts.benchmark_falcon_deployment import bench_once, parse_time_report
 from scripts.audit_falcon_data import quality_flags
+from scripts.build_falcon_dataset import read_records
 from scripts.falcon_trainability_probe import tiny_rows
 from scripts.score_falcon_battery import rule_result
 
@@ -93,3 +94,11 @@ def test_data_quality_flags_are_review_only_and_cover_known_risks():
     assert "authority_or_protocol_claim" in flags
     assert "numeric_medication_guidance" in flags
     assert "toxin_or_disinfectant_content" in flags
+
+
+def test_production_policy_marks_mcqa_shaped_clinical_rows_for_exclusion():
+    config = json.loads(Path("configs/falcon-production-v1.json").read_text())
+    source = next(item for item in config["data"]["sources"] if item["name"] == "project_clinical_generation")
+    rows = read_records(Path(source["path"]))
+    assert source["exclude_quality_flags"] == ["mcqa_shaped_sft"]
+    assert sum("Multiple choice" in row["instruction"] or "Chagua jibu" in row["instruction"] for row in rows) == 15

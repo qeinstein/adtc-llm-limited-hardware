@@ -20,7 +20,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from scripts.audit_falcon_data import infer_category, infer_language
+from scripts.audit_falcon_data import infer_category, infer_language, quality_flags, row_text
 WORD_RE = re.compile(r"[^\W\d_]+", re.UNICODE)
 
 
@@ -247,6 +247,12 @@ def main(argv: list[str] | None = None) -> int:
             continue
         for index, raw in enumerate(read_records(path)):
             try:
+                excluded_flags = set(str(x) for x in spec.get("exclude_quality_flags", []))
+                if excluded_flags:
+                    prompt_text, target_text = row_text(raw, str(spec["format"]))
+                    matched_flags = sorted(excluded_flags.intersection(quality_flags(prompt_text, target_text, str(spec["format"]))))
+                    if matched_flags:
+                        raise ValueError(f"quality policy excluded flags={','.join(matched_flags)}")
                 record = normalize_row(spec, raw, tokenizer, max_len, config["data"]["system_prompt"])
                 text_for_holdout = str(record.get("instruction") or record.get("context") or "")
                 leak = near_holdout(text_for_holdout, holdout_index)
@@ -261,7 +267,7 @@ def main(argv: list[str] | None = None) -> int:
                     "exceeds max_len" in reason
                     or "would be truncated" in reason
                     or "packing exceeded max_len" in reason
-                ) else "invalid"
+                ) else ("quality_excluded" if "quality policy excluded" in reason else "invalid")
                 rejected.append({"source": spec["name"], "index": str(index), "reason": reason, "type": rejection_type})
             if (index + 1) % 1000 == 0:
                 print(
@@ -331,6 +337,7 @@ def main(argv: list[str] | None = None) -> int:
             "rejected": len(rejected),
             "rejected_length": sum(x.get("type") == "length" for x in rejected),
             "rejected_invalid": sum(x.get("type") == "invalid" for x in rejected),
+            "rejected_quality": sum(x.get("type") == "quality_excluded" for x in rejected),
             "exact_duplicates_dropped": len(duplicates),
         },
         "token_totals": dict(tokens),
@@ -350,11 +357,16 @@ def main(argv: list[str] | None = None) -> int:
         "final_holdout_count": len(holdouts),
         "final_holdout_sha256": digest("\n".join(sorted(holdouts))),
         "source_files": source_files,
+        "quality_exclusion_policy": {
+            str(spec["name"]): [str(x) for x in spec.get("exclude_quality_flags", [])]
+            for spec in config["data"]["sources"]
+            if spec.get("exclude_quality_flags")
+        },
     }
     (out_dir / "data_manifest.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps({"out_dir": str(out_dir), "counts": manifest["counts"], "token_totals": manifest["token_totals"], "facets": manifest["facets"], "missing_sources": missing}, indent=2))
     required_missing = [x for x in missing if x["required"]]
-    hard_rejected = [x for x in rejected if x.get("type") != "length"]
+    hard_rejected = [x for x in rejected if x.get("type") not in {"length", "quality_excluded"}]
     return 2 if required_missing or hard_rejected else 0
 
 
