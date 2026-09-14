@@ -411,4 +411,6 @@ def test_export_requires_promoted_input_and_both_frozen_reports():
     assert "verify_frozen_quality_report(quantized_quality_path" in source
     assert "--report-only" in source
     assert "export must include the frozen clinical/safety battery" in source
+    assert "export_manifest['deployment_model']" in source
+    assert "Falcon-H1-1.5B-Deep-Instruct-Q4_K_M.gguf" not in source
     assert "exported_and_frozen_gate_passed" in source
