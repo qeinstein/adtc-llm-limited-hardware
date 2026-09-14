@@ -172,8 +172,11 @@
   },
   "active_experiments": [
     "phase7c_selective_q4_quality_v3_repaired_awaiting_rerun",
-    "mtp-probe-v2_v2running (resilient download fix; curl-56 was transient)",
-    "remainder-bypass-v1_running (GDN/shared/scores wall truth + sanity repros + overhead bound)",
+    "mtp-probe-v2_complete_KILL_HARD (n1 -2.6%, n2 -8.6%, CV 2.3% sound; moonshot C dead)",
+    "remainder-bypass-v1_complete (attn 47.5 / lmhead 24.3 / gdn 8.4 / scores ~0 / shared noisy; experts ~110 derived)",
+    "probe1_fused_moe_KILL (joint dispatch already exists; stacked ceiling ~2% core)",
+    "probe2_shared_bases_KILL_HARD (rank-512 keeps 38.9% energy; spectrum white)",
+    "probe3_backbone_KILL (resid/norm ~0.1ms; GDN op fused, copy-back ~2% via deep surgery)",
     "H_gate-sparsity_probe (design next: |silu(g)| histogram hook)",
     "I_lmhead-shortlist_probe (design next: --save-all-logits is perplexity-only; peakiness-first falsification)",
     "q2k-quality-v1_stood_down (no Q2K winner; file kept as pattern)"
