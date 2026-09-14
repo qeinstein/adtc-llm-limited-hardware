@@ -1,0 +1,15 @@
+{
+  "id": "toheebogunade/jamii-native-sparse-selective-q4-bounded-v2",
+  "title": "Jamii native sparse selective Q4 bounded v2",
+  "code_file": "q4_bounded_v2.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_tpu": false,
+  "enable_internet": true,
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "model_sources": []
+}

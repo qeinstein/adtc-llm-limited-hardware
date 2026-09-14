@@ -1,0 +1,43 @@
+{
+  "schema": "native-sparse-selective-q4-bounded/v2-analysis",
+  "status": "complete",
+  "decision": "KILL_AS_THROUGHPUT_PATH",
+  "hypothesis": "Disabling the accidental Q4_K CPU repack removes the v1 anonymous-RSS penalty while preserving the selective-Q4 bounded speed gain.",
+  "hardware": "Kaggle 4-vCPU Intel Xeon 2.20 GHz, AVX2, 4 threads",
+  "runtime": {
+    "llama_commit": "3057bb66c86c46d5781e50e85462a760ba7d1feb",
+    "no_repack_matched": true,
+    "precise_cli_timings": true,
+    "research_source_commit": "cae43e5fb930ec562bf5749c7df5cb0d8827a911"
+  },
+  "model_sha256": "2a809de317cfd49ac9130b95619ee6ac039a855e467015b3e996eb61af84718b",
+  "challenger_sha256": "86f27f69e0cea7f8cd0420452f1b600c57cedce6589f60c2cfee06a8c0395d39",
+  "native_k": 8,
+  "threads": 4,
+  "cache": {
+    "capacity_bytes": 2000000000,
+    "slot_bytes": 876544,
+    "slots": 2281
+  },
+  "control_bounded_serial": {
+    "decode_tok_s_reps": [2.539814, 2.594522, 3.150681],
+    "decode_tok_s_mean": 2.761672,
+    "peak_rss_mib_max": 3514.62
+  },
+  "selective_q4_bounded_serial": {
+    "decode_tok_s_reps": [2.869955, 2.727493, 2.602488],
+    "decode_tok_s_mean": 2.733312,
+    "peak_rss_mib_max": 3392.98
+  },
+  "throughput_delta_fraction": -0.010267,
+  "rss_delta_mib": -121.64,
+  "correctness": {
+    "control_matches_established_smoke": true,
+    "router_and_experts_unchanged": true,
+    "candidate_projection_weights_requantized": true
+  },
+  "quality": "gated separately by likelihood-based quality v3 harness",
+  "conclusion": "Previous ~430 MiB RSS regression was an automatic-repack confound. Matched selective-Q4 is 1.03% slower with 121.6 MiB less RSS: killed as a throughput path.",
+  "raw_result": "raw/result.json",
+  "kaggle_kernel": "toheebogunade/jamii-native-sparse-selective-q4-bounded-v2"
+}
