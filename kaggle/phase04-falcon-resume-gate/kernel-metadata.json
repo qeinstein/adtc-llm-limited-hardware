@@ -1,6 +1,6 @@
 {
   "id": "toheebogunade/jamii-afya-falcon-resume-gate",
-  "title": "Jamii Afya Falcon resumable checkpoint gate",
+  "title": "Jamii Afya Falcon Resume Gate",
   "code_file": "phase04_falcon_resume_gate.ipynb",
   "language": "python",
   "kernel_type": "notebook",
