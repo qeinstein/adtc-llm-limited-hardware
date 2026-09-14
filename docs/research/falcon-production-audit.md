@@ -90,6 +90,19 @@ remained 0/8 and validation 2/8 under the embedded rubric, with critical
 failures on emergency/safety and fabricated-protocol cases. It is rejected
 for promotion and export; no frozen final holdout was read.
 
+The bounded attention-plus-Mamba micro-probe ran on Kaggle kernel v2/1 and is
+preserved as
+[`falcon-small-real-micro-probe-v2-20260914.json`](experiments/falcon-small-real-micro-probe-v2-20260914.json).
+It used the corrected 382-row mixture (346 train / 36 dev), with 80.84% of
+loss tokens from SFT and 19.16% from MCQA, and completed 16 steps at 6.91
+tokens/s on a P100. The adapter changed 6/16 development/validation
+generations, but did not move the 25-row MCQA slice (48% raw, 60% acc_norm)
+and did not improve the quality gate: development remained 0/8 and validation
+2/8, with critical failures on d01/d04/d05 and v01/v03/v04. It is rejected
+for promotion and export. The frozen final holdout was not touched, and only
+small JSON/log summaries were retrieved locally; no model or adapter files
+were downloaded.
+
 ## Data review and current authorization
 
 The exact v25 mixture contained 142 SFT and 32 MCQA rows (30,051 and 11,474
