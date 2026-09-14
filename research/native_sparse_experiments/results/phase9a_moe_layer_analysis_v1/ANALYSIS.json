@@ -1,0 +1,32 @@
+{
+  "schema": "native-sparse-moe-layer-analysis/v1",
+  "status": "complete",
+  "decision": "KILL_SCHEDULING_ONLY_FUSION",
+  "hypothesis": "An exact whole-layer executor removes repeated per-expert scheduling cost and clears the 5% bar.",
+  "method": "offline audit of v10 executor, phase8c patch, phase5a/8c budgets; no runtime run",
+  "budget_ms_per_token": {
+    "staged_cold": 312.7,
+    "staged_warm_oracle": 301.1,
+    "resident_control": 210.7,
+    "expert_gemv_core": 87.0,
+    "mmap_control": 225.0,
+    "bounded_vs_mmap_gap": 76.0
+  },
+  "five_percent_bar_ms": 15.6,
+  "optimistic_fusion_saving_ms": [5.0, 8.0],
+  "optimistic_fusion_gain_fraction": [0.016, 0.026],
+  "per_token_shape": {
+    "layers": 40,
+    "mul_mat_id_nodes": 120,
+    "expert_gemvs": 960
+  },
+  "redirects": [
+    "fused single-row IQ2 gate+up kernel sharing one quantized activation (~87 ms core)",
+    "explain/remove ~76 ms bounded-vs-mmap copy+indirection tax"
+  ],
+  "sources": [
+    "phase7b_staged_pipeline_v1/raw/script.py",
+    "phase8c_critical_path_v1/raw/bounded-runtime.patch",
+    "phase8c_critical_path_v1/ANALYSIS.json"
+  ]
+}
