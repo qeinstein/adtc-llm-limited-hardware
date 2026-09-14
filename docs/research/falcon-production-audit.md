@@ -120,6 +120,12 @@ MCQA choice reuses the context. The result and hashes are recorded in
 The trainer therefore samples by configured loss-token exposure and logs the
 raw packed and objective-token views separately.
 
+The audit notebook now invokes the trainer's tokenizer-only preflight. Kaggle
+v28 passed it before model construction: 1,773 MCQA and 116 SFT training items,
+64.12% MCQA / 35.88% SFT by exact loss tokens, 100 explicitly bounded MCQA
+context truncations, and no weight load. See
+[`falcon-tokenized-preflight-v28-20260914.json`](experiments/falcon-tokenized-preflight-v28-20260914.json).
+
 The independent trainability gate and durable resume/persistence gate pass;
 the real-data quality gate and system-prompt selection gate do not. Therefore
 another long training run is **not authorized**. The next experiment must use
