@@ -10,9 +10,9 @@
       "source": "historical resident control; Phase 1/Phase 6 reports"
     },
     "exact_le_4_gib": {
-      "tok_s": 3.2,
-      "rss_mib": 3517.7,
-      "source": "phase7b_staged_pipeline_v1; rounded mean, matched 2 GB cache; process-time improvement only"
+      "tok_s": 3.198323,
+      "rss_mib": 3517.8,
+      "source": "phase8c_critical_path_v1 staged cold mean (3 reps, 2 GB cache); confirms phase7b v10 staged ~3.2"
     },
     "exact_le_2_5_gib": {
       "tok_s": 2.867,
@@ -36,11 +36,35 @@
       "serial_process_elapsed_sec_mean": 35.2902469297,
       "aggregate_ready_wait_ms_per_token": 270.6161097,
       "source": "phase7b_worker_pool_v1"
+    },
+    "critical_path_oracle": {
+      "serial_cold_decode_tok_s_mean": 3.114066,
+      "serial_warm_oracle_decode_tok_s_mean": 3.347492,
+      "staged_cold_decode_tok_s_mean": 3.198323,
+      "staged_warm_oracle_decode_tok_s_mean": 3.322881,
+      "serial_blocking_io_ms_per_token": 22.43,
+      "serial_optimistic_ceiling_fraction": 0.075,
+      "staged_blocking_io_ms_per_token": 11.613,
+      "staged_optimistic_ceiling_fraction": 0.0371,
+      "conclusion": "storage is not the main throughput bottleneck",
+      "source": "phase8c_critical_path_v1"
+    },
+    "prefetch_oracle": {
+      "status": "killed",
+      "perfect_oracle_projected_gain_fraction": 0.4244,
+      "projections_valid": false,
+      "deployable_heldout_transition_speedup": 1.010008,
+      "source": "phase8a_prefetch_oracle_v1"
+    },
+    "storage_wildcards": {
+      "status": "all_killed",
+      "split_residency_optimistic_gain_fraction": 0.00022,
+      "source": "phase8b_storage_model_v1"
     }
   },
   "challengers": {
     "selective_attention_q4": {
-      "status": "quality_gate_v2_pending",
+      "status": "killed_as_throughput_path__quality_v3_likelihood_pending",
       "resident_tok_s": 4.5,
       "resident_rss_mib": 10307.8,
       "control_tok_s": 4.2,
@@ -50,14 +74,26 @@
       "deterministic_smoke_hash": "a3c3c73a067cbb5fab9e68bd7d06c03d3c488e74467d33c40fae339836006c8c",
       "source": "phase7c_selective_q4_v1",
       "bounded_probe": {
-        "tok_s_mean": 2.7333333333,
-        "tok_s_median": 2.8,
-        "rss_mib": 3947.6,
-        "control_tok_s_mean": 2.2333333333,
-        "control_tok_s_median": 2.5,
-        "control_rss_mib": 3517.3,
-        "route_trace_changed": true,
-        "source": "phase7d_selective_q4_bounded_v1"
+        "tok_s_mean": 2.733312,
+        "tok_s_reps": [2.869955, 2.727493, 2.602488],
+        "rss_mib": 3392.98,
+        "control_tok_s_mean": 2.761672,
+        "control_tok_s_reps": [2.539814, 2.594522, 3.150681],
+        "control_rss_mib": 3514.62,
+        "throughput_delta_fraction": -0.010267,
+        "rss_delta_mib": -121.64,
+        "no_repack_matched": true,
+        "route_trace_changed": false,
+        "router_and_experts_unchanged": true,
+        "source": "phase7d_selective_q4_bounded_v2"
+      },
+      "quality_gate_v2": {
+        "control_clinical": "7/8",
+        "control_safety": "6/7",
+        "selective_q4_clinical": "8/8",
+        "selective_q4_safety": "7/7",
+        "mcq_generation_score_valid": false,
+        "source": "phase7c_selective_q4_quality_v2"
       }
     }
   },
@@ -67,6 +103,6 @@
     "routes_exact": true
   },
   "active_experiments": [
-    "phase7c_selective_q4_quality_v2"
+    "phase7c_selective_q4_quality_v3_repaired_awaiting_rerun"
   ]
 }

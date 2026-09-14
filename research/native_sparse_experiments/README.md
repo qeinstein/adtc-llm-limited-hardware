@@ -239,20 +239,43 @@ yet.
   English/Kiswahili instruction, and basic MCQ gate ended inconclusively
   because 48 tokens stopped inside automatic reasoning. It is preserved and
   explicitly superseded by the reasoning-disabled v2 gate.
-- `phase7c_selective_q4_quality_v2`: the corrected held-out gate with
-  `--reasoning off` remains running on Kaggle and is not yet used to promote
-  the Q4 challenger.
-- `phase7d_selective_q4_bounded_v1`: the selective-Q4 candidate reached a
-  rounded 2.733 tok/s mean / 2.8 median against 2.233 / 2.5 for the bounded
-  control, but control repetition 1 had a large storage stall. The candidate
-  remained below 4 GiB at 3,947.6 MiB, yet used 430.3 MiB more RSS than the
-  control and changed route trace SHA. Treat it as a <=4-GiB challenger only;
-  it is not a 2.5-GiB point.
+- `phase7c_selective_q4_quality_v2`: the corrected reasoning-disabled gate
+  completed. The candidate passed 8/8 clinical and 7/7 safety probes versus
+  7/8 and 6/7 for the control — evidence against an obvious clinical
+  regression, not a broad capability claim. The generated MCQ counts are
+  invalid (all 48-token responses truncated before the FINAL marker; fallback
+  parsing graded stray letters). Superseded by the likelihood-based v3 gate.
+- `phase7d_selective_q4_bounded_v1`: superseded by the no-repack matched v2
+  below; its ~430 MiB RSS regression was an automatic Q4_K CPU-repack
+  confound.
+- `phase7d_selective_q4_bounded_v2`: no-repack matched A/B killed selective-Q4
+  as a throughput path — 2.733312 tok/s mean versus 2.761672 control
+  (~1.03% slower) with 121.6 MiB less RSS (3,392.98 vs 3,514.62 MiB max).
+- `phase7c_selective_q4_quality_v3`: likelihood-based MMLU gate (pinned
+  100 tasks, matched control/challenger) failed rc=-9/OOM at context 2048,
+  batch 2048, ubatch 512, parallel 16. Repaired to 512/256/64/2; rerun
+  pending. Reject Q4 on a >2pp matched loss; no return to generated-answer
+  parsing.
+- `phase8a_prefetch_oracle_v1`: perfect-next-token oracle projected ~+42% at
+  modeled SSD bandwidth, but that projection class is invalid. Deployable
+  held-out transition predictor achieved only ~1.0% in simulation against
+  the 3.7% staged measured ceiling. Killed under the 5% rule; preserved as a
+  falsification tool.
+- `phase8b_storage_model_v1`: offline wildcard model killed all four layout
+  branches (split residency 0.022% optimistic gain; co-access placement
+  amplified traffic; syscall coalescing byte-neutral; hot copies +0.280 GB
+  disk with 1.15–2.01% amplification). Do not implement on Kaggle.
+- `phase8c_critical_path_v1`: warm page-cache oracle bounds fully removing
+  physical storage I/O at 22.43 ms/token serial (~7.5%) and 11.61 ms/token
+  staged (~3.7%). Storage is not the main throughput bottleneck. Research
+  priority moves to compute, graph execution, runtime overhead,
+  representation, and multi-token amortization.
 
 The machine-readable canonical points and experiment decisions are in
-`frontier.json`.  The staged storage result is a qualified process-time win,
+`frontier.json`. The staged storage result is a qualified process-time win,
 not a new rounded raw decode point. The fixed worker-pool follow-up did not
-move decoded throughput and is killed. The next decision is whether selective
-Q4 passes the completed-answer quality gate and whether its extra anonymous
-RSS can be removed; only then should it be promoted into the bounded
-frontier.
+move decoded throughput and is killed. Selective-Q4 is killed as a
+throughput path; its quality v3 likelihood rerun decides only whether the
+representation evidence is preserved. Storage-layout and prefetch branches
+are closed by measured wall-clock ceilings. The next frontier movement must
+come from compute-side architecture.
