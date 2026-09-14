@@ -106,6 +106,8 @@ def main(argv: list[str] | None = None) -> int:
             raise SystemExit("checkpoint manifest is not marked complete or disagrees with trainer_state global_step")
         if manifest.get("scaler_required") is True and not (checkpoint / "scaler.pt").is_file():
             raise SystemExit("checkpoint manifest requires scaler.pt but it is missing")
+        if manifest.get("sampler_required") is True and not (checkpoint / "sampler_state.json").is_file():
+            raise SystemExit("checkpoint manifest requires sampler_state.json but it is missing")
     with tempfile.TemporaryDirectory(prefix="falcon-persist-") as tmp:
         staging = Path(tmp) / "checkpoint"
         shutil.copytree(checkpoint, staging)
