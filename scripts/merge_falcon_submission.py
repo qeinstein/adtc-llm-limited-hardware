@@ -12,6 +12,8 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 MODEL_ID = "tiiuae/Falcon-H1-1.5B-Deep-Instruct"
 MODEL_REVISION = "b6648636ddc906688974282de6e7a243395f5423"
 FORBIDDEN = {"out_proj", "conv1d"}
