@@ -10,12 +10,14 @@ to adapter/trainer state and manifests, never the base model.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import shutil
 import subprocess
 import tempfile
 import time
+import zipfile
 from pathlib import Path
 
 
@@ -40,31 +42,110 @@ def run_streamed(command: list[str]) -> int:
     return process.wait()
 
 
-def wait_for_dataset_files(dataset: str, timeout_seconds: int = 600,
-                           retry_seconds: int = 15) -> None:
-    """Wait until the newly-created version exposes resumable trainer state."""
+def sha256_bytes(payload: bytes) -> str:
+    return hashlib.sha256(payload).hexdigest()
+
+
+def archive_matches_expected(
+    archive_path: Path,
+    *,
+    expected_global_step: int,
+    expected_manifest_sha256: str,
+) -> bool:
+    """Return true only when the downloaded archive contains this upload.
+
+    ``kaggle datasets files`` can report filenames from an older visible
+    version while a newly-created dataset version is still propagating.  File
+    names alone therefore cannot prove persistence.  This check reads the
+    archive bytes and binds readiness to the checkpoint step and exact local
+    manifest hash.
+    """
+    try:
+        with zipfile.ZipFile(archive_path) as archive:
+            names = set(archive.namelist())
+            state_names = [name for name in names if name.endswith("trainer_state.json")]
+            for state_name in state_names:
+                prefix = state_name[: -len("trainer_state.json")]
+                manifest_name = prefix + "checkpoint_manifest.json"
+                try:
+                    state = json.loads(archive.read(state_name).decode("utf-8"))
+                    manifest_bytes = archive.read(manifest_name)
+                    manifest = json.loads(manifest_bytes.decode("utf-8"))
+                except (KeyError, UnicodeDecodeError, json.JSONDecodeError):
+                    continue
+                if state.get("global_step") != expected_global_step:
+                    continue
+                if manifest.get("complete") is not True:
+                    continue
+                if manifest.get("global_step") != expected_global_step:
+                    continue
+                if sha256_bytes(manifest_bytes) != expected_manifest_sha256:
+                    continue
+                required = {
+                    prefix + name
+                    for name in ("optimizer.pt", "scheduler.pt", "rng_state.pth")
+                }
+                if not required.issubset(names):
+                    continue
+                if manifest.get("sampler_required") is True and prefix + "sampler_state.json" not in names:
+                    continue
+                if manifest.get("scaler_required") is True and prefix + "scaler.pt" not in names:
+                    continue
+                return True
+    except (OSError, zipfile.BadZipFile):
+        return False
+    return False
+
+
+def wait_for_dataset_files(
+    dataset: str,
+    expected_global_step: int,
+    expected_manifest_sha256: str,
+    timeout_seconds: int = 600,
+    retry_seconds: int = 15,
+) -> None:
+    """Wait until Kaggle serves the exact newly-uploaded checkpoint archive."""
     deadline = time.monotonic() + timeout_seconds
-    command = ["kaggle", "datasets", "files", "-d", dataset]
     attempt = 0
-    while True:
-        attempt += 1
-        result = subprocess.run(command, check=False, capture_output=True, text=True)
-        listing = (result.stdout or "") + (result.stderr or "")
-        ready = result.returncode == 0 and all(
-            name in listing for name in ("trainer_state.json", "optimizer.pt", "scheduler.pt")
-        )
-        if ready:
-            print(f"PERSISTENCE_READY dataset={dataset} attempt={attempt}", flush=True)
-            return
-        remaining = int(deadline - time.monotonic())
-        if remaining <= 0:
-            raise RuntimeError(
-                f"Kaggle dataset version did not expose resumable files within {timeout_seconds}s; "
-                f"last listing: {listing[-1000:]}"
+    with tempfile.TemporaryDirectory(prefix="falcon-persist-verify-") as tmp:
+        tmp_path = Path(tmp)
+        command = ["kaggle", "datasets", "download", "-d", dataset, "-p", str(tmp_path), "--force"]
+        while True:
+            attempt += 1
+            for old_archive in tmp_path.glob("*.zip"):
+                old_archive.unlink()
+            result = subprocess.run(command, check=False, capture_output=True, text=True)
+            archives = sorted(tmp_path.glob("*.zip"), key=lambda path: path.stat().st_mtime_ns)
+            ready = result.returncode == 0 and any(
+                archive_matches_expected(
+                    archive,
+                    expected_global_step=expected_global_step,
+                    expected_manifest_sha256=expected_manifest_sha256,
+                )
+                for archive in archives
             )
-        delay = min(max(1, retry_seconds), remaining)
-        print(f"PERSISTENCE_WAIT dataset={dataset} attempt={attempt} retry_in={delay}s", flush=True)
-        time.sleep(delay)
+            if ready:
+                print(
+                    f"PERSISTENCE_READY dataset={dataset} step={expected_global_step} "
+                    f"manifest_sha256={expected_manifest_sha256} attempt={attempt}",
+                    flush=True,
+                )
+                return
+            remaining = int(deadline - time.monotonic())
+            if remaining <= 0:
+                detail = (result.stdout or "") + (result.stderr or "")
+                raise RuntimeError(
+                    f"Kaggle dataset did not serve checkpoint step {expected_global_step} "
+                    f"with manifest {expected_manifest_sha256} within {timeout_seconds}s; "
+                    f"last download: {detail[-1000:]}"
+                )
+            delay = min(max(1, retry_seconds), remaining)
+            print(
+                f"PERSISTENCE_WAIT dataset={dataset} expected_step={expected_global_step} "
+                f"attempt={attempt} retry_in={delay}s",
+                flush=True,
+            )
+            time.sleep(delay)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -97,6 +178,8 @@ def main(argv: list[str] | None = None) -> int:
     if missing_state:
         raise SystemExit(f"checkpoint is not resumable; missing: {', '.join(missing_state)}")
     manifest_path = checkpoint / "checkpoint_manifest.json"
+    if not manifest_path.is_file():
+        raise SystemExit("checkpoint_manifest.json is required for exact persistence verification")
     if manifest_path.exists():
         try:
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -125,7 +208,13 @@ def main(argv: list[str] | None = None) -> int:
         code = run_streamed(command)
         if code:
             return code
-        wait_for_dataset_files(args.dataset, args.wait_seconds, args.retry_seconds)
+        wait_for_dataset_files(
+            args.dataset,
+            expected_global_step=trainer_state["global_step"],
+            expected_manifest_sha256=sha256_bytes(manifest_path.read_bytes()),
+            timeout_seconds=args.wait_seconds,
+            retry_seconds=args.retry_seconds,
+        )
         return 0
 
 

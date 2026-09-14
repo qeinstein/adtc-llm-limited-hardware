@@ -1,11 +1,14 @@
 import json
 import sys
+import hashlib
+import zipfile
 from pathlib import Path
 
 from scripts.benchmark_falcon_deployment import bench_once, parse_time_report
 from scripts.audit_falcon_data import near_duplicate_prompt_pairs, quality_flags
 from scripts.build_falcon_dataset import read_records
 from scripts.falcon_trainability_probe import tiny_rows
+from scripts.persist_checkpoint import archive_matches_expected
 from scripts.score_falcon_battery import rule_result
 
 
@@ -104,6 +107,35 @@ def test_near_duplicate_prompt_audit_is_bounded_and_excludes_exact_pairs():
     ])
     assert len(pairs) == 2
     assert {tuple(item[key] for key in ("left", "right")) for item in pairs} == {("a:1", "b:2"), ("b:2", "c:3")}
+
+
+def test_persistence_readiness_binds_archive_to_uploaded_step_and_manifest(tmp_path: Path):
+    manifest = json.dumps(
+        {
+            "complete": True,
+            "global_step": 4,
+            "sampler_required": True,
+            "scaler_required": False,
+        },
+        sort_keys=True,
+    ).encode()
+    archive_path = tmp_path / "checkpoints.zip"
+    with zipfile.ZipFile(archive_path, "w") as archive:
+        prefix = "checkpoint-4/"
+        archive.writestr(prefix + "trainer_state.json", '{"global_step": 4}')
+        archive.writestr(prefix + "checkpoint_manifest.json", manifest)
+        for name in ("optimizer.pt", "scheduler.pt", "rng_state.pth", "sampler_state.json"):
+            archive.writestr(prefix + name, "state")
+    digest = hashlib.sha256(manifest).hexdigest()
+    assert archive_matches_expected(
+        archive_path, expected_global_step=4, expected_manifest_sha256=digest
+    )
+    assert not archive_matches_expected(
+        archive_path, expected_global_step=16, expected_manifest_sha256=digest
+    )
+    assert not archive_matches_expected(
+        archive_path, expected_global_step=4, expected_manifest_sha256="0" * 64
+    )
 
 
 def test_production_policy_marks_mcqa_shaped_clinical_rows_for_exclusion():
