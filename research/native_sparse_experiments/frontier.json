@@ -26,7 +26,16 @@
       "throughput_delta_fraction": 0.0941,
       "routes_exact": true,
       "mincore_evicted_first_time": true,
-      "source": "phase10e_zero_copy_v5 (staged box; in-situ cert pending)"
+      "source": "phase10e_zero_copy_v5 (staged box)",
+      "replication": "FAILED in combo (-19.0% zc_iq2, 1.6GB cache own-goal + fast-I/O box); v5-verbatim 2GB re-cert in staged-q2k-v1; win appears I/O-box-specific (fault churn)"
+    },
+    "mechanism_q2k_kernel_resident": {
+      "tok_s": 6.529,
+      "rss_mib": 12049.0,
+      "control_tok_s": 4.955,
+      "throughput_delta_fraction": 0.318,
+      "frontier_eligible": false,
+      "source": "phase10i combo resident_q2k (mechanism proof, not a bounded point)"
     }
   },
   "challengers_q2k": {
@@ -154,6 +163,8 @@
   },
   "active_experiments": [
     "phase7c_selective_q4_quality_v3_repaired_awaiting_rerun",
-    "zc-q2k-combo-v1_design (Q2_K x v5-remap + v5 in-situ cert + resident_q2k K-isolation)"
+    "staged-q2k-v1_running (staged_q2k thesis + v5-verbatim recert + minflt proof)",
+    "mtp-probe-v1_running (moonshot C N=1/2/3/4)",
+    "q2k-quality-v1_held (fires iff a bounded arm wins >10%)"
   ]
 }
