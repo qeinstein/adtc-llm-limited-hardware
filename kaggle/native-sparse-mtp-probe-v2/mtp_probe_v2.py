@@ -110,9 +110,19 @@ def build() -> dict:
 
 
 def fetch_model() -> dict:
-    if not MODEL.exists() or MODEL.stat().st_size != MTP_SIZE:
-        run(["curl", "-L", "--retry", "3", "-C", "-", "-o", str(MODEL), MTP_URL],
-            log=OUT / "model-download.log")
+    # Resilient resume loop: v2-version-1 died on transient curl-56 at 11.8GB.
+    for attempt in range(1, 6):
+        if MODEL.exists() and MODEL.stat().st_size == MTP_SIZE:
+            break
+        print(f"model download attempt {attempt}/5 (resume)", flush=True)
+        p = subprocess.run(["curl", "-L", "--retry", "5", "--retry-delay", "10",
+                            "--retry-all-errors", "-C", "-", "-o", str(MODEL), MTP_URL],
+                           text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        print(p.stdout[-2000:], flush=True)
+        (OUT / f"model-download-attempt{attempt}.log").write_text(p.stdout, encoding="utf-8")
+        if p.returncode:
+            print(f"attempt {attempt} rc={p.returncode}, retrying", flush=True)
+            time.sleep(15)
     size = MODEL.stat().st_size
     digest = sha256(MODEL)
     if size != MTP_SIZE or digest != MTP_SHA256:
