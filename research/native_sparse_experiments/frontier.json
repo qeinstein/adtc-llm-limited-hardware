@@ -18,7 +18,35 @@
       "tok_s": 2.867,
       "rss_mib": 2301.2,
       "source": "phase6g_bounded_executor_v5"
+    },
+    "exact_zc_v5_remap": {
+      "tok_s": 3.826,
+      "rss_mib": 4300.0,
+      "control_tok_s": 3.497,
+      "throughput_delta_fraction": 0.0941,
+      "routes_exact": true,
+      "mincore_evicted_first_time": true,
+      "source": "phase10e_zero_copy_v5 (staged box; in-situ cert pending)"
     }
+  },
+  "challengers_q2k": {
+    "q2k_experts_staged": {
+      "status": "killed_as_standalone__kernel_kept_for_zc_combo",
+      "control_tok_s": 5.09,
+      "challenger_tok_s": 4.58,
+      "throughput_delta_fraction": -0.10,
+      "mechanism": "kernel win (+25-39ms ubench) buried under +2.74GB staged traffic penalty (+47-61ms)",
+      "source": "phase10f_q2k_v1 J1, phase10g refine probes, phase10h verdict"
+    },
+    "q2k_all_dense_isolation": {
+      "status": "confirms_kernel_win",
+      "control_tok_s": 5.09,
+      "challenger_tok_s": 5.06,
+      "throughput_delta_fraction": -0.005,
+      "dense_q2k_kernel_win_ms": 21,
+      "source": "phase10h_q2k_verdict J2"
+    },
+    "next": "zc-q2k-combo-v1 (Q2_K experts x v5-remap + resident_q2k K-isolation), predicts +35-45% over staged control"
   },
   "storage": {
     "bounded_async_fresh_bytes_per_token": 127030400,
@@ -126,6 +154,6 @@
   },
   "active_experiments": [
     "phase7c_selective_q4_quality_v3_repaired_awaiting_rerun",
-    "phase9b_zero_copy_prototype_design"
+    "zc-q2k-combo-v1_design (Q2_K x v5-remap + v5 in-situ cert + resident_q2k K-isolation)"
   ]
 }
