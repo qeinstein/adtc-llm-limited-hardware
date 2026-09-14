@@ -1088,8 +1088,13 @@ def main(argv: list[str] | None = None) -> int:
         resume_path = latest_checkpoint(checkpoint_dir)
         resume = str(resume_path) if resume_path else None
     if resume:
-        if not Path(resume).exists():
+        resume_path = Path(resume)
+        if not resume_path.exists():
             raise FileNotFoundError(f"resume checkpoint does not exist: {resume}")
+        if not checkpoint_is_complete(resume_path, require_scaler=bool(train_args.fp16)):
+            raise RuntimeError(
+                f"resume checkpoint is incomplete; refusing to delegate to Trainer: {resume}"
+            )
         event(event_path, "resume_start", checkpoint=resume)
     trainer._training_started = time.monotonic()
     progress.started = trainer._training_started
