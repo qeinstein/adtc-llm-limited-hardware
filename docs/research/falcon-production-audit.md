@@ -71,3 +71,37 @@ Proof v3 is the current implementation confirmation, recorded in
 It repeats the same pass with the instrumented loss summary and all 16 SFT
 fixture generations: 16/16 generations changed, SFT loss fell 61.15%, and
 MCQA loss fell 94.27%. The quality rejection remains unchanged.
+
+## Bounded real-data follow-up
+
+The first real-data pilot is preserved as
+[`falcon-small-real-probe-v1-20260913.json`](experiments/falcon-small-real-probe-v1-20260913.json).
+It was rejected because 8 optimizer steps at 5e-6 changed neither MCQA nor
+any of the 16 development/validation generations.
+
+The stronger canonical follow-up ran on Kaggle kernel v25 and is preserved as
+[`falcon-small-real-followup-v1-20260914.json`](experiments/falcon-small-real-followup-v1-20260914.json).
+It completed 16 steps on a P100 in 38m30s at 7.27 tokens/s, persisted steps
+8 and 16, and selected step 16 by fast development loss (2.9065). It passed
+the responsiveness test: 12/16 development/validation generations changed,
+fast-dev MCQA moved from 40% to 60% (acc_norm 80% to 100%), and SFT loss moved
+from 3.5880 to 3.4842. It failed the quality test: the development battery
+remained 0/8 and validation 2/8 under the embedded rubric, with critical
+failures on emergency/safety and fabricated-protocol cases. It is rejected
+for promotion and export; no frozen final holdout was read.
+
+## Data review and current authorization
+
+The exact v25 mixture contained 142 SFT and 32 MCQA rows (30,051 and 11,474
+all-sequence tokens respectively), but the loss-token share was 97.38% SFT
+versus 2.62% MCQA. The source audit now flags 15 MCQA-shaped rows stored as
+SFT, 25 authority/protocol claims, 5 numeric medication examples, 8
+toxin/disinfectant examples, 5 invasive-procedure examples, and 74 repeated
+disclaimer rows for manual review. These are review flags, not automatic
+deletions.
+
+The independent trainability gate and durable resume/persistence gate pass;
+the real-data quality gate and system-prompt selection gate do not. Therefore
+another long training run is **not authorized**. The next experiment must use
+the audited data mixture and quality reports, remain development/validation
+only, and demonstrate a genuine safety/usefulness improvement before scaling.
