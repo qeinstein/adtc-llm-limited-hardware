@@ -164,7 +164,8 @@
   "active_experiments": [
     "phase7c_selective_q4_quality_v3_repaired_awaiting_rerun",
     "staged-q2k-v1_running (staged_q2k thesis + v5-verbatim recert + minflt proof)",
-    "mtp-probe-v1_running (moonshot C N=1/2/3/4)",
+    "mtp-probe-v1_complete_inconclusive (base CV 27%; exactness holds; n1>n2>n3>n4)",
+    "mtp-probe-v2_running (interleaved pairs + CV gate + verbose telemetry)",
     "q2k-quality-v1_held (fires iff a bounded arm wins >10%)"
   ]
 }
