@@ -144,11 +144,14 @@ def main() -> int:
 
     bench_dir = export_dir / "deployment-benchmark"
     bench_dir.mkdir(parents=True, exist_ok=True)
+    bench_bin = ROOT / "llama.cpp" / "build" / "bin" / "llama-bench"
+    if not bench_bin.is_file():
+        run(["cmake", "--build", "llama.cpp/build", "--config", "Release", "-j4", "--target", "llama-bench"], cwd=ROOT)
     rows = []
     for rep in range(1, 4):
         out = bench_dir / f"rep-{rep}.json"
         timing = bench_dir / f"rep-{rep}.time"
-        command = ["/usr/bin/time", "-v", "./llama.cpp/build/bin/llama-bench", "-m", str(deployment), "-p", "512", "-n", "128", "-ngl", "0", "--output", "json"]
+        command = ["/usr/bin/time", "-v", str(bench_bin), "-m", str(deployment), "-p", "512", "-n", "128", "-ngl", "0", "--output", "json"]
         with out.open("w", encoding="utf-8") as stdout, timing.open("w", encoding="utf-8") as stderr:
             result = subprocess.run(command, cwd=ROOT, stdout=stdout, stderr=stderr, text=True, check=False)
         if result.returncode:
