@@ -1,0 +1,11 @@
+{
+ "n_experts": 256,
+ "norm_R8_mean": 1.0664585381967657,
+ "norm_R8_calib": 1.050378063057155,
+ "norm_R8_held": 1.079858934146441,
+ "norm_X": 57.167903900146484,
+ "expert_cos_mean": 0.07190201357497675,
+ "expert_cos_medabs": 0.04546689972262766,
+ "expert_cos_maxabs": 0.5629084559480952,
+ "expert_norm_ratio_maxmin": 2.3413089872631683
+}
