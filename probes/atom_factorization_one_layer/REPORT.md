@@ -1,6 +1,12 @@
 # Atom Factorization — One-Layer Falsification Experiment
 
-**Verdict: KILL** (strict criterion 1 fires with margin; no dictionary variant can survive the ceiling)
+**Verdict (REVISED): KILL HARD on sparse-subset pruning; OPEN on learned nonlinear basis.**
+The oracle only upper-bounds sparse SUBSET SELECTION from the original 4096
+atoms — it does not bound a dictionary of newly learned/synthesized
+nonlinear atoms, which can span directions no small original subset spans.
+The decisive learned-basis ceiling (dense SwiGLU student sweep) is tracked
+separately; no final architecture kill until it lands on real contextual
+states (current proxy routing logcorr 0.17 is insufficient for that).
 
 **Branch:** `research/atom-factor-one-layer`
 **Date:** 2026-09-15 · **Layer:** L20 · **Held-out tokens:** 384 (disjoint IDs)
@@ -43,7 +49,8 @@ the 2016-token REAL route corpus (`phase5e_route_corpus_v1`) = **0.17**
 Teacher: `R8(x) = Σ_{e∈top8} α_e Σ_j s_{e,j}(x)·d_{e,j}`, 4096 atoms/token.
 
 **Ceiling-first design.** Before building any dictionary, we ran the
-**oracle test**, which upper-bounds the entire hypothesis family: per
+**oracle test**, which upper-bounds the sparse-subset branch (it does NOT
+bound learned/synthesized atoms — see Revision note): per
 held-out token, rank the *true* 4096 routed-atom contributions by norm,
 keep top-M with *true* coefficients (best per-token subset, no sharing
 loss, no composition loss). Any routing-composed dictionary (fixed expert
@@ -69,8 +76,9 @@ task rules say to stop spending time on a dead approach.
 
 ## 4. Global vs community vs private results
 
-**Not run — moot.** The oracle (attainable by no dictionary) already fails
-every bar (see §5). Concretely, at the hypothesis's operating points:
+**Not run — moot for subset schemes.** The oracle (attainable by no
+subset dictionary) already fails every bar (see §5). Concretely, at the
+subset hypothesis's operating points:
 
 | Operating point | Oracle (ceiling) held-out error |
 |---|---|
@@ -79,9 +87,10 @@ every bar (see §5). Concretely, at the hypothesis's operating points:
 | PROMISING M≤2048, <2% | 8.9% median — off by **4×** |
 | KILL bar: >5% near M=2048 | **8.9% median → KILL fires** |
 
-No clustering, community structure, or private set can recover a 4–18×
-gap to an upper bound. Private atoms are further ruled out structurally:
-the failure is in the *bulk* (see §6), not in outliers.
+No subset clustering, community structure, or private set can recover a
+4–18× gap to an upper bound. Private atoms are further ruled out
+structurally: the failure is in the *bulk* (see §6), not in outliers.
+(Learned atoms are a different branch — see §8–§10.)
 
 ## 5. Error-vs-active-atoms table (held-out, n=384)
 
@@ -106,10 +115,83 @@ M=128: 0.593→0.575; M=256: 0.482→0.446; M=512: 0.357→0.302. Refit barely
 helps ⇒ the failure is **missing subspace** (signal lives in unselected
 atoms), not coefficient quality. No code-fitting scheme fixes this.
 
-## 6. Rare-event analysis
+## 6. Rare-event analysis (subset hypothesis)
 
-There is no rare-event story — the failure is systematic and tight:
+There is no rare-event story — the subset failure is systematic and tight:
 
 - At M=2048: median 8.9%, p99 11.4%, max 12.4%. The spread is narrow;
-  *typical* tokens fail, not outliers. Hiding behind mean MSE is
+  *typical* tokens fail, not outliers. No mean-MSE hiding: median ≈ mean
+  at every M.
+- Mechanism (all 320 calib tokens): Σ||C||²/||R8||² = 0.87 mean
+  (no cancellation pathology — contributions align); top-2048 atoms carry
+  99.2% of atom energy, yet dropping the bottom 2048 loses 8.6% coherent
+  signal. The tail is ~2000 small ALIGNED atoms: real signal, spread thin.
+  No subset trick, refit, or outlier handling recovers it.
+- Consequence: a private/outlier set cannot help — the missing component
+  is bulk, not outliers. This rules out branch D (shared+private) as
+  firmly as branch B (global).
+
+## 7. Projected compute/storage savings
+
+For sparse-subset execution the projections are moot (killed): the oracle
+itself needs 2551/3137 atoms for 5%/2% (1.6×/1.3× mult reduction vs the
+teacher's 25.2M mults/token/layer), below every bar, and no realizable
+scheme reaches oracle. Reference points only:
+
+| config | mults/token/layer | R | layer ms (2.75 base) | tok/s (5.196 frame) |
+|---|---|---|---|---|
+| teacher (8×512) | 25,165,824 | 1.0× | 2.75 | 5.20 |
+| oracle M=2551 @5% | ~15.7M | 1.6× | 1.72 | 6.73 |
+| oracle M=3137 @2% | ~19.3M | 1.3× | 2.11 | 6.06 |
+| hypothesis M=512 @2% | ~3.2M | 8× | 0.34 | 10.4 |
+
+(Assumes ~110 ms/token total MoE time over 40 layers, 82.5 ms non-MoE;
+see script `07_tables.py` for the model. The last row is what the
+hypothesis needed and did not get — not even at oracle level.)
+
+For the LEARNED-basis branch, projections await the student sweep: a dense
+h=1024 student costs 3×1024×2048 = 6.3M mults (4× reduction); h=2048 costs
+12.6M (2×). Reductions ≥2× are live iff the student fits.
+
+## 8. KEEP / KILL verdict
+
+**KILL HARD on sparse-subset pruning; OPEN on learned nonlinear basis.**
+
+- KILL HARD: pruning / sparse subset of original atoms (branches B/C/D as
+  subset schemes). Oracle: 8.9% median at M=2048 vs the 5% bar; 2551 atoms
+  needed for 5%. Do not pursue atom pruning.
+- OPEN: learned nonlinear basis / newly synthesized atoms. The oracle does
+  not bound learned atoms. Decisive test = dense SwiGLU student sweep
+  (`09`, in flight): h≤1024 at ~1–2% ⇒ major KEEP; h≤2048 strong ⇒ KEEP;
+  even h=3072 failing badly on real contextual held-out ⇒ strong evidence
+  against the broader thesis. No final architecture kill on proxy data
+  alone (routing logcorr 0.17 insufficient).
+
+## 9. Strongest version discovered
+
+- Subset branch: the oracle itself (unrealizable, and still dead).
+- Learned branch: TBD by the student sweep. Prior: s2_06's L0/proxy
+  dense-student run reports test_rel ≈ 0.95–0.97 at h=512/1024 (pooled,
+  N=320 proxy) — a bad omen, but L0 ≠ L20 and pooled-rel ≠ tails; our
+  L20 run (N=704, held-384 tails) is the cleaner read.
+
+## 10. Next ONE experiment
+
+The dense SwiGLU student sweep (`09_student.py`, h=512/1024/2048/3072 vs
+B=R8+S, train calib-256, test held-384, median/p95/p99/max/cosine) — in
+flight at time of writing. Global/community dictionary clustering stays
+parked until this ceiling lands. If the student succeeds on proxy, the
+mandatory follow-up is re-testing on REAL contextual L20 states; if it
+fails badly on proxy, the contextual run is still required before a final
+thesis kill (scoped separately — needs full-model inference: 15 of 20
+prefix layers are Gated DeltaNet, ruling out a hand-rolled prefix
+forward; realistic path is a llama.cpp hidden-state dump of the 10 GB
+GGUF, which currently does not fit local disk/RAM).
+
+## Revision note (2026-09-15)
+
+v1 of this report marked the whole hypothesis KILL. Corrected: the oracle
+bounds only subset selection, not learned atoms. §3–§5 numbers are
+unchanged (they concern the subset branch only); §8/§10 now reflect
+KILL-HARD-subset / OPEN-learned with the student sweep as decider.
 ...[truncated 5019 chars]
