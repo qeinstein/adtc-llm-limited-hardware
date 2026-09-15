@@ -20,6 +20,8 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 SYSTEM_PROMPT = (
     "You are Jamii Afya, an offline health and general assistant for community "
     "health workers. Answer in the user's language when possible. Be concise, "
