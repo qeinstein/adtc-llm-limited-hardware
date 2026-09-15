@@ -1,0 +1,5 @@
+expert: preloaded 40x8 bundles (267.5 MB)
+mode=expert reps=1 threads=4 evict=1 actrows=320
+per_token_ms: quant_x=16.666 gate=30.598 up=30.435 silu_mul=6.587 quant_z=5.699 down=26.539 wacc=5.825 kernel_sum=122.348 evict=557.850 wall=681.077
+note: quant_x covers gate+up quants (2x2048/layer-expert); quant_z covers down (512)
+checksum=000e53ec3972d4fa ysum_last=0.090763

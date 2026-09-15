@@ -1,0 +1,78 @@
+{
+ "model": {
+  "gdn_mmac": 754.97472,
+  "full_mmac": 272.62976,
+  "total_mmac": 1027.60448,
+  "ms_per_mmac": 0.046224010233976404,
+  "per_head_saved_mmac": 15.72864,
+  "full_attn_proj_ms": 12.60204081632653,
+  "base_ms": 215.2,
+  "attn_ms": 47.5
+ },
+ "candidates": [
+  {
+   "id": "static-16to12",
+   "kind": "query-head pruning",
+   "err_out": 0.6890750726064047,
+   "ms_saved": 2.9081632653061225,
+   "tok_s": 4.710496717072186,
+   "ram_mb": -43.4110464
+  },
+  {
+   "id": "static-16to8",
+   "kind": "query-head pruning",
+   "err_out": 0.6712426940600077,
+   "ms_saved": 5.816326530612245,
+   "tok_s": 4.775921557925106,
+   "ram_mb": -86.8220928
+  },
+  {
+   "id": "static-16to4",
+   "kind": "query-head pruning",
+   "err_out": 0.9379147092501322,
+   "ms_saved": 8.724489795918368,
+   "tok_s": 4.84318938847321,
+   "ram_mb": -130.23313919999998
+  },
+  {
+   "id": "gate-rank4",
+   "kind": "gate compression",
+   "err_out": 0.08440564821163814,
+   "ms_saved": 3.8093909438775517,
+   "tok_s": 4.730579113542874,
+   "ram_mb": -56.863948799999996
+  },
+  {
+   "id": "gate-rank8",
+   "kind": "gate compression",
+   "err_out": 0.07913159082333247,
+   "ms_saved": 3.7412308673469394,
+   "tok_s": 4.72905429319262,
+   "ram_mb": -55.8465024
+  },
+  {
+   "id": "gate-rank16",
+   "kind": "gate compression",
+   "err_out": 0.07251744344830513,
+   "ms_saved": 3.6049107142857144,
+   "tok_s": 4.726007599589007,
+   "ram_mb": -53.8116096
+  },
+  {
+   "id": "dyn-oracle-top8",
+   "kind": "token-dynamic head execution",
+   "err_out": 0.6962101062138876,
+   "ms_saved": 5.816326530612245,
+   "tok_s": 4.775921557925106,
+   "ram_mb": 0.0
+  },
+  {
+   "id": "dyn-oracle-top4",
+   "kind": "token-dynamic head execution",
+   "err_out": 0.953507681687673,
+   "ms_saved": 8.724489795918368,
+   "tok_s": 4.84318938847321,
+   "ram_mb": 0.0
+  }
+ ]
+}

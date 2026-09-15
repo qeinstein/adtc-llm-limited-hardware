@@ -1,0 +1,297 @@
+{
+ "repo": "Qwen/Qwen3.5-35B-A3B",
+ "layers": [
+  3,
+  19,
+  39
+ ],
+ "tensors": {
+  "model.language_model.layers.3.self_attn.q_proj.weight": {
+   "file": "L3_q_proj.pt",
+   "shape": [
+    8192,
+    2048
+   ],
+   "dtype": "torch.bfloat16"
+  },
+  "model.language_model.layers.3.self_attn.o_proj.weight": {
+   "file": "L3_o_proj.pt",
+   "shape": [
+    2048,
+    4096
+   ],
+   "dtype": "torch.bfloat16"
+  },
+  "model.language_model.layers.19.self_attn.q_proj.weight": {
+   "file": "L19_q_proj.pt",
+   "shape": [
+    8192,
+    2048
+   ],
+   "dtype": "torch.bfloat16"
+  },
+  "model.language_model.layers.19.self_attn.o_proj.weight": {
+   "file": "L19_o_proj.pt",
+   "shape": [
+    2048,
+    4096
+   ],
+   "dtype": "torch.bfloat16"
+  },
+  "model.language_model.layers.39.self_attn.q_proj.weight": {
+   "file": "L39_q_proj.pt",
+   "shape": [
+    8192,
+    2048
+   ],
+   "dtype": "torch.bfloat16"
+  },
+  "model.language_model.layers.39.self_attn.o_proj.weight": {
+   "file": "L39_o_proj.pt",
+   "shape": [
+    2048,
+    4096
+   ],
+   "dtype": "torch.bfloat16"
+  },
+  "model.language_model.layers.3.self_attn.k_proj.weight": {
+   "file": "L3_k_proj.pt",
+   "shape": [
+    512,
+    2048
+   ],
+   "dtype": "torch.bfloat16"
+  },
+  "model.language_model.layers.3.self_attn.v_proj.weight": {
+   "file": "L3_v_proj.pt",
+   "shape": [
+    512,
+    2048
+   ],
+   "dtype": "torch.bfloat16"
+  },
+  "model.language_model.layers.3.self_attn.q_norm.weight": {
+   "file": "L3_q_norm.pt",
+   "shape": [
+    256
+   ],
+   "dtype": "torch.bfloat16"
+  },
+  "model.language_model.layers.3.self_attn.k_norm.weight": {
+   "file": "L3_k_norm.pt",
+   "shape": [
+    256
+   ],
+   "dtype": "torch.bfloat16"
+  },
+  "model.language_model.layers.3.input_layernorm.weight": {
+   "file": "L3_input_ln.pt",
+   "shape": [
+    2048
+   ],
+   "dtype": "torch.bfloat16"
+  },
+  "model.language_model.layers.19.self_attn.k_proj.weight": {
+   "file": "L19_k_proj.pt",
+   "shape": [
+    512,
+    2048
+   ],
+   "dtype": "torch.bfloat16"
+  },
+  "model.language_model.layers.19.self_attn.v_proj.weight": {
+   "file": "L19_v_proj.pt",
+   "shape": [
+    512,
+    2048
+   ],
+   "dtype": "torch.bfloat16"
+  },
+  "model.language_model.layers.19.self_attn.q_norm.weight": {
+   "file": "L19_q_norm.pt",
+   "shape": [
+    256
+   ],
+   "dtype": "torch.bfloat16"
+  },
+  "model.language_model.layers.19.self_attn.k_norm.weight": {
+   "file": "L19_k_norm.pt",
+   "shape": [
+    256
+   ],
+   "dtype": "torch.bfloat16"
+  },
+  "model.language_model.layers.19.input_layernorm.weight": {
+   "file": "L19_input_ln.pt",
+   "shape": [
+    2048
+   ],
+   "dtype": "torch.bfloat16"
+  },
+  "model.language_model.layers.39.self_attn.k_proj.weight": {
+   "file": "L39_k_proj.pt",
+   "shape": [
+    512,
+    2048
+   ],
+   "dtype": "torch.bfloat16"
+  },
+  "model.language_model.layers.39.self_attn.v_proj.weight": {
+   "file": "L39_v_proj.pt",
+   "shape": [
+    512,
+    2048
+   ],
+   "dtype": "torch.bfloat16"
+  },
+  "model.language_model.layers.39.self_attn.q_norm.weight": {
+   "file": "L39_q_norm.pt",
+   "shape": [
+    256
+   ],
+   "dtype": "torch.bfloat16"
+  },
+  "model.language_model.layers.39.self_attn.k_norm.weight": {
+   "file": "L39_k_norm.pt",
+   "shape": [
+    256
+   ],
+   "dtype": "torch.bfloat16"
+  },
+  "model.language_model.layers.39.input_layernorm.weight": {
+   "file": "L39_input_ln.pt",
+   "shape": [
+    2048
+   ],
+   "dtype": "torch.bfloat16"
+  },
+  "model.language_model.embed_tokens.weight[calib]": {
+   "file": "calib_embed.pt",
+   "shape": [
+    117,
+    2048
+   ],
+   "dtype": "torch.bfloat16"
+  }
+ },
+ "calibration_ids": [
+  33963,
+  799,
+  61446,
+  2781,
+  20029,
+  311,
+  77938,
+  6093,
+  8346,
+  264,
+  1623,
+  440,
+  28078,
+  702,
+  55672,
+  73338,
+  64,
+  13,
+  68755,
+  2004,
+  10138,
+  9217,
+  12949,
+  86,
+  3789,
+  38957,
+  492,
+  1147,
+  18431,
+  5032,
+  72,
+  220,
+  18,
+  24,
+  59275,
+  4176,
+  210833,
+  91997,
+  8086,
+  204887,
+  11,
+  449,
+  385,
+  367,
+  4144,
+  4700,
+  710,
+  2933,
+  69861,
+  643,
+  80338,
+  7726,
+  7509,
+  210003,
+  3071,
+  6383,
+  307,
+  331,
+  46673,
+  259,
+  572,
+  35207,
+  8628,
+  338,
+  5385,
+  14270,
+  580,
+  16068,
+  4219,
+  30,
+  32,
+  19664,
+  5054,
+  506,
+  15,
+  5381,
+  17855,
+  14938,
+  45183,
+  69942,
+  10806,
+  321,
+  52385,
+  314,
+  279,
+  3460,
+  3437,
+  7727,
+  11590,
+  1220,
+  353,
+  1716,
+  364,
+  1092,
+  635,
+  303,
+  18508,
+  26910,
+  1973,
+  10352,
+  383,
+  2660,
+  760,
+  682,
+  32441,
+  11995,
+  8785,
+  38288,
+  369,
+  4252,
+  18537,
+  1044,
+  78428,
+  58459,
+  16,
+  17,
+  20332
+ ],
+ "n_calibration": 117
+}

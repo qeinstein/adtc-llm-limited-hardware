@@ -1,0 +1,10 @@
+loaded 129 L00 experts
+policy=noDN nslots=64 stride=876544 store_bytes=56098816 dontneed=0
+policy=noDN nslots=64 ntok=100 trace=uniform
+req=800 hit=349 miss=451 evict=387 hitrate=0.4363
+tok_ms_med=3.923 tok_ms_p90=5.468 manage_ms_med=0.6557 gemv_ms_med=3.275
+manage_ms_tot=91.66 gemv_ms_tot=330.15 manage_frac=0.2173
+minflt_tot=13703 majflt_tot=0 minflt_per_tok=137.0 minflt_med=0 maxrss_kb=169016
+minflt_per_miss=30.4 faults_avoidable_note=see_report
+checksum=d49b6cbc92ecd157
+store_bytes=56098816 bytes_per_expert=876544

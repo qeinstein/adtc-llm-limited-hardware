@@ -1,0 +1,15 @@
+rep1: events=7920 token_groups=66
+  sim: req=89280 hit=74205 miss=15075 ev=12794 (prod: req=89280 hit=80005 miss=9275 ev=6994)
+  prompt_groups=3 decode_groups=63
+  decode/token: uniq_miss_mean=92.1 med=90 max=187 evict_mean=92.1 med=90
+  decodeuniq_miss_total=5805 decode_first5=[123, 65, 56, 44, 49] decode_last5=[94, 118, 124, 115, 63]
+rep2: events=7920 token_groups=66
+  sim: req=89280 hit=74205 miss=15075 ev=12794 (prod: req=89280 hit=80005 miss=9275 ev=6994)
+  prompt_groups=3 decode_groups=63
+  decode/token: uniq_miss_mean=92.1 med=90 max=187 evict_mean=92.1 med=90
+  decodeuniq_miss_total=5805 decode_first5=[123, 65, 56, 44, 49] decode_last5=[94, 118, 124, 115, 63]
+rep3: events=7920 token_groups=66
+  sim: req=89280 hit=74205 miss=15075 ev=12794 (prod: req=89280 hit=80005 miss=9275 ev=6994)
+  prompt_groups=3 decode_groups=63
+  decode/token: uniq_miss_mean=92.1 med=90 max=187 evict_mean=92.1 med=90
+  decodeuniq_miss_total=5805 decode_first5=[123, 65, 56, 44, 49] decode_last5=[94, 118, 124, 115, 63]

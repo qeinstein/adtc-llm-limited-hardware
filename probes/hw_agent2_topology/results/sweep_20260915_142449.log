@@ -1,0 +1,214 @@
+== sweep: 3 windows x 30 trials -> results/sweep_20260915_142449.csv ==
+--- window 1/3 ---
+nth=3 part=row aff=pin pool=stream bar=futex ncpu=4 trials=30 med=1.694ms p10=1.498 p90=10.680 min=1.458 cv=1.652 bal=1.112 mig=0 ctxt=935/11 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0xf t3 row pin stream futex: 3,row,pin,stream,futex,30,1694330,1497628,10680356,1457568,3761596,1.6518,1.112,0,935,11,0,0,0.000000,0
+nth=4 part=row aff=pin pool=stream bar=futex ncpu=4 trials=30 med=1.430ms p10=1.337 p90=3.001 min=1.328 cv=0.869 bal=1.106 mig=0 ctxt=876/0 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0xf t4 row pin stream futex: 4,row,pin,stream,futex,30,1429528,1336786,3001406,1327720,2151253,0.8686,1.106,0,876,0,0,0,0.000000,0
+nth=6 part=row aff=pin pool=stream bar=futex ncpu=4 trials=30 med=3.355ms p10=1.785 p90=9.515 min=1.769 cv=0.984 bal=1.149 mig=0 ctxt=974/45 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0xf t6 row pin stream futex: 6,row,pin,stream,futex,30,3355000,1784799,9515166,1769086,4768781,0.9837,1.149,0,974,45,0,0,0.000000,0
+nth=8 part=row aff=pin pool=stream bar=futex ncpu=4 trials=30 med=3.601ms p10=1.733 p90=11.970 min=1.637 cv=1.349 bal=1.201 mig=0 ctxt=996/57 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0xf t8 row pin stream futex: 8,row,pin,stream,futex,30,3600586,1732777,11970453,1637448,5277586,1.3486,1.201,0,996,57,0,0,0.000000,0
+nth=2 part=expert aff=free pool=stream bar=futex ncpu=4 trials=30 med=1.807ms p10=1.657 p90=2.002 min=1.601 cv=0.091 bal=1.013 mig=0 ctxt=29/11 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0xf t2 expert free stream futex: 2,expert,free,stream,futex,30,1807135,1657219,2001646,1600556,1817902,0.0910,1.013,0,29,11,0,0,0.000000,0
+nth=3 part=expert aff=free pool=stream bar=futex ncpu=4 trials=30 med=2.384ms p10=0.997 p90=5.421 min=0.906 cv=0.553 bal=1.696 mig=2 ctxt=60/7 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0xf t3 expert free stream futex: 3,expert,free,stream,futex,30,2384238,996766,5421461,905682,2579709,0.5527,1.696,2,60,7,0,0,0.000000,0
+nth=4 part=expert aff=free pool=stream bar=futex ncpu=4 trials=30 med=2.023ms p10=0.976 p90=7.696 min=0.928 cv=0.837 bal=1.691 mig=3 ctxt=65/6 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0xf t4 expert free stream futex: 4,expert,free,stream,futex,30,2022867,976063,7696378,927726,3028271,0.8371,1.691,3,65,6,0,0,0.000000,0
+nth=6 part=expert aff=free pool=stream bar=futex ncpu=4 trials=30 med=1.439ms p10=0.974 p90=3.031 min=0.507 cv=0.468 bal=2.178 mig=0 ctxt=66/7 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0xf t6 expert free stream futex: 6,expert,free,stream,futex,30,1438504,974143,3030852,506707,1562536,0.4677,2.178,0,66,7,0,0,0.000000,0
+nth=8 part=expert aff=free pool=stream bar=futex ncpu=4 trials=30 med=1.441ms p10=0.970 p90=2.005 min=0.499 cv=0.325 bal=1.210 mig=1 ctxt=72/7 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0xf t8 expert free stream futex: 8,expert,free,stream,futex,30,1441035,970036,2004593,499109,1291916,0.3250,1.210,1,72,7,0,0,0.000000,0
+nth=2 part=expert aff=pin pool=stream bar=futex ncpu=4 trials=30 med=1.787ms p10=1.625 p90=3.097 min=1.607 cv=0.243 bal=1.018 mig=0 ctxt=31/14 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0xf t2 expert pin stream futex: 2,expert,pin,stream,futex,30,1786875,1624534,3097486,1606705,1955732,0.2426,1.018,0,31,14,0,0,0.000000,0
+nth=3 part=expert aff=pin pool=stream bar=futex ncpu=4 trials=30 med=2.137ms p10=1.556 p90=4.599 min=1.178 cv=0.461 bal=1.636 mig=0 ctxt=52/2 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0xf t3 expert pin stream futex: 3,expert,pin,stream,futex,30,2137407,1556049,4598680,1178266,2515382,0.4607,1.636,0,52,2,0,0,0.000000,0
+nth=4 part=expert aff=pin pool=stream bar=futex ncpu=4 trials=30 med=1.118ms p10=0.969 p90=1.948 min=0.961 cv=0.917 bal=1.320 mig=0 ctxt=53/0 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0xf t4 expert pin stream futex: 4,expert,pin,stream,futex,30,1118404,968899,1947896,960658,1607113,0.9172,1.320,0,53,0,0,0,0.000000,0
+nth=6 part=expert aff=pin pool=stream bar=futex ncpu=4 trials=30 med=1.600ms p10=0.998 p90=3.245 min=0.573 cv=0.870 bal=2.021 mig=0 ctxt=72/3 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0xf t6 expert pin stream futex: 6,expert,pin,stream,futex,30,1600205,998012,3244833,573378,2116608,0.8697,2.021,0,72,3,0,0,0.000000,0
+nth=8 part=expert aff=pin pool=stream bar=futex ncpu=4 trials=30 med=1.070ms p10=0.567 p90=2.190 min=0.502 cv=0.513 bal=1.181 mig=0 ctxt=66/8 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0xf t8 expert pin stream futex: 8,expert,pin,stream,futex,30,1070490,567202,2189731,502086,1165152,0.5128,1.181,0,66,8,0,0,0.000000,0
+nth=4 part=row aff=free pool=stream bar=spin ncpu=4 trials=30 med=1.061ms p10=0.977 p90=2.498 min=0.972 cv=2.064 bal=1.189 mig=0 ctxt=0/7 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0xf t4 row free stream spin: 4,row,free,stream,spin,30,1061429,977234,2497534,972039,2133185,2.0636,1.189,0,0,7,0,0,0.000000,0
+nth=4 part=row aff=pin pool=stream bar=spin ncpu=4 trials=30 med=1.054ms p10=0.979 p90=8.699 min=0.974 cv=1.925 bal=1.288 mig=0 ctxt=0/25 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0xf t4 row pin stream spin: 4,row,pin,stream,spin,30,1053753,979252,8699254,973768,2924146,1.9252,1.288,0,0,25,0,0,0.000000,0
+nth=4 part=expert aff=free pool=stream bar=spin ncpu=4 trials=30 med=0.989ms p10=0.947 p90=1.571 min=0.936 cv=0.808 bal=1.263 mig=0 ctxt=0/3 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0xf t4 expert free stream spin: 4,expert,free,stream,spin,30,988928,946854,1570993,936155,1222214,0.8082,1.263,0,0,3,0,0,0.000000,0
+nth=4 part=expert aff=pin pool=stream bar=spin ncpu=4 trials=30 med=1.006ms p10=0.950 p90=2.286 min=0.948 cv=0.668 bal=1.283 mig=0 ctxt=0/17 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0xf t4 expert pin stream spin: 4,expert,pin,stream,spin,30,1006205,949934,2285651,948499,1291030,0.6679,1.283,0,0,17,0,0,0.000000,0
+nth=8 part=expert aff=pin pool=stream bar=spin ncpu=4 trials=30 med=6.219ms p10=4.983 p90=11.740 min=3.003 cv=0.338 bal=1.910 mig=0 ctxt=0/100 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0xf t8 expert pin stream spin: 8,expert,pin,stream,spin,30,6219192,4983138,11739948,3002808,7350646,0.3383,1.910,0,0,100,0,0,0.000000,0
+nth=2 part=row aff=free pool=stream bar=spin ncpu=2 trials=30 med=1.957ms p10=1.670 p90=5.669 min=1.625 cv=0.590 bal=1.236 mig=0 ctxt=0/1 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0x3 t2 row free stream spin: 2,row,free,stream,spin,30,1957045,1670476,5669441,1624578,2695281,0.5905,1.236,0,0,1,0,0,0.000000,0
+nth=2 part=row aff=pin pool=stream bar=spin ncpu=2 trials=30 med=1.819ms p10=1.640 p90=6.088 min=1.614 cv=1.397 bal=1.202 mig=0 ctxt=0/26 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0x3 t2 row pin stream spin: 2,row,pin,stream,spin,30,1818525,1639565,6087935,1614364,3068488,1.3972,1.202,0,0,26,0,0,0.000000,0
+nth=2 part=expert aff=pin pool=stream bar=spin ncpu=2 trials=30 med=1.808ms p10=1.639 p90=1.973 min=1.608 cv=0.721 bal=1.143 mig=0 ctxt=0/19 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0x3 t2 expert pin stream spin: 2,expert,pin,stream,spin,30,1808213,1639357,1972550,1608429,2050651,0.7211,1.143,0,0,19,0,0,0.000000,0
+nth=2 part=row aff=pin pool=stream bar=spin ncpu=2 trials=30 med=1.942ms p10=1.771 p90=3.064 min=1.750 cv=0.929 bal=1.209 mig=0 ctxt=0/10 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0x5 t2 row pin stream spin: 2,row,pin,stream,spin,30,1942448,1771406,3063945,1749688,2610075,0.9289,1.209,0,0,10,0,0,0.000000,0
+nth=2 part=expert aff=pin pool=stream bar=spin ncpu=2 trials=30 med=1.984ms p10=1.678 p90=3.109 min=1.618 cv=0.241 bal=1.022 mig=0 ctxt=0/66 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0x5 t2 expert pin stream spin: 2,expert,pin,stream,spin,30,1984427,1678276,3108656,1618222,2196973,0.2406,1.022,0,0,66,0,0,0.000000,0
+nth=1 part=row aff=pin pool=stream bar=spin ncpu=1 trials=30 med=3.514ms p10=3.240 p90=3.771 min=3.226 cv=0.055 bal=1.000 mig=0 ctxt=0/16 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0x1 t1 row pin stream spin: 1,row,pin,stream,spin,30,3513518,3239853,3770615,3226130,3496117,0.0546,1.000,0,0,16,0,0,0.000000,0
+nth=4 part=row aff=free pool=hot bar=spin ncpu=4 trials=30 med=1.011ms p10=0.960 p90=1.521 min=0.953 cv=0.412 bal=1.081 mig=0 ctxt=0/3 minflt=0 maxdiff=0.00287 nbad=36864 y0=-0.000457 ylast=-0.001308
+w1 0xf t4 row free hot spin: 4,row,free,hot,spin,30,1011089,959750,1520550,953052,1194001,0.4120,1.081,0,0,3,0,0,0.002872,36864
+nth=4 part=expert aff=free pool=hot bar=spin ncpu=4 trials=30 med=1.013ms p10=0.943 p90=2.159 min=0.942 cv=1.032 bal=1.417 mig=0 ctxt=0/13 minflt=0 maxdiff=0.00287 nbad=36864 y0=-0.000457 ylast=-0.001308
+w1 0xf t4 expert free hot spin: 4,expert,free,hot,spin,30,1012767,943078,2159419,942305,1485646,1.0322,1.417,0,0,13,0,0,0.002872,36864
+nth=1 part=row aff=free pool=hot bar=spin ncpu=4 trials=30 med=3.381ms p10=3.193 p90=4.071 min=3.158 cv=0.103 bal=1.000 mig=0 ctxt=0/19 minflt=0 maxdiff=0.00287 nbad=36864 y0=-0.000457 ylast=-0.001308
+w1 0xf t1 row free hot spin: 1,row,free,hot,spin,30,3381359,3193427,4070513,3157780,3523510,0.1035,1.000,0,0,19,0,0,0.002872,36864
+nth=1 part=row aff=free pool=stream bar=futex ncpu=4 trials=30 med=3.342ms p10=3.259 p90=3.768 min=3.240 cv=0.048 bal=1.000 mig=0 ctxt=0/15 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0xf t1 row free stream futex: 1,row,free,stream,futex,30,3341918,3259292,3767602,3239901,3414222,0.0482,1.000,0,0,15,0,0,0.000000,0
+nth=2 part=row aff=free pool=stream bar=futex ncpu=4 trials=30 med=2.010ms p10=1.890 p90=3.913 min=1.783 cv=0.329 bal=1.006 mig=1 ctxt=612/90 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0xf t2 row free stream futex: 2,row,free,stream,futex,30,2009697,1889832,3912770,1782521,2510774,0.3286,1.006,1,612,90,0,0,0.000000,0
+nth=3 part=row aff=free pool=stream bar=futex ncpu=4 trials=30 med=1.580ms p10=1.473 p90=2.606 min=1.461 cv=1.605 bal=1.172 mig=0 ctxt=904/6 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0xf t3 row free stream futex: 3,row,free,stream,futex,30,1579709,1472995,2605918,1460948,2719328,1.6046,1.172,0,904,6,0,0,0.000000,0
+nth=4 part=row aff=free pool=stream bar=futex ncpu=4 trials=30 med=2.515ms p10=1.349 p90=5.791 min=1.344 cv=0.689 bal=1.132 mig=0 ctxt=891/0 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0xf t4 row free stream futex: 4,row,free,stream,futex,30,2515226,1349152,5791463,1343789,2899415,0.6895,1.132,0,891,0,0,0,0.000000,0
+nth=6 part=row aff=free pool=stream bar=futex ncpu=4 trials=30 med=2.810ms p10=1.909 p90=5.265 min=1.791 cv=1.395 bal=1.050 mig=1 ctxt=1077/0 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0xf t6 row free stream futex: 6,row,free,stream,futex,30,2810321,1909248,5265000,1790945,4272088,1.3953,1.050,1,1077,0,0,0,0.000000,0
+nth=8 part=row aff=free pool=stream bar=futex ncpu=4 trials=30 med=2.274ms p10=2.137 p90=5.246 min=2.128 cv=0.450 bal=1.152 mig=0 ctxt=1221/1 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0xf t8 row free stream futex: 8,row,free,stream,futex,30,2274167,2136862,5245677,2128310,2795526,0.4498,1.152,0,1221,1,0,0,0.000000,0
+nth=2 part=row aff=pin pool=stream bar=futex ncpu=4 trials=30 med=3.383ms p10=2.407 p90=6.202 min=2.361 cv=0.417 bal=1.007 mig=0 ctxt=605/8 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w1 0xf t2 row pin stream futex: 2,row,pin,stream,futex,30,3382926,2406878,6201681,2361245,3868480,0.4169,1.007,0,605,8,0,0,0.000000,0
+--- window 2/3 ---
+nth=6 part=expert aff=free pool=stream bar=futex ncpu=4 trials=30 med=2.416ms p10=0.736 p90=3.936 min=0.685 cv=0.522 bal=2.371 mig=4 ctxt=67/4 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0xf t6 expert free stream futex: 6,expert,free,stream,futex,30,2415664,736280,3935688,685112,2282428,0.5220,2.371,4,67,4,0,0,0.000000,0
+nth=8 part=expert aff=free pool=stream bar=futex ncpu=4 trials=30 med=2.053ms p10=1.376 p90=3.899 min=0.816 cv=1.050 bal=1.228 mig=2 ctxt=74/4 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0xf t8 expert free stream futex: 8,expert,free,stream,futex,30,2052883,1375786,3898761,816083,2640873,1.0500,1.228,2,74,4,0,0,0.000000,0
+nth=2 part=expert aff=pin pool=stream bar=futex ncpu=4 trials=30 med=2.849ms p10=2.662 p90=3.062 min=2.592 cv=0.127 bal=1.006 mig=0 ctxt=33/12 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0xf t2 expert pin stream futex: 2,expert,pin,stream,futex,30,2848899,2662370,3062237,2592394,2885980,0.1271,1.006,0,33,12,0,0,0.000000,0
+nth=3 part=expert aff=pin pool=stream bar=futex ncpu=4 trials=30 med=2.210ms p10=2.071 p90=2.825 min=1.458 cv=0.217 bal=1.533 mig=0 ctxt=38/0 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0xf t3 expert pin stream futex: 3,expert,pin,stream,futex,30,2209778,2070523,2824560,1458252,2361966,0.2166,1.533,0,38,0,0,0,0.000000,0
+nth=4 part=expert aff=pin pool=stream bar=futex ncpu=4 trials=30 med=2.373ms p10=1.642 p90=10.051 min=1.499 cv=1.332 bal=1.627 mig=0 ctxt=55/3 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0xf t4 expert pin stream futex: 4,expert,pin,stream,futex,30,2373102,1642382,10050885,1498652,4688743,1.3316,1.627,0,55,3,0,0,0.000000,0
+nth=6 part=expert aff=pin pool=stream bar=futex ncpu=4 trials=30 med=3.003ms p10=1.840 p90=9.759 min=1.481 cv=1.518 bal=2.324 mig=0 ctxt=71/3 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0xf t6 expert pin stream futex: 6,expert,pin,stream,futex,30,3003042,1840150,9759382,1481226,4811215,1.5178,2.324,0,71,3,0,0,0.000000,0
+nth=8 part=expert aff=pin pool=stream bar=futex ncpu=4 trials=30 med=1.709ms p10=0.878 p90=3.404 min=0.813 cv=0.906 bal=1.258 mig=0 ctxt=71/2 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0xf t8 expert pin stream futex: 8,expert,pin,stream,futex,30,1708807,877881,3403968,812797,2186740,0.9057,1.258,0,71,2,0,0,0.000000,0
+nth=4 part=row aff=free pool=stream bar=spin ncpu=4 trials=30 med=1.652ms p10=1.494 p90=3.795 min=1.468 cv=2.311 bal=1.256 mig=0 ctxt=0/19 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0xf t4 row free stream spin: 4,row,free,stream,spin,30,1652045,1494056,3794685,1468042,3592502,2.3106,1.256,0,0,19,0,0,0.000000,0
+nth=4 part=row aff=pin pool=stream bar=spin ncpu=4 trials=30 med=1.924ms p10=1.481 p90=7.110 min=1.469 cv=0.817 bal=1.432 mig=0 ctxt=0/25 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0xf t4 row pin stream spin: 4,row,pin,stream,spin,30,1923620,1481409,7110194,1469256,3068763,0.8168,1.432,0,0,25,0,0,0.000000,0
+nth=4 part=expert aff=free pool=stream bar=spin ncpu=4 trials=30 med=15.227ms p10=5.595 p90=38.087 min=2.642 cv=0.658 bal=1.972 mig=11 ctxt=0/183 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0xf t4 expert free stream spin: 4,expert,free,stream,spin,30,15227066,5595406,38086669,2642450,18112850,0.6585,1.972,11,0,183,0,0,0.000000,0
+nth=4 part=expert aff=pin pool=stream bar=spin ncpu=4 trials=30 med=1.669ms p10=1.535 p90=3.794 min=1.523 cv=0.505 bal=1.250 mig=0 ctxt=0/8 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0xf t4 expert pin stream spin: 4,expert,pin,stream,spin,30,1669089,1534758,3793709,1522597,2181816,0.5051,1.250,0,0,8,0,0,0.000000,0
+nth=8 part=expert aff=pin pool=stream bar=spin ncpu=4 trials=30 med=6.991ms p10=5.920 p90=24.722 min=3.062 cv=0.647 bal=1.899 mig=0 ctxt=0/85 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0xf t8 expert pin stream spin: 8,expert,pin,stream,spin,30,6990577,5919684,24721515,3062201,10641301,0.6465,1.899,0,0,85,0,0,0.000000,0
+nth=2 part=row aff=free pool=stream bar=spin ncpu=2 trials=30 med=3.244ms p10=3.033 p90=7.625 min=3.029 cv=1.094 bal=1.592 mig=0 ctxt=0/38 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0x3 t2 row free stream spin: 2,row,free,stream,spin,30,3243588,3033059,7624643,3029470,5490845,1.0939,1.592,0,0,38,0,0,0.000000,0
+nth=2 part=row aff=pin pool=stream bar=spin ncpu=2 trials=30 med=3.197ms p10=3.051 p90=6.187 min=3.029 cv=0.338 bal=1.245 mig=0 ctxt=0/6 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0x3 t2 row pin stream spin: 2,row,pin,stream,spin,30,3196550,3050820,6187209,3029101,3898505,0.3382,1.245,0,0,6,0,0,0.000000,0
+nth=2 part=expert aff=pin pool=stream bar=spin ncpu=2 trials=30 med=3.065ms p10=3.013 p90=4.952 min=3.010 cv=0.400 bal=1.144 mig=0 ctxt=0/5 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0x3 t2 expert pin stream spin: 2,expert,pin,stream,spin,30,3065300,3012808,4951581,3010150,3440706,0.4000,1.144,0,0,5,0,0,0.000000,0
+nth=2 part=row aff=pin pool=stream bar=spin ncpu=2 trials=30 med=3.061ms p10=2.897 p90=4.330 min=2.879 cv=0.539 bal=1.131 mig=0 ctxt=0/5 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0x5 t2 row pin stream spin: 2,row,pin,stream,spin,30,3061328,2897488,4329854,2878534,3502160,0.5393,1.131,0,0,5,0,0,0.000000,0
+nth=2 part=expert aff=pin pool=stream bar=spin ncpu=2 trials=30 med=3.057ms p10=2.880 p90=3.221 min=2.858 cv=0.633 bal=1.104 mig=0 ctxt=0/12 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0x5 t2 expert pin stream spin: 2,expert,pin,stream,spin,30,3057252,2880429,3221089,2858473,3445973,0.6325,1.104,0,0,12,0,0,0.000000,0
+nth=1 part=row aff=pin pool=stream bar=spin ncpu=1 trials=30 med=5.801ms p10=5.716 p90=6.178 min=5.698 cv=0.029 bal=1.000 mig=0 ctxt=0/7 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0x1 t1 row pin stream spin: 1,row,pin,stream,spin,30,5800828,5715648,6177723,5697930,5857032,0.0293,1.000,0,0,7,0,0,0.000000,0
+nth=4 part=row aff=free pool=hot bar=spin ncpu=4 trials=30 med=1.695ms p10=1.549 p90=4.771 min=1.540 cv=1.027 bal=1.500 mig=0 ctxt=0/4 minflt=0 maxdiff=0.00287 nbad=36864 y0=-0.000457 ylast=-0.001308
+w2 0xf t4 row free hot spin: 4,row,free,hot,spin,30,1694908,1549235,4770892,1539862,2650093,1.0267,1.500,0,0,4,0,0,0.002872,36864
+nth=4 part=expert aff=free pool=hot bar=spin ncpu=4 trials=30 med=1.572ms p10=1.447 p90=5.527 min=1.433 cv=1.085 bal=1.440 mig=0 ctxt=0/7 minflt=0 maxdiff=0.00287 nbad=36864 y0=-0.000457 ylast=-0.001308
+w2 0xf t4 expert free hot spin: 4,expert,free,hot,spin,30,1572038,1447351,5526622,1432810,2571016,1.0848,1.440,0,0,7,0,0,0.002872,36864
+nth=1 part=row aff=free pool=hot bar=spin ncpu=4 trials=30 med=5.786ms p10=5.675 p90=6.190 min=5.656 cv=0.030 bal=1.000 mig=0 ctxt=0/30 minflt=0 maxdiff=0.00287 nbad=36864 y0=-0.000457 ylast=-0.001308
+w2 0xf t1 row free hot spin: 1,row,free,hot,spin,30,5785852,5674557,6190010,5656325,5841921,0.0300,1.000,0,0,30,0,0,0.002872,36864
+nth=1 part=row aff=free pool=stream bar=futex ncpu=4 trials=30 med=5.555ms p10=5.419 p90=6.134 min=5.400 cv=0.306 bal=1.000 mig=1 ctxt=0/42 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0xf t1 row free stream futex: 1,row,free,stream,futex,30,5555255,5418659,6133791,5400119,6046448,0.3063,1.000,1,0,42,0,0,0.000000,0
+nth=2 part=row aff=free pool=stream bar=futex ncpu=4 trials=30 med=3.049ms p10=3.016 p90=3.346 min=2.998 cv=0.053 bal=1.005 mig=0 ctxt=615/13 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0xf t2 row free stream futex: 2,row,free,stream,futex,30,3048715,3015973,3346057,2998143,3112618,0.0533,1.005,0,615,13,0,0,0.000000,0
+nth=3 part=row aff=free pool=stream bar=futex ncpu=4 trials=30 med=2.231ms p10=2.157 p90=3.551 min=2.140 cv=1.945 bal=1.475 mig=0 ctxt=916/11 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0xf t3 row free stream futex: 3,row,free,stream,futex,30,2230751,2157294,3551430,2139732,3703212,1.9448,1.475,0,916,11,0,0,0.000000,0
+nth=4 part=row aff=free pool=stream bar=futex ncpu=4 trials=30 med=3.308ms p10=1.858 p90=6.740 min=1.834 cv=0.483 bal=1.082 mig=2 ctxt=803/114 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0xf t4 row free stream futex: 4,row,free,stream,futex,30,3308064,1857569,6739772,1833544,3656682,0.4827,1.082,2,803,114,0,0,0.000000,0
+nth=6 part=row aff=free pool=stream bar=futex ncpu=4 trials=30 med=4.301ms p10=2.836 p90=16.983 min=2.508 cv=0.967 bal=1.111 mig=5 ctxt=934/243 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0xf t6 row free stream futex: 6,row,free,stream,futex,30,4301143,2836314,16982572,2507818,6026544,0.9666,1.111,5,934,243,0,0,0.000000,0
+nth=8 part=row aff=free pool=stream bar=futex ncpu=4 trials=30 med=3.287ms p10=2.949 p90=6.392 min=2.917 cv=0.417 bal=1.127 mig=1 ctxt=1190/3 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0xf t8 row free stream futex: 8,row,free,stream,futex,30,3287080,2948648,6391752,2916977,3994742,0.4173,1.127,1,1190,3,0,0,0.000000,0
+nth=2 part=row aff=pin pool=stream bar=futex ncpu=4 trials=30 med=2.896ms p10=2.863 p90=4.974 min=2.852 cv=0.454 bal=1.059 mig=0 ctxt=614/5 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0xf t2 row pin stream futex: 2,row,pin,stream,futex,30,2896461,2863198,4973578,2852123,3477595,0.4543,1.059,0,614,5,0,0,0.000000,0
+nth=3 part=row aff=pin pool=stream bar=futex ncpu=4 trials=30 med=2.476ms p10=2.255 p90=17.601 min=2.186 cv=1.413 bal=1.127 mig=0 ctxt=892/0 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0xf t3 row pin stream futex: 3,row,pin,stream,futex,30,2475552,2255161,17600791,2185551,5421809,1.4129,1.127,0,892,0,0,0,0.000000,0
+nth=4 part=row aff=pin pool=stream bar=futex ncpu=4 trials=30 med=2.760ms p10=2.014 p90=5.215 min=1.923 cv=0.729 bal=1.061 mig=0 ctxt=951/2 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0xf t4 row pin stream futex: 4,row,pin,stream,futex,30,2759591,2014260,5214697,1922662,3658223,0.7286,1.061,0,951,2,0,0,0.000000,0
+nth=6 part=row aff=pin pool=stream bar=futex ncpu=4 trials=30 med=3.703ms p10=2.585 p90=6.898 min=2.525 cv=0.955 bal=1.094 mig=0 ctxt=988/50 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0xf t6 row pin stream futex: 6,row,pin,stream,futex,30,3703416,2585094,6898299,2524535,4756884,0.9552,1.094,0,988,50,0,0,0.000000,0
+nth=8 part=row aff=pin pool=stream bar=futex ncpu=4 trials=30 med=3.004ms p10=2.386 p90=16.472 min=2.348 cv=1.442 bal=1.254 mig=0 ctxt=1040/50 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0xf t8 row pin stream futex: 8,row,pin,stream,futex,30,3004315,2385847,16472497,2347927,6528943,1.4421,1.254,0,1040,50,0,0,0.000000,0
+nth=2 part=expert aff=free pool=stream bar=futex ncpu=4 trials=30 med=2.790ms p10=2.733 p90=2.921 min=2.726 cv=0.026 bal=1.003 mig=0 ctxt=29/12 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0xf t2 expert free stream futex: 2,expert,free,stream,futex,30,2789765,2733213,2920517,2725557,2801948,0.0261,1.003,0,29,12,0,0,0.000000,0
+nth=3 part=expert aff=free pool=stream bar=futex ncpu=4 trials=30 med=2.487ms p10=2.005 p90=4.010 min=1.388 cv=1.180 bal=1.429 mig=0 ctxt=36/2 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0xf t3 expert free stream futex: 3,expert,free,stream,futex,30,2487258,2005421,4009604,1388101,3200756,1.1800,1.429,0,36,2,0,0,0.000000,0
+nth=4 part=expert aff=free pool=stream bar=futex ncpu=4 trials=30 med=1.503ms p10=1.350 p90=2.827 min=1.316 cv=0.403 bal=1.219 mig=1 ctxt=59/8 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w2 0xf t4 expert free stream futex: 4,expert,free,stream,futex,30,1502734,1350338,2827433,1316034,1899725,0.4033,1.219,1,59,8,0,0,0.000000,0
+--- window 3/3 ---
+nth=4 part=row aff=free pool=stream bar=spin ncpu=4 trials=30 med=1.578ms p10=1.410 p90=7.285 min=1.394 cv=1.504 bal=1.889 mig=0 ctxt=0/0 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0xf t4 row free stream spin: 4,row,free,stream,spin,30,1577576,1410357,7285476,1393991,3243954,1.5043,1.889,0,0,0,0,0,0.000000,0
+nth=4 part=row aff=pin pool=stream bar=spin ncpu=4 trials=30 med=1.716ms p10=1.473 p90=20.013 min=1.424 cv=1.393 bal=1.629 mig=0 ctxt=0/28 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0xf t4 row pin stream spin: 4,row,pin,stream,spin,30,1716085,1473398,20012595,1423938,6282324,1.3933,1.629,0,0,28,0,0,0.000000,0
+nth=4 part=expert aff=free pool=stream bar=spin ncpu=4 trials=30 med=1.551ms p10=1.415 p90=3.486 min=1.375 cv=1.064 bal=1.452 mig=0 ctxt=0/3 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0xf t4 expert free stream spin: 4,expert,free,stream,spin,30,1551098,1415293,3485760,1375474,2290805,1.0641,1.452,0,0,3,0,0,0.000000,0
+nth=4 part=expert aff=pin pool=stream bar=spin ncpu=4 trials=30 med=1.487ms p10=1.371 p90=3.949 min=1.365 cv=1.689 bal=1.207 mig=0 ctxt=0/10 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0xf t4 expert pin stream spin: 4,expert,pin,stream,spin,30,1486525,1370940,3949048,1364575,2910443,1.6894,1.207,0,0,10,0,0,0.000000,0
+nth=8 part=expert aff=pin pool=stream bar=spin ncpu=4 trials=30 med=5.998ms p10=4.998 p90=17.999 min=2.791 cv=0.683 bal=1.592 mig=0 ctxt=0/90 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0xf t8 expert pin stream spin: 8,expert,pin,stream,spin,30,5998217,4997544,17999084,2791187,8198914,0.6834,1.592,0,0,90,0,0,0.000000,0
+nth=2 part=row aff=free pool=stream bar=spin ncpu=2 trials=30 med=2.534ms p10=2.478 p90=2.965 min=2.474 cv=0.611 bal=1.158 mig=0 ctxt=0/22 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0x3 t2 row free stream spin: 2,row,free,stream,spin,30,2533885,2477744,2964836,2474103,2943327,0.6112,1.158,0,0,22,0,0,0.000000,0
+nth=2 part=row aff=pin pool=stream bar=spin ncpu=2 trials=30 med=2.800ms p10=2.600 p90=5.020 min=2.594 cv=1.283 bal=1.637 mig=0 ctxt=0/5 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0x3 t2 row pin stream spin: 2,row,pin,stream,spin,30,2799744,2600313,5020291,2594323,4367065,1.2834,1.637,0,0,5,0,0,0.000000,0
+nth=2 part=expert aff=pin pool=stream bar=spin ncpu=2 trials=30 med=2.729ms p10=2.603 p90=2.850 min=2.588 cv=0.031 bal=1.018 mig=0 ctxt=0/2 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0x3 t2 expert pin stream spin: 2,expert,pin,stream,spin,30,2728595,2602531,2850482,2588450,2729085,0.0312,1.018,0,0,2,0,0,0.000000,0
+nth=2 part=row aff=pin pool=stream bar=spin ncpu=2 trials=30 med=2.828ms p10=2.731 p90=3.144 min=2.729 cv=0.611 bal=1.150 mig=0 ctxt=0/10 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0x5 t2 row pin stream spin: 2,row,pin,stream,spin,30,2828134,2731446,3143747,2729120,3285402,0.6106,1.150,0,0,10,0,0,0.000000,0
+nth=2 part=expert aff=pin pool=stream bar=spin ncpu=2 trials=30 med=2.827ms p10=2.668 p90=3.045 min=2.577 cv=1.098 bal=1.309 mig=0 ctxt=0/6 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0x5 t2 expert pin stream spin: 2,expert,pin,stream,spin,30,2826584,2668110,3044620,2577393,3528965,1.0984,1.309,0,0,6,0,0,0.000000,0
+nth=1 part=row aff=pin pool=stream bar=spin ncpu=1 trials=30 med=5.175ms p10=5.137 p90=6.365 min=5.115 cv=0.869 bal=1.000 mig=0 ctxt=0/35 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0x1 t1 row pin stream spin: 1,row,pin,stream,spin,30,5175031,5137106,6365241,5115478,6622695,0.8693,1.000,0,0,35,0,0,0.000000,0
+nth=4 part=row aff=free pool=hot bar=spin ncpu=4 trials=30 med=1.470ms p10=1.337 p90=8.861 min=1.320 cv=1.750 bal=1.966 mig=0 ctxt=0/11 minflt=0 maxdiff=0.00287 nbad=36864 y0=-0.000457 ylast=-0.001308
+w3 0xf t4 row free hot spin: 4,row,free,hot,spin,30,1470310,1336930,8861058,1320300,3617718,1.7504,1.966,0,0,11,0,0,0.002872,36864
+nth=4 part=expert aff=free pool=hot bar=spin ncpu=4 trials=30 med=1.500ms p10=1.370 p90=28.900 min=1.364 cv=1.677 bal=2.712 mig=3 ctxt=0/52 minflt=0 maxdiff=0.00287 nbad=36864 y0=-0.000457 ylast=-0.001308
+w3 0xf t4 expert free hot spin: 4,expert,free,hot,spin,30,1499508,1369766,28899505,1363961,6849291,1.6774,2.712,3,0,52,0,0,0.002872,36864
+nth=1 part=row aff=free pool=hot bar=spin ncpu=4 trials=30 med=5.462ms p10=5.396 p90=5.556 min=5.376 cv=0.010 bal=1.000 mig=0 ctxt=0/5 minflt=0 maxdiff=0.00287 nbad=36864 y0=-0.000457 ylast=-0.001308
+w3 0xf t1 row free hot spin: 1,row,free,hot,spin,30,5462047,5396091,5556138,5376498,5464838,0.0101,1.000,0,0,5,0,0,0.002872,36864
+nth=1 part=row aff=free pool=stream bar=futex ncpu=4 trials=30 med=5.453ms p10=5.170 p90=6.097 min=5.144 cv=0.058 bal=1.000 mig=1 ctxt=0/19 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0xf t1 row free stream futex: 1,row,free,stream,futex,30,5452924,5170412,6096703,5144406,5505210,0.0579,1.000,1,0,19,0,0,0.000000,0
+nth=2 part=row aff=free pool=stream bar=futex ncpu=4 trials=30 med=3.366ms p10=3.169 p90=5.033 min=3.041 cv=0.192 bal=1.026 mig=0 ctxt=602/6 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0xf t2 row free stream futex: 2,row,free,stream,futex,30,3366102,3169453,5033427,3041080,3668327,0.1921,1.026,0,602,6,0,0,0.000000,0
+nth=3 part=row aff=free pool=stream bar=futex ncpu=4 trials=30 med=2.632ms p10=2.270 p90=7.253 min=2.263 cv=1.722 bal=1.074 mig=0 ctxt=890/6 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0xf t3 row free stream futex: 3,row,free,stream,futex,30,2632355,2270357,7252976,2263107,4638303,1.7220,1.074,0,890,6,0,0,0.000000,0
+nth=4 part=row aff=free pool=stream bar=futex ncpu=4 trials=30 med=3.386ms p10=3.253 p90=5.425 min=3.223 cv=0.491 bal=1.027 mig=0 ctxt=983/1 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0xf t4 row free stream futex: 4,row,free,stream,futex,30,3386401,3253426,5424543,3223315,3984979,0.4906,1.027,0,983,1,0,0,0.000000,0
+nth=6 part=row aff=free pool=stream bar=futex ncpu=4 trials=30 med=3.020ms p10=2.691 p90=14.869 min=2.660 cv=1.661 bal=1.121 mig=3 ctxt=1005/65 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0xf t6 row free stream futex: 6,row,free,stream,futex,30,3019626,2691289,14868693,2659834,6562410,1.6607,1.121,3,1005,65,0,0,0.000000,0
+nth=8 part=row aff=free pool=stream bar=futex ncpu=4 trials=30 med=4.305ms p10=3.994 p90=11.440 min=3.916 cv=1.223 bal=1.085 mig=0 ctxt=1193/2 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0xf t8 row free stream futex: 8,row,free,stream,futex,30,4304593,3993625,11440417,3916289,7034476,1.2233,1.085,0,1193,2,0,0,0.000000,0
+nth=2 part=row aff=pin pool=stream bar=futex ncpu=4 trials=30 med=3.420ms p10=3.192 p90=4.009 min=3.156 cv=1.328 bal=1.118 mig=0 ctxt=610/22 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0xf t2 row pin stream futex: 2,row,pin,stream,futex,30,3419934,3191831,4009036,3156424,4652342,1.3280,1.118,0,610,22,0,0,0.000000,0
+nth=3 part=row aff=pin pool=stream bar=futex ncpu=4 trials=30 med=2.547ms p10=2.407 p90=4.817 min=2.368 cv=0.568 bal=1.033 mig=0 ctxt=914/5 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0xf t3 row pin stream futex: 3,row,pin,stream,futex,30,2546684,2406854,4816812,2367943,3135276,0.5685,1.033,0,914,5,0,0,0.000000,0
+nth=4 part=row aff=pin pool=stream bar=futex ncpu=4 trials=30 med=2.385ms p10=2.037 p90=23.825 min=2.028 cv=1.474 bal=1.025 mig=0 ctxt=915/3 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0xf t4 row pin stream futex: 4,row,pin,stream,futex,30,2384707,2036557,23825442,2027859,6522046,1.4735,1.025,0,915,3,0,0,0.000000,0
+nth=6 part=row aff=pin pool=stream bar=futex ncpu=4 trials=30 med=3.180ms p10=2.587 p90=21.878 min=2.531 cv=1.328 bal=1.081 mig=0 ctxt=912/76 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0xf t6 row pin stream futex: 6,row,pin,stream,futex,30,3179718,2586553,21878493,2530562,7696827,1.3282,1.081,0,912,76,0,0,0.000000,0
+nth=8 part=row aff=pin pool=stream bar=futex ncpu=4 trials=30 med=2.890ms p10=2.472 p90=16.377 min=2.350 cv=0.983 bal=1.217 mig=0 ctxt=1076/43 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0xf t8 row pin stream futex: 8,row,pin,stream,futex,30,2889626,2472323,16377221,2349724,6476758,0.9826,1.217,0,1076,43,0,0,0.000000,0
+nth=2 part=expert aff=free pool=stream bar=futex ncpu=4 trials=30 med=2.951ms p10=2.879 p90=3.352 min=2.872 cv=0.073 bal=1.013 mig=0 ctxt=31/2 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0xf t2 expert free stream futex: 2,expert,free,stream,futex,30,2951164,2878755,3352147,2871833,3013879,0.0726,1.013,0,31,2,0,0,0.000000,0
+nth=3 part=expert aff=free pool=stream bar=futex ncpu=4 trials=30 med=3.072ms p10=2.287 p90=4.933 min=1.941 cv=1.231 bal=1.746 mig=2 ctxt=39/11 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0xf t3 expert free stream futex: 3,expert,free,stream,futex,30,3071693,2286949,4932956,1940791,4626332,1.2308,1.746,2,39,11,0,0,0.000000,0
+nth=4 part=expert aff=free pool=stream bar=futex ncpu=4 trials=30 med=3.127ms p10=1.872 p90=5.564 min=1.562 cv=0.568 bal=1.138 mig=0 ctxt=52/6 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0xf t4 expert free stream futex: 4,expert,free,stream,futex,30,3126595,1872334,5564422,1561577,3649117,0.5677,1.138,0,52,6,0,0,0.000000,0
+nth=6 part=expert aff=free pool=stream bar=futex ncpu=4 trials=30 med=1.903ms p10=0.858 p90=8.214 min=0.836 cv=0.845 bal=2.209 mig=4 ctxt=68/6 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0xf t6 expert free stream futex: 6,expert,free,stream,futex,30,1903023,857610,8214491,835901,2714016,0.8449,2.209,4,68,6,0,0,0.000000,0
+nth=8 part=expert aff=free pool=stream bar=futex ncpu=4 trials=30 med=3.915ms p10=1.686 p90=11.093 min=0.821 cv=1.262 bal=2.373 mig=15 ctxt=75/17 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0xf t8 expert free stream futex: 8,expert,free,stream,futex,30,3914964,1685760,11092645,820629,5697523,1.2621,2.373,15,75,17,0,0,0.000000,0
+nth=2 part=expert aff=pin pool=stream bar=futex ncpu=4 trials=30 med=3.048ms p10=2.892 p90=3.546 min=2.868 cv=0.252 bal=1.058 mig=0 ctxt=29/24 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0xf t2 expert pin stream futex: 2,expert,pin,stream,futex,30,3047536,2891878,3546266,2868414,3212746,0.2520,1.058,0,29,24,0,0,0.000000,0
+nth=3 part=expert aff=pin pool=stream bar=futex ncpu=4 trials=30 med=2.605ms p10=2.393 p90=5.158 min=2.314 cv=0.662 bal=1.669 mig=0 ctxt=41/4 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0xf t3 expert pin stream futex: 3,expert,pin,stream,futex,30,2605341,2393385,5158070,2313527,3372278,0.6616,1.669,0,41,4,0,0,0.000000,0
+nth=4 part=expert aff=pin pool=stream bar=futex ncpu=4 trials=30 med=1.810ms p10=1.533 p90=6.407 min=1.496 cv=0.778 bal=1.184 mig=0 ctxt=53/1 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0xf t4 expert pin stream futex: 4,expert,pin,stream,futex,30,1809788,1533125,6406861,1496364,2839229,0.7782,1.184,0,53,1,0,0,0.000000,0
+nth=6 part=expert aff=pin pool=stream bar=futex ncpu=4 trials=30 med=2.695ms p10=1.644 p90=9.875 min=1.512 cv=0.792 bal=2.239 mig=0 ctxt=69/7 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0xf t6 expert pin stream futex: 6,expert,pin,stream,futex,30,2694737,1644237,9874992,1511572,3817715,0.7920,2.239,0,69,7,0,0,0.000000,0
+nth=8 part=expert aff=pin pool=stream bar=futex ncpu=4 trials=30 med=1.851ms p10=0.790 p90=13.876 min=0.759 cv=1.217 bal=1.307 mig=0 ctxt=73/15 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+w3 0xf t8 expert pin stream futex: 8,expert,pin,stream,futex,30,1851179,790424,13876249,759065,3998264,1.2170,1.307,0,73,15,0,0,0.000000,0

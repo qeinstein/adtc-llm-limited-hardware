@@ -1,0 +1,6 @@
+nth=1 part=row aff=free pool=hot bar=futex ncpu=4 trials=40 med=3.640ms p10=3.315 p90=9.309 min=3.211 cv=1.767 bal=1.000 mig=0 ctxt=0/16 minflt=0 maxdiff=0 nbad=0 y0=-0.000062 ylast=-0.000861
+vmhwm_kb=107608
+nth=4 part=row aff=free pool=hot bar=spin ncpu=4 trials=30 med=1.125ms p10=0.995 p90=5.049 min=0.965 cv=0.801 bal=1.381 mig=0 ctxt=0/3 minflt=0 maxdiff=0 nbad=0 y0=-0.000457 ylast=-0.001308
+vmhwm_kb=107568
+nth=4 part=expert aff=pin pool=hot bar=spin ncpu=4 trials=30 med=0.985ms p10=0.942 p90=3.779 min=0.933 cv=0.671 bal=1.264 mig=0 ctxt=0/17 minflt=0 maxdiff=0 nbad=0 y0=-0.000457 ylast=-0.001308
+vmhwm_kb=107512

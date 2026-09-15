@@ -1,0 +1,18 @@
+mode=expert reps=1 threads=4 evict=1 actrows=320
+per_token_ms: quant_x=109.333 gate=72.815 up=74.310 silu_mul=53.605 quant_z=53.505 down=72.306 wacc=48.923 kernel_sum=484.797 evict=586.066 wall=1071.894
+note: quant_x covers gate+up quants (2x2048/layer-expert); quant_z covers down (512)
+checksum=000e53ec3972d4fa ysum_last=0.090763
+# cmd: ./kreplay expert routes_tok60.txt /tmp/agent1_raw ../agent3_funcmoe/weights/inputs_L00.npy 
+# wall_sec=6.422803 child_status=0
+# nn: counter not opened in this environment
+cycles             34316660904
+instructions       51818583927
+branches           12206117766
+branch_misses      449376518
+task_clock         14790988072
+page_faults        52060
+minor_faults       52060
+major_faults       0
+context_switches   0
+cpu_migrations     0
+# IPC=1.5100
