@@ -35,6 +35,53 @@
 #include "ggml-cpu/quants.h"
 #include "ggml.h"
 
+#ifdef __linux__
+#include <linux/perf_event.h>
+#include <sys/syscall.h>
+#include <unistd.h>
+// Self-counters: perf_event_open on SELF (pid 0), bracketed tightly around
+// the trial loop so pool-build/quantize init cannot pollute. Run single-arm
+// (./ubench st <arm> N) for exact per-arm steady-state counts.
+// Disable with HWP_SELF=0.
+static int hwp_open(uint32_t type, uint64_t config) {
+    struct perf_event_attr a;
+    memset(&a, 0, sizeof(a));
+    a.size = sizeof(a);
+    a.type = type;
+    a.config = config;
+    a.disabled = 0;
+    a.exclude_kernel = 1;
+    a.exclude_hv = 1;
+    a.exclude_idle = 1;
+    return syscall(__NR_perf_event_open, &a, 0, -1, -1, 0);
+}
+static uint64_t hwp_read(int fd) {
+    uint64_t v = 0;
+    if (fd >= 0) {
+        ssize_t r = read(fd, &v, sizeof(v));
+        (void)r;
+    }
+    return v;
+}
+struct hwp { int cyc, ins, cref, cmiss, br, brm; int ok; };
+static void hwp_start(struct hwp *h) {
+    const char *e = getenv("HWP_SELF");
+    h->ok = 0;
+    if (e && !strcmp(e, "0")) return;
+    h->cyc = hwp_open(PERF_TYPE_HARDWARE, PERF_COUNT_HW_CPU_CYCLES);
+    h->ins = hwp_open(PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
+    h->cref = hwp_open(PERF_TYPE_HARDWARE, PERF_COUNT_HW_CACHE_REFERENCES);
+    h->cmiss = hwp_open(PERF_TYPE_HARDWARE, PERF_COUNT_HW_CACHE_MISSES);
+    h->br = hwp_open(PERF_TYPE_HARDWARE, PERF_COUNT_HW_BRANCH_INSTRUCTIONS);
+    h->brm = hwp_open(PERF_TYPE_HARDWARE, PERF_COUNT_HW_BRANCH_MISSES);
+    h->ok = (h->cyc >= 0 && h->ins >= 0);
+    if (!h->ok) {
+        int fds[6] = {h->cyc, h->ins, h->cref, h->cmiss, h->br, h->brm};
+        for (int i = 0; i < 6; i++) if (fds[i] >= 0) close(fds[i]);
+    }
+}
+#endif
+
 #define POOL_BYTES (32u << 20)
 #define MAX_EXPERTS 256
 #define RAW_DIR "/tmp/agent1_raw"
@@ -408,6 +455,19 @@ int main(int argc, char **argv) {
         return 0;
     }
 
+    struct hwp hw;
+    uint64_t b_cyc = 0, b_ins = 0, b_cref = 0, b_cmiss = 0, b_br = 0, b_brm = 0;
+#ifdef __linux__
+    hwp_start(&hw);
+    if (hw.ok) {
+        b_cyc = hwp_read(hw.cyc); b_ins = hwp_read(hw.ins);
+        b_cref = hwp_read(hw.cref); b_cmiss = hwp_read(hw.cmiss);
+        b_br = hwp_read(hw.br); b_brm = hwp_read(hw.brm);
+    }
+#endif
+    uint64_t total_rows = 0;
+    uint64_t total_ns = 0;
+
     for (int t = 0; t < trials; t++) {
         // rotate arm order per trial to defeat drift
         for (int a = 0; a < (int)NARMS; a++) {
@@ -416,6 +476,8 @@ int main(int argc, char **argv) {
             for (int pr = 0; pr < 3; pr++) {
                 struct pool *p = &P[ai][pr];
                 uint64_t dt = mt4 ? run_mt4(p, out) : run_st(p, out);
+                total_rows += p->nrows;
+                total_ns += dt;
                 double nsr = (double)dt / (double)p->nrows;
                 res[ai][pr][t] = nsr;
                 double sum = 0;
@@ -429,6 +491,25 @@ int main(int argc, char **argv) {
         }
         fflush(stdout);
     }
+
+#ifdef __linux__
+    if (hw.ok) {
+        double d_cyc = (double)(hwp_read(hw.cyc) - b_cyc);
+        double d_ins = (double)(hwp_read(hw.ins) - b_ins);
+        double d_cref = (double)(hwp_read(hw.cref) - b_cref);
+        double d_cmiss = (double)(hwp_read(hw.cmiss) - b_cmiss);
+        double d_br = (double)(hwp_read(hw.br) - b_br);
+        double d_brm = (double)(hwp_read(hw.brm) - b_brm);
+        double R = (double)total_rows;
+        printf("SELF rows=%.0f ns_total=%.0f cyc/row=%.0f ins/row=%.0f "
+               "IPC=%.3f miss/row=%.1f miss_pct=%.1f br_miss_pct=%.2f\n",
+               R, (double)total_ns, d_cyc / R, d_ins / R, d_ins / d_cyc,
+               d_cmiss / R, 100.0 * d_cmiss / (d_cref + 1),
+               100.0 * d_brm / (d_br + 1));
+    } else {
+        printf("SELF unavailable (perf_event_open failed or HWP_SELF=0)\n");
+    }
+#endif
 
     if (mt4) {
         atomic_store(&MT.stop, 1);
