@@ -77,7 +77,17 @@ bit-identical in every run (pin protocol; no torn reads). mem mode: stall
 - RSS observed: 728MB max (512 slots + pbuf-era runs); direct-slot
   production sizes are modeled, not materialized, on this 2GB box.
 
-## 6. What this unlocks
+## 6. Memory-bandwidth headroom (measured, this box)
+
+STREAM-triad-like: 1T 15.0 GB/s, 4T 14.7 GB/s (saturated); memcpy 23.8 GB/s
+(best-of-3). Kernel demand (ns/row × rowbytes): ST IQ2 1.5 / Q2_K 3.3 /
+Q4 3.7 GB/s → 4T ≈ 5.2 / 11.6 / 13 GB/s. Headroom on N100-class: 2.9× /
+1.3× / 1.15× — Q4 at 4T is near the ceiling here (may scale ~3.0–3.3× vs
+3.5×; second-order for verdicts, unresolvable in current noise). i5 dual-
+channel DDR4 (~35GB/s) gives 2.7–6× for all formats — the ceiling
+disappears on target. Staging copies are scan-dominated, not BW-bound.
+
+## 7. What this unlocks
 
 Phase 3's prerouter plugs into a PROVEN pipe: reservation protocol,
 worker pool, headroom rule, spin budget, and the 96% oracle bound are
