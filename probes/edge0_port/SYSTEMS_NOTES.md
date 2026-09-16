@@ -93,3 +93,18 @@ Phase 3's prerouter plugs into a PROVEN pipe: reservation protocol,
 worker pool, headroom rule, spin budget, and the 96% oracle bound are
 all measured. Remaining Phase-3 question is purely ML: prediction recall
 × CPU overhead — the systems side is de-risked.
+
+## 8. Quant route churn (staged-q2k traces, probes/edge0_port/route_churn.py)
+
+Q: does Q2_K routing invalidate the IQ2-derived cache pins / hot sets?
+A: no. Event-zip reproduces the kernel's route_agreement exactly
+(0.6565/0.1402 ×3 reps — machinery validated). Split: prompt 0.907
+(same context: pure quant churn ≈1 pick in 11) vs decode 0.645
+(mostly generation divergence, different contexts). Hot-set Jaccard
+(top-N IQ2 vs Q2K) 0.70–0.74 at all Pareto slot counts (320–2664);
+LRU + IQ2-train pins evaluated on IQ2-test vs Q2K-test: churn-delta
+≈ 0 (−2.6…−0.5 miss/tok, test-set noise, n=94+94 decode tokens).
+Churn concentrates in late-mid layers (worst L39 0.538, best ~0.71).
+Caveat: single prompt, 63 decode tokens, temp=0 deterministic reps
+(all 3 reps bit-identical) — effective n is small but the kernel-match
+validates the method. Cache sims (§cache_curves) hold for the Q2K path.
