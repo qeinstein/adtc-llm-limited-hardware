@@ -1,12 +1,14 @@
 # Atom Factorization — One-Layer Falsification Experiment
 
-**Verdict (REVISED): KILL HARD on sparse-subset pruning; OPEN on learned nonlinear basis.**
-The oracle only upper-bounds sparse SUBSET SELECTION from the original 4096
-atoms — it does not bound a dictionary of newly learned/synthesized
-nonlinear atoms, which can span directions no small original subset spans.
-The decisive learned-basis ceiling (dense SwiGLU student sweep) is tracked
-separately; no final architecture kill until it lands on real contextual
-states (current proxy routing logcorr 0.17 is insufficient for that).
+**Verdict (FINAL on proxy): KILL HARD on sparse-subset pruning; LEARNED BASIS
+CEILING ALSO FAILS BADLY (strong evidence against the thesis, contextual
+confirmation still formally required).**
+The oracle bounds only subset selection — but the decisive dense SwiGLU
+student sweep (h=512→3072 vs full block B, train 2463, test held-384) fails
+at every width: best test median 1.08 vs the 0.975 mean-predictor floor and
+the 0.02 bar. More capacity → worse test (pure memorization); 4× data →
+4% gain (flat scaling). No final architecture kill until a contextual run
+lands (proxy routing logcorr 0.17), but reversal is implausible — see §11.
 
 **Branch:** `research/atom-factor-one-layer`
 **Date:** 2026-09-15 · **Layer:** L20 · **Held-out tokens:** 384 (disjoint IDs)
@@ -155,43 +157,89 @@ h=1024 student costs 3×1024×2048 = 6.3M mults (4× reduction); h=2048 costs
 
 ## 8. KEEP / KILL verdict
 
-**KILL HARD on sparse-subset pruning; OPEN on learned nonlinear basis.**
+**KILL HARD on sparse-subset pruning; learned-basis ceiling FAILS (strong
+evidence against the thesis; contextual run still required for final kill).**
 
 - KILL HARD: pruning / sparse subset of original atoms (branches B/C/D as
   subset schemes). Oracle: 8.9% median at M=2048 vs the 5% bar; 2551 atoms
   needed for 5%. Do not pursue atom pruning.
-- OPEN: learned nonlinear basis / newly synthesized atoms. The oracle does
-  not bound learned atoms. Decisive test = dense SwiGLU student sweep
-  (`09`, in flight): h≤1024 at ~1–2% ⇒ major KEEP; h≤2048 strong ⇒ KEEP;
-  even h=3072 failing badly on real contextual held-out ⇒ strong evidence
-  against the broader thesis. No final architecture kill on proxy data
-  alone (routing logcorr 0.17 insufficient).
+- LEARNED BASIS CEILING FAILS: dense SwiGLU students h=512/1024/2048/3072
+  vs full block B=R8+S (train 2463, val 256, test held-384) reach test
+  medians 1.08/1.12/1.17/1.19 — all at or above the 0.975 mean-predictor
+  floor, ~50× above the 1–2% bars. More capacity → worse test
+  (memorization: h=3072 train 0.09 / test 1.19); val never beats 1.0 at any
+  checkpoint for any width. The 4× data-scaling check is flat (1.093→1.051
+  pooled). Independent corroboration: peer s2_06 L0/proxy run gets pooled
+  0.95/0.97/0.90/0.90 across the same widths — floor-level everywhere.
+- Formal caveat: inputs are proxy (routing logcorr 0.17), so the FINAL
+  architecture kill awaits one contextual run. But the failure mechanism —
+  inability to learn input-dependent 8-of-256 routing + expert outputs,
+  with flat data scaling — is distribution-agnostic; contextual inputs are
+  higher-entropy, not easier. Reversal is implausible.
 
 ## 9. Strongest version discovered
 
 - Subset branch: the oracle itself (unrealizable, and still dead).
-- Learned branch: TBD by the student sweep. Prior: s2_06's L0/proxy
-  dense-student run reports test_rel ≈ 0.95–0.97 at h=512/1024 (pooled,
-  N=320 proxy) — a bad omen, but L0 ≠ L20 and pooled-rel ≠ tails; our
-  L20 run (N=704, held-384 tails) is the cleaner read.
+- Learned branch: h=512 student (smallest, least-overfit) at test median
+  1.08 — still above the mean floor. There is no surviving version; every
+  width fails, and capacity hurts. The coherent-tail (§6) and
+  memorization-dynamics (§11) findings jointly say the routed block's
+  input-dependent structure is not compressible into few nonlinear units
+  by any method tested.
 
 ## 10. Next ONE experiment
 
-The dense SwiGLU student sweep (`09_student.py`, h=512/1024/2048/3072 vs
-B=R8+S, train calib-256, test held-384, median/p95/p99/max/cosine) — in
-flight at time of writing. Global/community dictionary clustering stays
-parked until this ceiling lands. If the student succeeds on proxy, the
-mandatory follow-up is re-testing on REAL contextual L20 states; if it
-fails badly on proxy, the contextual run is still required before a final
-thesis kill (scoped separately — needs full-model inference: 15 of 20
-prefix layers are Gated DeltaNet, ruling out a hand-rolled prefix
-forward; realistic path is a llama.cpp hidden-state dump of the 10 GB
-GGUF, which currently does not fit local disk/RAM).
+ONE contextual closer run: collect ~400 real contextual L20-MoE inputs
+(llama.cpp hidden-state dump of the 10.66 GB GGUF — needs a bigger box;
+15 of 20 prefix layers are Gated DeltaNet, ruling out hand-rolled prefix
+forward; local disk/RAM cannot host it), then run the frozen student
+protocol (`11`, h=2048+3072 only) against exact R8/S targets computed from
+cached L20 experts. Bar: h=3072 test median <5% would reopen the thesis;
+anything near floor (≈1.0) finalizes the kill. Do NOT run
+global/community dictionary clustering — the ceiling it would need
+(a fittable learned basis) has already failed.
+
+## 11. Learned-basis ceiling: dense SwiGLU student (L20, B=R8+S)
+
+Protocol (`11_student_big.py`, `11b`, `12_datascale.py`): train 2463 /
+val 256 (fresh proxy pool + calib) / test held-384 fixed disjoint IDs;
+input+target standardized; minibatch Adam 400 epochs lr=3e-4 with
+val-checkpointing (keep best of 20); 1 seed. Targets exact (cached L20
+experts + fetched shared expert, |B|=1.42). Baselines on held-384:
+linear ridge pooled 0.994, mean predictor 0.975.
+
+| h | best ep | train | pooled | median | p95 | p99 | max | cos |
+|---|---|---|---|---|---|---|---|---|
+| 512 | 20 | 0.848 | 1.051 | 1.080 | 1.193 | 1.255 | 1.666 | 0.156 |
+| 1024 | 20 | 0.694 | 1.082 | 1.118 | 1.244 | 1.331 | 1.748 | 0.155 |
+| 2048 | 20 | 0.462 | 1.116 | 1.167 | 1.323 | 1.369 | 1.696 | 0.165 |
+| 3072 | 400 | 0.093 | 1.134 | 1.194 | 1.389 | 1.503 | 2.145 | 0.164 |
+
+Reading: (1) every width is at/above the mean floor — no generalizable
+signal learned (val never beats 1.0 at any checkpoint); (2) capacity
+inverts the ranking — h=3072 memorizes train (0.09) and tests worst;
+(3) h≤2048 pick the FIRST checkpoint (ep 20) — later training is pure
+memorization. Small-N reference (`09`, train 256): h=512 train 0.011 /
+test median 1.32 — same overfit regime, motivating the expansion.
+
+Data scaling (`12`, h=512): n=615 → pooled 1.093; n=1231 → 1.078;
+n=2463 → 1.051. Four times the data buys 4% — flat. No reasonable N
+closes a 50× gap to the 2% bar.
+
+Corroboration: independent peer run s2_06 (L0, N=320 proxy, full-batch
+1500 steps): pooled 0.945/0.971/0.900/0.897 at h=512→3072 — floor-level
+at a different layer with a different protocol. (Both that run and our
+first full-grid run were OOM-killed on side computations — exit 137 —
+after printing all widths; numbers preserved from logs.)
+
+Cost note: h=3072 needed a batch-128 rerun (`11b`) after the OOM kill;
+same protocol otherwise.
 
 ## Revision note (2026-09-15)
 
-v1 of this report marked the whole hypothesis KILL. Corrected: the oracle
-bounds only subset selection, not learned atoms. §3–§5 numbers are
-unchanged (they concern the subset branch only); §8/§10 now reflect
-KILL-HARD-subset / OPEN-learned with the student sweep as decider.
+v1 marked the whole hypothesis KILL. Corrected (v2): the oracle bounds
+only subset selection — learned basis stayed OPEN with the student sweep
+as decider. v3 (this): student ceiling fails at all widths with flat data
+scaling ⇒ strong evidence against the thesis; only the formal contextual
+closer remains (§10).
 ...[truncated 5019 chars]
