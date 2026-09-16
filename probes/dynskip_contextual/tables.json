@@ -1,0 +1,309 @@
+{
+ "layers": {
+  "0": {
+   "layer": 0,
+   "N": 2272,
+   "route_match": 1.0,
+   "x_h1_recon_max": 0.003898395168957235,
+   "B_rt_max": 0.0399282580930498,
+   "B_rt_mean": 0.02266988832564378,
+   "med_full": 0.28630531240921636,
+   "med_rout": 0.2486999922375891,
+   "med_blk": 0.8183945292911268,
+   "cos_full_mean": 0.9539511319191075,
+   "cos_full_min": 0.7219240052901384,
+   "cos_blk_mean": 0.6264028692989866,
+   "cos_blk_min": 0.3895265904540882,
+   "mix_over_Y_med": 0.7770216068509379,
+   "bar_0.01": {
+    "oracle_full": 0.0,
+    "oracle_rout": 0.0,
+    "oracle_blk": 0.0,
+    "best_full": {
+     "rate": 0.0,
+     "signal": null,
+     "dir": null,
+     "thr": null
+    },
+    "best_rout": {
+     "rate": 0.0,
+     "signal": null,
+     "dir": null,
+     "thr": null
+    }
+   },
+   "bar_0.02": {
+    "oracle_full": 0.0,
+    "oracle_rout": 0.0,
+    "oracle_blk": 0.0,
+    "best_full": {
+     "rate": 0.0,
+     "signal": null,
+     "dir": null,
+     "thr": null
+    },
+    "best_rout": {
+     "rate": 0.0,
+     "signal": null,
+     "dir": null,
+     "thr": null
+    }
+   },
+   "bar_0.05": {
+    "oracle_full": 0.0,
+    "oracle_rout": 0.0,
+    "oracle_blk": 0.0,
+    "best_full": {
+     "rate": 0.0,
+     "signal": null,
+     "dir": null,
+     "thr": null
+    },
+    "best_rout": {
+     "rate": 0.0,
+     "signal": null,
+     "dir": null,
+     "thr": null
+    }
+   },
+   "split_rout_2pct": {
+    "train": 0.0,
+    "held": 0.0
+   },
+   "min_full": 0.13933582251601687,
+   "min_rout": 0.08848310902865478,
+   "min_blk": 0.5606643529145192
+  },
+  "20": {
+   "layer": 20,
+   "N": 2272,
+   "route_match": 0.9995598591549296,
+   "x_h1_recon_max": 0.00023284231448173225,
+   "B_rt_max": 0.07124657397032544,
+   "B_rt_mean": 0.03284553769317561,
+   "med_full": 0.19020780827611186,
+   "med_rout": 0.15695047902601772,
+   "med_blk": 0.2623301501411221,
+   "cos_full_mean": 0.976738155850045,
+   "cos_full_min": 0.7677185996893382,
+   "cos_blk_mean": 0.9612404247221847,
+   "cos_blk_min": 0.759267833181846,
+   "mix_over_Y_med": 0.20944624082733054,
+   "bar_0.01": {
+    "oracle_full": 0.0,
+    "oracle_rout": 0.0,
+    "oracle_blk": 0.0,
+    "best_full": {
+     "rate": 0.0,
+     "signal": null,
+     "dir": null,
+     "thr": null
+    },
+    "best_rout": {
+     "rate": 0.0,
+     "signal": null,
+     "dir": null,
+     "thr": null
+    }
+   },
+   "bar_0.02": {
+    "oracle_full": 0.0,
+    "oracle_rout": 0.0,
+    "oracle_blk": 0.0,
+    "best_full": {
+     "rate": 0.0,
+     "signal": null,
+     "dir": null,
+     "thr": null
+    },
+    "best_rout": {
+     "rate": 0.0,
+     "signal": null,
+     "dir": null,
+     "thr": null
+    }
+   },
+   "bar_0.05": {
+    "oracle_full": 0.0,
+    "oracle_rout": 0.0,
+    "oracle_blk": 0.0,
+    "best_full": {
+     "rate": 0.0,
+     "signal": null,
+     "dir": null,
+     "thr": null
+    },
+    "best_rout": {
+     "rate": 0.0,
+     "signal": null,
+     "dir": null,
+     "thr": null
+    }
+   },
+   "split_rout_2pct": {
+    "train": 0.0,
+    "held": 0.0
+   },
+   "min_full": 0.09740759289476324,
+   "min_rout": 0.0582178535708051,
+   "min_blk": 0.16407954770425254
+  },
+  "39": {
+   "layer": 39,
+   "N": 2272,
+   "route_match": 1.0,
+   "x_h1_recon_max": 1.4708055403430101e-05,
+   "B_rt_max": 0.04125970282584568,
+   "B_rt_mean": 0.025337103962883512,
+   "med_full": 0.5887438746492849,
+   "med_rout": 0.24895405372562293,
+   "med_blk": 0.7865005975787192,
+   "cos_full_mean": 0.8153718342831949,
+   "cos_full_min": 0.5530583417597796,
+   "cos_blk_mean": 0.728615650767158,
+   "cos_blk_min": 0.41630757297108767,
+   "mix_over_Y_med": 0.4142157441147929,
+   "bar_0.01": {
+    "oracle_full": 0.0,
+    "oracle_rout": 0.0,
+    "oracle_blk": 0.0,
+    "best_full": {
+     "rate": 0.0,
+     "signal": null,
+     "dir": null,
+     "thr": null
+    },
+    "best_rout": {
+     "rate": 0.0,
+     "signal": null,
+     "dir": null,
+     "thr": null
+    }
+   },
+   "bar_0.02": {
+    "oracle_full": 0.0,
+    "oracle_rout": 0.0,
+    "oracle_blk": 0.0,
+    "best_full": {
+     "rate": 0.0,
+     "signal": null,
+     "dir": null,
+     "thr": null
+    },
+    "best_rout": {
+     "rate": 0.0,
+     "signal": null,
+     "dir": null,
+     "thr": null
+    }
+   },
+   "bar_0.05": {
+    "oracle_full": 0.0,
+    "oracle_rout": 0.0013204225352112676,
+    "oracle_blk": 0.0,
+    "best_full": {
+     "rate": 0.0,
+     "signal": null,
+     "dir": null,
+     "thr": null
+    },
+    "best_rout": {
+     "rate": 0.0,
+     "signal": null,
+     "dir": null,
+     "thr": null
+    }
+   },
+   "split_rout_2pct": {
+    "train": 0.0,
+    "held": 0.0
+   },
+   "min_full": 0.35816018424370916,
+   "min_rout": 0.04508190315462763,
+   "min_blk": 0.4920728574069953
+  }
+ },
+ "policy": {
+  "runtime_skip_rate": 0.20950704225352113,
+  "runtime_local_top1_maxdiff": 5.105436193877932e-07,
+  "skipped_max_err": 0.2214115465279781,
+  "skipped_n_viol": 476,
+  "held_skip_rate": 0.20704225352112676,
+  "held_skipped_max_err": 0.19973718849204347,
+  "diverged_prompts": 19,
+  "byte_agreement": 0.7523020257826888,
+  "worst": [
+   {
+    "pid": 0,
+    "first_diff_byte": 156,
+    "flip_tok_pos": 37,
+    "gen_toks": 77,
+    "ctl_tail": "n Solution (ORS) helps a child with watery diarrhea:\n\n1.  **Analyze the Request:**\n    *   **Topic:** Oral Rehydration Solution (ORS).\n    *   **Target Audience:** General public/p",
+    "pol_tail": "n Solution (ORS) helps a child with watery diarrhea:\n\n1.  **Deconstruct the Request:**\n    *   **Topic:** Oral Rehydration Solution (ORS).\n    *   **Target:** A child with watery d"
+   },
+   {
+    "pid": 3,
+    "first_diff_byte": 278,
+    "flip_tok_pos": 65,
+    "gen_toks": 77,
+    "ctl_tail": "unity Health Worker (CHW).\n    *   **Recipient:** A mother (caregiver).\n    *   **Topic:** M",
+    "pol_tail": "unity Health Worker (CHW).\n    *   **Recipient:** A mother (specifically, likely caring for an infant/child, as"
+   },
+   {
+    "pid": 6,
+    "first_diff_byte": 115,
+    "flip_tok_pos": 24,
+    "gen_toks": 76,
+    "ctl_tail": "t intervention to prevent cholera among the given options: A clean water, B antibiotics, C vitamins, D bed rest.\n\n1.  **Analyze the disease:** Cholera is an acute diarrheal infecti",
+    "pol_tail": "t intervention to prevent cholera among the given options: A) Clean water, B) Antibiotics, C) Vitamins, D) Bed rest.\n\n1.  **Analyze the disease:** Cholera is an acute diarrheal inf"
+   },
+   {
+    "pid": 8,
+    "first_diff_byte": 91,
+    "flip_tok_pos": 21,
+    "gen_toks": 77,
+    "ctl_tail": "sking for the best first step in managing suspected hypoglycemia from a list of options.\n\n1.  **Analyze the condition:** Hypoglycemia refers to low blood sugar levels. It is a medi",
+    "pol_tail": "sking for the best first step in managing suspected hypoglycaemia from a list of options.\n\n1.  **Analyze the condition:** Hypoglycaemia refers to low blood sugar levels. It is a me"
+   },
+   {
+    "pid": 10,
+    "first_diff_byte": 173,
+    "flip_tok_pos": 49,
+    "gen_toks": 77,
+    "ctl_tail": "uest:**\n    *   **Resources:** 2 Nurses, 4 Rooms.\n    *   **Context:** A clinic (likely primary care or outpatient).\n    *   **Task:** Propose a *simple* morning patient-flow plan",
+    "pol_tail": "uest:**\n    *   **Resources:** 2 Nurses, 4 Rooms.\n    *   **Goal:** Propose a simple morning patient-flow plan.\n    *   **Requirement:** Explain the plan.\n    *   **Context"
+   },
+   {
+    "pid": 11,
+    "first_diff_byte": 254,
+    "flip_tok_pos": 57,
+    "gen_toks": 76,
+    "ctl_tail": "garding patient care location.\n    *   **Options:** Sending to hospital (acute care) vs. Monitoring at home (home care/telehealth/observation).",
+    "pol_tail": "garding patient care location.\n    *   **Options:** Sending a patient to a hospital (inpatient/acute care) vs. Monitoring at home (telehealth,"
+   },
+   {
+    "pid": 12,
+    "first_diff_byte": 207,
+    "flip_tok_pos": 55,
+    "gen_toks": 77,
+    "ctl_tail": "s for 8 hours.\n    *   **Frequency:** Taken twice daily (BID - Bis in Die).\n    *   **Goal:** Explain a practical schedule.\n\n2.  **",
+    "pol_tail": "s for 8 hours.\n    *   **Frequency:** Taken twice daily (BID).\n    *   **Goal:** Explain a practical schedule.\n\n2.  **Determine the Core"
+   },
+   {
+    "pid": 14,
+    "first_diff_byte": 120,
+    "flip_tok_pos": 32,
+    "gen_toks": 77,
+    "ctl_tail": "e suggested answer:\n\n1.  **Analyze the Request:**\n    *   **Question:** \"What evidence would distinguish a true outbreak from an increase in reporting?\"\n    *   **Context:** Epidem",
+    "pol_tail": "e suggested answer:\n\n1.  **Analyze the Request:**\n    *   **Core Question:** What evidence distinguishes a *true outbreak* from an *increase in reporting*?\n    *   **Context:** Epi"
+   }
+  ],
+  "note": "KL unmeasured: top-k post-logits hook unsupported; flips are the gate and fired (19/32)"
+ },
+ "kernel_summary": {
+  "prompts_diverged": 19,
+  "mean_skip_pred_ctl": 0.20950704225352113,
+  "mean_skip_rate_policy": 0.21346830985915494
+ },
+ "decode_tokens": 2272
+}
