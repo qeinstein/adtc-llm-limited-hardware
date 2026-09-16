@@ -9,8 +9,16 @@ This kernel answers the executable, decision-relevant questions:
 Matched quants (both UD-IQ2_XXS) isolate the pretrain difference.
 Disk-safe: models downloaded/run/deleted SEQUENTIALLY (peak ~13 GB).
 
+v4 harness fix (v3 post-mortem): v3's server generations came back EMPTY
+(87/88 records, completion_tokens=300 = hit max) because Qwen3 thinking
+consumed the whole 300-token budget (evidence: h14 'DENY' cost 279 tokens).
+v4 appends the Qwen3-documented /no_think trigger (deployment-faithful:
+production cannot afford think-tokens at 18 tok/s), captures
+reasoning_content alongside content, and fail-fasts if >=2 of the first
+8 prompts return empty content. MMLU bumped 100 -> 200 tasks for power.
+
 Gates (frozen, raw-pinned + sha-verified from the repo):
-  - MMLU 100-task matched likelihood (deterministic)
+  - MMLU 200-task matched likelihood (deterministic)
   - data/swahili_eval_set.json: 18 prompts, gold-keyword scoring
   - docs/research/falcon_probe_heldout.json: 24 prompts, outputs captured
     for adjudicated grading (checks are natural-language; kernel does NOT
@@ -43,7 +51,8 @@ PERPLEXITY = BUILD / "bin" / "llama-perplexity"
 
 LLAMA_COMMIT = "3057bb66c86c46d5781e50e85462a760ba7d1feb"
 N_THREADS = 4
-N_TASKS = 100
+N_TASKS = 200
+NO_THINK = " /no_think"
 
 # frozen gate data: (repo path, sha256) @ REPO_PIN
 REPO_PIN = "405b114ed9951b596cbf1b1482c985f8e31dc948"
@@ -312,16 +321,25 @@ def run_generation(model, prompts, label):
             if last is not None:
                 raise last
             el = time.monotonic() - t0
-            ch = r["choices"][0]["message"]["content"]
+            msg = r["choices"][0]["message"]
+            ch = msg.get("content") or ""
+            rs = msg.get("reasoning_content") or ""
             usage = r.get("usage", {})
             recs.append({"id": pr["id"], "prompt": pr["text"],
                          "max_tokens": pr.get("max_tokens", 300),
                          "output": ch, "output_no_think": strip_thinking(ch),
+                         "reasoning_content": rs,
+                         "reasoning_chars": len(rs),
                          "elapsed_sec": el,
                          "completion_tokens": usage.get("completion_tokens"),
                          "prompt_tokens": usage.get("prompt_tokens")})
             print(f"  {label} {pr['id']}: {el:.1f}s "
-                  f"ctok={usage.get('completion_tokens')}", flush=True)
+                  f"ctok={usage.get('completion_tokens')} "
+                  f"out_chars={len(ch)} rsn_chars={len(rs)}", flush=True)
+            if len(recs) == 8 and sum(
+                    1 for x in recs if not x["output"].strip()) >= 2:
+                raise RuntimeError(
+                    "fail-fast: >=2/8 first outputs empty (v3 repeat?)")
         (OUT / f"generation_{label}.json").write_text(
             json.dumps(recs, indent=1), encoding="utf-8")
         return recs
@@ -342,17 +360,19 @@ def main():
     held = json.loads(
         (SCRATCH / "falcon_probe_heldout.json").read_text())["prompts"]
     meta = json.loads((SCRATCH / "metadata.json").read_text())
-    prompts = ([{"id": f"sw{i:02d}", "text": p["query"],
+    prompts = ([{"id": f"sw{i:02d}",
+                 "text": p["query"] + NO_THINK,
                  "max_tokens": 300} for i, p in enumerate(sw)] +
-               [{"id": h["id"], "text": h["text"],
+               [{"id": h["id"], "text": h["text"] + NO_THINK,
                  "max_tokens": max(h.get("max_tokens", 200), 300)}
                 for h in held] +
-               [{"id": t["prompt_id"], "text": t["prompt"],
+               [{"id": t["prompt_id"], "text": t["prompt"] + NO_THINK,
                  "max_tokens": 320} for t in meta["test_prompts"]])
     urllib.request.urlretrieve(DATA_URL, SCRATCH / "mmlu-test.bin")
     dataset = SCRATCH / "mmlu-test.bin"
 
     results = {"schema": "native-sparse-edge0phase2/v1",
+               "harness": "v4-no_think",
                "gates": gates_info, "repo_pin": REPO_PIN,
                "hardware": {"platform": platform.platform(),
                             "cpu_count": os.cpu_count()},
