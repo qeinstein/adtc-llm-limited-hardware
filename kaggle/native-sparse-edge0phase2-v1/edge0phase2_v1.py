@@ -49,7 +49,7 @@ N_TASKS = 100
 REPO_PIN = "405b114ed9951b596cbf1b1482c985f8e31dc948"
 GATE_FILES = {
     "swahili_eval_set.json":
-        "a927c9dd342eef13e196bd5cfd2d8ad1d35ff0444b766c2ee9e375c12f868a8d6",
+        "a927c9dd342eef13e196bd5cf2d8ad1d35ff0444b766c2ee9e375c12f868a8d6",
     "falcon_probe_heldout.json":
         "6747c0907e63938f81942219858e1b9cf9fa131c5d915c8664885b2dc851caa4",
     "metadata.json":
