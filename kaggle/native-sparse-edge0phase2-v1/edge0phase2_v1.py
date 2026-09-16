@@ -17,6 +17,18 @@ production cannot afford think-tokens at 18 tok/s), captures
 reasoning_content alongside content, and fail-fasts if >=2 of the first
 8 prompts return empty content. MMLU bumped 100 -> 200 tasks for power.
 
+v5 harness fix (v4 post-mortem): /no_think suffix did NOT disable thinking
+(v4 log: rsn_chars ~900-1200, out_chars=0, ctok=300 on all 8 probes before
+the fail-fast correctly tripped — no blind burn). v5 sends
+"enable_thinking": false in the chat payload (ignored harmlessly if the
+server predates it) AND raises the budget to 1200 tokens so think+answer
+fits even on the slow path; the server already splits reasoning_content
+from content, so grading on content stays clean either way. Fail-fast now
+trips only when BOTH fields are empty (>=2/8); persistent thinking just
+logs a loud warning and continues on the slow path (~100s/prompt).
+Salvaged from v4: MMLU-A-200 = 40.5% (tasks 1-100 reproduce 37.0 exactly,
+third replication of the control).
+
 Gates (frozen, raw-pinned + sha-verified from the repo):
   - MMLU 200-task matched likelihood (deterministic)
   - data/swahili_eval_set.json: 18 prompts, gold-keyword scoring
@@ -53,6 +65,7 @@ LLAMA_COMMIT = "3057bb66c86c46d5781e50e85462a760ba7d1feb"
 N_THREADS = 4
 N_TASKS = 200
 NO_THINK = " /no_think"
+GEN_MAX_TOKENS = 1200
 
 # frozen gate data: (repo path, sha256) @ REPO_PIN
 REPO_PIN = "405b114ed9951b596cbf1b1482c985f8e31dc948"
@@ -295,7 +308,8 @@ def run_generation(model, prompts, label):
             raise RuntimeError("server never became ready (503 loop?)")
         # warmup: one tiny completion (prefaults, discarded)
         chat_complete({"messages": [{"role": "user", "content": "Hi"}],
-                       "max_tokens": 4, "temperature": 0.0, "seed": 42},
+                       "max_tokens": 4, "temperature": 0.0, "seed": 42,
+                       "enable_thinking": False},
                       port=port)
         import urllib.error
         recs = []
@@ -307,8 +321,9 @@ def run_generation(model, prompts, label):
                     r = chat_complete(
                         {"messages": [{"role": "user",
                                        "content": pr["text"]}],
-                         "max_tokens": pr.get("max_tokens", 300),
-                         "temperature": 0.0, "seed": 42}, port=port)
+                         "max_tokens": pr.get("max_tokens", GEN_MAX_TOKENS),
+                         "temperature": 0.0, "seed": 42,
+                         "enable_thinking": False}, port=port)
                     last = None
                     break
                 except urllib.error.HTTPError as e:
@@ -326,7 +341,7 @@ def run_generation(model, prompts, label):
             rs = msg.get("reasoning_content") or ""
             usage = r.get("usage", {})
             recs.append({"id": pr["id"], "prompt": pr["text"],
-                         "max_tokens": pr.get("max_tokens", 300),
+                         "max_tokens": pr.get("max_tokens", GEN_MAX_TOKENS),
                          "output": ch, "output_no_think": strip_thinking(ch),
                          "reasoning_content": rs,
                          "reasoning_chars": len(rs),
@@ -336,10 +351,20 @@ def run_generation(model, prompts, label):
             print(f"  {label} {pr['id']}: {el:.1f}s "
                   f"ctok={usage.get('completion_tokens')} "
                   f"out_chars={len(ch)} rsn_chars={len(rs)}", flush=True)
-            if len(recs) == 8 and sum(
-                    1 for x in recs if not x["output"].strip()) >= 2:
-                raise RuntimeError(
-                    "fail-fast: >=2/8 first outputs empty (v3 repeat?)")
+            if len(recs) == 8:
+                dead = sum(1 for x in recs
+                           if not x["output"].strip()
+                           and not x["reasoning_content"].strip())
+                thinky = sum(1 for x in recs if x["reasoning_chars"] > 500)
+                if dead >= 2:
+                    raise RuntimeError(
+                        "fail-fast: >=2/8 first outputs fully empty")
+                if thinky >= 5:
+                    print("  WARNING: thinking persists despite "
+                          "enable_thinking=false "
+                          f"({thinky}/8 with >500 rsn chars); continuing on "
+                          "slow path (1200-token budget, grade content only)",
+                          flush=True)
         (OUT / f"generation_{label}.json").write_text(
             json.dumps(recs, indent=1), encoding="utf-8")
         return recs
@@ -362,17 +387,18 @@ def main():
     meta = json.loads((SCRATCH / "metadata.json").read_text())
     prompts = ([{"id": f"sw{i:02d}",
                  "text": p["query"] + NO_THINK,
-                 "max_tokens": 300} for i, p in enumerate(sw)] +
+                 "max_tokens": GEN_MAX_TOKENS} for i, p in enumerate(sw)] +
                [{"id": h["id"], "text": h["text"] + NO_THINK,
-                 "max_tokens": max(h.get("max_tokens", 200), 300)}
+                 "max_tokens": max(h.get("max_tokens", 200), GEN_MAX_TOKENS)}
                 for h in held] +
                [{"id": t["prompt_id"], "text": t["prompt"] + NO_THINK,
-                 "max_tokens": 320} for t in meta["test_prompts"]])
+                 "max_tokens": GEN_MAX_TOKENS + 80}
+                for t in meta["test_prompts"]])
     urllib.request.urlretrieve(DATA_URL, SCRATCH / "mmlu-test.bin")
     dataset = SCRATCH / "mmlu-test.bin"
 
     results = {"schema": "native-sparse-edge0phase2/v1",
-               "harness": "v4-no_think",
+               "harness": "v5-enable_thinking-false-1200tok",
                "gates": gates_info, "repo_pin": REPO_PIN,
                "hardware": {"platform": platform.platform(),
                             "cpu_count": os.cpu_count()},

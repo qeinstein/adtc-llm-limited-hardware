@@ -40,6 +40,21 @@ v4 (fixed harness) LAUNCHED. No base-model choice made.
   overrides files present (733 lines each); transcodes 120/432 Q2K tensors.
 - In-kernel decider applied the rule correctly; my read agrees. No action needed.
 
+## v4 post-mortem — fail-fast tripped correctly, /no_think ineffective, MMLU-A-200 salvaged
+
+- v4 ran 75 min then ERRORED via the fail-fast guard (working as designed —
+  no blind 2.5h burn). Log: all 8 probes ctok=300, out_chars=0,
+  rsn_chars ~900-1200. The `/no_think` prompt suffix does NOT disable thinking
+  through llama-server chat completions for this model.
+- Salvaged from partial outputs (ERROR runs keep /kaggle/working files):
+  MMLU-A-200 = 40.5% (81/200, se 3.47); tasks 1-100 reproduce 37.0 EXACTLY —
+  third independent replication of the control (q2k-quality, v3 A, v4 A).
+- v5: sends "enable_thinking": false (harmless if ignored) + 1200-token budget
+  so think+answer fits on the slow path; server already splits
+  reasoning_content from content so grading stays clean either way. Fail-fast
+  now trips only when BOTH fields are empty; persistent thinking warns and
+  continues (~100s/prompt slow path, total ~4.5h, within limits).
+
 ## edge0phase2-v1 v2 — UNRECOVERABLE, cannot adjudicate
 
 - The Kaggle CLI ignores the /<version> suffix on `output`, `logs`, and `files`
