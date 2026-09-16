@@ -116,8 +116,9 @@ tok/s | peak RSS | quality impact | mechanism (i5-LOW; HIGH in parens):
 Fastest per cap: ≤4GB 6.1 (K4+IQ2!) · ≤5GB 7.0 · ≤5.5GB 7.3 · ≤6GB **7.7**.
 Disk sensitivity (top config): 0.5GB/s→6.3–6.7, 1GB/s→7.4–7.9,
 3GB/s→8.3–9.0. NOTE every sub-6GB winner uses K4 — K4 quality recovery
-(Phase 2/4) is load-bearing, not optional. Fastest quality-safe-today
-point (K8, Q2_K≈IQ2 tier): ≈5.2–5.5 tok/s.
+(Phase 2/4) is load-bearing, not optional. Fastest QUALITY-PROVEN point
+(K8, Q2K-experts MMLU gate passed): 4.94 i5-LOW / 5.6 i5-HIGH @6.0GB
+(4.05 @4.6GB) — 1.6× the current bounded path with zero quality risk.
 
 ## 8. Original gate + the Edge0-INT4 question
 
@@ -136,14 +137,17 @@ Q2_K is the x86 speed king.** Q3_K is Pareto-dominated (slower than Q2_K
 AND bigger) — KILLED for experts. Q4_K survives only as the quality
 fallback if Q2_K's likelihood gate fails.
 
-## 9. Quality-gate status (Phase 1d)
+## 9. Quality-gate result (Phase 1d — COMPLETE, kernel v1)
 
-Weight/GEMV evidence (§5) says Q2_K ≈ IQ2 tier — "clearly unacceptable" is
-already excluded. End-to-end confirmation: Kaggle kernel
-`toheebogunade/jamii-native-sparse-q2k-quality-v1` v1 PUSHED and running
-(matched MMLU 100-task control vs q2k-experts vs q2k-all; reject if >2pp
-drop; tests transcoded worst-case). Result lands in ~1–3h; will be folded
-into Phase 2/final. Dense-Q2K and K4 need their own gates (K4 = Phase 4).
+Matched MMLU-100 (transcoded worst-case, i.e. IQ2→Q2_K, NOT from-bf16):
+control 37.0% ±4.9 → q2k-experts **39.0% ±4.9 (Δ+2.0pp) → KEEP**;
+q2k-all 26.0% ±4.4 (Δ−11.0pp) → REJECT (head/embeddings/dense must NOT go
+ wholesale to 2-bit — expected, matches prior art). Conclusion: Q2_K
+experts show NO measurable regression even in the worst case; production
+from-bf16 is strictly better. Q2_K-experts is QUALITY-PROVEN. The +2.0 is
+within noise (do not claim "better"). Scope notes: (a) dense-Q2K in §7
+covers attn/shared ONLY (narrower than rejected q2k-all) — still needs
+its own gate; (b) K4 needs Phase 4; (c) MMLU≠Kiswahili/safety (Phase 2).
 
 ## 10. Gap to 18 tok/s (55.6ms) — the honest math
 

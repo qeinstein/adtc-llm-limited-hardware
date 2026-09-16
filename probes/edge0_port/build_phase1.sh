@@ -23,9 +23,17 @@ gcc -O3 -march=native -D_GNU_SOURCE $I -c "$P/src/ggml-cpu/quants.c" -o "$OUT/cp
 echo "== tables shim =="
 gcc -O3 -march=native -Dquantize_row_q8_K_ref=shim_unused_q8k_ref \
   -c "$D/../hw_agent1_kernel/ggml_tables_shim.c" -o "$OUT/shim.o"
-echo "== link =="
+echo "== link ubench =="
 gcc -O3 -march=native -o "$OUT/ubench" "$OUT/ubench.o" "$OUT/mini.o" \
+  "$OUT/ggml-quants.o" "$OUT/x86_quants.o" "$OUT/cpu-quants.o" "$OUT/shim.o" -lm -lpthread
+echo "== qerr =="
+gcc -O2 -march=native -D_GNU_SOURCE $I -c "$D/phase1_qerr.c" -o "$OUT/qerr.o"
+gcc -O2 -march=native -o "$OUT/qerr" "$OUT/qerr.o" "$OUT/mini.o" \
+  "$OUT/ggml-quants.o" "$OUT/cpu-quants.o" "$OUT/shim.o" -lm
+echo "== overlap =="
+gcc -O3 -march=native -D_GNU_SOURCE $I -c "$D/stage_overlap.c" -o "$OUT/overlap.o"
+gcc -O3 -march=native -o "$OUT/overlap" "$OUT/overlap.o" "$OUT/mini.o" \
   "$OUT/ggml-quants.o" "$OUT/x86_quants.o" "$OUT/cpu-quants.o" "$OUT/shim.o" -lm -lpthread
 echo "== hwpstat =="
 gcc -O2 -o "$OUT/hwpstat" "$D/../hw_profile/hwpstat.c"
-ls -la "$OUT/ubench" "$OUT/hwpstat"
+ls -la "$OUT/ubench" "$OUT/qerr" "$OUT/overlap" "$OUT/hwpstat"

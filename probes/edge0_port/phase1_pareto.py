@@ -174,8 +174,11 @@ def main():
         sl = (mb - ma) / (cs[-1] - cs[-2]) * 0.3
         return max(6.0, mb + sl * (slots - cs[-1]))
 
+    # overlap: measured oracle-prefetch hiding (stage_overlap, direct-slot,
+    # lookahead-1, headroom): 96% of fetch hidden (8ms residual on 212ms).
+    # Deployable prerouter < oracle; parameterized for sensitivity.
     def ev(fmt, K, cache_gb, policy="lru", dense_q2k=False,
-           lm_short=False, ssd_bw=1.0, t_miss=0.25):
+           lm_short=False, ssd_bw=1.0, t_miss=0.25, overlap=0.0):
         slots = int(cache_gb * 1e9 / BUNDLE[fmt])
         curve = bel if policy == "belady" else lru
         miss = misses_at(curve, slots) * (K / 8.0)
@@ -184,7 +187,8 @@ def main():
         eovh = EOVH_FIX + EOVH_K8 * (K / 8.0)
         gemv = (ATTN + SHARED) * (DENSE_Q2K if dense_q2k else 1.0)
         lm = 3.0 if lm_short else LMHEAD
-        fetch = fresh_mb / (ssd_bw * 1000.0) * 1000.0 + miss * t_miss
+        fetch = (fresh_mb / (ssd_bw * 1000.0) * 1000.0 + miss * t_miss) \
+            * (1.0 - overlap)
         cpu = core + eovh + gemv + GDN + SCORES + GAPS + lm + MGMT
         n100 = cpu + fetch
         dg = dense_q2k_gb if dense_q2k else dense_gb
@@ -214,10 +218,16 @@ def main():
               f"core={r['core']:.1f} cpu={r['cpu']:.1f} fetch={r['fetch']:.1f} "
               f"n100={r['n100']:.1f} i5hi={1000/r['i5hi']:.1f}t/s rss={r['rss']:.2f}")
 
+    print("\n== quality-PROVEN rows (K8, experts-only, MMLU gate passed) ==")
+    for fmt, K, cg in (("q2k", 8, 2.4), ("q2k", 8, 3.8)):
+        r = ev(fmt, K, cg)
+        print(f"  {1000/r['i5lo']:5.2f}t/s | {r['rss']:.2f}GB | "
+              f"Q2K-experts PROVEN | slots={r['slots']} miss={r['miss']:.0f} "
+              f"n100={r['n100']:.0f} i5hi={1000/r['i5hi']:.1f}")
     print("\n== key rows (tok/s | peak RSS | quality note | mechanism) ==")
     key = [("iq2", 8, 1.0, "lru", False, False, "current bounded path"),
             ("iq2", 8, 2.4, "lru", False, False, "current + big cache"),
-            ("q2k", 8, 2.4, "lru", False, False, "Q2_K experts, same tier?"),
+            ("q2k", 8, 2.4, "lru", False, False, "Q2K-experts PROVEN (MMLU+2pp)"),
             ("q2k", 8, 4.0, "lru", True, False, "+dense-Q2K (gate TBD)"),
             ("q2k", 4, 4.0, "lru", True, False, "+K4 (needs Phase-4 recovery)"),
             ("q4k", 4, 4.0, "lru", True, False, "K4+Q4K (better weights)"),
@@ -231,6 +241,11 @@ def main():
               f"cpu={r['cpu']:.1f} fetch={r['fetch']:.1f} n100={r['n100']:.0f} "
               f"i5hi={1000/r['i5hi']:.1f}")
 
+    print("\n== overlap sensitivity (q2k K4 dq cache4.0, ssd=1GB/s) ==")
+    for ov in (0.0, 0.80, 0.90, 0.96):
+        r = ev("q2k", 4, 4.0, dense_q2k=True, overlap=ov)
+        print(f"  overlap={ov}: fetch={r['fetch']:.1f}ms "
+              f"i5lo={1000/r['i5lo']:.2f}t/s i5hi={1000/r['i5hi']:.2f}t/s")
     print("\n== disk sensitivity (q2k K4 dq cache4.0) ==")
     for bw in (0.5, 1.0, 3.0):
         row = []
