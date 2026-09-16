@@ -234,6 +234,30 @@ def wait_port(port, timeout=120):
     return False
 
 
+def wait_ready(port, timeout=900):
+    """llama-server listens BEFORE the model finishes loading (POSTs get
+    503 until slots are ready). Poll a tiny completion until non-503."""
+    import urllib.error
+    t0 = time.time()
+    attempt = 0
+    while time.time() - t0 < timeout:
+        attempt += 1
+        try:
+            chat_complete(
+                {"messages": [{"role": "user", "content": "Hi"}],
+                 "max_tokens": 2, "temperature": 0.0, "seed": 42}, port=port)
+            print(f"  server ready after {attempt} probes, "
+                  f"{time.time()-t0:.0f}s", flush=True)
+            return True
+        except urllib.error.HTTPError as e:
+            if e.code != 503:
+                raise
+            time.sleep(20)
+        except OSError:
+            time.sleep(5)
+    return False
+
+
 def chat_complete(payload, port=8080):
     req = urllib.request.Request(
         f"http://127.0.0.1:{port}/v1/chat/completions",
@@ -257,17 +281,36 @@ def run_generation(model, prompts, label):
         stdout=logf, stderr=subprocess.STDOUT, text=True)
     try:
         if not wait_port(port, 600):
-            raise RuntimeError("server did not start")
-        # warmup: one tiny completion (loads/prefaults, discarded)
+            raise RuntimeError("server did not listen")
+        if not wait_ready(port, 900):
+            raise RuntimeError("server never became ready (503 loop?)")
+        # warmup: one tiny completion (prefaults, discarded)
         chat_complete({"messages": [{"role": "user", "content": "Hi"}],
-                       "max_tokens": 4, "temperature": 0.0, "seed": 42})
+                       "max_tokens": 4, "temperature": 0.0, "seed": 42},
+                      port=port)
+        import urllib.error
         recs = []
         for pr in prompts:
             t0 = time.monotonic()
-            r = chat_complete(
-                {"messages": [{"role": "user", "content": pr["text"]}],
-                 "max_tokens": pr.get("max_tokens", 300), "temperature": 0.0,
-                 "seed": 42})
+            last = None
+            for attempt in range(4):
+                try:
+                    r = chat_complete(
+                        {"messages": [{"role": "user",
+                                       "content": pr["text"]}],
+                         "max_tokens": pr.get("max_tokens", 300),
+                         "temperature": 0.0, "seed": 42}, port=port)
+                    last = None
+                    break
+                except urllib.error.HTTPError as e:
+                    last = e
+                    if e.code != 503 or attempt == 3:
+                        raise
+                    print(f"  {pr['id']}: 503, retry {attempt+1}/3",
+                          flush=True)
+                    time.sleep(30)
+            if last is not None:
+                raise last
             el = time.monotonic() - t0
             ch = r["choices"][0]["message"]["content"]
             usage = r.get("usage", {})
