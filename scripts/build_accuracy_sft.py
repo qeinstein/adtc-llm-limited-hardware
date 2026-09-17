@@ -219,6 +219,9 @@ def main() -> int:
                     if key in seen:
                         continue
                     seen.add(key)
+                    rec = dict(rec)
+                    rec["_source"] = name
+                    rec["_synthetic"] = False
                     f.write(json.dumps(rec, ensure_ascii=False) + "\n")
                     n_rows += 1
                     total += 1

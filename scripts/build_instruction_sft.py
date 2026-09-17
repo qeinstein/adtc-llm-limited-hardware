@@ -152,6 +152,10 @@ def main() -> int:
         except Exception as e:
             print(f"  [warn] {name} failed ({type(e).__name__}: {e}) — skipping")
             continue
+        for row in got:
+            row["_source"] = f"instruction_{name}"
+            row["_category"] = "medical"
+            row["_synthetic"] = False
         if name == "ours":
             got = got * max(1, args.our_repeat)
         rows.extend(got)

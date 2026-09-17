@@ -169,9 +169,14 @@ def main() -> int:
         try:
             result = call_teacher(client, args.model, title, text, args.per_guideline)
 
-            for item in result.get("chat_en", []) + result.get("chat_sw", []):
-                if item.get("instruction") and item.get("output"):
-                    chat_rows.append({"instruction": item["instruction"], "input": "", "output": item["output"]})
+            for key, language in (("chat_en", "en"), ("chat_sw", "sw")):
+                for item in result.get(key, []):
+                    if item.get("instruction") and item.get("output"):
+                        chat_rows.append({
+                            "instruction": item["instruction"], "input": "", "output": item["output"],
+                            "_source": "synthetic_clinical_chat", "_category": "medical",
+                            "_language": language, "_synthetic": True,
+                        })
 
             for key in ("mcq_en", "mcq_sw"):
                 for item in result.get(key, []):
@@ -184,15 +189,22 @@ def main() -> int:
                             "choices": LETTERS,
                             "gold": ci,
                             "format": "letter",
+                            "_source": "synthetic_mcqa",
+                            "_category": "medical",
+                            "_language": "en" if key == "mcq_en" else "sw",
+                            "_synthetic": True,
                         }
                         mcqa_f.write(json.dumps(row, ensure_ascii=False) + "\n")
 
             # also bank the raw Q+A pairs as free text for Track B depth
-            for item in result.get("chat_en", []) + result.get("chat_sw", []):
-                if item.get("instruction") and item.get("output"):
-                    corpus_f.write(json.dumps(
-                        {"text": f"{item['instruction']}\n{item['output']}"}, ensure_ascii=False
-                    ) + "\n")
+            for key, language in (("chat_en", "en"), ("chat_sw", "sw")):
+                for item in result.get(key, []):
+                    if item.get("instruction") and item.get("output"):
+                        corpus_f.write(json.dumps({
+                            "text": f"{item['instruction']}\n{item['output']}",
+                            "_source": "synthetic_corpus", "_category": "medical",
+                            "_language": language, "_synthetic": True,
+                        }, ensure_ascii=False) + "\n")
 
             n_ok += 1
             print(f"  [{n_ok+n_fail}/{len(guidelines)}] {title[:50]:50s} OK")

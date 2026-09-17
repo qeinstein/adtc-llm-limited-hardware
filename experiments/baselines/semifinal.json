@@ -1,0 +1,177 @@
+{
+  "schema_version": "1.0.0",
+  "baseline_id": "adtc-2026-semifinal",
+  "status": "immutable",
+  "description": "The ADTC 2026 semifinal model baseline. Future model experiments must compare against this artifact and must not overwrite it.",
+  "frozen_at_utc": "2026-09-08T22:45:00Z",
+  "repository": {
+    "url": "https://github.com/qeinstein/adtc-llm-limited-hardware",
+    "baseline_branch": "main",
+    "baseline_git_sha": "fadef7b9efcc853ec845657f3f4f9d0102692f42",
+    "profiler_reported_git_sha": "b0a976f61a195916a3264e7c52360b301d89257f",
+    "note": "The repository baseline SHA records the latest main commit before Phase 0/1. The profiler-reported SHA is the older source snapshot used by the committed Gate-1 run."
+  },
+  "base_model": {
+    "id": "Qwen/Qwen3-0.6B-Base",
+    "revision": "da87bfb608c14b7cf20ba1ce41287e8de496c0cd",
+    "revision_status": "current upstream revision discovered during baseline freeze; the original training command did not pin a revision",
+    "license": "Apache-2.0",
+    "architecture": "qwen3",
+    "parameter_count": 596049920,
+    "context_length": 32768,
+    "tokenizer": {
+      "source": "Qwen/Qwen3-0.6B-Base",
+      "tokenizer_json_blob_sha1": "443909a61d429dff23010e5bddd28ff530edda00",
+      "tokenizer_config_blob_sha1": "6a3829ee9491f36113e64df37573be81df0366f5",
+      "bos_token": "<|endoftext|>",
+      "eos_token": "<|endoftext|>",
+      "pad_token": "<|endoftext|>",
+      "chat_template": "Qwen3 template embedded in GGUF; supports enable_thinking=false, which inserts <think>\\n\\n</think>\\n\\n after the assistant prefix"
+    }
+  },
+  "artifact": {
+    "model_id": "Fluxx08/jamii-afya-qwen3-0.6b",
+    "model_revision": "db25331f85c8aab975a65efdc87af5e3ca14036d",
+    "revision_title": "v3: Kiswahili + general-capability SFT on recovered weights (arc_easy 79.0, medmcqa 36.0)",
+    "filename": "Qwen3-0.6B-Q4_0.gguf",
+    "immutable_url": "https://huggingface.co/Fluxx08/jamii-afya-qwen3-0.6b/resolve/db25331f85c8aab975a65efdc87af5e3ca14036d/Qwen3-0.6B-Q4_0.gguf",
+    "sha256": "c8519086e799fb60a4888ec51e87f78a35c27bad5554d74f68707f09590593ad",
+    "size_bytes": 382155680,
+    "quantization": "Q4_0",
+    "importance_matrix": "English/Kiswahili medical calibration reported and GGUF metadata records an imatrix source path; calibration artifact/checksum is not committed",
+    "parameter_count": 596049920,
+    "source": "Hugging Face model API with blobs=true, captured during Phase 0"
+  },
+  "training": {
+    "method": "two-stage QLoRA history reconstructed from repository evidence",
+    "initial_stage": {
+      "base": "Qwen/Qwen3-0.6B-Base (revision not pinned at training time)",
+      "objective": "character-length-normalized listwise MCQA ranking + 0.2 gold-token mean NLL; completion-only clinical chat NLL; optional healthcare causal-LM NLL",
+      "qlora": {
+        "load_in_4bit": true,
+        "bnb_4bit_quant_type": "nf4",
+        "bnb_4bit_compute_dtype": "bfloat16",
+        "bnb_4bit_use_double_quant": true,
+        "rank": 32,
+        "alpha": 64,
+        "dropout": 0.05,
+        "bias": "none",
+        "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+      },
+      "optimizer_configuration": {
+        "learning_rate": 0.0001,
+        "scheduler": "cosine",
+        "warmup_ratio": 0.03,
+        "epochs": 2.0,
+        "per_device_batch_items": 4,
+        "gradient_accumulation_steps": 8,
+        "max_length": 256,
+        "gradient_checkpointing": true,
+        "clinical_repeat": 3
+      },
+      "inputs": [
+        "output/accuracy_sft.jsonl from scripts/build_accuracy_sft.py",
+        "data/medical_lora_dataset.json and possibly output/synthetic_clinical_chat.json",
+        "output/healthcare_corpus.jsonl from scripts/build_healthcare_corpus.py",
+        "synthetic append/merge commands documented in PROGRESS.md"
+      ],
+      "input_status": "derived training files and exact run manifest are not committed; exact initial-stage mixture is not reproducible from the repository alone"
+    },
+    "v3_stage": {
+      "base": "output/jamii-hf-recovered, dequantized from the prior shipped Q4_0 GGUF by scripts/gguf_to_hf.py",
+      "fresh_lora_adapter": true,
+      "objective": "same listwise/chat objective; healthcare corpus disabled",
+      "rank": 32,
+      "alpha": 64,
+      "dropout": 0.05,
+      "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+      "learning_rate": 0.00005,
+      "scheduler": "cosine",
+      "warmup_ratio": 0.03,
+      "epochs": 2.0,
+      "per_device_batch_items": 1,
+      "gradient_accumulation_steps": 32,
+      "max_length": 320,
+      "gradient_checkpointing": true,
+      "clinical_repeat": 1,
+      "save_steps": 60,
+      "reported_row_mix": {
+        "kiswahili_clinical_effective": 1182,
+        "general_identity_social_health_literacy_effective": 720,
+        "handwritten_clinical_effective": 400,
+        "english_medical_qa": 2500,
+        "mcqa": 1200
+      },
+      "inputs": ["output/mcqa_v3.jsonl", "output/sft_v3.json"],
+      "input_status": "generated v3 inputs, recovered base, adapter, logs, and exact seeds are not committed"
+    },
+    "system_prompt": "You are Jamii Afya, an offline medical decision-support assistant for community health workers in rural African clinics. Answer in the question's language (English or Kiswahili). Always surface danger signs and when to refer.",
+    "random_seed": null
+  },
+  "export": {
+    "steps": [
+      "merge PEFT adapter into the recovered/model base in float16",
+      "convert Hugging Face checkpoint to GGUF f16 with convert_hf_to_gguf.py",
+      "build an importance matrix with llama-imatrix --chunks 100 when calibration_corpus.txt exists",
+      "quantize to Q4_0 with llama-quantize"
+    ],
+    "script": "scripts/export_gguf.sh",
+    "llama_cpp_revision": null,
+    "llama_cpp_revision_status": "not pinned; scripts clone/fetch master",
+    "calibration_corpus_sha256": null,
+    "conversion_environment": "not captured"
+  },
+  "reported_metrics": {
+    "accuracy": [
+      {"task": "arc_easy", "metric": "acc_norm", "value_percent": 79.5, "n": 200, "source": "REPORT.md", "artifact_linkage": "reported, not checksum-bound"},
+      {"task": "arc_easy", "metric": "acc_norm", "value_percent": 78.7, "n": 300, "source": "REPORT.md", "artifact_linkage": "consistent with current HF v3 revision title rounded to 79.0, but raw result is absent"},
+      {"task": "openbookqa", "metric": "acc_norm", "value_percent": 51.5, "n": 200, "source": "REPORT.md", "artifact_linkage": "reported, not checksum-bound"},
+      {"task": "medmcqa", "metric": "acc_norm", "value_percent": 36.0, "n": 300, "source": "REPORT.md and current HF v3 revision title", "artifact_linkage": "reported, raw result is absent"}
+    ],
+    "system": {
+      "throughput_tokens_per_second_generation": 20.33,
+      "first_token_latency_ms": 12104.36,
+      "peak_rss_mb": 526.91,
+      "steady_state_rss_mb": 495.97,
+      "peak_vms_mb": 1053.57,
+      "thermal_throttled": false,
+      "cpu_percent_p99": 57.6,
+      "core_temp_c_peak": null,
+      "prompt_tokens": 512,
+      "generated_tokens": 128,
+      "source": "docs/gate1-profiler-run.json",
+      "artifact_linkage": "profiler record predates current HF v3 artifact and does not record a model checksum"
+    }
+  },
+  "profiler_environment": {
+    "profiler_version": "adtc-profiler 0.1.0",
+    "cpu_model": "AMD EPYC 7763 64-Core Processor",
+    "cores": 4,
+    "ram_gb": 15.6,
+    "gpu": "none",
+    "os": "Ubuntu 24.04.4 LTS",
+    "llama_cpp_build": "scalar; AVX, AVX2, AVX512, FMA, F16C, BLAS, CUDA and Metal disabled",
+    "llama_cpp_revision": null
+  },
+  "known_reproducibility_gaps": [
+    "The hosted filename was overwritten: Hugging Face history has an original upload and a later v3 upload under the same name.",
+    "The committed profiler metrics are not bound to a GGUF checksum and predate the current hosted v3 revision.",
+    "Base model revision was not pinned in training commands.",
+    "llama.cpp revision was not pinned for conversion, quantization, or scalar benchmarking.",
+    "Derived training files, source snapshots, adapters, recovered weights, calibration corpus, imatrix, seeds, package lockfile, and raw accuracy outputs are absent.",
+    "download_model.sh comments list an obsolete 376246272-byte size, while the current immutable artifact is 382155680 bytes.",
+    "The repository contains v4 training code, but the currently hosted artifact identifies itself as v3; no v4 artifact is linked from metadata.json."
+  ],
+  "evidence": [
+    "metadata.json",
+    "download_model.sh",
+    "REPORT.md",
+    "PROGRESS.md",
+    "docs/gate1-profiler-run.json",
+    "scripts/train_lora.py",
+    "scripts/train_v3.sh",
+    "scripts/export_gguf.sh",
+    "scripts/gguf_to_hf.py",
+    "Hugging Face model and commit APIs captured on 2026-09-08"
+  ]
+}
