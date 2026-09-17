@@ -1,0 +1,24 @@
+{
+  "experiment_id": "falcon-generation-smoke-v10-20260913",
+  "status": "passed_numeric_smoke",
+  "kernel": "toheebogunade/jamii-afya-falcon-production-post-training",
+  "kernel_version": 10,
+  "commit": "b098a60",
+  "model": "tiiuae/Falcon-H1-1.5B-Deep-Instruct",
+  "model_revision": "b6648636ddc906688974282de6e7a243395f5423",
+  "hardware": "Tesla P100-PCIE-16GB, CUDA capability 6.0",
+  "dtype": "torch.float32",
+  "generation": {
+    "prompt_tokens": 60,
+    "stop_ids": [11, 228],
+    "score_steps": 8,
+    "token_ids": [4638, 29264, 3053, 15451, 4426, 535, 883, 3708],
+    "visible_chars": 19,
+    "text_prefix": "As Jamii Afya, I ur",
+    "stopped_on": null,
+    "finite_scores": true
+  },
+  "conclusion": "FP32 removes the P100 NaN/PAD failure; the short smoke is numerically valid but intentionally truncated",
+  "training_started": false,
+  "timestamp_utc": "2026-09-13"
+}

@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0.0",
+  "experiment_id": "falcon-deployment-baseline-v1-20260913",
+  "status": "ABORTED_INFRASTRUCTURE",
+  "decision": "FOLLOW-UP",
+  "kaggle_kernel": "toheebogunade/jamii-afya-falcon-deployment-baseline",
+  "kaggle_kernel_version": 1,
+  "repo_sha": "fbc981ba50a59cd5630f7369b33d1c4a8cb054e2",
+  "started_utc": "2026-09-13T18:12:09Z",
+  "failed_utc": "2026-09-13T18:19:14Z",
+  "hardware": {
+    "cpu": "Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "cores": 4,
+    "build": "scalar llama.cpp"
+  },
+  "requested_panel": ["Falcon-H1-1.5B-Deep-Instruct-Q4_0.gguf", "Falcon-H1-1.5B-Deep-Instruct-Q4_K_M.gguf"],
+  "requested_command": "llama-bench -m MODEL -p 512 -n 128 -ngl 0 -t 4 --output json",
+  "reason_for_termination": "The Kaggle image did not contain /usr/bin/time. The benchmark wrapper failed while spawning its first Q4_0 repetition, before llama-bench loaded the model.",
+  "known_weaknesses": [
+    "No throughput, RSS, or deterministic-output measurement is valid from this version.",
+    "The portable resource-accounting implementation is used by v2; its outputs are recorded separately."
+  ]
+}

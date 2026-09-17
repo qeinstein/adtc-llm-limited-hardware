@@ -1,0 +1,31 @@
+{
+  "experiment_id": "falcon-generation-smoke-v8-20260913",
+  "status": "failed_generation_contract",
+  "kernel": "toheebogunade/jamii-afya-falcon-production-post-training",
+  "kernel_version": 8,
+  "commit": "666c5f3",
+  "model": "tiiuae/Falcon-H1-1.5B-Deep-Instruct",
+  "model_revision": "b6648636ddc906688974282de6e7a243395f5423",
+  "data_build": {
+    "accepted": 15036,
+    "train": 13564,
+    "dev": 1472,
+    "sft_tokens": 30051,
+    "mcqa_tokens": 7426390,
+    "project_sft_rows": 142
+  },
+  "generation": {
+    "prompt_tokens": 60,
+    "stop_ids": [11, 228],
+    "tokenizer_eos_token_id": 11,
+    "tokenizer_pad_token_id": 0,
+    "new_tokens_reported": 8,
+    "token_ids": [4638, 0, 0, 0, 0, 0, 0, 0],
+    "visible_chars": 2,
+    "text": "As",
+    "stopped_on": null
+  },
+  "conclusion": "stop-set bug is fixed, but generation still needs trace diagnostics to distinguish early-stop padding from the model selecting PAD; no training or checkpoint promotion authorized",
+  "next_action": "rerun smoke-only with return_dict_in_generate/output_scores diagnostics",
+  "timestamp_utc": "2026-09-13"
+}

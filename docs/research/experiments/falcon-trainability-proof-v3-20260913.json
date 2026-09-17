@@ -1,0 +1,55 @@
+{
+  "schema_version": "1.0.0",
+  "experiment_id": "falcon-trainability-proof-v3-20260913",
+  "status": "PASS_TRAINABILITY_ONLY",
+  "decision": "FOLLOW-UP",
+  "kaggle_kernel": "toheebogunade/jamii-afya-falcon-trainability-proof",
+  "kaggle_kernel_version": 3,
+  "repo_sha": "32a808d",
+  "started_utc": "2026-09-13T18:35:28Z",
+  "completed_utc": "2026-09-13T18:42:58Z",
+  "model": {
+    "id": "tiiuae/Falcon-H1-1.5B-Deep-Instruct",
+    "revision": "b6648636ddc906688974282de6e7a243395f5423"
+  },
+  "hardware": {
+    "gpu": "Tesla P100-PCIE-16GB",
+    "cuda_capability": "sm_60",
+    "dtype": "torch.float16",
+    "mamba_fast_path": false
+  },
+  "configuration": {
+    "steps": 64,
+    "learning_rate": 0.001,
+    "lora": {
+      "r": 16,
+      "alpha": 32,
+      "dropout": 0.0,
+      "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj"]
+    },
+    "fixture_rows": 32,
+    "fixture_mix": {"sft": 16, "mcqa": 16},
+    "seed": 3407
+  },
+  "evidence": {
+    "trainable_parameters": 7569408,
+    "adapter_tensors_changed": 528,
+    "adapter_delta_l2": 24.05708510017754,
+    "adapter_delta_relative": 0.6412081252407458,
+    "probe_logit_delta_max_abs": 57.017578125,
+    "probe_logit_delta_rms": 9.352434158325195,
+    "adapter_off_matches_initial_stock_max_abs": 0.0,
+    "adapter_on_restored_max_abs": 0.0,
+    "reloaded_adapter_max_abs": 0.0,
+    "merged_vs_unmerged_max_abs": 0.125,
+    "loss_summary": {
+      "sft": {"first_mean": 3.0727100386, "last_mean": 1.1936058998, "drop_percent": 61.1546},
+      "mcqa": {"first_mean": 0.6694855131, "last_mean": 0.0383494617, "drop_percent": 94.2718}
+    },
+    "changed_generation_count": 16,
+    "generation_count": 16
+  },
+  "conclusion": "The current proof implementation passes the complete movement gate: nonzero gradients and parameter deltas, material per-objective loss reductions, adapter-off stock equivalence, exact adapter reload equivalence, and changed generations on every SFT fixture row.",
+  "quality_warning": "This is deliberately high-rate overfitting. The adapter produces repetitive referral text and is rejected as a quality candidate. It only authorizes a controlled real-data probe after prompt evaluation; it does not authorize production-scale training.",
+  "raw_artifacts": ["trainability_manifest.json", "training_metrics.jsonl", "generations.json", "events.jsonl"]
+}

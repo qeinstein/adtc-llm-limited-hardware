@@ -135,8 +135,9 @@ def resolve_precision(*, use_cuda, cuda_capability=None, mps=False,
     - CUDA + 4bit -> bitsandbytes NF4 (locked recipe); bf16 unless overridden.
       NOTE: bitsandbytes requires sm>=70 — on older GPUs (P100/sm_60) use
       --quantize none instead of failing at runtime.
-    - CUDA + none -> plain weights; auto picks bf16 on sm>=80, fp16 below
-      (P100/T4 have no bf16 tensor cores; fp16 is the safe fast choice).
+    - CUDA + none -> plain weights; auto picks bf16 on sm>=80, fp16 on sm>=70,
+      and fp32 below sm_70. Falcon-H1 produces non-finite autoregressive
+      logits in P100 FP16, so the older path is deliberately correctness-first.
     """
     if not use_cuda:
         return ("plain", "fp16" if mps else "fp32")
@@ -147,7 +148,7 @@ def resolve_precision(*, use_cuda, cuda_capability=None, mps=False,
     cap = cuda_capability or (0, 0)
     if cap >= (8, 0):
         return ("plain", "bf16")
-    return ("plain", "fp16")
+    return ("plain", "fp16" if cap >= (7, 0) else "fp32")
 
 
 def compile_supported(*, use_cuda, cuda_capability=None):
@@ -155,6 +156,33 @@ def compile_supported(*, use_cuda, cuda_capability=None):
     if not use_cuda:
         return False
     return (cuda_capability or (0, 0)) >= (7, 0)
+
+
+def get_cuda_capability(torch_module):
+    """Return the active CUDA device capability using PyTorch's public API."""
+    return torch_module.cuda.get_device_capability(0)
+
+
+def patch_peft_transformers_compat() -> bool:
+    """Restore PEFT's legacy Bloom symbol on Transformers 4.52+.
+
+    Falcon-H1 first appears in Transformers 4.53, while PEFT releases used by
+    this probe still import ``BloomPreTrainedModel`` from the Transformers
+    top-level namespace. Transformers moved that lazy export. PEFT only uses
+    the symbol for an import-time Bloom prefix-tuning check, so a placeholder
+    is sufficient for a Falcon run and avoids importing optional vision/quant
+    dependencies just to recover an unrelated legacy export. Return whether a
+    patch was needed; callers can log it without hiding other import failures.
+    """
+    import transformers
+
+    if getattr(transformers, "BloomPreTrainedModel", None) is None:
+        class BloomPreTrainedModel:  # noqa: N801 - preserve PEFT's old symbol
+            pass
+
+        transformers.BloomPreTrainedModel = BloomPreTrainedModel
+        return True
+    return False
 
 
 # --------------------------------------------------------------------------- #
@@ -302,6 +330,7 @@ def main() -> int:
 
     import torch
     import torch.nn.functional as F
+    patch_peft_transformers_compat()
     from peft import LoraConfig, PeftModel, get_peft_model, prepare_model_for_kbit_training
     from transformers import (
         AutoModelForCausalLM,
@@ -331,7 +360,7 @@ def main() -> int:
     # Defaults (4bit + auto dtype) reproduce the locked recipe exactly.
     use_cuda = torch.cuda.is_available()
     mps = (not use_cuda) and torch.backends.mps.is_available()
-    cap = torch.cuda.get_capability() if use_cuda else None
+    cap = get_cuda_capability(torch) if use_cuda else None
     load_mode, dtype_name = resolve_precision(
         use_cuda=use_cuda, cuda_capability=cap, mps=mps,
         quantize=args.quantize, compute_dtype=args.compute_dtype,
@@ -340,6 +369,17 @@ def main() -> int:
     dtype = _dtypes[dtype_name]
     print(f"Precision: load_mode={load_mode} dtype={dtype_name} cuda_cap={cap}")
 
+    # Transformers' generic AutoModel registry imports every optional model
+    # family when resolving a class. On the Kaggle P100 image that reaches an
+    # unrelated Gemma3n/torchvision dependency. Falcon-H1 has a first-class
+    # direct class, so use it here; the existing AutoModel path remains the
+    # default for Qwen and other supported bases.
+    model_cls = AutoModelForCausalLM
+    if "falcon-h1" in args.base_model.lower():
+        from transformers.models.falcon_h1.modeling_falcon_h1 import FalconH1ForCausalLM
+
+        model_cls = FalconH1ForCausalLM
+
     if load_mode == "bnb4":
         bnb = BitsAndBytesConfig(
             load_in_4bit=True,
@@ -347,13 +387,13 @@ def main() -> int:
             bnb_4bit_compute_dtype=dtype,
             bnb_4bit_use_double_quant=True,
         )
-        model = AutoModelForCausalLM.from_pretrained(
+        model = model_cls.from_pretrained(
             args.base_model, quantization_config=bnb, device_map="auto",
             trust_remote_code=True, torch_dtype=dtype,
         )
     else:
         print(f"Loading unquantized ({dtype_name}).")
-        model = AutoModelForCausalLM.from_pretrained(
+        model = model_cls.from_pretrained(
             args.base_model, trust_remote_code=True, torch_dtype=dtype,
         )
         if use_cuda:

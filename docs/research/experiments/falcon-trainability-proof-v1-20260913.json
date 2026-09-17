@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0.0",
+  "experiment_id": "falcon-trainability-proof-v1-20260913",
+  "status": "ABORTED_INFRASTRUCTURE",
+  "decision": "REJECT",
+  "model": "tiiuae/Falcon-H1-1.5B-Deep-Instruct",
+  "model_revision": "b6648636ddc906688974282de6e7a243395f5423",
+  "kaggle_kernel": "toheebogunade/jamii-afya-falcon-trainability-proof",
+  "kaggle_kernel_version": 1,
+  "repo_sha": "fbc981ba50a59cd5630f7369b33d1c4a8cb054e2",
+  "started_utc": "2026-09-13T18:12:19Z",
+  "failed_utc": "2026-09-13T18:16:30Z",
+  "requested_hyperparameters": {
+    "steps": 12,
+    "learning_rate": 0.001,
+    "lora_r": 16,
+    "lora_alpha": 32,
+    "lora_dropout": 0.0,
+    "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj"],
+    "fixture_rows": 12
+  },
+  "hardware": "Tesla P100-PCIE-16GB",
+  "reason_for_termination": "The notebook invoked scripts/falcon_trainability_probe.py by path, but the script imported scripts.* without adding the repository root to sys.path. It failed with ModuleNotFoundError before model loading and before any optimizer step.",
+  "known_weaknesses": [
+    "No trainability evidence was produced.",
+    "The pre-fix fixture was only 12 rows and therefore below the requested 32-128-row diagnostic range.",
+    "The 12-step setting was not sufficient evidence of memorization even if the import had succeeded."
+  ],
+  "replacement": "v2 rerun uses repo-root import hardening, 32 deterministic mixed rows, and 64 steps; its result is recorded separately."
+}

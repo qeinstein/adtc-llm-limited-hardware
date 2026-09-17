@@ -1,0 +1,58 @@
+{
+  "schema_version": "1.0.0",
+  "experiment_id": "falcon-small-real-followup-v1",
+  "purpose": "bounded real-data follow-up after the 8-step pilot showed no generation movement; not a production promotion config",
+  "hypothesis": "The previous pilot used an intentionally conservative 5e-6 learning rate and only 8 optimizer steps. A canonical Stage-A schedule over the same clean mixture should produce measurable adapter-on versus stock movement without using frozen holdouts.",
+  "base_config": "configs/falcon-production-v1.json",
+  "model": {
+    "id": "tiiuae/Falcon-H1-1.5B-Deep-Instruct",
+    "revision": "b6648636ddc906688974282de6e7a243395f5423"
+  },
+  "data": {
+    "mcqa_max_per_dataset": 4,
+    "mcqa_datasets": ["arc_easy", "arc_challenge", "openbookqa", "mmlu_aux", "medmcqa", "medqa", "pubmedqa", "headqa"],
+    "letter_permutations": 3,
+    "seed": 3407,
+    "batteries": [
+      "docs/research/falcon_prompt_dev.json",
+      "docs/research/falcon_prompt_validation.json"
+    ],
+    "frozen_final_holdout": [
+      "docs/research/falcon_probe_heldout.json",
+      "docs/research/falcon_baseline_prompts.json",
+      "data/swahili_eval_set.json"
+    ],
+    "frozen_holdout_policy": "not read by this follow-up; no checkpoint promotion"
+  },
+  "training": {
+    "stage": "stage_a_capability_preserving",
+    "max_steps": 16,
+    "save_steps": 4,
+    "eval_steps": 4,
+    "learning_rate": 0.00003,
+    "lora_r": 16,
+    "lora_alpha": 32,
+    "lora_dropout": 0.05,
+    "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj", "in_proj", "out_proj", "gate_proj", "up_proj", "down_proj"],
+    "objective_weights": {"sft": 1.0, "mcqa": 0.15},
+    "sampling_token_share": {"sft": 0.9, "mcqa": 0.1},
+    "quantize": "none",
+    "compute_dtype": "fp16",
+    "gradient_accumulation_steps": 16,
+    "per_device_batch_size": 1,
+    "max_length": 512,
+    "seed": 3407
+  },
+  "evaluation": {
+    "development_and_validation_only": true,
+    "max_dev_rows": 64,
+    "max_new_tokens": 128,
+    "behavioral_movement_required": true,
+    "frozen_gate_required_before_any_promotion": true
+  },
+  "persistence": {
+    "checkpoint_dataset": "toheebogunade/jamii-afya-falcon-production-checkpoints",
+    "persist_steps": [4, 8, 12, 16],
+    "promotion": "forbidden until frozen gate and deployment evaluation pass"
+  }
+}

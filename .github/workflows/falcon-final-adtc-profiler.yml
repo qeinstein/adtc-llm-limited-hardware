@@ -1,0 +1,220 @@
+name: Falcon final submission validation and ADTC profiler
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "metadata.json"
+      - "download_model.sh"
+      - "eval/falcon_final_48q.json"
+      - "scripts/evaluate_falcon_final_48q.py"
+      - ".github/workflows/falcon-final-adtc-profiler.yml"
+
+permissions:
+  contents: read
+
+env:
+  PROFILER_SPEC: git+https://github.com/Africa-Deep-Tech-Foundation/adtc-profiler.git@ac2e137dca65ea3b09d997774f17dd8907b489fb
+  FINAL_MODEL_NAME: Falcon-H1-1.5B-Deep-JamiiAfya-Q4_K_M.gguf
+
+jobs:
+  final-validation:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 360
+    steps:
+      - name: Checkout exact submission commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Record clean-checkout identity
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          mkdir -p artifacts
+          {
+            echo "submission_commit=$(git rev-parse HEAD)"
+            echo "workflow_sha=$GITHUB_SHA"
+            echo "branch=${GITHUB_REF_NAME}"
+            echo "profiler_spec=$PROFILER_SPEC"
+            echo "runner=$(uname -a)"
+            echo "cpu=$(grep -m1 'model name' /proc/cpuinfo || true)"
+            echo "cores=$(nproc)"
+            echo "memory=$(free -h)"
+            echo "disk=$(df -h /)"
+          } > artifacts/environment.txt
+
+      - name: Validate active Falcon metadata before downloading
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          metadata = json.loads(Path("metadata.json").read_text())
+          expected = "model/Falcon-H1-1.5B-Deep-JamiiAfya-Q4_K_M.gguf"
+          assert metadata["_runtime"]["model_path"] == expected
+          assert metadata["model"]["name"].startswith("JamiiAfya-Falcon-H1")
+          assert metadata["model"]["quantization"] == "GGUF Q4_K_M"
+          print(json.dumps({"runtime_model_path": expected, "model": metadata["model"]}, indent=2))
+          PY
+
+      - name: Install build tools and Python
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y cmake build-essential python3-dev
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Build llama.cpp with llama-bench on PATH
+        run: |
+          bash scripts/build_llamacpp_scalar.sh
+          echo "$GITHUB_WORKSPACE/llama.cpp/build-scalar/bin" >> "$GITHUB_PATH"
+          command -v llama-bench
+
+      - name: Install the pinned official ADTC profiler
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --prefer-binary llama-cpp-python
+          python -m pip install "$PROFILER_SPEC"
+          python - <<'PY'
+          import adtc_profiler
+          print("adtc-profiler import: PASS")
+          PY
+
+      - name: Download exact active GGUF through repository mechanism
+        env:
+          MODEL_SHA256: ${{ vars.FALCON_GGUF_SHA256 }}
+        run: |
+          set -euo pipefail
+          bash download_model.sh
+          test "$(basename "$(python3 - <<'PY'
+          from src.config import resolve_model_path
+          print(resolve_model_path())
+          PY
+          )")" = "$FINAL_MODEL_NAME"
+          test -f "model/$FINAL_MODEL_NAME"
+          actual="$(sha256sum "model/$FINAL_MODEL_NAME" | awk '{print $1}')"
+          expected="${MODEL_SHA256:-}"
+          if [ -z "$expected" ]; then
+            expected="$(curl -L --fail --silent --show-error "${MODEL_URL:-https://huggingface.co/Fluxx08/jamii-afya-falcon-h1-1.5b/resolve/main/$FINAL_MODEL_NAME}.sha256" | grep -Eo '[[:xdigit:]]{64}' | head -n 1 | tr '[:upper:]' '[:lower:]')"
+          fi
+          test "${#expected}" = 64
+          test "$actual" = "${expected,,}"
+          printf '{"filename":"%s","bytes":%s,"sha256":"%s"}\n' "$FINAL_MODEL_NAME" "$(stat -c%s "model/$FINAL_MODEL_NAME")" "$actual" | tee artifacts/sha256-manifest.json
+
+      - name: Run fixed 48-question exact-GGUF evaluation
+        run: |
+          python scripts/evaluate_falcon_final_48q.py \
+            --model "model/$FINAL_MODEL_NAME" \
+            --output artifacts/falcon-final-eval.json \
+            --no-system-output artifacts/falcon-final-no-system-safety.json \
+            --report docs/research/FALCON_FINAL_EVAL_REPORT.md \
+            --no-system-report docs/research/FALCON_FINAL_NO_SYSTEM_SAFETY.md
+
+      - name: Run full official ADTC participant profiler
+        run: |
+          set -o pipefail
+          adtc-profiler run \
+            --submission "$GITHUB_WORKSPACE" \
+            --mode participant \
+            --output artifacts/adtc-submission.json \
+            2>&1 | tee artifacts/adtc-profiler-full.log
+
+      - name: Validate profiler report and print concise summary
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import sys
+          from pathlib import Path
+          from adtc_profiler.report import validate
+          report = json.loads(Path("artifacts/adtc-submission.json").read_text())
+          validate(report)
+          if not report.get("accuracy"):
+              raise SystemExit("official full run emitted no accuracy metrics")
+          peak = float((report.get("memory") or {}).get("peak_rss_mb", 1e12))
+          if peak >= 7168:
+              raise SystemExit(f"peak RSS is not below 7 GB: {peak} MB")
+          summary = {
+              "accuracy": report.get("accuracy"),
+              "generation_tok_s": (report.get("throughput") or {}).get("tokens_per_second_generation"),
+              "prompt_tok_s": (report.get("throughput") or {}).get("tokens_per_second_prompt"),
+              "first_token_latency_ms": (report.get("throughput") or {}).get("first_token_latency_ms"),
+              "peak_rss_mb": peak,
+              "steady_rss_mb": (report.get("memory") or {}).get("steady_state_rss_mb"),
+              "cpu_utilization_p99": (report.get("cpu_thermal") or {}).get("cpu_percent_p99"),
+              "thermal": report.get("cpu_thermal"),
+              "overall_score": report.get("overall_score", report.get("score")),
+              "model_size": Path("model") .joinpath(os.environ["FINAL_MODEL_NAME"]).stat().st_size,
+              "profiler_commit": "ac2e137dca65ea3b09d997774f17dd8907b489fb",
+              "submission_commit": os.environ.get("GITHUB_SHA"),
+              "gguf_sha256": json.loads(Path("artifacts/sha256-manifest.json").read_text())["sha256"],
+              "interpretation": "Official ADTC profiler software, GitHub Actions hardware self-check",
+          }
+          Path("artifacts/adtc-summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+          print(json.dumps(summary, indent=2))
+          PY
+
+      - name: Repeat official throughput and memory twice
+        run: |
+          set -o pipefail
+          for repeat in 1 2; do
+            adtc-profiler run \
+              --submission "$GITHUB_WORKSPACE" \
+              --mode participant \
+              --output "artifacts/adtc-submission-repeat-${repeat}.json" \
+              --skip-accuracy \
+              2>&1 | tee "artifacts/adtc-profiler-repeat-${repeat}.log"
+          done
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          reports = [json.loads(Path(f"artifacts/adtc-submission-repeat-{i}.json").read_text()) for i in (1, 2)]
+          speeds = [float(r["throughput"]["tokens_per_second_generation"]) for r in reports]
+          peaks = [float(r["memory"]["peak_rss_mb"]) for r in reports]
+          result = {
+              "generation_tok_s_mean": sum(speeds) / len(speeds),
+              "generation_tok_s_min": min(speeds),
+              "generation_tok_s_max": max(speeds),
+              "peak_rss_mb_mean": sum(peaks) / len(peaks),
+              "peak_rss_mb_min": min(peaks),
+              "peak_rss_mb_max": max(peaks),
+              "official_full_run_remains_canonical": True,
+          }
+          Path("artifacts/adtc-repeatability.json").write_text(json.dumps(result, indent=2) + "\n")
+          print(json.dumps(result, indent=2))
+          PY
+
+      - name: Update measured model card in workspace
+        run: |
+          python scripts/update_falcon_model_card.py \
+            --card MODEL_CARD.md \
+            --evaluation artifacts/falcon-final-eval.json \
+            --profiler artifacts/adtc-submission.json
+
+      - name: Clean-checkout inference smoke test
+        run: python3 -m src.main --demo
+
+      - name: Upload all final validation artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: falcon-final-validation-${{ github.run_id }}
+          if-no-files-found: warn
+          path: |
+            artifacts/adtc-submission.json
+            artifacts/adtc-summary.json
+            artifacts/adtc-submission-repeat-*.json
+            artifacts/adtc-repeatability.json
+            artifacts/adtc-profiler-*.log
+            artifacts/environment.txt
+            artifacts/sha256-manifest.json
+            artifacts/falcon-final-eval.json
+            artifacts/falcon-final-no-system-safety.json
+            docs/research/FALCON_FINAL_EVAL_REPORT.md
+            docs/research/FALCON_FINAL_NO_SYSTEM_SAFETY.md
+            MODEL_CARD.md

@@ -1,0 +1,64 @@
+{
+  "experiment_id": "falcon-data-audit-v27-20260914",
+  "status": "KEEP",
+  "run_type": "Kaggle audit-only",
+  "kernel": "toheebogunade/jamii-afya-falcon-production-post-training/27",
+  "repo_sha": "95c8303",
+  "started_utc": "2026-09-14T01:09:50Z",
+  "completed_utc": "2026-09-14T01:15:03Z",
+  "training_launched": false,
+  "model_weights_downloaded": false,
+  "config_sha256": "d3c94f182e752380688849f25f6191e44050e69a3bda7caacbf6b012501d2daf",
+  "holdout_sha256": "c0a7b970917fac7e3de4fd58a049b1d7740f8436a2a1b028dc0db9c73dd28cb0",
+  "remote_artifacts": {
+    "data_manifest_sha256": "da6256cebdf7337e25e8171ab23d6a2842d67c7bc1e406edf53033ad549e5d97",
+    "raw_data_audit_sha256": "323495a7e06389a7fba4e0fede8d5617c62991a2ffcb5cf59cba6d960dd86a8a",
+    "mcqa_manifest_sha256": "5d4c186a1e5cbafb067dfba92983209f35b9b7239283cd342ee85fde225fd43c"
+  },
+  "built_dataset": {
+    "accepted": 2089,
+    "train": 1889,
+    "dev": 200,
+    "exact_duplicates_dropped": 9,
+    "rejected_length": 29,
+    "rejected_quality": 15,
+    "objective_rows": {
+      "mcqa": 1962,
+      "sft": 127
+    },
+    "packed_token_share_percent": {
+      "mcqa": 97.1578,
+      "sft": 2.8422
+    },
+    "loss_token_share_percent": {
+      "mcqa": 64.5806,
+      "sft": 35.4194
+    },
+    "sft_response_tokens": {
+      "mean": 119.252,
+      "p50": 121,
+      "p95": 214,
+      "max": 247
+    },
+    "mcqa_per_dataset_cap": 250,
+    "letter_permutations": 2,
+    "missing_optional_sources": [
+      "teacher_general_sft_optional",
+      "project_instruction_sft"
+    ]
+  },
+  "contamination": {
+    "declared_source_duplicates": 0,
+    "final_holdout_contamination": 0,
+    "final_holdout_count": 63,
+    "quality_flags": {
+      "authority_or_protocol_claim": 25,
+      "boilerplate_disclaimer": 74,
+      "invasive_procedure_content": 5,
+      "mcqa_shaped_sft": 15,
+      "numeric_medication_guidance": 5,
+      "toxin_or_disinfectant_content": 8
+    }
+  },
+  "conclusion": "KEEP as the corrected bounded data policy. It materially reduces MCQA dominance while retaining public train-only replay. The loss-token sampler remains mandatory because packed MCQA context tokens are not objective tokens. No training was launched."
+}

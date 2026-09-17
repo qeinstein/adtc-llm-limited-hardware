@@ -1,0 +1,13 @@
+{
+  "id": "toheebogunade/jamii-afya-falcon-prompt-weight-matrix",
+  "title": "Jamii Afya Falcon prompt weight matrix",
+  "code_file": "phase04_falcon_prompt_weight_matrix.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": []
+}

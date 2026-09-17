@@ -20,27 +20,40 @@ def validate(path: Path) -> list[str]:
         data = json.loads(path.read_text())
     except json.JSONDecodeError as e:
         return [f"{path}: invalid JSON: {e}"]
-    prompts = data.get("prompts")
+    # The original Falcon batteries are wrapped in {"prompts": [...]}; the
+    # Swahili battery is intentionally a plain list with query/gold-keyword
+    # records.  Validate both schemas instead of letting CI reject a holdout
+    # that the evaluator itself can run.
+    wrapped = isinstance(data, dict)
+    prompts = data.get("prompts") if wrapped else data
     if not isinstance(prompts, list) or not prompts:
-        return [f"{path}: 'prompts' must be a non-empty list"]
+        expected = "'prompts' must be a non-empty list" if wrapped else "top-level value must be a non-empty list"
+        return [f"{path}: {expected}"]
     seen: set[str] = set()
     for i, pr in enumerate(prompts):
         where = f"{path}[{i}]"
         if not isinstance(pr, dict):
             errors.append(f"{where}: not an object")
             continue
-        for key in REQUIRED_KEYS:
-            if key not in pr:
-                errors.append(f"{where}: missing key {key!r}")
+        if wrapped:
+            for key in REQUIRED_KEYS:
+                if key not in pr:
+                    errors.append(f"{where}: missing key {key!r}")
+        else:
+            if not any(key in pr for key in ("text", "query", "instruction")):
+                errors.append(f"{where}: missing prompt text field ('text', 'query', or 'instruction')")
         pid = pr.get("id")
         if isinstance(pid, str):
             if pid in seen:
                 errors.append(f"{where}: duplicate id {pid!r}")
             seen.add(pid)
-        if "text" in pr and not str(pr["text"]).strip():
-            errors.append(f"{where}: empty text")
+        text_value = pr.get("text", pr.get("query", pr.get("instruction", "")))
+        if not str(text_value).strip():
+            errors.append(f"{where}: empty prompt text")
         mt = pr.get("max_tokens")
-        if "max_tokens" in pr and (not isinstance(mt, int) or mt <= 0):
+        if not wrapped and mt is None:
+            mt = 256
+        if mt is not None and (not isinstance(mt, int) or mt <= 0):
             errors.append(f"{where}: max_tokens must be a positive int")
     return errors
 

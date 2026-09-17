@@ -1,0 +1,27 @@
+{
+  "experiment_id": "falcon-generation-smoke-v7-20260913",
+  "status": "aborted_infrastructure_failure",
+  "kernel": "toheebogunade/jamii-afya-falcon-production-post-training",
+  "kernel_version": 7,
+  "commit": "e25086d",
+  "model": "tiiuae/Falcon-H1-1.5B-Deep-Instruct",
+  "model_revision": "b6648636ddc906688974282de6e7a243395f5423",
+  "data_build": {
+    "accepted": 15036,
+    "train": 13564,
+    "dev": 1472,
+    "sft_tokens": 30051,
+    "mcqa_tokens": 7426390,
+    "project_sft_rows": 142,
+    "holdout_count": 63
+  },
+  "failure": {
+    "stage": "generation_smoke_launch",
+    "error": "ModuleNotFoundError: No module named 'scripts'",
+    "cause": "standalone script did not add the repository root to sys.path",
+    "training_started": false,
+    "model_loaded": false
+  },
+  "next_action": "rerun bounded smoke after launch-path fix",
+  "timestamp_utc": "2026-09-13"
+}

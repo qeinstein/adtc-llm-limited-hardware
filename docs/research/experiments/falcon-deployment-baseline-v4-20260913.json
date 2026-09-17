@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0.0",
+  "experiment_id": "falcon-deployment-baseline-v4-20260913",
+  "status": "COMPLETE_VALID_MEASUREMENT",
+  "decision": "KEEP_BASELINE",
+  "kaggle_kernel": "toheebogunade/jamii-afya-falcon-deployment-baseline",
+  "kaggle_kernel_version": 4,
+  "repo_sha": "eacd3d34ea78eeea9c498b84477dcada940752da",
+  "model": {"id": "tiiuae/Falcon-H1-1.5B-Deep-Instruct", "revision": "b6648636ddc906688974282de6e7a243395f5423"},
+  "hardware": {"cpu": "Intel(R) Xeon(R) CPU @ 2.20GHz", "cores": 4, "threads": 4, "llama_cpp_sha": "5f436dddb440a288ee5611d7d1eca564a6aca9f4", "build": "scalar/no-SIMD audit-parity"},
+  "command": "llama-bench -m <model.gguf> -p 512 -n 128 -ngl 0 -t 4 --output json",
+  "repetitions": 3,
+  "final_frozen_touched": false,
+  "results": {
+    "deep-Q4_0": {"file_bytes":904190528,"file_sha256":"38d283df6414a4ac0a60c02866d7341ca0b6520e350ddc48fb09cc6ec9bf5e62","prompt_tps":{"mean":9.8157,"stdev":0.1578,"min":9.6482,"max":9.9617},"decode_tps":{"mean":6.2922,"stdev":0.4525,"min":5.77,"max":6.571},"decode_ms_per_token":{"mean":159.5013,"stdev":11.9649},"peak_rss_mb":{"mean":1066.1233,"stdev":0.1321,"min":1066.023,"max":1066.273},"steady_rss_mb":{"mean":1045.169,"stdev":1.9167},"wall_seconds":{"mean":418.374,"stdev":3.6268},"deterministic_exact":false,"deterministic_normalized":false},
+    "deep-Q4_K_M": {"file_bytes":938466368,"file_sha256":"21de106930a920682d972fdd924d9f1254891768ebd3771465c19c380925c567","prompt_tps":{"mean":4.878,"stdev":0.0076,"min":4.8717,"max":4.8864},"decode_tps":{"mean":3.8211,"stdev":0.0616,"min":3.7744,"max":3.8909},"decode_ms_per_token":{"mean":261.7467,"stdev":4.185},"peak_rss_mb":{"mean":1098.8307,"stdev":0.1095,"min":1098.711,"max":1098.926},"steady_rss_mb":{"mean":1080.674,"stdev":0.6186},"wall_seconds":{"mean":798.063,"stdev":2.6955},"deterministic_exact":false,"deterministic_normalized":false}
+  },
+  "interpretation": "Q4_0 is the deployment performance baseline: 6.2922 decode tok/s and 1.066 GB peak RSS, versus Q4_K_M at 3.8211 tok/s and 1.099 GB. Q4_0 is about 64.7% faster in decode with about 32.7 MB lower peak RSS, but accuracy must be measured before promotion. Both quantizations showed output variation under repeated llama-cli checks at the pinned seed; this is recorded as a deployment finding, not used to discard valid throughput measurements."
+}
