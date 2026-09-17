@@ -98,18 +98,27 @@ def recall_at(pred8, true8, k_list=(1, 4, 8)):
 
 def fit_probe(Xtr, Ytr):
     from sklearn.linear_model import LogisticRegression
-    it = 20 if SMOKE else 300
+    from sklearn.preprocessing import StandardScaler
+    it = 20 if SMOKE else 1000
+    # scaler folded into weights at deploy time (zero inference cost)
+    sc = StandardScaler().fit(Xtr)
     clf = LogisticRegression(solver="saga",
-                             max_iter=it, tol=0.05, random_state=RP_SEED,
+                             max_iter=it, tol=1e-3, random_state=RP_SEED,
                              verbose=0)
     # single-label fit on top-1 (ranking recovered from predict_proba)
-    clf.fit(Xtr, Ytr)
-    return clf
+    clf.fit(sc.transform(Xtr), Ytr)
+    return clf, sc
+
+
+def probe_top8(clf, X):
+    P = clf.predict_proba(X)
+    # CRITICAL (v1 post-mortem): proba columns follow clf.classes_, NOT
+    # expert ids — argmax indices must be mapped back (v1 scored random).
+    return clf.classes_[np.argsort(-P, axis=1)[:, :8]]
 
 
 def eval_probe(clf, Xte, Y8te):
-    P = clf.predict_proba(Xte)
-    top8 = np.argsort(-P, axis=1)[:, :8]
+    top8 = probe_top8(clf, Xte)
     agg = {"r1": 0.0, "r4": 0.0, "r8": 0.0}
     for i in range(len(Xte)):
         r = recall_at(top8[i], Y8te[i])
@@ -164,15 +173,29 @@ def main():
                 Xte = np.concatenate(Xte)
                 Y8te = np.concatenate(Y8te)
                 f0 = time.time()
-                clf = fit_probe(Xtr, Ytr)
+                clf, sc = fit_probe(Xtr, Ytr)
                 t_fit += time.time() - f0
-                agg = eval_probe(clf, Xte, Y8te)
+                Xte_s = sc.transform(Xte)
+                agg = eval_probe(clf, Xte_s, Y8te)
                 agg["n_train"] = len(Xtr)
                 agg["n_test"] = len(Xte)
+                agg["n_iter"] = [int(x) for x in np.atleast_1d(clf.n_iter_)]
+                # train-fit sanity (same-input same-class MUST fit train;
+                # guards future harness bugs like v1's classes mismatch)
+                tr_top8 = probe_top8(clf, sc.transform(Xtr))
+                agg["train_top1in8"] = float(np.mean(
+                    [Ytr[i] in set(tr_top8[i]) for i in range(len(Xtr))]))
                 per_layer[str(L)] = agg
             key = f"dim{dim}"
             results["variants"][variant][key] = per_layer
             results["fit_sec"][f"{variant}_{key}"] = round(t_fit, 1)
+            if variant == "a" and dim == FULL_DIM and not SMOKE:
+                tr = np.mean([v["train_top1in8"]
+                              for v in per_layer.values()])
+                if tr < 0.9:
+                    raise RuntimeError(
+                        f"fail-fast: (a)-full train fit {tr:.3f} < 0.9 "
+                        f"(harness bug?)")
             r8 = np.mean([v["r8"] for v in per_layer.values()])
             r4 = np.mean([v["r4"] for v in per_layer.values()])
             print(f"variant {variant} {key}: layers={len(per_layer)} "
