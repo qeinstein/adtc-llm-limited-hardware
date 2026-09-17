@@ -1,7 +1,9 @@
 # Edge0 Phase 3 — Prerouter Port to N100/CPU Engine (GATE-FREE INFRASTRUCTURE)
 
-Status: INFRASTRUCTURE PREPARED, trainset kernel v1 WRITTEN + BUILD-PATTERN VERIFIED, **NOT LAUNCHED**
-Launch gate: edge0phase2-v1 v3 adjudication (picks 3.5 vs 3.6 base for the trace kernel's MODEL_URL).
+Status: LAUNCHED with BASE=3.6 (Phase 2 verdict: quality TIE, 3.6 wins on
+efficiency). Pre-launch review fixed 3 deltas: 3.6 pin filled, parity
+threshold 1.0→0.999 (fp16 boundary ties), cmake = v5's exact proven recipe.
+Hook anchors verified exactly-once in pin 3057bb6; `--poll` verified present.
 Branch: research/edge0-port. No quality-gate assumption made; nothing irreversible started.
 
 ## What Edge0's mechanism needs (from Phase 2 fidelity analysis, PHASE2_STATIC.md)
