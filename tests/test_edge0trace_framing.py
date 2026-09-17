@@ -82,3 +82,22 @@ def test_ids_before_first_sweep_rejected():
     h, _ = _sweeps(2, lambda t, layer: [])
     with pytest.raises(AssertionError):
         match_ids_to_sweeps(h, [_i(0, 0, -1)], 2, n_layers=NL)
+
+
+check_parity = _mod.check_parity
+
+
+def test_parity_gate_accepts_v2_measured_noise():
+    # v2 pids 0/1/2: parity 0.9994/0.9991/0.9987 at coverage 0.9634 —
+    # small-integer fp16 boundary flips, provably benign.
+    assert check_parity(0.9987, 0.9634, 2) == (0.9987, 0.9634)
+
+
+def test_parity_gate_rejects_low_parity():
+    with pytest.raises(RuntimeError):
+        check_parity(0.50, 0.96, 0)
+
+
+def test_parity_gate_rejects_low_coverage():
+    with pytest.raises(RuntimeError):
+        check_parity(1.0, 0.10, 0)

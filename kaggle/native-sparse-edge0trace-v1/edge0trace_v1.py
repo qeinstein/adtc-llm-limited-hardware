@@ -303,6 +303,26 @@ def match_ids_to_sweeps(h, ids, nt, n_layers=40):
     return matched
 
 
+PARITY_MIN = 0.995  # fp16 boundary flips 2-4/3160 (v2); wrong tensor scores ~0
+COVERAGE_MIN = 0.5  # plumbing sanity: at least half the evals carry runtime ids
+
+
+def check_parity(parity, coverage, pid):
+    """Raise on parity/coverage violations; returns (parity, coverage).
+
+    PARITY_MIN is 0.995, not 1.0: fp16 rounding of the dumped hidden flips
+    rank-8 boundary ties on a few tokens/prompt (v2 pids 0/1/2: 2/3/4 of
+    3160). Provably benign — offline math uses the model's own F32 gates,
+    so rounding is the only lossy step and stored pairs are self-consistent.
+    """
+    if coverage < COVERAGE_MIN:
+        raise RuntimeError(f"pid {pid}: ids coverage {coverage} < "
+                           f"{COVERAGE_MIN}")
+    if parity < PARITY_MIN:
+        raise RuntimeError(f"pid {pid}: topk parity {parity} < {PARITY_MIN}")
+    return parity, coverage
+
+
 def read_gate_weights(model_path):
     """F32 router gates per layer from the GGUF: {layer: (256,2048) f32}."""
     import struct as st
@@ -448,8 +468,7 @@ def main():
                     par += 1
         coverage = tot / (nt * 40)
         parity = par / tot if tot else 0.0
-        if coverage < 0.5:
-            raise RuntimeError(f"pid {pid}: ids coverage {coverage} < 0.5")
+        check_parity(parity, coverage, pid)
         np.savez_compressed(OUT / f"trace_p{pid:02d}.npz",
                             hidden_fp16=H.astype(np.float16),
                             topk_ids=topk_ids, topk_probs=topk_pr)
@@ -461,17 +480,6 @@ def main():
                                "topk_parity": parity})
         print(f"  pid={pid} tok={nt} rms={rms:.3f} cov={coverage:.4f} "
               f"parity={parity:.4f}", flush=True)
-        # NOTE: threshold is 0.995, not 1.0 — fp16 rounding of the dumped
-        # hidden flips rank-8 boundary ties on a few tokens/prompt (v2:
-        # pids 0/1/2 showed 2/3/4 flips of 3160 — small-integer noise).
-        # This is PROVABLY benign: offline math uses the model's own F32
-        # gate weights, so fp16 rounding is the ONLY lossy step; the
-        # stored (hidden_fp16, topk) pairs are self-consistent by
-        # construction, which is exactly what the prerouter trains on.
-        # A wrong tensor/orientation would score ~0 parity, so 0.995
-        # still guards the real failure mode with huge margin.
-        if parity < 0.995:
-            raise RuntimeError(f"pid {pid}: topk parity {parity} < 0.995")
     result = {"schema": "native-sparse-edge0trace/v1", "status": "ok",
               "runtime": runtime, "model": model,
               "hardware": {"platform": platform.platform(),
