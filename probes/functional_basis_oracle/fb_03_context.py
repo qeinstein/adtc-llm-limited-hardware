@@ -42,6 +42,24 @@ def main():
         pre = os.path.join(kd, f"prompt_{pid:02d}.L20")
         evs = [json.loads(l) for l in open(pre + ".idx")]
         assert all("error" not in e for e in evs), f"p{pid} hook error"
+        # hook fires twice per forward call with bit-identical data
+        # (executor visits the router node in two passes); verify + dedupe
+        assert len(evs) % 2 == 0, f"p{pid}: odd event count"
+        raw = np.fromfile(pre + ".bin", dtype=np.float32).reshape(-1, 2048)
+        off = 0
+        for i in range(0, len(evs), 2):
+            a, b = int(evs[i]["n_rows"]), int(evs[i + 1]["n_rows"])
+            assert a == b, f"p{pid} ev{i}: {a} vs {b}"
+            d = np.abs(raw[off:off + a] - raw[off + a:off + 2 * a]).max()
+            assert d == 0.0, f"p{pid} ev{i}: pair diff {d}"
+            off += 2 * a
+        keep = np.concatenate(
+            [np.arange(sum(int(evs[j]["n_rows"]) for j in range(i)),
+                       sum(int(evs[j]["n_rows"]) for j in range(i))
+                       + int(evs[i]["n_rows"]))
+             for i in range(0, len(evs), 2)])
+        raw = raw[keep]
+        evs = evs[0::2]
         nrs = [int(e["n_rows"]) for e in evs]
         # prefill = leading n>1 events (usually one), decode = trailing n==1
         k = 0
@@ -49,8 +67,8 @@ def main():
             k += 1
         assert all(n == 1 for n in nrs[k:]), f"p{pid} bad event pattern {nrs}"
         n_pre, n_dec = sum(nrs[:k]), sum(nrs[k:])
-        X = np.fromfile(pre + ".bin", dtype=np.float32).reshape(-1, 2048)
-        assert X.shape[0] == n_pre + n_dec == pr["dump_rows"]
+        X = raw
+        assert X.shape[0] == n_pre + n_dec == pr["dump_rows"] // 2
         Xs.append(X)
         meta.append({"prompt_id": pid, "category": pr["category"],
                      "n_pre": n_pre, "n_dec": n_dec,

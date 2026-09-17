@@ -42,9 +42,12 @@ def load_held():
     else:
         d = np.load(os.path.join(OUT, "context_inputs.npz"))
         t = np.load(os.path.join(OUT, "context_teacher.npz"))
-        return (d["Xte"].astype(np.float32), d["top8te"],
-                d["w8te"].astype(np.float64), t["R8te"].astype(np.float64),
-                d["top8tr"])
+        keep = np.load(os.path.join(OUT, "context_te_keep.npy"))
+        print(f"context: kept {int(keep.sum())}/{len(keep)} held rows "
+              f"(near-dup excluded)", flush=True)
+        return (d["Xte"][keep].astype(np.float32), d["top8te"][keep],
+                d["w8te"][keep].astype(np.float64),
+                t["R8te"][keep].astype(np.float64), d["top8tr"])
 
 
 def main():
@@ -120,6 +123,10 @@ def main():
               f"exprt={g['expert_rel_mean']:.4f}", flush=True)
     np.savez_compressed(os.path.join(OUT, f"fb_beta_{DATA_TAG}.npz"), **{
         f"r{r}": betas[r] for r in RANKS})
+    # interim dump: community section is OOM-prone; ranks must survive
+    json.dump({"H": H, "TAG": DATA_TAG, "ranks": res["ranks"]},
+              open(os.path.join(OUT, f"fb_oracle_{DATA_TAG}.json"), "w"),
+              indent=1)
 
     # controls: mean predictor + full-rank exactness
     mu = R8.mean(axis=0)
