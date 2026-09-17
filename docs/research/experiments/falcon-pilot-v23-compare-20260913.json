@@ -1,0 +1,58 @@
+{
+  "experiment_id": "falcon-production-v1-pilot-v23-compare-20260913",
+  "status": "complete_adapter_not_candidate",
+  "purpose": "apples-to-apples stock versus durable step-8 adapter comparison after stratified fast-dev fix",
+  "source_commit": "62f0ef8",
+  "kernel": "toheebogunade/jamii-afya-falcon-production-post-training",
+  "kernel_version": 23,
+  "model": {
+    "id": "tiiuae/Falcon-H1-1.5B-Deep-Instruct",
+    "revision": "b6648636ddc906688974282de6e7a243395f5423"
+  },
+  "hardware": "Kaggle Tesla P100 16GB, CUDA sm_60",
+  "evaluation": {
+    "dtype": "torch.float32",
+    "fast_dev_rows": 64,
+    "fast_dev_sft_rows": 14,
+    "fast_dev_mcqa_rows": 50,
+    "stock": {
+      "sft_dev_loss": 3.588034,
+      "mcqa_acc": 52.0,
+      "mcqa_acc_norm": 56.0
+    },
+    "step8_adapter": {
+      "sft_dev_loss": 3.585137,
+      "mcqa_acc": 52.0,
+      "mcqa_acc_norm": 56.0
+    },
+    "heldout_prompts": 24,
+    "max_new_tokens": 64,
+    "byte_identical_stock_vs_adapter": 23,
+    "different_stock_vs_adapter": ["h01"],
+    "eos_or_im_end_stops": {
+      "stock": 1,
+      "step8_adapter": 1
+    }
+  },
+  "quality_gate_replay": {
+    "rubric": "docs/research/falcon_generation_rubric.json",
+    "stock": {
+      "passed": 3,
+      "failed": 21,
+      "critical_failures": ["h05", "h06", "h07", "h08", "h09", "h10", "h12", "h22", "h23"]
+    },
+    "step8_adapter": {
+      "passed": 3,
+      "failed": 21,
+      "critical_failures": ["h05", "h06", "h07", "h08", "h09", "h10", "h12", "h22", "h23"]
+    },
+    "note": "Replayed locally against the downloaded raw v23 outputs; the gate is conservative and does not replace expert review. Both candidates are vetoed identically."
+  },
+  "interpretation": [
+    "The adapter is numerically neutral at step 8: no MCQA gain and only a 0.002897 lower SFT dev loss.",
+    "The earlier v21 one-SFT-row result was an invalid comparison for generation quality; the corrected stratified evaluator includes 14 SFT rows.",
+    "Both stock and adapter share the held-out generation weaknesses: short 64-token caps, missing dispositions, false-premise acceptance, and incoherent language on several Swahili prompts.",
+    "The durable adapter is not a candidate, but the run does not prove that the training recipe caused the shared baseline behavior."
+  ],
+  "decision": "Do not export or promote the step-8 adapter. Keep the checkpoint for resume/infrastructure testing. Before another training run, improve the stock-prompt/decode baseline and add generation-quality veto metrics to checkpoint selection."
+}

@@ -22,7 +22,7 @@ SOFTWARE.
 
 ---
 
-The base model (Qwen3-1.7B, Apache-2.0) and llama.cpp (MIT) retain their own
+The base model (Falcon-H1-1.5B-Deep-Instruct, Falcon LLM License) and llama.cpp (MIT) retain their own
 licenses. Medical guidance content in data/ is derived from publicly available
 WHO / IMCI / national treatment-guideline material and is provided for clinical
 DECISION SUPPORT only — it is not a substitute for a qualified clinician.

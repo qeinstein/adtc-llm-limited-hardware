@@ -1,0 +1,38 @@
+{
+  "experiment_id": "falcon-tokenized-preflight-v28-20260914",
+  "status": "KEEP",
+  "run_type": "Kaggle audit-only post-tokenization preflight",
+  "kernel": "toheebogunade/jamii-afya-falcon-production-post-training/28",
+  "repo_sha": "d23c20cb8df9da9686f5223762f0f95a866e0b03",
+  "started_utc": "2026-09-14T01:22:51Z",
+  "completed_utc": "2026-09-14T01:29:08Z",
+  "training_launched": false,
+  "model_weights_loaded": false,
+  "preflight_log_sha256": "153fda94bdc6d68d0a10ff8361c1b9b4f758c2e7c8818442d4d68f27fdb30795",
+  "data": {
+    "train_rows": 1889,
+    "dev_rows": 200,
+    "train_items_after_tokenization": 1889,
+    "dev_items_evaluated": 64,
+    "train_objective_items": {
+      "mcqa": 1773,
+      "sft": 116
+    },
+    "train_loss_token_totals": {
+      "mcqa": 24894,
+      "sft": 13930
+    },
+    "train_loss_token_share_percent": {
+      "mcqa": 64.1201,
+      "sft": 35.8799
+    },
+    "mcqa_context_truncated": 100,
+    "dev_mcqa_context_truncated": 3
+  },
+  "policy": {
+    "minimum_raw_loss_token_share": {"sft": 0.25},
+    "maximum_raw_loss_token_share": {"mcqa": 0.75},
+    "result": "PASS"
+  },
+  "conclusion": "KEEP. The exact trainer-side tokenizer/data path passed the objective balance and answer-preserving truncation checks before model construction. This is the preflight required before a future GPU probe."
+}

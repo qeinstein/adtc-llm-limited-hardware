@@ -1,0 +1,9 @@
+{
+  "title": "Jamii Afya Falcon submission artifact",
+  "id": "toheebogunade/jamii-afya-falcon-submission",
+  "subtitle": "Public Falcon-H1 deployment GGUF for ADTC submission",
+  "description": "The selected Jamii Afya Falcon-H1-1.5B-Deep-Instruct Q4_K_M GGUF submission artifact. The file is published only after clinical/safety, exact-quantized evaluation, and deployment benchmark checks pass.",
+  "isPrivate": false,
+  "licenses": [{"name": "other"}],
+  "keywords": ["llm", "gguf", "healthcare", "offline", "falcon"]
+}

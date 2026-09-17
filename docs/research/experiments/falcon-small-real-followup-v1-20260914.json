@@ -1,0 +1,120 @@
+{
+  "schema_version": "1.0.0",
+  "experiment_id": "falcon-small-real-followup-v1-20260914",
+  "status": "COMPLETE_BEHAVIOR_MOVEMENT_REJECTED_QUALITY",
+  "decision": "REJECT",
+  "purpose": "Bounded real-data follow-up to determine whether a stronger, canonical Stage-A adapter can move Falcon behavior after the rejected 8-step pilot. This is not a deployable or promoted checkpoint.",
+  "hypothesis": "Increasing the update budget, LoRA capacity, learning rate, and target coverage should produce measurable adapter-on versus stock movement without reading the frozen final holdout.",
+  "model": {
+    "id": "tiiuae/Falcon-H1-1.5B-Deep-Instruct",
+    "revision": "b6648636ddc906688974282de6e7a243395f5423",
+    "tokenizer_revision": "b6648636ddc906688974282de6e7a243395f5423"
+  },
+  "execution": {
+    "kaggle_kernel": "toheebogunade/jamii-afya-falcon-production-post-training",
+    "kernel_version": 25,
+    "repo_sha": "b715031a193f1ade7c684210badcb75d8f2be406",
+    "started_utc": "2026-09-13T23:39:09Z",
+    "completed_utc": "2026-09-14T00:31:34Z",
+    "hardware": "Tesla P100-PCIE-16GB, CUDA sm_60",
+    "precision": "plain FP16 LoRA; no QLoRA on P100; HF evaluation used fp32 on sm_60",
+    "training_command": "scripts/train_falcon_production.py --config configs/falcon-production-v1.json --stage stage_a_capability_preserving --max-steps 16 --save-steps 4 --eval-steps 4",
+    "gradient_accumulation": 16,
+    "per_device_batch_size": 1,
+    "effective_batch_size": 16,
+    "seed": 3407,
+    "lora": {
+      "r": 16,
+      "alpha": 32,
+      "dropout": 0.05,
+      "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj", "in_proj", "out_proj", "gate_proj", "up_proj", "down_proj"],
+      "trainable_parameters": 29491968,
+      "total_parameters": 1584366736,
+      "trainable_percent": 1.861436
+    }
+  },
+  "data": {
+    "accepted_rows": 174,
+    "train_rows": 155,
+    "dev_rows": 19,
+    "train_objective_rows": {"sft": 128, "mcqa": 27},
+    "all_objective_rows": {"sft": 142, "mcqa": 32},
+    "all_tokens": {"sft": 30051, "mcqa": 11474},
+    "all_token_share_percent": {"sft": 72.3685, "mcqa": 27.6315},
+    "loss_tokens": {"sft": 16643, "mcqa": 448},
+    "loss_token_share_percent": {"sft": 97.3787, "mcqa": 2.6213},
+    "language_rows": {"en": 118, "en+sw": 1, "sw": 55},
+    "data_manifest_sha256": "0f5ff7a9bb2ef89fb74b7c8f2373f9308cae26bf0ff83e2b6ac53ee3e744d3f8",
+    "public_data_policy": "MCQA built from train splits only; no final holdout was read",
+    "development_batteries": ["docs/research/falcon_prompt_dev.json", "docs/research/falcon_prompt_validation.json"],
+    "frozen_gate": "DEFERRED; no selected system prompt and the final holdout was intentionally excluded"
+  },
+  "training_result": {
+    "global_step": 16,
+    "seen_tokens": 16807,
+    "train_runtime_seconds": 2310.3624,
+    "observed_tokens_per_second": 7.27,
+    "observed_steps_per_second": 0.007,
+    "peak_gpu_reserved_mb": 13442.0,
+    "peak_gpu_allocated_mb": 3320.0,
+    "finite_loss_and_gradients": true,
+    "component_loss": {
+      "step_1": {"sft": 4.0655286, "mcqa": 2.4508090, "total": 3.2581688, "learning_rate": 0.0},
+      "step_8": {"sft": 4.1647926, "mcqa": 1.6687919, "total": 2.6047922, "learning_rate": 0.0000196353},
+      "step_16": {"sft": 3.0087378, "mcqa": 1.9758544, "total": 2.4922961, "learning_rate": 0.0000003278}
+    },
+    "fast_dev_eval_loss": {"step_4": 2.9855680, "step_8": 2.9360027, "step_12": 2.9107809, "step_16": 2.9065409},
+    "checkpoint_selection": "step 16 selected by lowest fast-dev eval loss; steps 8, 12, and 16 were complete and persisted",
+    "checkpoint_persistence": "PASS; step-8 and step-16 resumable states uploaded to Kaggle Dataset toheebogunade/jamii-afya-falcon-production-checkpoints",
+    "promotion": "not attempted; pilot explicitly forbids promotion"
+  },
+  "evaluation": {
+    "system_prompt_sha256": "6ece37bdd8e8e8126b62c59679b4111390e1f2b7856adafa3d7346eb0be669f5",
+    "system_prompt_tokens": 51,
+    "baseline": {"sft_dev_loss": 3.588034, "mcqa_n": 5, "mcqa_acc_percent": 40.0, "mcqa_acc_norm_percent": 80.0},
+    "adapter": {"sft_dev_loss": 3.484211, "mcqa_n": 5, "mcqa_acc_percent": 60.0, "mcqa_acc_norm_percent": 100.0},
+    "generation_behavior": {
+      "development_prompts": 8,
+      "validation_prompts": 8,
+      "development_changed": 7,
+      "validation_changed": 5,
+      "exactly_changed": 12,
+      "exactly_identical": 4,
+      "identical_ids": ["d07", "v04", "v06", "v08"],
+      "behavioral_movement_proven": true,
+      "mechanical_quality_rubric": {
+        "dev": {"baseline_passed": 0, "adapter_passed": 0, "count": 8, "adapter_critical_failures": ["d01", "d04", "d05"]},
+        "validation": {"baseline_passed": 2, "adapter_passed": 2, "count": 8, "adapter_critical_failures": ["v01", "v03", "v04"]},
+        "rubric_source": "quality fields embedded in development/validation battery; not the frozen final gate"
+      },
+      "qualitative_observation": "The adapter changed token sequences but retained pervasive malformed Kiswahili, weak clinical dispositions, and failure to express the safety/refusal requirements. Movement was real but not useful quality improvement."
+    },
+    "frozen_gate": "NOT RUN by design",
+    "critical_veto_count": "not assigned; frozen gate deferred",
+    "deployable_candidate": false
+  },
+  "diagnosis": {
+    "pipeline_movement": "PASS; the canonical configuration moved 12/16 held-out development/validation generations, improved fast-dev SFT loss by 2.9%, and improved the tiny dev MCQA slice 40% to 60% (acc_norm 80% to 100%).",
+    "quality_result": "FAIL; no gain on the mechanical generation rubric and the raw outputs remained malformed/unsafe-quality, especially in Kiswahili.",
+    "primary_next_diagnosis": "data/teacher-answer quality and base-model/runtime capability need diagnosis before scaling; optimizer/LoRA attachment is no longer the leading explanation for unchanged behavior.",
+    "not_authorized": ["production-scale fine-tuning", "frozen-gate promotion", "GGUF export as a submission candidate"],
+    "next_action": "FOLLOW-UP: add a reusable dev/validation quality report to the pilot, correct token-length MCQA normalization, inspect and clean the bilingual clinical mixture, and run only a small controlled comparison after the data/format audit. Do not launch a long run yet.",
+    "known_limits": [
+      "The five-row MCQA dev slice is directional only.",
+      "No logit delta was collected in this real-data follow-up; generation movement is sufficient to pass the responsiveness gate, while the independent tiny proof supplies logit/adapter-state evidence.",
+      "No frozen final holdout was read, so this record makes no safety promotion claim.",
+      "P100 used the naive Mamba implementation; this is representative of the executed training environment but not a claim about an optimized deployment build."
+    ]
+  },
+  "artifacts": {
+    "kaggle_output": "toheebogunade/jamii-afya-falcon-production-post-training/25",
+    "run_manifest": "experiments/falcon-production-v1/pilots/falcon-small-real-followup-v1-20260914/stage_a_capability_preserving/run_manifest.json",
+    "training_metrics": "experiments/falcon-production-v1/pilots/falcon-small-real-followup-v1-20260914/stage_a_capability_preserving/training_metrics.jsonl",
+    "events": "experiments/falcon-production-v1/pilots/falcon-small-real-followup-v1-20260914/stage_a_capability_preserving/events.jsonl",
+    "checkpoint_selection": "experiments/falcon-production-v1/pilots/falcon-small-real-followup-v1-20260914/stage_a_capability_preserving/checkpoint_selection.json",
+    "baseline_eval_metrics": "experiments/falcon-production-v1/pilots/falcon-small-real-followup-v1-20260914/stage_a_capability_preserving/pilot-baseline/eval_metrics.json",
+    "adapter_eval_metrics": "experiments/falcon-production-v1/pilots/falcon-small-real-followup-v1-20260914/stage_a_capability_preserving/pilot-eval/eval_metrics.json",
+    "checkpoint_dataset": "toheebogunade/jamii-afya-falcon-production-checkpoints",
+    "local_weight_policy": "adapter, optimizer, and model files were not downloaded locally"
+  }
+}

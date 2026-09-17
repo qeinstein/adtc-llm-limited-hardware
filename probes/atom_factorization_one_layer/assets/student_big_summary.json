@@ -1,0 +1,57 @@
+{
+ "n_train": 2463,
+ "n_val": 256,
+ "n_test": 384,
+ "epochs": 400,
+ "lr": 0.0003,
+ "note": "h=512/1024/2048 batch=256 (from killed full-grid run log); h=3072 batch=128 rerun (11b). Same protocol otherwise.",
+ "H": {
+  "512": {
+   "best_ep": 20,
+   "train_rel": 0.8475,
+   "test_pooled_rel": 1.0512,
+   "rel_median": 1.0795,
+   "rel_p95": 1.1925,
+   "rel_p99": 1.2547,
+   "rel_max": 1.6664,
+   "cos_mean": 0.1557,
+   "minutes": 15
+  },
+  "1024": {
+   "best_ep": 20,
+   "train_rel": 0.6935,
+   "test_pooled_rel": 1.082,
+   "rel_median": 1.1182,
+   "rel_p95": 1.244,
+   "rel_p99": 1.3313,
+   "rel_max": 1.7475,
+   "cos_mean": 0.1551,
+   "minutes": 24
+  },
+  "2048": {
+   "best_ep": 20,
+   "train_rel": 0.4618,
+   "test_pooled_rel": 1.1161,
+   "rel_median": 1.1665,
+   "rel_p95": 1.3234,
+   "rel_p99": 1.3689,
+   "rel_max": 1.6963,
+   "cos_mean": 0.1653,
+   "minutes": 46
+  },
+  "3072": {
+   "best_ep": 400,
+   "val_mse": 1.4226276874542236,
+   "train_rel": 0.09293192422732897,
+   "test_pooled_rel": 1.1342688693772982,
+   "rel_mean": 1.192282207951543,
+   "rel_median": 1.1937214762699981,
+   "rel_p95": 1.38910484770419,
+   "rel_p99": 1.5025102443015363,
+   "rel_max": 2.145407557811927,
+   "cos_mean": 0.16358080442658984,
+   "cos_min": 0.022204417250889393,
+   "minutes": 49.1
+  }
+ }
+}

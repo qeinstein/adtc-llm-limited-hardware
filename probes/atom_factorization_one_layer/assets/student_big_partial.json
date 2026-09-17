@@ -1,0 +1,44 @@
+{
+ "n_train": 2463,
+ "n_val": 256,
+ "n_test": 384,
+ "epochs": 400,
+ "batch": 256,
+ "lr": 0.0003,
+ "H": {
+  "512": {
+   "best_ep": 20,
+   "train_rel": 0.8475,
+   "test_pooled_rel": 1.0512,
+   "rel_median": 1.0795,
+   "rel_p95": 1.1925,
+   "rel_p99": 1.2547,
+   "rel_max": 1.6664,
+   "cos_mean": 0.1557,
+   "minutes": 15
+  },
+  "1024": {
+   "best_ep": 20,
+   "train_rel": 0.6935,
+   "test_pooled_rel": 1.082,
+   "rel_median": 1.1182,
+   "rel_p95": 1.244,
+   "rel_p99": 1.3313,
+   "rel_max": 1.7475,
+   "cos_mean": 0.1551,
+   "minutes": 24
+  },
+  "2048": {
+   "best_ep": 20,
+   "train_rel": 0.4618,
+   "test_pooled_rel": 1.1161,
+   "rel_median": 1.1665,
+   "rel_p95": 1.3234,
+   "rel_p99": 1.3689,
+   "rel_max": 1.6963,
+   "cos_mean": 0.1653,
+   "minutes": 46
+  }
+ },
+ "note": "recovered from /tmp/11.log; full-grid run OOM-killed at h=3072 (see 11b)"
+}

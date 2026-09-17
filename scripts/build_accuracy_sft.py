@@ -9,9 +9,10 @@ anti-contamination clause. We train ONLY on train splits, NEVER on test/validati
 (that would be contamination), and exclude afrimmlu/mmlu_prox entirely (possible
 hidden-set overlap with the audit's Swahili eval).
 
-Output schema (one JSON object per line) — a CHOICE-LIST, not a flat completion,
-because scripts/train_lora.py trains a listwise ranking loss over all choices
-(shown superior to gold-only SFT for sub-1B models — see PROGRESS.md):
+Output schema (one JSON object per line) — a CHOICE-LIST intermediate. The
+fixed Falcon submission builder converts each row to ordinary user/assistant
+SFT; this file remains choice-list shaped so train-only provenance and the
+gold choice are auditable before conversion:
 
     {"context": str, "choices": [str, ...], "gold": int, "format": "fulltext"|"letter"}
 
@@ -32,6 +33,7 @@ Two scoring regimes, handled differently per real lm-eval task configs:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import random
 import sys
@@ -41,6 +43,18 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "output"
 LETTERS = ["A", "B", "C", "D", "E", "F"]
 RNG = random.Random(3407)  # fixed seed: reproducible augmentation
+
+SOURCE_PROVENANCE = {
+    "arc_easy": {"dataset": "allenai/ai2_arc", "config": "ARC-Easy", "split": "train"},
+    "arc_challenge": {"dataset": "allenai/ai2_arc", "config": "ARC-Challenge", "split": "train"},
+    "openbookqa": {"dataset": "allenai/openbookqa", "config": "main", "split": "train"},
+    "mmlu_aux": {"dataset": "cais/mmlu", "config": "all", "split": "auxiliary_train"},
+    "medmcqa": {"dataset": "openlifescienceai/medmcqa", "config": "default", "split": "train"},
+    "medqa": {"dataset": "GBaker/MedQA-USMLE-4-options", "config": "default", "split": "train"},
+    "pubmedqa": {"dataset": "qiaojin/PubMedQA", "config": "pqa_artificial", "split": "train"},
+    "headqa": {"dataset": "dvilares/head_qa", "config": "en", "split": "train"},
+    "sciq": {"dataset": "allenai/sciq", "config": "default", "split": "train"},
+}
 
 
 def _fulltext_item(q: str, choices: list[str], gold_idx: int) -> dict:
@@ -161,7 +175,7 @@ def from_pubmedqa(max_ctx_chars: int = 1200):
 def from_headqa(config: str = "en"):
     from datasets import load_dataset
 
-    ds = load_dataset("dvilares/head_qa", config, split="train")
+    ds = load_dataset("dvilares/head_qa", config, split="train", trust_remote_code=True)
     for r in ds:
         ans = {a["aid"]: a["atext"] for a in r["answers"]}
         ordered = [ans[a["aid"]] for a in r["answers"] if a["aid"] in ans]
@@ -191,12 +205,16 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Build MCQA choice-list training set from public TRAIN splits")
     ap.add_argument("--datasets", nargs="+", default=DEFAULT, choices=list(_sources(1)))
     ap.add_argument("--max-per-dataset", type=int, default=20000,
-                    help="Cap per SOURCE ITEM (before permutation expansion)")
+                    help="Cap emitted records per dataset (after permutation expansion)")
     ap.add_argument("--letter-permutations", type=int, default=3,
                     help="Balanced option-order variants per letter-format item (debiases A/B/C/D preference)")
+    ap.add_argument("--seed", type=int, default=3407, help="Seed for deterministic option permutation")
     ap.add_argument("--include-sciq", action="store_true", help="Add SciQ (CC-BY-NC — non-commercial)")
+    ap.add_argument("--fail-on-source-error", action="store_true",
+                    help="Exit nonzero if any configured source is skipped")
     ap.add_argument("--out", default=str(OUT / "accuracy_sft.jsonl"))
     args = ap.parse_args()
+    RNG.seed(args.seed)
 
     names = list(args.datasets)
     if args.include_sciq and "sciq" not in names:
@@ -204,11 +222,13 @@ def main() -> int:
     if not args.include_sciq and "sciq" in names:
         names.remove("sciq")
 
-    OUT.mkdir(exist_ok=True)
+    output_path = Path(args.out)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     sources = _sources(args.letter_permutations)
     seen: set[str] = set()
     total = 0
-    with open(args.out, "w", encoding="utf-8") as f:
+    source_results: list[dict[str, object]] = []
+    with output_path.open("w", encoding="utf-8") as f:
         for name in names:
             try:
                 n_rows = 0
@@ -225,14 +245,36 @@ def main() -> int:
                     f.write(json.dumps(rec, ensure_ascii=False) + "\n")
                     n_rows += 1
                     total += 1
+                source_results.append({"name": name, "status": "ok", "rows": n_rows})
                 print(f"  {name:14s}: {n_rows} rows")
             except Exception as e:  # dataset renamed / offline / schema drift
+                source_results.append({"name": name, "status": "skipped", "rows": 0, "error_type": type(e).__name__, "error": str(e)})
                 print(f"  {name:14s}: SKIPPED ({type(e).__name__}: {e})")
 
-    print(f"\nWrote {total} MCQA rows (choice-list format) -> {args.out}")
+    manifest = {
+        "schema_version": "1.0.0",
+        "builder": "scripts/build_accuracy_sft.py",
+        "datasets": names,
+        "max_per_dataset_emitted_records": args.max_per_dataset,
+        "letter_permutations": args.letter_permutations,
+        "include_sciq": args.include_sciq,
+        "seed": args.seed,
+        "rows": total,
+        "source_provenance": {name: SOURCE_PROVENANCE[name] for name in names},
+        "source_results": source_results,
+        "output": str(output_path),
+        "output_sha256": hashlib.sha256(output_path.read_bytes()).hexdigest(),
+        "contamination_policy": "public train splits only; no validation/test splits; afrimmlu and mmlu_prox excluded",
+    }
+    output_path.with_name(output_path.stem + ".manifest.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(f"\nWrote {total} MCQA rows (choice-list format) -> {output_path}")
     print(f"Letter-format items expanded x{args.letter_permutations} (balanced permutation, debiases A/B/C/D).")
-    print("Trained via a listwise ranking loss in scripts/train_lora.py.")
+    print("Consumed by scripts/build_falcon_submission_sft.py and converted to ordinary assistant-only SFT.")
     print("NOTE: train splits only — never any test/validation split; afrimmlu/mmlu_prox excluded.")
+    skipped = [item for item in source_results if item["status"] != "ok"]
+    if skipped and args.fail_on_source_error:
+        print(f"ERROR: {len(skipped)} configured MCQA source(s) were skipped; refusing incomplete production mixture.", file=sys.stderr)
+        return 2
     return 0
 
 

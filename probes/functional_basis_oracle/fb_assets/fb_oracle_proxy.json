@@ -1,0 +1,88 @@
+{
+ "H": 384,
+ "TAG": "proxy",
+ "note": "recovered from /tmp/fb02.log; process OOM-killed in community section after all ranks printed",
+ "ranks": {
+  "16": {
+   "rel_median": 0.9607,
+   "rel_mean": 0.9499,
+   "rel_p95": 0.9934,
+   "rel_p99": 0.9968,
+   "rel_max": 0.9982,
+   "cos_mean": 0.286,
+   "expert_rel_mean": 0.976
+  },
+  "32": {
+   "rel_median": 0.9492,
+   "rel_mean": 0.9388,
+   "rel_p95": 0.9877,
+   "rel_p99": 0.9934,
+   "rel_max": 0.9959,
+   "cos_mean": 0.3213,
+   "expert_rel_mean": 0.9664
+  },
+  "64": {
+   "rel_median": 0.9348,
+   "rel_mean": 0.9231,
+   "rel_p95": 0.9791,
+   "rel_p99": 0.9877,
+   "rel_max": 0.9918,
+   "cos_mean": 0.364,
+   "expert_rel_mean": 0.9512
+  },
+  "96": {
+   "rel_median": 0.9219,
+   "rel_mean": 0.9101,
+   "rel_p95": 0.9712,
+   "rel_p99": 0.9798,
+   "rel_max": 0.9885,
+   "cos_mean": 0.396,
+   "expert_rel_mean": 0.9377
+  },
+  "128": {
+   "rel_median": 0.9106,
+   "rel_mean": 0.8981,
+   "rel_p95": 0.9641,
+   "rel_p99": 0.973,
+   "rel_max": 0.9851,
+   "cos_mean": 0.4229,
+   "expert_rel_mean": 0.9253
+  },
+  "160": {
+   "rel_median": 0.8995,
+   "rel_mean": 0.8864,
+   "rel_p95": 0.9565,
+   "rel_p99": 0.9649,
+   "rel_max": 0.981,
+   "cos_mean": 0.4474,
+   "expert_rel_mean": 0.9132
+  },
+  "192": {
+   "rel_median": 0.8888,
+   "rel_mean": 0.875,
+   "rel_p95": 0.9474,
+   "rel_p99": 0.9587,
+   "rel_max": 0.9762,
+   "cos_mean": 0.4698,
+   "expert_rel_mean": 0.9013
+  },
+  "224": {
+   "rel_median": 0.8774,
+   "rel_mean": 0.8638,
+   "rel_p95": 0.9402,
+   "rel_p99": 0.952,
+   "rel_max": 0.9722,
+   "cos_mean": 0.4903,
+   "expert_rel_mean": 0.8897
+  },
+  "256": {
+   "rel_median": 0.8662,
+   "rel_mean": 0.8531,
+   "rel_p95": 0.9313,
+   "rel_p99": 0.946,
+   "rel_max": 0.9676,
+   "cos_mean": 0.5091,
+   "expert_rel_mean": 0.8784
+  }
+ }
+}
