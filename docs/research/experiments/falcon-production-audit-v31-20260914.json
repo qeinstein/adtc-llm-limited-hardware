@@ -1,0 +1,61 @@
+{
+  "experiment_id": "falcon-production-audit-v31-20260914",
+  "status": "KEEP",
+  "decision": "Infrastructure audit passed; no training or promotion authorized.",
+  "run_type": "Kaggle audit-only production notebook validation",
+  "kernel": "toheebogunade/jamii-afya-falcon-production-post-training/31",
+  "repo_sha": "d3936043291003366e75ffab599931b8cc1a634a",
+  "model_weights_loaded": false,
+  "training_launched": false,
+  "started_utc": "2026-09-14T07:38:03Z",
+  "completed_utc": "2026-09-14T07:43:51Z",
+  "artifacts": {
+    "kernel_log_sha256": "a0dea0f8712626887c78750695bffd58f414525093d4656e25170018ebb250d2",
+    "tokenized_preflight_log_sha256": "c73197e151e5a0c0f194e9dc65a05741d7a46889aba572316e2da484fbfbfa51",
+    "raw_data_audit_sha256": "f65744c0fe2dab4297689f3877f584895d4493ced4c91d1955390d5caab7dcc5"
+  },
+  "data": {
+    "accepted": 2089,
+    "train": 1866,
+    "dev": 223,
+    "rejected": 44,
+    "exact_duplicates_dropped": 9,
+    "prompt_duplicate_groups": 0,
+    "cross_split_prompt_duplicate_groups": 0,
+    "holdout_contamination": 0,
+    "train_objective_items": {
+      "mcqa": 1761,
+      "sft": 105
+    },
+    "train_loss_token_totals": {
+      "mcqa": 24912,
+      "sft": 12417
+    },
+    "train_loss_token_share_percent": {
+      "mcqa": 66.7363,
+      "sft": 33.2637
+    },
+    "train_mcqa_context_truncated": 100,
+    "dev_mcqa_context_truncated": 3,
+    "tokenizer_max_length": 512,
+    "mcqa_context_max_tokens": 384
+  },
+  "preflight": {
+    "result": "PASS",
+    "sampler_algorithm": "torch.multinomial_private_generator_v1",
+    "sampler_seed": 3407,
+    "sampler_weights_sha256": "4d7638effacde4583e84966831486d9f14205e8550af45f70a44c6f178382d3d",
+    "objective_policy": {
+      "minimum_sft_loss_token_share": 0.25,
+      "maximum_mcqa_loss_token_share": 0.75
+    },
+    "event": "TOKENIZED_PREFLIGHT_PASS"
+  },
+  "promotion_export_contract": {
+    "local_tests": "109 passed",
+    "promotion_manifest_required": true,
+    "merged_and_quantized_frozen_gate_required": true,
+    "quantized_export_performed": false
+  },
+  "conclusion": "KEEP. The pushed production notebook remains audit-safe and the exact remote tokenizer/data path passes before model construction. The dataset is still MCQA-heavy by loss tokens despite the 90/10 stage sampler; no expensive training run is justified until a controlled real-data probe demonstrates safe behavioral movement."
+}

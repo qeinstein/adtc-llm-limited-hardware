@@ -1,0 +1,119 @@
+{
+  "schema_version": "1.0.0",
+  "experiment_id": "falcon-small-real-micro-probe-v2-20260914",
+  "status": "COMPLETE_BEHAVIOR_MOVEMENT_REJECTED_QUALITY",
+  "decision": "FOLLOW-UP",
+  "purpose": "Bounded attention-plus-Mamba real-data probe after the rejected all-nine-module follow-up. This experiment tests behavioral movement only; it is not a deployable or promoted checkpoint.",
+  "hypothesis": "A lower-rate adapter on attention and Mamba input/output projections will move behavior while reducing drift relative to the rejected 3e-5 all-nine-module run.",
+  "model": {
+    "id": "tiiuae/Falcon-H1-1.5B-Deep-Instruct",
+    "revision": "b6648636ddc906688974282de6e7a243395f5423",
+    "tokenizer_revision": "b6648636ddc906688974282de6e7a243395f5423"
+  },
+  "execution": {
+    "kaggle_kernel": "toheebogunade/jamii-afya-falcon-bounded-micro-probe-v2",
+    "kernel_version": 1,
+    "repo_sha": "a0f37bef1b9f2284b98d44131783adcf51d3ecd1",
+    "started_utc": "2026-09-14T01:39:22Z",
+    "completed_utc": "2026-09-14T02:37:21Z",
+    "hardware": "Tesla P100-PCIE-16GB, CUDA sm_60",
+    "precision": "plain FP16 LoRA; no QLoRA on P100",
+    "torch": "2.6.0+cu118",
+    "training_command": "scripts/kaggle_falcon_micro_probe.py --steps 16 --learning-rate 1e-5 --allow-ephemeral",
+    "gradient_accumulation": 16,
+    "per_device_batch_size": 1,
+    "effective_batch_size": 16,
+    "seed": 3407,
+    "lora": {
+      "r": 16,
+      "alpha": 32,
+      "dropout": 0.05,
+      "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj", "in_proj", "out_proj"],
+      "trainable_parameters": 15704832,
+      "total_parameters": 1570579600,
+      "trainable_percent": 0.999939
+    }
+  },
+  "data": {
+    "accepted_rows": 382,
+    "train_rows": 346,
+    "dev_rows": 36,
+    "objective_rows": {"sft": 127, "mcqa": 255},
+    "token_totals": {"sft": 26501, "mcqa": 111183},
+    "loss_tokens": {"sft": 15145, "mcqa": 3590},
+    "loss_token_share_percent": {"sft": 80.838, "mcqa": 19.162},
+    "language_rows": {"en": 333, "en+sw": 1, "sw": 48},
+    "exact_duplicates_dropped": 1,
+    "rejected_quality": 15,
+    "source_manifest_sha256": "32a41a38e9418cfcf4de0cb4afc81ffe6f6479738ddfc3e2d9568f57da9b748f",
+    "public_data_policy": "MCQA built from public train splits only; final holdout was not read",
+    "development_batteries": ["docs/research/falcon_prompt_dev.json", "docs/research/falcon_prompt_validation.json"],
+    "frozen_final_holdout_touched": false
+  },
+  "training_result": {
+    "global_step": 16,
+    "train_runtime_seconds": 2560.332,
+    "observed_tokens_per_second": 6.913,
+    "final_train_loss": 3.147436,
+    "final_fast_dev_eval_loss": 2.472840,
+    "finite_loss_and_gradients": true,
+    "peak_gpu_allocated_mb": 3162.2,
+    "peak_gpu_reserved_mb": 15918.0,
+    "checkpoints": [4, 8, 12, 16],
+    "checkpoint_persistence": "Ephemeral Kaggle working-directory run by design; no adapter or checkpoint was promoted or downloaded",
+    "behavioral_movement": "PASS; adapter changed 6 of 16 development/validation generations"
+  },
+  "evaluation": {
+    "system_prompt_sha256": "6ece37bdd8e8e8126b62c59679b4111390e1f2b7856adafa3d7346eb0be669f5",
+    "system_prompt_tokens": 51,
+    "stock": {
+      "sft_dev_loss": 3.618069,
+      "mcqa_n": 25,
+      "mcqa_acc_percent": 48.0,
+      "mcqa_acc_norm_percent": 60.0
+    },
+    "adapter": {
+      "sft_dev_loss": 3.586172,
+      "mcqa_n": 25,
+      "mcqa_acc_percent": 48.0,
+      "mcqa_acc_norm_percent": 60.0
+    },
+    "generation_behavior": {
+      "development_prompts": 8,
+      "validation_prompts": 8,
+      "changed_generation_count": 6,
+      "exactly_identical_count": 10,
+      "behavioral_movement_proven": true,
+      "mechanical_quality_rubric": {
+        "dev": {"stock_passed": 0, "adapter_passed": 0, "count": 8, "adapter_critical_failures": ["d01", "d04", "d05"]},
+        "validation": {"stock_passed": 2, "adapter_passed": 2, "count": 8, "adapter_critical_failures": ["v01", "v03", "v04"]},
+        "rubric_source": "quality fields embedded in development/validation batteries; frozen final gate was not run"
+      },
+      "qualitative_observation": "The adapter changed token sequences but retained malformed Kiswahili, weak clinical dispositions, and fabricated WHO/Grade-Blue protocol behavior. The changed outputs were not a useful safety improvement."
+    },
+    "promotion": "REJECTED; dev and validation quality gates failed",
+    "frozen_gate": "NOT RUN by design",
+    "deployable_candidate": false
+  },
+  "diagnosis": {
+    "pipeline_movement": "PASS; the lower-rate six-module adapter changed 6/16 generations and reduced SFT dev loss by 0.031897, but did not move MCQA.",
+    "quality_result": "FAIL; development remained 0/8 and validation remained 2/8, with the same critical safety/hallucination failures as stock on the scored batteries.",
+    "primary_next_diagnosis": "Data/teacher-answer quality, bilingual formatting, and base-model capability remain the leading constraints; optimizer attachment is not the leading explanation.",
+    "not_authorized": ["production-scale fine-tuning", "frozen-gate promotion", "GGUF export as a submission candidate", "persistent checkpoint promotion"],
+    "next_action": "FOLLOW-UP only through data and evaluation correction: inspect the malformed bilingual examples and teacher outputs, improve the development rubric, and test prompt/format/data interventions cheaply before any longer training.",
+    "known_limits": [
+      "The 25-row MCQA slice is directional only.",
+      "No frozen final holdout was read.",
+      "The probe used an ephemeral Kaggle workspace and intentionally did not create a durable candidate.",
+      "Generation evaluation used the 51-token stock system prompt; no system prompt candidate has passed selection.",
+      "P100 used the naive Mamba implementation; this is not a deployment-throughput claim."
+    ]
+  },
+  "artifacts": {
+    "kaggle_output": "toheebogunade/jamii-afya-falcon-bounded-micro-probe-v2/1",
+    "summary": "micro-probe-summary.json",
+    "data_manifest_summary": "data_manifest_summary.json",
+    "environment": "environment.json",
+    "local_weight_policy": "Only small JSON/log summaries were retrieved locally; adapter, optimizer, and model files were not downloaded"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "experiment_id": "falcon-probe-v15",
+  "status": "aborted",
+  "model": {
+    "name": "tiiuae/Falcon-H1-1.5B-Deep-Instruct",
+    "revision": "unspecified-in-kernel",
+    "deployment_quantization": "Q4_K_M (not reached)"
+  },
+  "source_commit": "6cee8b774f0cfa1ba32fa096c3163249bcbfcc7a",
+  "kaggle": {
+    "kernel": "toheebogunade/jamii-afya-phase-04-falcon-probe",
+    "version": 15,
+    "hardware": "Tesla P100-PCIE-16GB",
+    "started_utc": "2026-09-12T09:56:16Z",
+    "terminated_utc": "2026-09-12T14:11:56Z",
+    "termination": "Notebook deleted by operator after an unobservable multi-hour run; Kaggle subsequently denied access to the version."
+  },
+  "dataset": {
+    "mcqa_rows": 1000,
+    "clinical_probe_rows": 38,
+    "clinical_replay_rows": 80,
+    "effective_clinical_rows": 240,
+    "total_rows_before_sampling": 1354,
+    "heldout_rows": 24,
+    "notes": "MCQA was generated from public train splits; the held-out clinical battery was not passed to the trainer. No final checkpoint or evaluation artifact was recovered."
+  },
+  "hyperparameters": {
+    "epochs": 3,
+    "batch_size": 1,
+    "gradient_accumulation_steps": 32,
+    "max_len": 256,
+    "learning_rate": 0.0001,
+    "lora_r": 32,
+    "lora_alpha": 64,
+    "gradient_checkpointing": true,
+    "quantization": "none",
+    "compute_dtype": "fp16",
+    "save_steps": 100,
+    "logging_steps": 20
+  },
+  "known_weaknesses": [
+    "The notebook wrapper used subprocess.run(stdout=PIPE) and printed only after each child exited; multi-hour training had no live logs or heartbeat.",
+    "train.log was written only after the training subprocess returned.",
+    "The trainer had no resume_from_checkpoint argument or optimizer/scheduler/RNG resume test.",
+    "Checkpoints were local to ephemeral /kaggle/working and were not persistently uploaded during the run.",
+    "The run used a row-count mix dominated by MCQA rather than an explicit token-balanced multi-objective schedule.",
+    "The probe did not produce a valid model checkpoint, merged model, GGUF, or evaluation result."
+  ],
+  "checkpoint_validity": "invalid-as-final; no checkpoint was recovered and optimizer position cannot be verified",
+  "historical_value": "Retain as infrastructure and baseline evidence only; do not use weights or metrics as a production result."
+}

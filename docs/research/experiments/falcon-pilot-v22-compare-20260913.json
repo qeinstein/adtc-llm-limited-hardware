@@ -1,0 +1,15 @@
+{
+  "experiment_id": "falcon-production-v1-pilot-v22-compare-20260913",
+  "status": "failed_infrastructure_not_candidate",
+  "purpose": "stock-versus-adapter diagnostic launch; evaluator failed before model load",
+  "source_commit": "9d52bd2",
+  "kernel": "toheebogunade/jamii-afya-falcon-production-post-training",
+  "kernel_version": 22,
+  "failure": {
+    "type": "UnboundLocalError",
+    "message": "stable_eval_subset was referenced before the in-function import in evaluate_falcon_hf.py",
+    "scope": "stock evaluation command, before model_load_start",
+    "impact": "no model loaded, no training performed, no checkpoint modified"
+  },
+  "decision": "Discard this run and retry only after the import-order fix. The durable step-8 checkpoint remains unchanged."
+}

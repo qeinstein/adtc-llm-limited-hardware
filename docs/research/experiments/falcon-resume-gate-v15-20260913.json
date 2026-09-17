@@ -1,0 +1,30 @@
+{
+  "experiment_id": "falcon-resume-gate-v15-20260913",
+  "status": "failed_eval_resource_oom",
+  "kernel": "toheebogunade/jamii-afya-falcon-production-post-training",
+  "kernel_version": 15,
+  "commit": "d6d3033",
+  "model": "tiiuae/Falcon-H1-1.5B-Deep-Instruct",
+  "model_revision": "b6648636ddc906688974282de6e7a243395f5423",
+  "hardware": "Tesla P100-PCIE-16GB, CUDA capability 6.0",
+  "training": {
+    "dtype": "fp16",
+    "max_length": 512,
+    "effective_batch_size": 16,
+    "steps_completed": 2,
+    "step_seconds": 157.82,
+    "losses_finite": true,
+    "last_loss": 3.61873304097183,
+    "last_grad_norm": 2.0721383099213867,
+    "peak_gpu_reserved_mb": 13460.0
+  },
+  "failure": {
+    "stage": "dev_evaluation_after_step_2",
+    "error_type": "torch.OutOfMemoryError",
+    "message": "Mamba G_intermediate requested 19.50 GiB with per_device_eval_batch_size=4",
+    "resume_test_completed": false
+  },
+  "conclusion": "P100 FP16 teacher-forcing training fits and is finite; evaluation batching was too large for Falcon-H1 Mamba intermediates",
+  "fix": "set per_device_eval_batch_size=1",
+  "timestamp_utc": "2026-09-13"
+}

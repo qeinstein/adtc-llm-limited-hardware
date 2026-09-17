@@ -1,0 +1,37 @@
+{
+  "experiment_id": "falcon-production-audit-v32-20260914",
+  "status": "KEEP",
+  "decision": "Remote audit passed after deployment-manifest and promotion-status hardening; no training or promotion authorized.",
+  "run_type": "Kaggle audit-only production notebook validation",
+  "kernel": "toheebogunade/jamii-afya-falcon-production-post-training/32",
+  "repo_sha": "0ab2a830ad2ac276a415a9f2d5f1efc246ee376f",
+  "model_weights_loaded": false,
+  "training_launched": false,
+  "started_utc": "2026-09-14T07:52:44Z",
+  "completed_utc": "2026-09-14T07:58:21Z",
+  "artifacts": {
+    "kernel_log_sha256": "2663dee83b62f1fca21fb3f7183e342c1d200d4907e7f932346e48da8612f35a",
+    "tokenized_preflight_log_sha256": "f0de270b7b781d9a061f4f3f738602173582ba25b34b49027b3a9ab023457224",
+    "raw_data_audit_sha256": "f65744c0fe2dab4297689f3877f584895d4493ced4c91d1955390d5caab7dcc5"
+  },
+  "preflight": {
+    "result": "PASS",
+    "accepted_rows": 2089,
+    "train_rows": 1866,
+    "dev_rows": 223,
+    "train_objective_items": {"mcqa": 1761, "sft": 105},
+    "loss_token_share_percent": {"mcqa": 66.7363, "sft": 33.2637},
+    "train_mcqa_context_truncated": 100,
+    "dev_mcqa_context_truncated": 3,
+    "prompt_duplicate_groups": 0,
+    "cross_split_prompt_duplicate_groups": 0,
+    "event": "TOKENIZED_PREFLIGHT_PASS"
+  },
+  "contract_checks": {
+    "generated_deployment_manifest_consumed": true,
+    "promotion_manifest_required_for_export": true,
+    "training_status_is_quality_gate_pending_before_promotion": true,
+    "local_tests": "109 passed"
+  },
+  "conclusion": "KEEP. The exact Kaggle audit path remains safe and reproducible after the final contract edits. No deployable Falcon candidate exists; the earlier real-data probes remain rejected by the frozen safety/usefulness gate."
+}

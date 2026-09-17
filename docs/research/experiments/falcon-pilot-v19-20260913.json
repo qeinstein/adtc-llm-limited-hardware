@@ -1,0 +1,52 @@
+{
+  "experiment_id": "falcon-production-v1-pilot-v19-20260913",
+  "status": "failed_infrastructure_not_candidate",
+  "purpose": "bounded Stage-A safe-attention pilot; retained step-8 checkpoint is for evaluation only",
+  "model": {
+    "id": "tiiuae/Falcon-H1-1.5B-Deep-Instruct",
+    "revision": "b6648636ddc906688974282de6e7a243395f5423"
+  },
+  "source_commit": "6ba724e",
+  "hardware": "Kaggle Tesla P100 16GB, CUDA sm_60",
+  "training": {
+    "stage": "stage_a_capability_preserving",
+    "profile": "safe_attention",
+    "requested_optimizer_steps": 12,
+    "completed_optimizer_steps": 8,
+    "failed_at_microstep": 149,
+    "per_device_batch_size": 1,
+    "gradient_accumulation_steps": 16,
+    "effective_batch_size": 16,
+    "max_length": 512,
+    "train_dtype": "plain fp16",
+    "evaluation_dtype": "fp32",
+    "lora_target_modules": ["q_proj", "k_proj", "v_proj", "o_proj"],
+    "lora_rank": 8,
+    "lora_alpha": 16,
+    "lora_dropout": 0.1,
+    "learning_rate": 0.000005,
+    "mcqa_context_max_tokens": 512,
+    "objective_weights": {"sft": 1.0, "mcqa": 0.15},
+    "sampling_token_share": {"sft": 0.9, "mcqa": 0.1},
+    "eval_loss_step_4": 2.0981090069,
+    "eval_loss_step_8": 2.0981001854,
+    "checkpoint_step_8_persisted": true
+  },
+  "failure": {
+    "type": "cuda_out_of_memory",
+    "stage": "backward",
+    "microstep": 149,
+    "requested_allocation": "6.00 GiB",
+    "gpu_total": "15.89 GiB",
+    "gpu_free_at_failure": "5.82 GiB",
+    "process_in_use": "10.06 GB",
+    "pytorch_allocated": "9.61 GB",
+    "diagnosis": "A long MCQA context produced an oversized full-vocabulary activation during gradient-checkpointed backward on the P100. The step-8 checkpoint is complete and durable, but the run cannot be promoted or resumed as a production candidate without the bounded-context fix."
+  },
+  "decision": "Do not export or initialize another stage from this adapter. Evaluate the durable step-8 adapter separately after the 384-token MCQA context cap is deployed; use the result only as diagnostic evidence.",
+  "remote_artifacts": {
+    "kernel": "toheebogunade/jamii-afya-falcon-production-post-training",
+    "checkpoint_dataset": "toheebogunade/jamii-afya-falcon-production-checkpoints",
+    "durable_checkpoint": "step-8"
+  }
+}

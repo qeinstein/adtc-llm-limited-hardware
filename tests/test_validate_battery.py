@@ -7,8 +7,10 @@ build+bench cycle on a prompts file whose first entry had no "text" key.
 from pathlib import Path
 
 from scripts.validate_battery import validate
+from scripts.verify_falcon_holdouts import verify
 
 BATTERY = Path(__file__).resolve().parent.parent / "docs" / "research" / "falcon_baseline_prompts.json"
+SWAHILI = Path(__file__).resolve().parent.parent / "data" / "swahili_eval_set.json"
 
 
 def _write(tmp_path: Path, payload: dict) -> Path:
@@ -19,6 +21,10 @@ def _write(tmp_path: Path, payload: dict) -> Path:
 
 def test_shipped_falcon_battery_is_valid():
     assert validate(BATTERY) == []
+
+
+def test_shipped_swahili_query_battery_is_valid():
+    assert validate(SWAHILI) == []
 
 
 def test_missing_text_key_fails(tmp_path):
@@ -40,3 +46,8 @@ def test_bad_max_tokens_fails(tmp_path):
         {"id": "p01", "section": "A", "text": "a", "max_tokens": 0},
     ]})
     assert any("max_tokens" in e for e in validate(p))
+
+
+def test_committed_holdout_manifest_matches_files():
+    root = Path(__file__).resolve().parent.parent
+    assert verify(root, root / "docs/research/falcon_holdout_manifest.json") == []

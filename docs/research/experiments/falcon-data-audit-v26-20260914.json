@@ -1,0 +1,55 @@
+{
+  "experiment_id": "falcon-data-audit-v26-20260914",
+  "status": "FOLLOW-UP",
+  "run_type": "Kaggle audit-only",
+  "kernel": "toheebogunade/jamii-afya-falcon-production-post-training/26",
+  "repo_sha": "a74fa8f8b0def5854652bab6ed3a05595298ccb1",
+  "started_utc": "2026-09-14T00:58:30Z",
+  "completed_utc": "2026-09-14T01:04:02Z",
+  "training_launched": false,
+  "model_weights_downloaded": false,
+  "config_sha256": "148b10ca685b77db40526ef3626fc4f992abfb86817be93fcfbcc34d86eea2ec",
+  "remote_artifacts": {
+    "data_manifest_sha256": "db329444fb0e2ce688ca34e69158d21fa976a86e05725adcfa3764d5c1f46593",
+    "raw_data_audit_sha256": "011b9d80a6375fbe519abb8adc08b4cc0b790f57c00efdc8cf96f80a6ace9ded"
+  },
+  "declared_sft_audit": {
+    "rows": 142,
+    "exact_duplicates": 0,
+    "final_holdout_contamination": 0,
+    "final_holdout_count": 63,
+    "quality_flags": {
+      "authority_or_protocol_claim": 25,
+      "boilerplate_disclaimer": 74,
+      "invasive_procedure_content": 5,
+      "mcqa_shaped_sft": 15,
+      "numeric_medication_guidance": 5,
+      "toxin_or_disinfectant_content": 8
+    }
+  },
+  "built_dataset": {
+    "accepted": 15021,
+    "train": 13552,
+    "dev": 1469,
+    "exact_duplicates_dropped": 106,
+    "rejected_length": 116,
+    "rejected_quality": 15,
+    "objective_rows": {
+      "mcqa": 14894,
+      "sft": 127
+    },
+    "packed_token_share_percent": {
+      "mcqa": 99.6444,
+      "sft": 0.3556
+    },
+    "loss_token_share_percent": {
+      "mcqa": 93.6373,
+      "sft": 6.3627
+    },
+    "missing_optional_sources": [
+      "teacher_general_sft_optional",
+      "project_instruction_sft"
+    ]
+  },
+  "conclusion": "REJECT current 2000-record MCQA default for production: MCQA dominates both rows and objective tokens. Keep public train-only provenance, but use a bounded 250-record-per-dataset and two-permutation policy, then re-audit before any training."
+}

@@ -1,0 +1,97 @@
+{
+  "schema_version": "1.0.0",
+  "experiment_id": "falcon-small-real-probe-v1-20260913",
+  "status": "COMPLETE_REJECTED_NO_BEHAVIORAL_MOVEMENT",
+  "decision": "REJECT",
+  "purpose": "Bounded real-data responsiveness probe after the trainability proof. This is infrastructure evidence only and is not a deployable or promoted checkpoint.",
+  "hypothesis": "A conservative Stage-A LoRA update on the clean mixed dataset will begin to move Falcon behavior while preserving capability.",
+  "model": {
+    "id": "tiiuae/Falcon-H1-1.5B-Deep-Instruct",
+    "revision": "b6648636ddc906688974282de6e7a243395f5423",
+    "tokenizer_revision": "b6648636ddc906688974282de6e7a243395f5423"
+  },
+  "execution": {
+    "kaggle_kernel": "toheebogunade/jamii-afya-falcon-production-post-training",
+    "kernel_version": 24,
+    "repo_sha": "4ef163afd7de014d95244aad1c680a09793dec4d",
+    "started_utc": "2026-09-13T20:58:21Z",
+    "completed_utc": "2026-09-13T21:32:09Z",
+    "hardware": "Tesla P100-PCIE-16GB, CUDA sm_60",
+    "precision": "plain FP16 LoRA; no QLoRA on P100",
+    "training_command": "scripts/train_falcon_production.py --stage stage_a_capability_preserving --max-steps 8 --save-steps 4 --eval-steps 4 --learning-rate 0.000005 --lora-r 8 --lora-alpha 16 --lora-dropout 0.1 --target-modules q_proj,k_proj,v_proj,o_proj",
+    "gradient_accumulation": 16,
+    "per_device_batch_size": 1,
+    "effective_batch_size": 16,
+    "seed": 3407
+  },
+  "data": {
+    "accepted_rows": 174,
+    "train_rows": 155,
+    "dev_rows": 19,
+    "train_objective_rows": {"sft": 128, "mcqa": 27},
+    "all_objective_rows": {"sft": 142, "mcqa": 32},
+    "all_tokens": {"sft": 30051, "mcqa": 11474},
+    "all_token_share_percent": {"sft": 72.3685, "mcqa": 27.6315},
+    "loss_tokens": {"sft": 16643, "mcqa": 448},
+    "loss_token_share_percent": {"sft": 97.3787, "mcqa": 2.6213},
+    "language_rows": {"en": 118, "en+sw": 1, "sw": 55},
+    "public_data_policy": "MCQA built from train splits only; no final holdout was read",
+    "development_batteries": ["docs/research/falcon_prompt_dev.json", "docs/research/falcon_prompt_validation.json"],
+    "frozen_gate": "DEFERRED; no selected system prompt and the final holdout was intentionally excluded"
+  },
+  "training_result": {
+    "global_step": 8,
+    "seen_tokens": 8850,
+    "train_runtime_seconds": 1200.9242,
+    "observed_tokens_per_second": 7.362,
+    "observed_steps_per_second": 0.007,
+    "peak_gpu_reserved_mb": 14438.0,
+    "final_train_loss": 3.5748777389526367,
+    "checkpoint_selection": "step 8 selected by lowest fast-dev eval loss, 3.0108089447 vs 3.0118532181 at step 4",
+    "checkpoint_persistence": "PASS; step-8 resumable state uploaded to Kaggle Dataset toheebogunade/jamii-afya-falcon-production-checkpoints",
+    "promotion": "not attempted"
+  },
+  "evaluation": {
+    "system_prompt_sha256": "6ece37bdd8e8e8126b62c59679b4111390e1f2b7856adafa3d7346eb0be669f5",
+    "system_prompt_tokens": 51,
+    "baseline": {
+      "sft_dev_loss": 3.588034,
+      "mcqa_n": 5,
+      "mcqa_acc_percent": 40.0,
+      "mcqa_acc_norm_percent": 80.0
+    },
+    "adapter": {
+      "sft_dev_loss": 3.586885,
+      "mcqa_n": 5,
+      "mcqa_acc_percent": 40.0,
+      "mcqa_acc_norm_percent": 80.0
+    },
+    "generation_behavior": {
+      "development_prompts": 8,
+      "validation_prompts": 8,
+      "exactly_changed": 0,
+      "exactly_identical": 16,
+      "behavioral_movement_proven": false,
+      "critical_veto_count": "not scored; frozen gate deferred",
+      "qualitative_observation": "Stock and adapter outputs were byte-identical, including the known fabricated-protocol and poor-Kiswahili behaviors in validation."
+    }
+  },
+  "diagnosis": {
+    "primary": "The probe was underpowered for a behavioral test: 8 optimizer steps at 5e-6 with r=8 and dropout=0.1 produced a tiny held-out loss change and no generation or MCQA movement.",
+    "pipeline_failure": false,
+    "trainability_evidence": "The independent 64-step tiny overfit proof passed: loss fell materially, adapter tensors changed, logits changed, reload/off/merge checks passed, and 16/16 generations changed.",
+    "next_action": "FOLLOW-UP: one bounded canonical Stage-A real-data probe at 16 steps, 3e-5, r=16, alpha=32, dropout=0.05, same clean data and dev/validation-only evaluation. Do not run the frozen gate or promote it.",
+    "known_limits": [
+      "No adapter-on versus stock logit diagnostic was collected in this pilot.",
+      "The 5-row MCQA dev slice is directional only.",
+      "No quality claim is made from the loss-ranked step-8 adapter."
+    ]
+  },
+  "artifacts": {
+    "run_manifest": "experiments/falcon-production-v1/pilots/falcon-small-real-probe-v1-20260913/stage_a_capability_preserving/run_manifest.json",
+    "training_metrics": "experiments/falcon-production-v1/pilots/falcon-small-real-probe-v1-20260913/stage_a_capability_preserving/training_metrics.jsonl",
+    "checkpoint_selection": "experiments/falcon-production-v1/pilots/falcon-small-real-probe-v1-20260913/stage_a_capability_preserving/checkpoint_selection.json",
+    "final_summary": "experiments/falcon-production-v1/pilots/falcon-small-real-probe-v1-20260913/stage_a_capability_preserving/final_summary.json",
+    "data_manifest": "experiments/falcon-production-v1/data/data_manifest.json"
+  }
+}
