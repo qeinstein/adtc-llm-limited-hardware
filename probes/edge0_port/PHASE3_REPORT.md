@@ -4,6 +4,25 @@ Status: LAUNCHED with BASE=3.6 (Phase 2 verdict: quality TIE, 3.6 wins on
 efficiency). Pre-launch review fixed 3 deltas: 3.6 pin filled, parity
 threshold 1.0→0.999 (fp16 boundary ties), cmake = v5's exact proven recipe.
 Hook anchors verified exactly-once in pin 3057bb6; `--poll` verified present.
+
+## Trainset validation (trace v3 COMPLETE, 0.34h wall) — VALID
+
+- 23/23 prompts ok; 82 evals each (80 gen + 2 batching-quirk), 1886 total.
+- RMS 1.0035–1.0357; ids coverage uniform 96.34% (first-3-eval gap on every
+  prompt, deterministic); parity 0.9981–1.0000 (all pass 0.995 gate).
+- 3 diverse npz sampled locally (p00 medical, p12 swahili, p20 short):
+  shapes/dtypes exact, all finite, ids in [0,256) all 256 experts hit,
+  probs renormalized (rowsums 1.0), sort-desc 0 violations/22960,
+  top-1 diverse (max share 76/3280). Cross-prompt duplication ruled out.
+- Quirk note: eval 0 is byte-identical across prompts (lone first-token
+  eval, same input → same output); evals 1–2 prompt-dependent but
+  hidden-only. All labels are exact offline router math on stored hiddens
+  (self-consistent by construction); runtime ids cross-check parity only.
+- Disk: full 23-npz set (~290MB) stays in kernel outputs (local disk 100%
+  full, other agent's 14GB untouched); 3 samples + result.json local.
+- v1 post-mortem: `ids 79 != tok 82` → seq-order matching + regression tests
+  (tests/test_edge0trace_framing.py, 8 passed). v2 post-mortem: parity
+  0.9987 < 0.999 → 0.995 (fp16 boundary flips 2–6/3160, provably benign).
 Branch: research/edge0-port. No quality-gate assumption made; nothing irreversible started.
 
 ## What Edge0's mechanism needs (from Phase 2 fidelity analysis, PHASE2_STATIC.md)
