@@ -1,0 +1,56 @@
+name: Falcon MCQ accuracy screen
+
+# Part 6 of the Falcon stock baseline: frozen MCQ screen (no training).
+# arc_easy (general) + medmcqa (clinical proxy), loglikelihood ranking —
+# the same metric family the profiler scores.
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Questions per task"
+        required: false
+        default: "200"
+
+jobs:
+  mcq:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install eval deps
+        run: |
+          python -m pip install -q --upgrade pip
+          python -m pip install -q llama-cpp-python datasets
+
+      - name: Download GGUF
+        run: |
+          mkdir -p /tmp/falcon
+          curl -L --fail --retry 3 --retry-delay 5 -C - \
+            -o /tmp/falcon/model.gguf \
+            "https://huggingface.co/unsloth/Falcon-H1-1.5B-Deep-Instruct-GGUF/resolve/main/Falcon-H1-1.5B-Deep-Instruct-Q4_K_M.gguf"
+          stat -c%s /tmp/falcon/model.gguf
+
+      - name: MCQ screen
+        run: |
+          for task in arc_easy medmcqa; do
+            echo "===== $task =====" | tee /tmp/mcq_$task.log
+            python scripts/mcq_eval.py --model /tmp/falcon/model.gguf \
+              --task $task --limit "${{ github.event.inputs.limit }}" 2>&1 | tee -a /tmp/mcq_$task.log
+          done
+          grep -hE "^(arc_easy|medmcqa):" /tmp/mcq_*.log | tee /tmp/mcq_summary.txt
+
+      - name: Upload MCQ results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: falcon-mcq
+          path: /tmp/mcq_*.log
+          if-no-files-found: warn

@@ -1,0 +1,128 @@
+name: Falcon throughput frontier
+
+# Throughput research, independent of the training probe:
+# A. Falcon-H1-1.5B-Instruct (24-layer) profiler-exact bench
+# B. Deep quant sweep: Q4_0, Q4_K_M, Q5_K_M, Q6_K, Q8_0, IQ4_XS
+# C. Thread-count sweep on Deep Q4_K_M
+# D. CPU profile attempt (perf stat where permitted, else honest fallback)
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  frontier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Runner hardware
+        run: |
+          uname -a
+          grep -m1 "model name" /proc/cpuinfo || true
+          echo "cores: $(nproc)"; free -h; df -h /
+          echo "### Runner" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          grep -m1 "model name" /proc/cpuinfo >> "$GITHUB_STEP_SUMMARY" || true
+          echo "cores: $(nproc)" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Install build tools
+        run: sudo apt-get update -y && sudo apt-get install -y cmake build-essential python3-psutil linux-tools-common 2>/dev/null || sudo apt-get install -y cmake build-essential python3-psutil
+
+      - name: Build SCALAR llama.cpp (audit parity)
+        run: bash scripts/build_llamacpp_scalar.sh
+
+      - name: Verify scalar + record revision
+        run: |
+          git -C llama.cpp log --oneline -1 | tee /tmp/revs.txt
+          ./llama.cpp/build-scalar/bin/llama-cli --version 2>&1 | tee /tmp/sysinfo.txt || true
+          if grep -qiE "AVX = 1|AVX2 = 1|FMA = 1" /tmp/sysinfo.txt; then
+            echo "::error::Build is NOT scalar."; exit 1
+          fi
+
+      # ---- shared bench helper: bench_one <gguf> <tag> [extra llama-bench args]
+      - name: Install bench helper
+        run: |
+          cat > /tmp/bench_one.sh <<'EOF'
+          #!/usr/bin/env bash
+          # bench_one <model.gguf> <tag> [extra args...] -> appends one row to /tmp/frontier.tsv
+          set -euo pipefail
+          MODEL="$1"; TAG="$2"; shift 2
+          BIN=./llama.cpp/build-scalar/bin/llama-bench
+          OUT=$(/usr/bin/time -v "$BIN" -m "$MODEL" -p 512 -n 128 -ngl 0 --output json "$@" 2>/tmp/t.log)
+          TG=$(echo "$OUT" | python3 -c "import json,sys; rows=json.load(sys.stdin); print(round(next(r['avg_ts'] for r in rows if r.get('n_gen',0)>0),2))")
+          PP=$(echo "$OUT" | python3 -c "import json,sys; rows=json.load(sys.stdin); print(round(next(r['avg_ts'] for r in rows if r.get('n_gen',0)==0 and r.get('n_prompt',0)>0),2))")
+          PEAK_KB=$(grep "Maximum resident set size" /tmp/t.log | grep -o '[0-9]*')
+          ELAPSED=$(grep "Elapsed (wall clock)" /tmp/t.log | grep -o '[0-9:]*\.[0-9]*' | tail -1)
+          SIZE=$(stat -c%s "$MODEL")
+          printf "%s\t%s\t%s\t%s\t%s\t%s\n" "$TAG" "$SIZE" "$PP" "$TG" "$(( ${PEAK_KB:-0} / 1024 ))" "$ELAPSED" | tee -a /tmp/frontier.tsv
+          EOF
+          chmod +x /tmp/bench_one.sh
+          printf "tag\tbytes\tpp_tps\ttg_tps\tpeak_rss_mb\telapsed\n" > /tmp/frontier.tsv
+
+      - name: "A. Instruct-24L bench (Q4_K_M)"
+        run: |
+          curl -L --fail --retry 3 -C - -o /tmp/instruct.gguf \
+            "https://huggingface.co/unsloth/Falcon-H1-1.5B-Instruct-GGUF/resolve/main/Falcon-H1-1.5B-Instruct-Q4_K_M.gguf"
+          stat -c%s /tmp/instruct.gguf
+          /tmp/bench_one.sh /tmp/instruct.gguf instruct-Q4_K_M
+
+      - name: "B. Deep quant sweep"
+        run: |
+          REPO="https://huggingface.co/unsloth/Falcon-H1-1.5B-Deep-Instruct-GGUF/resolve/main"
+          for q in Q4_0 Q4_K_M Q5_K_M Q6_K Q8_0 IQ4_XS; do
+            f="Falcon-H1-1.5B-Deep-Instruct-${q}.gguf"
+            curl -L --fail --retry 3 -C - -o /tmp/deep.gguf "$REPO/$f"
+            /tmp/bench_one.sh /tmp/deep.gguf "deep-${q}"
+            rm -f /tmp/deep.gguf
+          done
+          # re-fetch Q4_K_M for the thread + profile steps below
+          curl -L --fail --retry 3 -C - -o /tmp/deep.gguf \
+            "$REPO/Falcon-H1-1.5B-Deep-Instruct-Q4_K_M.gguf"
+
+      - name: "C. Thread-count sweep (Deep Q4_K_M)"
+        run: |
+          for t in 1 2 4; do
+            /tmp/bench_one.sh /tmp/deep.gguf "deep-Q4_K_M-t${t}" -t "$t"
+          done
+          /tmp/bench_one.sh /tmp/deep.gguf "deep-Q4_K_M-tdef"
+
+      - name: "D. CPU profile attempt (perf stat, honest fallback)"
+        run: |
+          BIN=./llama.cpp/build-scalar/bin/llama-bench
+          if command -v perf >/dev/null 2>&1; then
+            perf stat -e cycles,instructions,cache-misses,branch-misses \
+              "$BIN" -m /tmp/deep.gguf -p 64 -n 16 -ngl 0 > /dev/null 2>/tmp/perf.log || \
+              echo "perf stat failed (likely restricted)" | tee /tmp/perf.log
+          else
+            echo "perf not installed; attempting install..." | tee /tmp/perf.log
+            (sudo apt-get install -y linux-tools-generic 2>&1 | tail -1 | tee -a /tmp/perf.log) || true
+            echo "perf unavailable on this runner" | tee -a /tmp/perf.log
+          fi
+          cat /tmp/perf.log
+          echo "--- model load time (fresh process, tiny run) ---"
+          /usr/bin/time -f "load+16tok elapsed %es maxrss %MKB" \
+            "$BIN" -m /tmp/deep.gguf -p 8 -n 16 -ngl 0 --output json 2>&1 | tail -2
+
+      - name: Publish frontier table
+        if: always()
+        run: |
+          echo "## Falcon throughput frontier (scalar audit-parity)" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          column -t -s "$(printf '\t')" /tmp/frontier.tsv >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || cat /tmp/frontier.tsv >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          cat /tmp/frontier.tsv
+
+      - name: Upload frontier artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: falcon-throughput
+          path: |
+            /tmp/frontier.tsv
+            /tmp/perf.log
+            /tmp/revs.txt
+            /tmp/sysinfo.txt
+          if-no-files-found: warn
