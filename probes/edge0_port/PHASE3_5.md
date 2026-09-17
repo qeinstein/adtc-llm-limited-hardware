@@ -57,3 +57,41 @@ DO NOT select k2 on perplexity. Paper recommends scanning {k1,k,2k}.
 - Paper disabled reasoning via chat template (transformers); our logprob
   MMLU is thinking-independent, so no thinking control needed for the gate.
   Generations (sanity set) WILL think; inspected as-is.
+
+## v1 results (kernel log; NO output files saved — crash before first dump)
+
+All 8 MMLU-200 arms completed; transcode/layer/sanity/speed never ran
+(`RuntimeError: kv type 5` in transcode_q2k's GGUF parser — scalar KV
+types unhandled + n_kv/n_tensors swapped; fixed + regression-tested in
+tests/test_gguf_kv_skip.py; remainder in edge0phase35r_v1.py):
+
+| arm | k1 | k2 | score | sigma | wall |
+|---|---|---|---|---|---|
+| native (unset) | - | - | 42.0 | 3.499 | 2112s |
+| k8exp (patched control) | 8 | 8 | 42.0 | 3.499 | 2136s |
+| naive k4 | 4 | 4 | 38.5 | 3.449 | 1677s |
+| k48 | 4 | 8 | 40.0 | 3.473 | 1743s |
+| k412 | 4 | 12 | 41.5 | 3.493 | 1774s |
+| k416 | 4 | 16 | 41.0 | 3.487 | 1672s |
+| k424 | 4 | 24 | 39.5 | 3.465 | 1717s |
+| k432 | 4 | 32 | 40.0 | 3.473 | 1733s |
+
+Adjudication vs pre-registered rule: k8exp == native EXACTLY (patch
+harness quality-neutral, +1.1% wall overhead). Naive k4 -3.5pp; EVERY
+k2>4 arm recovers to within -2.5..-0.5pp. k416 = -1.0pp with full K4
+speed (1672s, 1.26x) and no collapse => **STRONG KEEP** (within ~1pp).
+k412 nominally best (-0.5pp, ONE question over k416) but all k2 arms
+are mutually within noise (n=200, sigma ~3.5; paired detail lost with
+the crash, no McNemar possible).
+
+k2 LOCK: **16** (paper's choice; 1 question off nominal-best, flat
+within noise across k2 in 8..32; k2 changes only the renormalization
+scalar, NOT the executed top-4 set, so speed/traces/cache are
+k2-independent). k2=12 recorded as statistically equivalent fallback.
+
+Speed: K4 arms 1672-1774s vs native 2112 (1.19-1.26x; k412's +6% vs
+k416 is host noise — k2 cannot change executed work). Matches the
+paper's delta PATTERN (naive deep loss, k2=16 ~neutral) scaled to our
+matched-likelihood harness. Mandatory Recover-LoRA NOT needed for the
+speed sprint. Pending: mmlu_q2k_k416 joint gate + layer probe + sanity
+(r-kernel running).

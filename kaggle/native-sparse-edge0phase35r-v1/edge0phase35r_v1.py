@@ -19,6 +19,14 @@ Decision rule (applied after pull; user brief):
   STRONG KEEP: (4,16) within ~1pp of K8 or indistinguishable + no collapse.
   KEEP/RECOVER-LATER: modest 1-3pp loss, competent. RECOVER NOW: >3pp loss
   but big help vs naive (LoRA on THIS student path). NO-GO: catastrophic.
+
+REMAINDER kernel (r-v1): v1 completed all 8 MMLU arms (transcribed in
+probes/edge0_port/PHASE3_5.md) then died in transcode_q2k on a GGUF KV
+parser bug (scalar metadata types unhandled + n_kv/n_tensors swapped;
+both fixed here, regression test tests/test_gguf_kv_skip.py). This run
+skips MMLU (REMAINDER=1) and executes transcode -> mmlu_q2k_k416 ->
+layer probe -> sanity -> speed, with result.json dumped after EVERY
+stage so a crash preserves the completed prefix.
 """
 from __future__ import annotations
 
@@ -35,7 +43,8 @@ from pathlib import Path
 
 WORK = Path("/kaggle/working")
 SCRATCH = Path("/tmp/kaggle_scratch")
-OUT = WORK / "native-sparse-edge0phase35-v1-results"
+OUT = WORK / "native-sparse-edge0phase35r-v1-results"
+REMAINDER = True  # r-kernel: v1 MMLU arms complete; run transcode onward
 # NOTE: no mkdir at import (keeps `import edge0phase35_v1` side-effect-free
 # for tests); setup_runtime() creates SCRATCH+OUT before anything needs them.
 
@@ -454,14 +463,24 @@ def main():
             ("mmlu_k416", 4, 16), ("mmlu_k8exp", 8, 8),
             ("mmlu_k48", 4, 8), ("mmlu_k412", 4, 12),
             ("mmlu_k424", 4, 24), ("mmlu_k432", 4, 32)]
+    def dump():
+        results["wall_sec"] = time.time() - t_start
+        (OUT / "result.json").write_text(json.dumps(results, indent=1))
+
     mmlu = {}
-    for label, k1, k2 in arms:
-        mmlu[label] = run_mmlu(model, ds, label, k1, k2)
+    if REMAINDER:
+        mmlu = {"note": "8 arms done in v1 (see PHASE3_5.md); skipped here"}
+    else:
+        for label, k1, k2 in arms:
+            mmlu[label] = run_mmlu(model, ds, label, k1, k2)
     results["mmlu"] = mmlu
+    dump()
     # ---- Q2K deployment arm ----
     q2k = WORK / "Qwen3.6-35B-A3B-UD-Q2K-experts.gguf"
     results["transcode"] = transcode_q2k(model, q2k)
+    dump()
     results["mmlu_q2k_k416"] = run_mmlu(q2k, ds, "mmlu_q2k_k416", 4, 16)
+    dump()
     # ---- layer probe (moe_out capture) ----
     layer_bins, layer_perf = {}, {}
     for pi, pr in enumerate(LAYER_PROMPTS):
@@ -477,6 +496,7 @@ def main():
         probe[f"p{pi}"] = analyze_layer(
             {c: Path(layer_bins[c][pi]) for c in ("k8", "k4", "k416")})
     results["layer_probe"] = probe
+    dump()
     # ---- sanity generations ----
     gates = fetch_gates()
     sw = gates["swahili_eval_set.json"]
@@ -500,11 +520,11 @@ def main():
                      "output": r["output"], "perf": r["perf"]})
     (OUT / "sanity.json").write_text(json.dumps(gens))
     results["n_sanity"] = len(gens)
+    dump()
     # ---- Q2K decode speed ----
     r = cli_run(q2k, LAYER_PROMPTS[0], "speed_q2k_k416", 60, 0.0, 4, 16)
     results["speed_q2k_k416"] = r["perf"]
-    results["wall_sec"] = time.time() - t_start
-    (OUT / "result.json").write_text(json.dumps(results, indent=1))
+    dump()
     print(json.dumps({k: (v["score_percent"] if isinstance(v, dict) and
                           "score_percent" in v else v)
                       for k, v in results["mmlu"].items()}, indent=1),
