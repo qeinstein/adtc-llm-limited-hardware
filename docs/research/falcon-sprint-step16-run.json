@@ -1,0 +1,54 @@
+{
+  "schema": "falcon-sprint-run-v1",
+  "status": "TRAINING_COMPLETE_GATE_PENDING",
+  "experiment_id": "falcon-production-v1",
+  "kernel": "toheebogunade/jamii-afya-falcon-production-post-training",
+  "kernel_version": 37,
+  "run_id": "20260914T154108Z",
+  "model": "tiiuae/Falcon-H1-1.5B-Deep-Instruct",
+  "model_revision": "b6648636ddc906688974282de6e7a243395f5423",
+  "hardware": {
+    "gpu": "Tesla P100-PCIE-16GB",
+    "cuda_capability": [6, 0],
+    "torch": "2.6.0+cu118",
+    "dtype": "fp16",
+    "mamba_path": "naive_fallback"
+  },
+  "training": {
+    "stage": "stage_a_capability_preserving",
+    "optimizer_steps": 16,
+    "effective_batch_size": 16,
+    "max_length": 384,
+    "mcqa_context_max_tokens": 320,
+    "learning_rate": 0.00003,
+    "lora_rank": 4,
+    "lora_alpha": 8,
+    "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj"],
+    "sampling_token_share": {"sft": 0.9, "mcqa": 0.1},
+    "train_rows": 1866,
+    "dev_rows": 223
+  },
+  "checkpoint_selection": {
+    "step_8_eval_loss": 2.9333534240722656,
+    "step_12_eval_loss": 2.922335147857666,
+    "step_16_eval_loss": 2.9194788932800293,
+    "selected_step": 16,
+    "all_checkpoints_persisted": true,
+    "persistence_dataset": "toheebogunade/jamii-afya-falcon-production-checkpoints"
+  },
+  "timing_utc": {
+    "train_start": "2026-09-14T15:41:54Z",
+    "step_4": "2026-09-14T15:54:50Z",
+    "step_8": "2026-09-14T16:05:47Z",
+    "step_12": "2026-09-14T16:18:52Z",
+    "step_16": "2026-09-14T16:31:01Z"
+  },
+  "gate_status": {
+    "training": "passed",
+    "dev_validation": "not_run_by_original_notebook_import_bug",
+    "frozen_clinical_safety": "pending_persisted_gate_worker",
+    "promotion_manifest": "absent_at_last_local_poll"
+  },
+  "known_wrapper_failure": "Original production notebook completed training, then failed importing scripts.select_falcon_candidate because the cloned repository was not inserted into sys.path. Fixed in commit fbc74e2; persisted-checkpoint gate worker launched separately.",
+  "recorded_from": "Kaggle kernel logs retrieved 2026-09-14 before API DNS outage"
+}

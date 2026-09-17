@@ -1,80 +1,71 @@
 #!/usr/bin/env bash
-# ADTC 2026 — Jamii Afya model downloader
-# ---------------------------------------------------------------------------
-# Fetches the GGUF weights to the path declared in metadata.json (_runtime.model_path).
-# The adtc-profiler runs this script, then loads the resulting GGUF directly via
-# llama.cpp (llama-bench / lm-eval). No credentials, 100% public URL, idempotent.
+# ADTC 2026 — Jamii Afya Falcon submission downloader
 #
-# FINAL model: our own fine-tuned Qwen3-0.6B-Base, Q4_0 quantized, produced by
-#   scripts/train_lora.py (listwise MCQ ranking + clinical SFT + healthcare
-#   corpus, 2 epochs) + scripts/export_gguf.sh. Real measured arc_easy
-#   acc_norm=80.0 (vs 51-57% pre-fine-tune baseline), 358.78 MB. Hosted on our
-#   own Hugging Face model repo (Apache-2.0, same license as base Qwen3).
-#   See PROGRESS.md for the full training/decision history.
-#
-# Quant = Q4_0, decided by the real sweep in .github/workflows/quant-sweep.yml: it
-#   was the only quant that cleared the 15 tok/s scoring threshold with real margin
-#   (19.1 tok/s measured; Q4_K_M/Q5_K_M/Q6_K/Q8_0 all measured BELOW 15 tok/s on the
-#   same run). Accuracy differences between quants were within noise on a 200-item
-#   sample; the speed margin is the high-confidence signal given real run-to-run
-#   hardware variance we've observed. See PROGRESS.md.
-# ---------------------------------------------------------------------------
-
+# The active artifact is the exact Q4_K_M GGUF.  The host must publish the
+# matching .sha256 sidecar (or callers may provide MODEL_SHA256); downloads are
+# never accepted on size alone.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MODEL_DIR="$HERE/model"
-# Must match _runtime.model_path in metadata.json:
-MODEL_FILE="$MODEL_DIR/Qwen3-0.6B-Q4_0.gguf"
-
-# Public, credential-free source (override with env MODEL_URL for local testing).
-MODEL_URL="${MODEL_URL:-https://huggingface.co/Fluxx08/jamii-afya-qwen3-0.6b/resolve/main/Qwen3-0.6B-Q4_0.gguf}"
-
-# Lower-bound size sanity check. Our fine-tuned Q4_0 export is 358.78 MB
-# (376,246,272 bytes) -- smaller than the untuned baseline was, because the
-# real file size is what it is, not what we'd guess. Set comfortably below
-# that to guard against truncated downloads without false-failing on the real file.
-MIN_SIZE="${MIN_SIZE:-350000000}"
-
-mkdir -p "$MODEL_DIR"
+MODEL_FILE="$MODEL_DIR/Falcon-H1-1.5B-Deep-JamiiAfya-Q4_K_M.gguf"
+MODEL_URL="${MODEL_URL:-https://huggingface.co/Fluxx08/jamii-afya-falcon-h1-1.5b/resolve/main/Falcon-H1-1.5B-Deep-JamiiAfya-Q4_K_M.gguf}"
+MODEL_SHA256="${MODEL_SHA256:-}"
+MIN_SIZE="${MIN_SIZE:-500000000}"
 
 file_size() {
     if [ ! -f "$1" ]; then echo 0; return; fi
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        stat -f%z "$1" 2>/dev/null || echo 0
-    else
-        stat -c%s "$1" 2>/dev/null || echo 0
+    if [[ "${OSTYPE:-}" == "darwin"* ]]; then stat -f%z "$1" 2>/dev/null || echo 0
+    else stat -c%s "$1" 2>/dev/null || echo 0
     fi
 }
 
-if [ "$(file_size "$MODEL_FILE")" -ge "$MIN_SIZE" ]; then
-    echo "[download_model] Model already present and complete: $MODEL_FILE"
-    echo "[download_model] Skipping download."
-    exit 0
+sha256_file() {
+    if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" | awk '{print $1}'
+    else shasum -a 256 "$1" | awk '{print $1}'
+    fi
+}
+
+fetch_expected_hash() {
+    if [ -n "$MODEL_SHA256" ]; then return 0; fi
+    local sidecar="${MODEL_URL}.sha256" sidecar_file="$MODEL_FILE.sha256"
+    if command -v curl >/dev/null 2>&1 && curl -L --fail --silent --show-error --retry 2 -o "$sidecar_file" "$sidecar"; then
+        MODEL_SHA256="$(grep -Eo '[[:xdigit:]]{64}' "$sidecar_file" | head -n 1 | tr '[:upper:]' '[:lower:]')"
+    elif command -v wget >/dev/null 2>&1 && wget -q -O "$sidecar_file" "$sidecar"; then
+        MODEL_SHA256="$(grep -Eo '[[:xdigit:]]{64}' "$sidecar_file" | head -n 1 | tr '[:upper:]' '[:lower:]')"
+    fi
+    rm -f "$sidecar_file"
+    [ "${#MODEL_SHA256}" -eq 64 ]
+}
+
+verify_model() {
+    local actual
+    [ "$(file_size "$MODEL_FILE")" -ge "$MIN_SIZE" ] || { echo "[download_model] ERROR: artifact is too small" >&2; return 1; }
+    [ "${#MODEL_SHA256}" -eq 64 ] || { echo "[download_model] ERROR: MODEL_SHA256 or hosted .sha256 sidecar is required" >&2; return 1; }
+    actual="$(sha256_file "$MODEL_FILE")"
+    [ "$actual" = "${MODEL_SHA256,,}" ] || { echo "[download_model] ERROR: SHA256 mismatch expected=$MODEL_SHA256 actual=$actual" >&2; return 1; }
+    echo "[download_model] verified $MODEL_FILE ($(file_size "$MODEL_FILE") bytes) sha256=$actual"
+}
+
+mkdir -p "$MODEL_DIR"
+if [ -f "$MODEL_FILE" ]; then
+    if fetch_expected_hash; then verify_model; exit 0; fi
+    echo "[download_model] Existing artifact cannot be verified; re-download or set MODEL_SHA256." >&2
 fi
 
-echo "[download_model] Target : $MODEL_FILE"
-echo "[download_model] Source : $MODEL_URL"
-echo "[download_model] Downloading (resumable)..."
-
-# Download to a .partial then atomically move, so an interrupted run never leaves a
-# corrupt file that passes the size check. -C - resumes; --fail catches HTTP errors.
-TMP_FILE="$MODEL_FILE.partial"
+fetch_expected_hash || {
+    echo "[download_model] ERROR: host did not provide a SHA256 sidecar; set MODEL_SHA256 explicitly." >&2
+    exit 1
+}
+tmp_file="$MODEL_FILE.partial"
+echo "[download_model] Downloading $MODEL_URL"
 if command -v curl >/dev/null 2>&1; then
-    curl -L --fail --retry 3 --retry-delay 5 -C - -o "$TMP_FILE" "$MODEL_URL"
+    curl -L --fail --retry 3 --retry-delay 5 -C - -o "$tmp_file" "$MODEL_URL"
 elif command -v wget >/dev/null 2>&1; then
-    wget -c -O "$TMP_FILE" "$MODEL_URL"
+    wget -c -O "$tmp_file" "$MODEL_URL"
 else
-    echo "[download_model] ERROR: neither curl nor wget is available." >&2
+    echo "[download_model] ERROR: neither curl nor wget is available" >&2
     exit 1
 fi
-
-DL_SIZE="$(file_size "$TMP_FILE")"
-if [ "$DL_SIZE" -lt "$MIN_SIZE" ]; then
-    echo "[download_model] ERROR: downloaded file is too small ($DL_SIZE bytes < $MIN_SIZE)." >&2
-    echo "[download_model] The download may have been interrupted. Re-run to resume." >&2
-    exit 1
-fi
-
-mv -f "$TMP_FILE" "$MODEL_FILE"
-echo "[download_model] Done: $MODEL_FILE ($DL_SIZE bytes)"
+mv -f "$tmp_file" "$MODEL_FILE"
+verify_model

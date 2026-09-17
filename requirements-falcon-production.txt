@@ -1,0 +1,17 @@
+# Pinned user-space stack for Falcon-H1 production training/evaluation.
+# Torch is installed separately from the CUDA wheel index selected by the
+# worker image, so this file intentionally does not pin torch.
+transformers==4.53.3
+tokenizers==0.21.4
+peft==0.15.2
+accelerate==1.7.0
+datasets==3.6.0
+fsspec[http]==2025.3.0
+safetensors==0.5.3
+sentencepiece==0.2.0
+huggingface-hub==0.33.4
+# Falcon-H1 Mamba fast path. The Kaggle notebook installs these with
+# --no-build-isolation after setting TORCH_CUDA_ARCH_LIST=7.5 for T4.
+# A missing import is fatal; naive Mamba is never an allowed training path.
+mamba-ssm>=2.2.4
+causal-conv1d>=1.5.0

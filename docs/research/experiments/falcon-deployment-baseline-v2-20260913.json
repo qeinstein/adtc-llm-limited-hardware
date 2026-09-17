@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0.0",
+  "experiment_id": "falcon-deployment-baseline-v2-20260913",
+  "status": "ABORTED_INFRASTRUCTURE",
+  "decision": "FOLLOW-UP",
+  "kaggle_kernel": "toheebogunade/jamii-afya-falcon-deployment-baseline",
+  "kaggle_kernel_version": 2,
+  "repo_sha": "1e51048",
+  "started_utc": "2026-09-13T18:22:17Z",
+  "failed_utc": "2026-09-13T18:37:04Z",
+  "hardware": {
+    "cpu": "Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "cores": 4,
+    "build": "scalar llama.cpp"
+  },
+  "requested_command": "llama-bench -m MODEL -p 512 -n 128 -ngl 0 -t 4 --output json",
+  "partial_observation": "The first Q4_0 llama-bench process ran for about 390 seconds and the sampler observed approximately 1066 MB peak RSS, but no repetition result was accepted.",
+  "reason_for_termination": "After the child exited, the wrapper performed one final psutil sample against its vanished PID and raised NoSuchProcess. This invalidated the run after the process itself had completed.",
+  "known_weaknesses": [
+    "No aggregate throughput, RSS, or deterministic-output result is valid from this version.",
+    "v3 removes the post-exit sample and catches procfs races inside the sampler."
+  ]
+}

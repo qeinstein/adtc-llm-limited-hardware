@@ -1,0 +1,194 @@
+{
+  "schema_version": "falcon-submission-sft-v1",
+  "experiment_id": "falcon-submission-sft-v1",
+  "model": {
+    "id": "tiiuae/Falcon-H1-1.5B-Deep-Instruct",
+    "revision": "b6648636ddc906688974282de6e7a243395f5423",
+    "tokenizer_revision": "b6648636ddc906688974282de6e7a243395f5423",
+    "license": "Falcon LLM License"
+  },
+  "data": {
+    "train_file": "output/falcon-submission-sft-v1.jsonl",
+    "system_prompt": "You are Jamii Afya, an offline health and general assistant for community health workers. Answer in the user's language when possible. Be concise, useful, and disposition-first for clinical questions: identify danger signs, give only safe immediate actions, and state when referral is needed. Never invent WHO/IMCI protocols, citations, diagnoses, medicine doses, or numeric thresholds. Do not provide invasive procedures or instructions to ingest or inject bleach or other toxic substances. When information is insufficient, say so. Avoid long disclaimers and answer the safe, useful part first.",
+    "max_length": 512,
+    "sources": [
+      {
+        "name": "clinical_safety",
+        "path": "data/falcon_probe_sft.json",
+        "format": "alpaca",
+        "objective": "sft",
+        "category": "clinical_safety",
+        "provenance": "project_audited_training",
+        "license": "project-authored",
+        "language": "en",
+        "required": true
+      },
+      {
+        "name": "project_clinical_generation",
+        "path": "data/medical_lora_dataset.json",
+        "format": "alpaca",
+        "objective": "sft",
+        "category": "normal_clinical",
+        "provenance": "project_audited_training",
+        "license": "project-authored",
+        "language": "en+sw",
+        "exclude_quality_flags": ["mcqa_shaped_sft"],
+        "required": true
+      },
+      {
+        "name": "general_conversational",
+        "path": "data/falcon_general_sft.json",
+        "format": "alpaca",
+        "objective": "sft",
+        "category": "general_conversational",
+        "provenance": "project_audited_training",
+        "license": "project-authored",
+        "language": "en+sw",
+        "required": true
+      },
+      {
+        "name": "mcqa_sft",
+        "path": "output/accuracy_sft.jsonl",
+        "format": "mcqa",
+        "objective": "mcqa",
+        "category": "mcqa_sft",
+        "provenance": "public_train_splits_only",
+        "license": "per-source; see accuracy_sft.manifest.json",
+        "language": "en",
+        "required": true
+      }
+    ],
+    "frozen_holdouts": [
+      "docs/research/falcon_probe_heldout.json",
+      "docs/research/falcon_baseline_prompts.json",
+      "data/swahili_eval_set.json"
+    ],
+    "final_holdouts": [
+      "docs/research/falcon_probe_heldout.json",
+      "docs/research/falcon_baseline_prompts.json",
+      "data/swahili_eval_set.json"
+    ],
+    "mixture": {
+      "unit": "assistant_supervised_tokens",
+      "stage1_domain_lock_in": {
+        "clinical_safety": 0.40,
+        "normal_clinical": 0.30,
+        "general_conversational": 0.15,
+        "mcqa_sft": 0.10,
+        "kiswahili_boost": 0.05
+      },
+      "stage2_safety_polish": {
+        "clinical_safety": 0.60,
+        "normal_clinical": 0.20,
+        "general_conversational": 0.10,
+        "mcqa_sft": 0.05,
+        "kiswahili_boost": 0.05
+      },
+      "stage3_capability_replay": {
+        "clinical_safety": 0.10,
+        "normal_clinical": 0.20,
+        "general_conversational": 0.35,
+        "mcqa_sft": 0.30,
+        "kiswahili_boost": 0.05
+      },
+      "minimum_total_kiswahili_assistant_token_share": 0.10
+    },
+    "mcqa": {
+      "source": "output/accuracy_sft.jsonl",
+      "format": "ordinary_sft",
+      "answer_policy": "concise_correct_choice_only",
+      "chain_of_thought": false,
+      "split_policy": "public train splits only"
+    }
+  },
+  "lora": {
+    "r": 16,
+    "lora_alpha": 32,
+    "lora_dropout": 0.05,
+    "bias": "none",
+    "task_type": "CAUSAL_LM",
+    "target_modules": [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj",
+      "in_proj",
+      "gate_proj",
+      "up_proj",
+      "down_proj"
+    ]
+  },
+  "hardware": {
+    "minimum_cuda_capability": [7, 5],
+    "preferred": "Kaggle T4 x2",
+    "compute_dtype": "float16",
+    "optimized_mamba_required": true,
+    "torch_cuda_arch_list": "7.5",
+    "forbid_naive_mamba_fallback": true
+  },
+  "training": {
+    "max_length": 512,
+    "per_device_train_batch_size": 2,
+    "per_device_eval_batch_size": 2,
+    "gradient_accumulation_steps": 4,
+    "effective_batch_size_on_t4_x2": 16,
+    "ddp_find_unused_parameters": false,
+    "gradient_checkpointing": false,
+    "dataloader_num_workers": 2,
+    "dataloader_persistent_workers": true,
+    "dataloader_pin_memory": true,
+    "optimizer": "adamw_torch",
+    "beta1": 0.9,
+    "beta2": 0.95,
+    "weight_decay": 0.0,
+    "max_grad_norm": 1.0,
+    "seed": 3407,
+    "fast_dev_battery": "docs/research/falcon_prompt_dev.json",
+    "fast_dev_max_new_tokens": 96
+  },
+  "stages": {
+    "stage1_domain_lock_in": {
+      "optimizer_steps": 96,
+      "learning_rate": 0.00003,
+      "warmup_ratio": 0.05,
+      "scheduler": "cosine",
+      "checkpoint_steps": [48, 96],
+      "mixture": "stage1_domain_lock_in"
+    },
+    "stage2_safety_polish": {
+      "optimizer_steps": 24,
+      "learning_rate": 0.00001,
+      "warmup_ratio": 0.0,
+      "scheduler": "constant",
+      "checkpoint_steps": [24],
+      "mixture": "stage2_safety_polish"
+    },
+    "stage3_capability_replay": {
+      "optimizer_steps": 16,
+      "learning_rate": 0.000005,
+      "warmup_ratio": 0.0,
+      "scheduler": "constant",
+      "checkpoint_steps": [16],
+      "mixture": "stage3_capability_replay"
+    }
+  },
+  "validation": {
+    "fast_checkpoints": ["Stage1-step48", "Stage1-step96", "Stage2-final", "Stage3-final"],
+    "max_new_tokens": 96,
+    "frozen_battery": "docs/research/falcon_probe_heldout.json",
+    "critical_safety_without_system_prompt": true
+  },
+  "selection": {
+    "candidates": ["Stage1-step96", "Stage2-final", "Stage3-final"],
+    "order": ["Stage3-final", "Stage2-final", "Stage1-step96", "stock-falcon-h1"],
+    "criterion": "frozen_clinical_safety_gate_only",
+    "stock_fallback": "tiiuae/Falcon-H1-1.5B-Deep-Instruct@b6648636ddc906688974282de6e7a243395f5423"
+  },
+  "export": {
+    "quantization": "Q4_K_M",
+    "filename": "Falcon-H1-1.5B-Deep-JamiiAfya-Q4_K_M.gguf",
+    "merge_method": "merge_and_unload",
+    "require_adapter_on_merged_equivalence": true,
+    "record": ["sha256", "byte_size", "base_revision", "adapter_commit", "training_config_sha256"]
+  }
+}

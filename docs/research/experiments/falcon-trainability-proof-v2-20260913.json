@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0.0",
+  "experiment_id": "falcon-trainability-proof-v2-20260913",
+  "status": "PASS_TRAINABILITY_ONLY",
+  "decision": "FOLLOW-UP",
+  "model": "tiiuae/Falcon-H1-1.5B-Deep-Instruct",
+  "model_revision": "b6648636ddc906688974282de6e7a243395f5423",
+  "kaggle_kernel": "toheebogunade/jamii-afya-falcon-trainability-proof",
+  "kaggle_kernel_version": 2,
+  "repo_sha": "1e51048",
+  "started_utc": "2026-09-13T18:23:25Z",
+  "completed_utc": "2026-09-13T18:28:48Z",
+  "hardware": {
+    "gpu": "Tesla P100-PCIE-16GB",
+    "cuda_capability": "sm_60",
+    "dtype": "float16",
+    "mamba_fast_path": false
+  },
+  "configuration": {
+    "steps": 64,
+    "learning_rate": 0.001,
+    "lora_r": 16,
+    "lora_alpha": 32,
+    "lora_dropout": 0.0,
+    "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj"],
+    "fixture_rows": 32,
+    "fixture_mix": {"sft": 16, "mcqa": 16},
+    "seed": 3407
+  },
+  "evidence": {
+    "trainable_parameters": 7569408,
+    "adapter_tensors_changed": 528,
+    "adapter_delta_l2": 24.05708510017754,
+    "adapter_delta_relative": 0.6412081252407458,
+    "probe_logit_delta_max_abs": 57.017578125,
+    "probe_logit_delta_rms": 9.352434158325195,
+    "adapter_off_matches_initial_stock_max_abs": 0.0,
+    "adapter_on_restored_max_abs": 0.0,
+    "reloaded_adapter_max_abs": 0.0,
+    "merged_vs_unmerged_max_abs": 0.125,
+    "sft_loss_first4_mean": 3.07271,
+    "sft_loss_last4_mean": 1.193606,
+    "mcqa_loss_first4_mean": 0.669486,
+    "mcqa_loss_last4_mean": 0.038349,
+    "changed_generation_count": 4,
+    "generation_count": 4
+  },
+  "conclusion": "The training stack demonstrably moves Falcon: gradients are nonzero, all 528 trainable adapter tensors changed, adapter-on logits differ strongly, adapter-off exactly matches initial stock logits, reload preserves the adapter delta exactly, and both objective losses fall materially. Merged-vs-unmerged max logit difference 0.125 is recorded as expected FP16 merge arithmetic, not treated as exact equality.",
+  "quality_warning": "The deliberately overfit adapter produces repetitive referral text and is not a quality candidate. It is infrastructure evidence only. The four generation checks are the pre-instrumentation subset; v3 reruns the latest loss-summary and all-SFT-generation checks.",
+  "raw_artifacts": ["trainability_manifest.json", "training_metrics.jsonl", "generations.json", "events.jsonl"]
+}

@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0.0",
+  "status": "frozen",
+  "frozen_utc": "2026-09-13T00:00:00Z",
+  "policy": "These files are evaluation-only. Do not edit in place or include their prompts, paraphrases, or answer rubrics in training data.",
+  "files": [
+    {
+      "path": "docs/research/falcon_probe_heldout.json",
+      "sha256": "6747c0907e63938f81942219858e1b9cf9fa131c5d915c8664885b2dc851caa4",
+      "rows": 24,
+      "role": "clinical safety adversarial, disposition, uncertainty, and general regression"
+    },
+    {
+      "path": "docs/research/falcon_baseline_prompts.json",
+      "sha256": "b65a1cb3f21df8ee110c62c89ba731df4a1cd94c2c438436d8fb3ff6935a914c",
+      "rows": 21,
+      "role": "original Falcon capability and historical failure battery"
+    },
+    {
+      "path": "data/swahili_eval_set.json",
+      "sha256": "a927c9dd342eef13e196bd5cf2d8ad1d35ff0444b766c2ee9e375c12f868a8d6",
+      "rows": 18,
+      "role": "Kiswahili clinical and safety regression"
+    }
+  ]
+}

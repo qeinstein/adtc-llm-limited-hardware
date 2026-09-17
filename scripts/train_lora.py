@@ -53,7 +53,7 @@ SYSTEM = (
 )
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description="QLoRA fine-tune (listwise MCQ ranking + clinical chat)")
     p.add_argument("--base_model", default="Qwen/Qwen3-0.6B-Base")
     p.add_argument("--accuracy_file", default=str(ROOT / "output" / "accuracy_sft.jsonl"))
@@ -103,7 +103,86 @@ def parse_args() -> argparse.Namespace:
                         "without repeating the full multi-hour run. Use a low --lr "
                         "(e.g. 2e-5) to avoid catastrophically overwriting what the "
                         "first run already learned.")
-    return p.parse_args()
+    p.add_argument("--quantize", choices=("4bit", "none"), default="4bit",
+                   help="'4bit' = QLoRA via bitsandbytes (locked recipe default). "
+                        "'none' = plain unquantized LoRA: required on GPUs without "
+                        "bitsandbytes support (e.g. Kaggle P100, sm_60), and faster "
+                        "per step for a 0.6B model (fp16 weights are only ~1.2 GB, "
+                        "so 4-bit buys nothing but dequant overhead).")
+    p.add_argument("--compute-dtype", choices=("auto", "bf16", "fp16", "fp32"),
+                   default="auto",
+                   help="Training compute dtype on CUDA. 'auto' keeps the locked "
+                        "recipe (bf16 with 4bit) and picks bf16 on sm>=80 / fp16 "
+                        "below for --quantize none.")
+    p.add_argument("--torch-compile", action="store_true", default=False,
+                   help="torch.compile the model (inductor needs sm>=70; silently "
+                        "skipped on older GPUs). Off by default: measure before trusting.")
+    p.add_argument("--optim", default=None,
+                   help="Optimizer passthrough for TrainingArguments (e.g. "
+                        "'adamw_torch_fused'). Unset = current default behavior.")
+    return p.parse_args(argv)
+
+
+def resolve_precision(*, use_cuda, cuda_capability=None, mps=False,
+                      quantize="4bit", compute_dtype="auto"):
+    """Choose load mode + compute dtype WITHOUT importing torch (pure, tested).
+
+    Returns (load_mode, dtype_name) where load_mode is 'bnb4' or 'plain' and
+    dtype_name is one of 'bf16'/'fp16'/'fp32'.
+
+    Rules (also encode hardware facts, not just preferences):
+    - No CUDA -> plain fp16 on MPS (no bf16 ops), else plain fp32.
+    - CUDA + 4bit -> bitsandbytes NF4 (locked recipe); bf16 unless overridden.
+      NOTE: bitsandbytes requires sm>=70 — on older GPUs (P100/sm_60) use
+      --quantize none instead of failing at runtime.
+    - CUDA + none -> plain weights; auto picks bf16 on sm>=80, fp16 on sm>=70,
+      and fp32 below sm_70. Falcon-H1 produces non-finite autoregressive
+      logits in P100 FP16, so the older path is deliberately correctness-first.
+    """
+    if not use_cuda:
+        return ("plain", "fp16" if mps else "fp32")
+    if quantize == "4bit":
+        return ("bnb4", compute_dtype if compute_dtype != "auto" else "bf16")
+    if compute_dtype != "auto":
+        return ("plain", compute_dtype)
+    cap = cuda_capability or (0, 0)
+    if cap >= (8, 0):
+        return ("plain", "bf16")
+    return ("plain", "fp16" if cap >= (7, 0) else "fp32")
+
+
+def compile_supported(*, use_cuda, cuda_capability=None):
+    """Inductor/Triton needs sm>=70. Pure predicate so callers skip cleanly."""
+    if not use_cuda:
+        return False
+    return (cuda_capability or (0, 0)) >= (7, 0)
+
+
+def get_cuda_capability(torch_module):
+    """Return the active CUDA device capability using PyTorch's public API."""
+    return torch_module.cuda.get_device_capability(0)
+
+
+def patch_peft_transformers_compat() -> bool:
+    """Restore PEFT's legacy Bloom symbol on Transformers 4.52+.
+
+    Falcon-H1 first appears in Transformers 4.53, while PEFT releases used by
+    this probe still import ``BloomPreTrainedModel`` from the Transformers
+    top-level namespace. Transformers moved that lazy export. PEFT only uses
+    the symbol for an import-time Bloom prefix-tuning check, so a placeholder
+    is sufficient for a Falcon run and avoids importing optional vision/quant
+    dependencies just to recover an unrelated legacy export. Return whether a
+    patch was needed; callers can log it without hiding other import failures.
+    """
+    import transformers
+
+    if getattr(transformers, "BloomPreTrainedModel", None) is None:
+        class BloomPreTrainedModel:  # noqa: N801 - preserve PEFT's old symbol
+            pass
+
+        transformers.BloomPreTrainedModel = BloomPreTrainedModel
+        return True
+    return False
 
 
 # --------------------------------------------------------------------------- #
@@ -172,9 +251,17 @@ class UnifiedDataset:
             inp = (item.get("input") or "").strip()
             user = f"{instr}\n\n{inp}" if inp else instr
             msgs = [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}]
-            prompt = self.tok.apply_chat_template(
-                msgs, tokenize=False, add_generation_prompt=True, enable_thinking=False
-            )
+            try:
+                prompt = self.tok.apply_chat_template(
+                    msgs, tokenize=False, add_generation_prompt=True, enable_thinking=False
+                )
+            except TypeError:
+                # Templates without a thinking switch (e.g. Falcon-H1): same
+                # call without the kwarg. Model-agnostic fallback, Qwen path
+                # unchanged.
+                prompt = self.tok.apply_chat_template(
+                    msgs, tokenize=False, add_generation_prompt=True
+                )
             ctx_ids = self._encode(prompt)
             tgt_ids = self._encode(out) + [self.tok.eos_token_id]
             if len(ctx_ids) + len(tgt_ids) > self.max_len:
@@ -243,6 +330,7 @@ def main() -> int:
 
     import torch
     import torch.nn.functional as F
+    patch_peft_transformers_compat()
     from peft import LoraConfig, PeftModel, get_peft_model, prepare_model_for_kbit_training
     from transformers import (
         AutoModelForCausalLM,
@@ -266,33 +354,55 @@ def main() -> int:
         print("ERROR: no training items. Run build_accuracy_sft.py and/or check clinical_file.")
         return 1
 
-    # bitsandbytes 4-bit is CUDA-only. On Apple Silicon (MPS) we load in fp16
-    # instead — fine here because 0.6B fp16 is only ~1.2 GB, so 4-bit buys us
-    # nothing we need, and LoRA adapters stay tiny either way.
+    # bitsandbytes 4-bit is CUDA-only AND sm>=70-only (fails on Kaggle P100).
+    # --quantize none loads plain weights instead: for 0.6B, fp16 is ~1.2 GB,
+    # so 4-bit buys nothing we need, and skipping dequant is faster per step.
+    # Defaults (4bit + auto dtype) reproduce the locked recipe exactly.
     use_cuda = torch.cuda.is_available()
-    if use_cuda:
+    mps = (not use_cuda) and torch.backends.mps.is_available()
+    cap = get_cuda_capability(torch) if use_cuda else None
+    load_mode, dtype_name = resolve_precision(
+        use_cuda=use_cuda, cuda_capability=cap, mps=mps,
+        quantize=args.quantize, compute_dtype=args.compute_dtype,
+    )
+    _dtypes = {"bf16": torch.bfloat16, "fp16": torch.float16, "fp32": torch.float32}
+    dtype = _dtypes[dtype_name]
+    print(f"Precision: load_mode={load_mode} dtype={dtype_name} cuda_cap={cap}")
+
+    # Transformers' generic AutoModel registry imports every optional model
+    # family when resolving a class. On the Kaggle P100 image that reaches an
+    # unrelated Gemma3n/torchvision dependency. Falcon-H1 has a first-class
+    # direct class, so use it here; the existing AutoModel path remains the
+    # default for Qwen and other supported bases.
+    model_cls = AutoModelForCausalLM
+    if "falcon-h1" in args.base_model.lower():
+        from transformers.models.falcon_h1.modeling_falcon_h1 import FalconH1ForCausalLM
+
+        model_cls = FalconH1ForCausalLM
+
+    if load_mode == "bnb4":
         bnb = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=torch.bfloat16,
+            bnb_4bit_compute_dtype=dtype,
             bnb_4bit_use_double_quant=True,
         )
-        model = AutoModelForCausalLM.from_pretrained(
+        model = model_cls.from_pretrained(
             args.base_model, quantization_config=bnb, device_map="auto",
-            trust_remote_code=True, torch_dtype=torch.bfloat16,
+            trust_remote_code=True, torch_dtype=dtype,
         )
     else:
-        mps = torch.backends.mps.is_available()
-        # MPS has no bfloat16 support in several ops; float16 is the safe choice.
-        dtype = torch.float16 if mps else torch.float32
-        print(f"No CUDA — loading unquantized ({'MPS' if mps else 'CPU'}, {dtype}).")
-        model = AutoModelForCausalLM.from_pretrained(
+        print(f"Loading unquantized ({dtype_name}).")
+        model = model_cls.from_pretrained(
             args.base_model, trust_remote_code=True, torch_dtype=dtype,
         )
-        model = model.to("mps" if mps else "cpu")
+        if use_cuda:
+            model = model.to("cuda")
+        else:
+            model = model.to("mps" if mps else "cpu")
 
     model.config.use_cache = False
-    if use_cuda:
+    if load_mode == "bnb4":
         # NOTE: this helper defaults to use_gradient_checkpointing=True internally,
         # independent of the TrainingArguments flag below — must be passed explicitly
         # or it silently re-enables checkpointing regardless of --gradient_checkpointing.
@@ -416,15 +526,23 @@ def main() -> int:
         logging_steps=20,
         save_strategy=("steps" if args.save_steps > 0 else "epoch"),
         **({"save_steps": args.save_steps, "save_total_limit": 2} if args.save_steps > 0 else {}),
-        # bf16 is a CUDA/Ampere+ feature; MPS doesn't support it and Trainer will
-        # raise if we ask for it. We already loaded fp16 weights on MPS, and we
-        # deliberately do NOT set fp16=True there either — fp16 turns on the CUDA
-        # GradScaler path, which is unsupported on MPS.
-        bf16=use_cuda,
+        # Match the flags to the resolved dtype (not just "CUDA on/off"): bf16
+        # is Ampere+; fp16 keeps the CUDA GradScaler path valid; MPS gets
+        # neither (GradScaler is unsupported there).
+        bf16=(use_cuda and dtype_name == "bf16"),
+        fp16=(use_cuda and dtype_name == "fp16"),
+        **({"optim": args.optim} if args.optim else {}),
         gradient_checkpointing=args.gradient_checkpointing,
         report_to="none",
         remove_unused_columns=False,
     )
+
+    if args.torch_compile:
+        if compile_supported(use_cuda=use_cuda, cuda_capability=cap):
+            print("torch.compile enabled (inductor).")
+            model = torch.compile(model)
+        else:
+            print("WARN: --torch-compile skipped (needs CUDA sm>=70).")
 
     trainer = RankingTrainer(
         model=model, args=targs, train_dataset=dataset, data_collator=identity_collate,

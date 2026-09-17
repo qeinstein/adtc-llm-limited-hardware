@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0.0",
+  "experiment_id": "falcon-production-audit-v30-20260914",
+  "status": "COMPLETE_AUDIT_PREFLIGHT_PASS",
+  "decision": "KEEP",
+  "purpose": "Remote validation of the near-duplicate source audit and the hardened production tokenizer preflight.",
+  "execution": {
+    "kaggle_kernel": "toheebogunade/jamii-afya-falcon-production-post-training",
+    "kernel_version": 30,
+    "repo_sha": "8e73a0ee469e82701ac68055127b7290db4c336f",
+    "mode": "audit",
+    "model_weights_loaded": false,
+    "training_started": false,
+    "completed_utc": "2026-09-14T07:22:48Z"
+  },
+  "raw_audit": {
+    "accepted": 2089,
+    "train": 1866,
+    "dev": 223,
+    "exact_duplicates_dropped": 9,
+    "rejected": 44,
+    "rejected_length": 29,
+    "rejected_quality": 15,
+    "exact_duplicate_count": 0,
+    "near_duplicate_prompt_count": 0,
+    "holdout_contamination_count": 0,
+    "cross_split_prompt_duplicate_groups": 0,
+    "prompt_duplicate_groups": 0
+  },
+  "tokenized_preflight": {
+    "train_items": 1866,
+    "dev_items": 64,
+    "objective_counts": {"mcqa": 1761, "sft": 105},
+    "loss_token_totals": {"mcqa": 24912, "sft": 12417},
+    "loss_token_share_percent": {"mcqa": 66.7363, "sft": 33.2637},
+    "train_mcqa_context_truncated": 100,
+    "dev_mcqa_context_truncated": 3,
+    "policy_result": "PASS"
+  },
+  "sampler": {
+    "algorithm": "torch.multinomial_private_generator_v1",
+    "seed": 3407,
+    "num_samples": 1866,
+    "resume_semantics": "replay full deterministic sequence; Trainer skips consumed batches",
+    "weights_sha256": "4d7638effacde4583e84966831486d9f14205e8550af45f70a44c6f178382d3d"
+  },
+  "conclusion": "Near-duplicate audit and exact prompt-group split gate passed remotely. The tokenizer-only preflight passed with no model load; no expensive training is authorized by this audit."
+}

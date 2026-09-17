@@ -1,0 +1,25 @@
+{
+  "experiment_id": "falcon-generation-smoke-v9-20260913",
+  "status": "failed_p100_fp16_numerics",
+  "kernel": "toheebogunade/jamii-afya-falcon-production-post-training",
+  "kernel_version": 9,
+  "commit": "550fa46",
+  "model": "tiiuae/Falcon-H1-1.5B-Deep-Instruct",
+  "model_revision": "b6648636ddc906688974282de6e7a243395f5423",
+  "hardware": "Tesla P100-PCIE-16GB, CUDA capability 6.0",
+  "generation": {
+    "prompt_tokens": 60,
+    "stop_ids": [11, 228],
+    "tokenizer_pad_token_id": 65536,
+    "model_pad_token_id": 0,
+    "score_steps": 8,
+    "token_ids": [4638, 0, 0, 0, 0, 0, 0, 0],
+    "visible_chars": 2,
+    "text": "As",
+    "top1_score_finite": [true, false, false, false, false, false, false, false]
+  },
+  "conclusion": "FP16 Falcon-H1 inference on sm_60 becomes non-finite after the first generated token; PAD IDs are an argmax artifact, not a stop-set bug",
+  "fix": "use FP32 on sm_60 for HF smoke/evaluation/training; retain low precision on sm_70+",
+  "training_started": false,
+  "timestamp_utc": "2026-09-13"
+}

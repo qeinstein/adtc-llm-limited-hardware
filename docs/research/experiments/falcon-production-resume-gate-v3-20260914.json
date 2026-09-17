@@ -1,0 +1,41 @@
+{
+  "experiment_id": "falcon-production-resume-gate-v3-20260914",
+  "status": "PASS",
+  "purpose": "bounded infrastructure proof only; no quality candidate and no promotion",
+  "kernel": "toheebogunade/jamii-afya-falcon-resume-gate/3",
+  "started_utc": "2026-09-14T09:03:11Z",
+  "completed_utc": "2026-09-14T09:24:28Z",
+  "repo_sha": "bfd7e2d87d733e1d4e0aabae6dd3505dfac84355",
+  "model": "tiiuae/Falcon-H1-1.5B-Deep-Instruct",
+  "model_revision": "b6648636ddc906688974282de6e7a243395f5423",
+  "hardware": {
+    "gpu": "Tesla P100-PCIE-16GB",
+    "cuda": "11.8",
+    "torch": "2.6.0+cu118",
+    "dtype": "fp16",
+    "mamba_path": "naive fallback; fast selective-state/causal-conv path unavailable"
+  },
+  "resume_proof": {
+    "local_steps": [2, 4],
+    "retrieved_global_step": 4,
+    "remote_resumed_global_step": 6,
+    "optimizer_scheduler_rng_verified": true,
+    "sampler_state_verified": true,
+    "exact_archive_verification": true,
+    "uploaded_manifest_sha256": "147d98c18f09ac1e923bfddd5fb839651e2a49c87e15a2d0edfc559235ded8dd",
+    "persistence_dataset": "toheebogunade/jamii-afya-falcon-production-checkpoints"
+  },
+  "remote_resume_metrics": {
+    "eval_loss_step_6": 3.6278200149536133,
+    "train_loss": 0.6802711089452108,
+    "grad_norm": 1.6087039709091187,
+    "tokens_per_second": 6.538,
+    "gpu_memory_allocated_mb": 3320.0,
+    "gpu_memory_reserved_mb": 8268.0
+  },
+  "promotion": {
+    "status": "not_promoted",
+    "reason": "infrastructure gate does not evaluate clinical quality"
+  },
+  "v2_note": "v2 verified exact persistence and reached remote step 5, but the short continuation had no evaluation boundary and correctly failed closed on no evaluated checkpoint; v3 changed the continuation to step 6 using eval_steps=2."
+}

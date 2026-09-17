@@ -15,7 +15,7 @@
   "cross_disciplinary_pairing": {
     "discipline": "medicine",
     "load_bearing": true,
-    "description": "Jamii Afya is an offline clinical decision-support advisor for community health workers in rural African clinics. Its design is driven by primary-care clinical workflows (WHO/IMCI triage, danger-sign escalation, essential-medicines dosing) and by bilingual English/Kiswahili patient communication, so the medical discipline is load-bearing on both the knowledge base and the safety behaviour."
+    "description": "Jamii Afya is an offline clinical decision-support advisor for community health workers in rural African clinics. Its design is driven by primary-care clinical workflows and bilingual English/Kiswahili patient communication, so the medical discipline is load-bearing on both the knowledge base and the safety behaviour."
   },
   "test_prompts": [
     {
@@ -28,13 +28,13 @@
     }
   ],
   "model": {
-    "name": "JamiiAfya-Qwen3-0.6B-Medical",
+    "name": "JamiiAfya-Falcon-H1-1.5B-Deep-Instruct",
     "runtime": "llama.cpp",
-    "quantization": "GGUF Q4_0 (EN+SW medical imatrix calibration; picked by scripts/quant-sweep.yml — only quant clearing 15 tok/s with real margin)",
-    "parameters_estimate": "0.6B",
+    "quantization": "GGUF Q4_K_M",
+    "parameters_estimate": "1.5B",
     "packaging": "binary_bundle"
   },
   "_runtime": {
-    "model_path": "model/Qwen3-0.6B-Q4_0.gguf"
+    "model_path": "model/Falcon-H1-1.5B-Deep-JamiiAfya-Q4_K_M.gguf"
   }
 }
