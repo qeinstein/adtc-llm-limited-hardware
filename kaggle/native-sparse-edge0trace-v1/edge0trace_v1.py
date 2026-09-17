@@ -20,6 +20,7 @@ Output per prompt: npz {hidden_fp16 [T,40,2048], topk_ids/probs [T,40,8]}
 """
 from __future__ import annotations
 
+import bisect
 import hashlib
 import json
 import os
@@ -280,6 +281,28 @@ def parse_records(path):
     return recs
 
 
+def match_ids_to_sweeps(h, ids, nt, n_layers=40):
+    """Match runtime-ids records to hidden-eval sweeps by global seq order.
+
+    h: hidden records (nt sweeps x n_layers, layer runs in order).
+    ids: runtime-ids records (any subset; v1 showed prefix sweeps may
+    lack ids entirely — a llama.cpp batching quirk, hidden still valid).
+    Returns {layer: [(eval_t, ids8), ...]}; raises on framing violations
+    (out-of-range or duplicate (layer, eval) matches).
+    """
+    assert len(h) == nt * n_layers, (len(h), nt)
+    assert [r["layer"] for r in h[:n_layers]] == list(range(n_layers))
+    sweep_start = [h[t * n_layers]["seq"] for t in range(nt)]
+    matched, seen = {}, set()
+    for r in ids:
+        t = bisect.bisect_right(sweep_start, r["seq"]) - 1
+        assert 0 <= t < nt, r["seq"]
+        assert (r["layer"], t) not in seen, (r["layer"], t)
+        seen.add((r["layer"], t))
+        matched.setdefault(r["layer"], []).append((t, r["vals"]))
+    return matched
+
+
 def read_gate_weights(model_path):
     """F32 router gates per layer from the GGUF: {layer: (256,2048) f32}."""
     import struct as st
@@ -387,13 +410,16 @@ def main():
         if p.returncode != 0:
             raise RuntimeError(f"prompt {pid} failed: {p.stderr[-2000:]}")
         recs = parse_records(trace) if trace.exists() else []
-        # frame: kind0 hidden + kind2 ids interleave per layer; group by
-        # layer runs of 40 (hidden), ids matched by (layer, order)
+        # frame: hidden arrives in layer runs of 40 per eval; runtime ids
+        # are matched to hidden-evals by SEQ ORDER (v1 post-mortem: the
+        # first 3 evals of prompt 0 carried hidden but no ids — a llama.cpp
+        # batching quirk, hidden RMS-proven valid; ids are only a parity
+        # cross-check, labels always come from exact offline router math).
         h = [r for r in recs if r["kind"] == 0]
         ids = [r for r in recs if r["kind"] == 2]
         nt = len(h) // 40
         assert len(h) % 40 == 0, (pid, len(h))
-        assert [r["layer"] for r in h[:40]] == list(range(40)), pid
+        matched = match_ids_to_sweeps(h, ids, nt)
         # fp16 -> f32 (numpy) + RMS validation (post-norm => ~1.0)
         H = np.stack([(r["raw"].copy().view(np.float16).astype(np.float32))
                       for r in h]).reshape(nt, 40, 2048)
@@ -413,27 +439,28 @@ def main():
                 idx = idx[np.argsort(-pr[idx])]
                 topk_ids[t, L] = idx
                 topk_pr[t, L] = pr[idx] / pr[idx].sum()
-        # parity vs hooked runtime ids
-        par = 0
-        by_layer_seq = {}
-        for r in ids:
-            by_layer_seq.setdefault(r["layer"], []).append(r["vals"])
+        # parity vs hooked runtime ids, over SEQ-MATCHED pairs only
+        par = tot = 0
         for L in range(40):
-            arr = np.stack(by_layer_seq[L])  # [nids_L, 8]
-            if len(arr) != nt:
-                raise RuntimeError(f"pid {pid} L{L}: ids {len(arr)} != tok {nt}")
-            par += int((np.sort(arr, 1) == np.sort(topk_ids[:, L], 1)).all(1).sum())
-        parity = par / (nt * 40)
+            for t, v in matched.get(L, []):
+                tot += 1
+                if (np.sort(v) == np.sort(topk_ids[t, L])).all():
+                    par += 1
+        coverage = tot / (nt * 40)
+        parity = par / tot if tot else 0.0
+        if coverage < 0.5:
+            raise RuntimeError(f"pid {pid}: ids coverage {coverage} < 0.5")
         np.savez_compressed(OUT / f"trace_p{pid:02d}.npz",
                             hidden_fp16=H.astype(np.float16),
                             topk_ids=topk_ids, topk_probs=topk_pr)
         trace.unlink()
         all_toks += nt
         prompt_results.append({"prompt_id": pid, "category": category,
-                               "decode_tokens": nt, "hidden_rms": rms,
+                               "trace_evals": nt, "hidden_rms": rms,
+                               "ids_coverage": coverage,
                                "topk_parity": parity})
-        print(f"  pid={pid} tok={nt} rms={rms:.3f} parity={parity:.4f}",
-              flush=True)
+        print(f"  pid={pid} tok={nt} rms={rms:.3f} cov={coverage:.4f} "
+              f"parity={parity:.4f}", flush=True)
         # NOTE: threshold is 0.999, not 1.0 — fp16 rounding of the dumped
         # hidden can flip a rank-8 boundary tie on rare tokens. A wrong
         # tensor/orientation would score LOW parity, so 0.999 still guards
