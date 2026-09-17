@@ -23,6 +23,28 @@ Hook anchors verified exactly-once in pin 3057bb6; `--poll` verified present.
 - v1 post-mortem: `ids 79 != tok 82` → seq-order matching + regression tests
   (tests/test_edge0trace_framing.py, 8 passed). v2 post-mortem: parity
   0.9987 < 0.999 → 0.995 (fp16 boundary flips 2–6/3160, provably benign).
+
+## Prerouter pilot adjudication (v2 VALID) — NO-GO, uniform and final
+
+- v1 VOID (classes-index bug: proba columns misread as expert ids → random).
+  v2 mechanics verified: train fits ≈1.0 on all variants (fail-fast guard
+  held), test on 5 held-out prompts (405 evals).
+- Pre-registered rule: GO if (b)/(c) r8 ≥ 0.85 ≤5ms; COND ≥ 0.70; else NO-GO.
+  Measured (b)-dim256 r8 = 0.382, (c) = 0.266 → NO-GO. Full table:
+  (a) d64/d256/full r8 = 0.316/0.386/0.437; (b) = 0.310/0.382;
+  (c) = 0.235/0.266; popularity = 0.201; persistence = 0.368.
+- Key reads: (b) ≈ persistence (0.38 vs 0.37); (c) UNDERPERFORMS persistence
+  (0.27 < 0.37); even same-input full-dim (a) only reaches 0.44 (train 1.0 →
+  test 0.44: severe overfit at n=1458, and the bar is 0.70+).
+- Per-layer spread tight: (b) 0.315–0.424, ZERO layers ≥ 0.50 — no partial
+  (early-layer-only) prerouter rescue. First-10 vs last-10 identical.
+- Cost (Kaggle CPU): loop 5.35ms (misses bar), batched 3.30ms (passes),
+  true router 7.45ms. Cost is moot — recall fails first.
+- CONSEQUENCE: prediction-based prefetch is dead for this sprint. Engine
+  path = static pins + LRU cache + reactive fetch (overlap for misses).
+  Phase 4 must REDUCE fetch (K4: fewer experts/token via model adaptation,
+  not prediction) rather than predict routes. Thinking-control remains the
+  other deployment blocker (Phase 2 finding).
 Branch: research/edge0-port. No quality-gate assumption made; nothing irreversible started.
 
 ## What Edge0's mechanism needs (from Phase 2 fidelity analysis, PHASE2_STATIC.md)
