@@ -1,0 +1,39 @@
+
+
+Loading model... |-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\ 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b1-3057bb66c
+model      : /tmp/native-sparse-selective-q4-quality-v1/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf
+ftype      : IQ2_XXS - 2.0625 bpw
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> MCQ. The main purpose of oral rehydration solution is: A) replace lost water and electrolytes B) kill every intestinal virus C) stop all bowel movements immediately D) induce sleep. Reply at the end as FINAL: one letter.
+
+[Start thinking]
+
+The user wants to identify the main purpose of Oral Rehydration Solution (ORS) from the given options.
+
+1.  **Analyze the options:**
+    *   A) replace lost water and electrolytes: ORS is specifically
+
+[ Prompt: 7.9 t/s | Generation: 4.5 t/s ]
+
+
+Exiting...

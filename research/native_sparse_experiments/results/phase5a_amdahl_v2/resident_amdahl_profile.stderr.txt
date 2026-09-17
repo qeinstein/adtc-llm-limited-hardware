@@ -1,0 +1,11 @@
+PHASE5_AMDAHL category=routed_moe cycles=131462472622 calls=92640
+PHASE5_AMDAHL category=gated_delta_net cycles=14169816006 calls=23160
+PHASE5_AMDAHL category=full_attention cycles=743025658 calls=7720
+PHASE5_AMDAHL category=router cycles=6239343676 calls=61760
+PHASE5_AMDAHL category=shared_expert cycles=10550562124 calls=92640
+PHASE5_AMDAHL category=output_projection cycles=5981868384 calls=7720
+PHASE5_AMDAHL category=attention_matmul cycles=68596468520 calls=69480
+PHASE5_AMDAHL category=other_matmul cycles=18597061218 calls=69480
+PHASE5_AMDAHL category=normalization cycles=226373662 calls=46320
+PHASE5_AMDAHL category=other_ops cycles=20528107972 calls=1052424
+PHASE3_IQP_PROFILE decode_cycles=0 gemv_cycles=0 decode_calls=0 gemv_calls=0

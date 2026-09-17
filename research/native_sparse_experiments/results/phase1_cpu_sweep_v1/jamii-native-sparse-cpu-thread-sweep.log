@@ -1,0 +1,42 @@
+[{"stream_name":"stdout","time":1.074501631,"data":"+ git clone --filter=blob:none https://github.com/ggml-org/llama.cpp.git /tmp/native-sparse-cpu-sweep/llama.cpp\n"}
+,{"stream_name":"stdout","time":10.945112814,"data":"+ git fetch --depth 1 origin 3057bb66c86c46d5781e50e85462a760ba7d1feb\n"}
+,{"stream_name":"stdout","time":12.029785902,"data":"+ git checkout --detach 3057bb66c86c46d5781e50e85462a760ba7d1feb\n"}
+,{"stream_name":"stdout","time":12.714605925,"data":"+ cmake -S /tmp/native-sparse-cpu-sweep/llama.cpp -B /tmp/native-sparse-cpu-sweep/llama.cpp/build-native -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DGGML_NATIVE=ON -DGGML_CUDA=OFF -DGGML_METAL=OFF -DGGML_VULKAN=OFF -DLLAMA_CURL=OFF\n"}
+,{"stream_name":"stdout","time":16.078782653,"data":"+ cmake --build /tmp/native-sparse-cpu-sweep/llama.cpp/build-native --config Release -j4 --target llama-bench\n"}
+,{"stream_name":"stdout","time":269.262186765,"data":"+ /tmp/native-sparse-cpu-sweep/llama.cpp/build-native/bin/llama-bench --version\n"}
+,{"stream_name":"stdout","time":269.284843483,"data":"                (default: f16)\n"}
+,{"stream_name":"stdout","time":269.284883721,"data":"  -t, --threads \u003cn\u003e                                 (default: 2)\n"}
+,{"stream_name":"stdout","time":269.28489181,"data":"  -C, --cpu-mask \u003chex,hex\u003e                          (default: 0x0)\n"}
+,{"stream_name":"stdout","time":269.284898913,"data":"  --cpu-strict \u003c0|1\u003e                                (default: 0)\n"}
+,{"stream_name":"stdout","time":269.284905476,"data":"  --poll \u003c0...100\u003e                                  (default: 50)\n"}
+,{"stream_name":"stdout","time":269.284911178,"data":"  -ngl, --n-gpu-layers \u003cn\u003e                          (default: -1)\n"}
+,{"stream_name":"stdout","time":269.284917079,"data":"  -ncmoe, --n-cpu-moe \u003cn\u003e                           (default: 0)\n"}
+,{"stream_name":"stdout","time":269.284922363,"data":"  -sm, --split-mode \u003cnone|layer|row|tensor\u003e         (default: layer)\n"}
+,{"stream_name":"stdout","time":269.284928205,"data":"  -mg, --main-gpu \u003ci\u003e                               (default: 0)\n"}
+,{"stream_name":"stdout","time":269.284933586,"data":"  -nkvo, --no-kv-offload \u003c0|1\u003e                      (default: 0)\n"}
+,{"stream_name":"stdout","time":269.284938855,"data":"  -fa, --flash-attn \u003con|off|auto\u003e                   (default: auto)\n"}
+,{"stream_name":"stdout","time":269.284944211,"data":"  -dev, --device \u003cdev0/dev1/...\u003e                    (default: auto)\n"}
+,{"stream_name":"stdout","time":269.284949785,"data":"  -lm, --load-mode \u003cauto|none|mmap|mlock|mmap+mlock|dio\u003e (default: auto)\n"}
+,{"stream_name":"stdout","time":269.284955261,"data":"  -lzm, --lazy-mode \u003con|auto|off\u003e                   (default: auto)\n"}
+,{"stream_name":"stdout","time":269.284960519,"data":"  -embd, --embeddings \u003c0|1\u003e                         (default: 0)\n"}
+,{"stream_name":"stdout","time":269.284972249,"data":"  -ts, --tensor-split \u003cts0/ts1/..\u003e                  (default: 0)\n"}
+,{"stream_name":"stdout","time":269.284976255,"data":"  -ot --override-tensor \u003ctensor name pattern\u003e=\u003cbuffer type\u003e;...\n"}
+,{"stream_name":"stdout","time":269.284980079,"data":"                                                    (default: disabled)\n"}
+,{"stream_name":"stdout","time":269.284983632,"data":"  -nopo, --no-op-offload \u003c0|1\u003e                      (default: 0)\n"}
+,{"stream_name":"stdout","time":269.284987411,"data":"  --no-host \u003c0|1\u003e                                   (default: 0)\n"}
+,{"stream_name":"stdout","time":269.284991041,"data":"\n"}
+,{"stream_name":"stdout","time":269.284994459,"data":"Multiple values can be given for each parameter by separating them with ','\n"}
+,{"stream_name":"stdout","time":269.285026885,"data":"or by specifying the parameter multiple times. Ranges can be given as\n"}
+,{"stream_name":"stdout","time":269.285030217,"data":"'first-last' or 'first-last+step' or 'first-last*mult'.\n"}
+,{"stream_name":"stdout","time":269.285033091,"data":"\n"}
+,{"stream_name":"stdout","time":269.285035662,"data":"error: invalid parameter for argument: --version\n"}
+,{"stream_name":"stdout","time":269.285038332,"data":"\n"}
+,{"stream_name":"stdout","time":269.285041017,"data":"ERROR: command exited 1: /tmp/native-sparse-cpu-sweep/llama.cpp/build-native/bin/llama-bench --version\n"}
+,{"stream_name":"stdout","time":269.285524343,"data":"{\"status\": \"failed\", \"best\": null, \"error\": \"RuntimeError('command exited 1: /tmp/native-sparse-cpu-sweep/llama.cpp/build-native/bin/llama-bench --version')\"}\n"}
+,{"stream_name":"stderr","time":272.477006591,"data":"/usr/local/lib/python3.12/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":272.477074913,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":272.920553066,"data":"/usr/local/lib/python3.12/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":272.920613185,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":274.933213456,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":276.904810308,"data":"[NbConvertApp] Writing 347004 bytes to __results__.html\n"}
+]

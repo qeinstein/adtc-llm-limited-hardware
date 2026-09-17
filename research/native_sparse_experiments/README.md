@@ -1,0 +1,290 @@
+# Native sparse route-trace analysis
+
+This directory contains a model-free analysis pass for routed Qwen3.5 traces.
+It does not load a checkpoint or implement a sparse runtime.
+
+## Trace contract
+
+Input may be a JSON array or JSONL. Each token record must contain `layers`,
+with exactly 40 entries. Each entry is either an eight-element expert-ID list
+or `{ "experts": [...] }`. IDs must be distinct integers in `[0, 256)`.
+
+Example:
+
+```json
+{"token": 0, "layers": [[0,1,2,3,4,5,6,7], "... 39 more layers ..."]}
+```
+
+The analyzer treats each `(layer, expert_id)` as a cache bundle. The default
+bundle size is 1,700,000 bytes, the rough Qwen3.5 4-bit estimate in the
+research notes; pass the measured packed size instead when available. For
+non-uniform packed layers, `--bundle-by-layer-file` accepts either a JSON list
+of 40 byte sizes or a JSON object keyed by layer number.
+
+## Outputs
+
+`route_trace.py` reports:
+
+- total and per-token route requests, unique layer/expert bundles, and global
+  and per-layer popularity;
+- adjacent-token Jaccard/shared-request overlap and same-layer retention;
+- uncached bytes/token;
+- global-LRU hit/miss rates, fresh requests/token, and fresh bytes/token for
+  each requested capacity;
+- an equally partitioned per-layer LRU (`partitioned_lru`), where
+  `floor(total/40)` bundles go to every layer and the remainder goes to the
+  lowest layer indices;
+- a static per-layer popularity cache (`static_popularity_oracle`) that picks
+  the most-requested layer/expert bundles from the complete trace. This is a
+  hindsight upper-control, explicitly marked non-deployable, not a prediction
+  method.
+
+Run on Kaggle (after checkout, with no model download required):
+
+```bash
+python research/native_sparse_experiments/route_trace.py \
+  --trace research/native_sparse_experiments/tests/fixtures/valid_one_token.json \
+  --capacities 0,64,128,256,512,1024 \
+  --output /kaggle/working/route_report.json
+# Optional exact per-layer byte accounting:
+# --bundle-by-layer-file /kaggle/working/qwen35_bundle_bytes.json
+python -m pytest research/native_sparse_experiments/tests -q
+```
+
+For a real trace, replace the fixture path. The unit tests exercise shape
+validation, duplicate/range rejection, JSON array input, overlap, popularity,
+global/per-layer LRU behavior, static-oracle selection, and byte accounting.
+
+## Measured execution status
+
+The exact Qwen3.5-35B-A3B IQ2_XXS control and follow-up experiments are
+preserved under the results directory:
+
+- phase0_kaggle_v4: exact native top-8 output/route equality; 4.8 tok/s at
+  10,528.7 MiB resident and 2.7 tok/s at 5,155.3 MiB with routed-expert lazy
+  mmap.
+- phase1_cpu_sweep_v2: resident CPU ceiling. Four threads with poll 0 reached
+  4.716 tok/s across three repeats; thread, poll, and affinity tuning changed
+  throughput by only about 2%.
+- phase2_iqp_decode_v1: compute-kernel intervention. Forcing the existing
+  batch-oriented IQ panel at one row per expert regressed 43.42% to 2.940
+  tok/s versus a 5.196 tok/s same-binary generic control, with deterministic
+  generated-payload equality and unchanged residency/traffic.
+- phase3_single_row_avx2_v1: a purpose-built `cne1 == 1` path using the
+  existing IQP decoder plus one-row AVX2 GEMV remained exact but regressed
+  39.26% to 3.020 tok/s versus a 4.973 tok/s control. Profiling attributed
+  88.58% of the instrumented IQP cycles to decoding/materializing the eight
+  weight rows.
+- phase3_single_row_avx2_v3: direct raw IQ2_XXS row-dot dispatch was neutral
+  at 4.184 tok/s versus a 4.168 tok/s same-run control (+0.40%). The
+  measurement-only non-MoE arm measured a 1,612.9 MiB operational resident
+  floor (539.7 MiB anonymous, 1,073.2 MiB file-backed) against 6,538.9 MiB
+  for the lazy 64-token inference arm.
+- phase4_fused_iq2_v1: a true four-row fused packed-IQ2_XXS AVX2 path shared
+  activation loads and avoided decoded panels, but measured 4.778 tok/s
+  versus 4.885 tok/s for the same-run raw-row reference. It remained exact;
+  the profile attributed 5.74% of summed fused-function cycles to activation
+  loads and 31.50% to the decode/integer-MAC region, with the remainder in
+  loop, accumulator, and surrounding handling.
+- phase4_fused_iq2_v2: a two-row fused follow-up reduced per-call profile
+  cost but doubled fused call count and measured 4.441 tok/s versus 4.650
+  tok/s raw-row. It also remained exact. Both phase 4 reports include raw
+  Kaggle bundles and the v1 cache budget design.
+
+Current classification: resident CPU/DRAM-kernel execution is the larger term
+in the lazy path (about 212 ms/token resident plus about 158 ms/token added
+lazy-storage stall at the measured Phase 0 point). The single-row experiments
+show that panel-backed specialization and dispatch isolation do not improve
+the ceiling; raw IQ2 dequantization remains dominant. Storage remains a major
+secondary bottleneck, but storage optimization alone cannot reach 10 tok/s.
+The direct fused IQ2 path is now a correct but insufficient optimization:
+activation-load sharing and row-group width do not clear the ceiling. A
+custom packed expert layout/decode-table access pattern or a specialized
+executor is justified as the next compute experiment. In parallel, bounded
+expert storage should be implemented against the measured 1.61 GiB floor;
+the committed Phase 4 cache design budgets 2,664 / 1,439 / 826 bundles for
+4 / 3 / 2.5 GiB total RSS and replays 97.53 / 110.52 / 141.66 MB fresh
+logical bytes per token respectively.
+
+## Phase 5 decision measurements
+
+- `phase5a_amdahl_v1`: the exact resident control averaged 4.745 tok/s
+  (210.73 ms/token).  A measurement-only routed-MoE removal reached 8.083
+  tok/s (123.72 ms/token), so routed experts account for 41.29% of wall time
+  and cannot alone reach 10 tok/s.  Summed operator work was 46.98% routed
+  MoE, 33.64% other matrix multiplication, 5.37% Gated DeltaNet, and 3.82%
+  shared expert.
+- `phase5b_lowbit_ceiling_v1/v2` and `phase5c_iq2_representation_v1`: an
+  exact offline-resolved IQ2 layout was slower than the control at both 74
+  bytes/block (+12.12% storage) and 70 bytes/block (+6.06%).  A simple
+  unsigned W2 LUT/gather reference was slower too.  Metadata resolution and
+  record padding are therefore rejected as standalone optimizations.
+- `phase5e_route_corpus_v1`: 32 prompts yielded 2,016 exact route tokens and
+  9,577 unique bundles.  On the diverse corpus, global LRU fresh logical
+  traffic is 63.96 / 106.87 / 143.63 MB/token at 4 / 3 / 2.5 GiB budgets.
+  Layer partitioning changes this by about one percent; the tested online
+  frequency/staleness policies are worse.  Belady is retained only as an
+  offline headroom oracle.
+- `phase5g_bounded_cache_v1`: a model-free explicit `pread` store plus fixed
+  aligned byte-bounded LRU cache passes unit tests.  It is the selected
+  transitional storage architecture; model integration follows after the
+  current compute target is identified.
+- `phase5h_floor_decomp_v1`: loader inventory finds 733 unique tensors, with
+  1.5555 GiB logical non-routed payload (0.2664 GiB each for input embeddings
+  and LM head, 0.8578 GiB attention/DeltaNet trunk, 0.0861 GiB shared expert,
+  0.0781 GiB router).  The skip-MoE process measured 1,609.96 MiB RSS.
+
+- `phase5a_amdahl_v2`: splitting that matrix bucket and removing only the LM
+  head gives 5.385 tok/s versus the 4.733 tok/s control, a 12.11% wall-time
+  saving.  Routed-expert removal reaches 8.174 tok/s.  Treating both savings
+  as additive gives only a theoretical 10.34 tok/s ceiling.  Attention
+  projection matmuls are 24.76% of summed operator work and are now the next
+  compute target.
+
+The exact control and native routes remain unchanged; no model
+representation change is justified yet.
+
+## Phase 6 runtime and bounded-storage measurements
+
+- `phase6b_attention_amdahl_v1`: the exact resident control averaged 4.365
+  tok/s (229.08 ms/token).  Measurement-only attention projection bypass
+  reached 5.662 tok/s (176.62 ms/token), saving 52.46 ms/token or 22.90% of
+  wall time.  The dominant profiled Q5_K families were `attn_qkv` (48.3% of
+  projection TSC), `attn_gate` (25.3%), and full-attention `attn_q` (16.0%).
+  Even a free attention-projection path therefore remains below 10 tok/s.
+- `phase6c_dense_repack_v3`: the standard mainline Q5_K repack was a matched
+  donor/kernel A/B at 4.167 versus 4.200 tok/s (+0.8%) and added 107.5 MiB
+  RSS.  It is neutral within run spread and is not a runtime pivot.
+- `phase6a_ik_llama_v3`: the exact IQ2_XXS checkpoint loaded and ran on the
+  upstream ik_llama CPU path, but default `llama-bench` generation averaged
+  2.528 tok/s across three 64-token samples versus 4.167 tok/s for the
+  matched mainline reference.  Its deterministic smoke was internally
+  stable, but no cross-runtime route hook was present.  ik_llama remains a
+  code donor/reference, not the replacement baseline.
+- `phase6g_bounded_executor_v3`: exact-IQP explicit pread into 2,281 fixed
+  global-LRU slots reached 3.000 tok/s at 3,517.5 MiB RSS (3.435 GiB), versus
+  4.067 tok/s at 10,537.1 MiB resident.  Route files were byte-identical and
+  output hashes matched across control/cache repetitions.  The cache had an
+  89.61% operational hit rate and supplied 127.0304 MB fresh logical bytes
+  per generated token (8,129.95 MB per 64-token repetition); instrumented
+  reads occupied about 44.3% of wall time.
+- `phase6g_bounded_executor_v4`: the 1,439-slot / 1,261,346,816-byte exact
+  cache reached 3.033 tok/s at 2,813.8 MiB RSS (2.748 GiB), with 86.03% hit
+  rate, 170.8165 MB fresh logical bytes per generated token (10,932.26 MB per
+  64-token repetition), and reads occupying about 55.2% of wall time.  Routes
+  and deterministic outputs remained equal.
+- `phase6g_bounded_executor_v5`: the 826-slot / 724,025,344-byte exact cache
+  reached 2.867 tok/s at 2,301.2 MiB RSS (2.247 GiB), with 83.10% hit rate,
+  206.6316 MB fresh logical bytes per generated token (13,224.42 MB per
+  64-token repetition), and reads occupying about 56.8% of wall time.  Routes
+  and deterministic outputs again remained equal.  This demonstrates the
+  measured 2.5 GiB RAM frontier, but it is not a throughput solution.
+
+The phase-6 storage arms use a short deterministic prompt, so their measured
+cache hit rates and fresh bytes are workload-specific.  The larger 2,016-token
+corpus remains the cache-policy planning source: global-LRU replay predicts
+63.96 / 106.87 / 143.63 MB fresh logical bytes per token at 4 / 3 / 2.5 GiB
+budgets respectively.  The real executor confirms the important causal
+result: explicit bounded ownership works, while serialized I/O plus CPU
+execution is too slow for the target.
+
+The combined independent wall fractions measured so far are approximately
+42.1% routed experts and 22.9% attention projections.  A fraction-based
+expert-plus-attention-free guide is only about 13.5 tok/s, before accounting
+for interactions and all remaining runtime work; routed-expert optimization
+alone has an 8.17 tok/s measured ceiling.  The non-MoE floor remains
+1,609.96 MiB RSS, decomposed logically as 0.2664 GiB input embeddings,
+0.2664 GiB LM head, 0.8578 GiB attention/DeltaNet trunk, 0.0861 GiB shared
+expert, 0.0781 GiB router, plus runtime/state.  The exact bounded storage
+path is therefore selected for the RAM track; further cache-policy tuning is
+not the next throughput move.  The v9 matched bounded I/O A/B reduced mean
+process elapsed time 14.0% (median 6.0%) and reduced measured read wait from
+11.038 s to 8.507 s per 64-token repetition, but still joined all reads before
+compute.  It justifies one staged read/compute follow-up, not more layout
+variants.  No K, routing, expert-topology, or model-weight change is justified
+yet.
+
+## Phase 7 frontier-directed measurements
+
+- `phase7a_contiguous_sidecar_v2`: physically contiguous gate/up/down bundle
+  records reduced syscall count but regressed cold bounded decode to 3.167
+  tok/s at 3,517 MiB RSS; the layout branch is killed.
+- `phase7b_async_reads_v2`: matched serial versus concurrent three-plane
+  reads at the 2 GB cache point.  Rounded generation means were 2.867 versus
+  3.200 tok/s, but medians were 3.3 versus 3.2; mean/median total process
+  elapsed improved 14.0%/6.0% with exact route and output equality.  Traffic
+  was 127.0304 MB/token in both arms.  This branch is now superseded by the
+  staged readiness experiment, not by another layout variant.
+- `phase7b_staged_pipeline_v1`: plane-ready asynchronous reads reduced
+  bounded process elapsed by 7.857% (35.086 s to 32.329 s mean over three
+  repeats) at the same 3,517.5 MiB RSS and 127.0304 MB logical fresh bytes per
+  token.  The CLI's rounded decode metric remained 3.2 tok/s in both arms.
+  Aggregate readiness wait was 96.269 ms/token, while final join wait fell to
+  1.073 s per 64-token repetition.  Routes and outputs remained exact.
+- `phase7b_worker_pool_v1`: a fixed four-reader worker pool preserved exact
+  routes/output and reduced process elapsed by a further 6.722% versus serial
+  bounded execution, but rounded decode fell from 3.167 to 3.133 tok/s.  Four
+  read workers competing with four compute threads increased aggregate
+  readiness wait to 270.616 ms/token, versus 96.269 ms/token in v10.  This
+  basic scheduler branch is killed; v10 remains the storage scheduling
+  control.
+- `phase7c_selective_q4_v1`: after two preserved quantizer failures, the
+  corrected selective Q4 challenger completed.  Requantizing only the
+  measured attention/GDN Q5_K projection families raised resident decode from
+  4.2 to 4.5 tok/s (+7.14%), reduced RSS by 122.6 MiB, and reduced file size
+  by 1.205%.  The deterministic smoke output remained the established hash,
+  but this is a representation challenger rather than an exact bytewise
+  control; the initial held-out quality gate is running.
+- `phase7c_selective_q4_quality_v1`: the frozen clinical/safety,
+  English/Kiswahili instruction, and basic MCQ gate ended inconclusively
+  because 48 tokens stopped inside automatic reasoning. It is preserved and
+  explicitly superseded by the reasoning-disabled v2 gate.
+- `phase7c_selective_q4_quality_v2`: the corrected reasoning-disabled gate
+  completed. The candidate passed 8/8 clinical and 7/7 safety probes versus
+  7/8 and 6/7 for the control — evidence against an obvious clinical
+  regression, not a broad capability claim. The generated MCQ counts are
+  invalid (all 48-token responses truncated before the FINAL marker; fallback
+  parsing graded stray letters). Superseded by the likelihood-based v3 gate.
+- `phase7d_selective_q4_bounded_v1`: superseded by the no-repack matched v2
+  below; its ~430 MiB RSS regression was an automatic Q4_K CPU-repack
+  confound.
+- `phase7d_selective_q4_bounded_v2`: no-repack matched A/B killed selective-Q4
+  as a throughput path — 2.733312 tok/s mean versus 2.761672 control
+  (~1.03% slower) with 121.6 MiB less RSS (3,392.98 vs 3,514.62 MiB max).
+- `phase7c_selective_q4_quality_v3`: likelihood-based MMLU gate (pinned
+  100 tasks, matched control/challenger) failed rc=-9/OOM at context 2048,
+  batch 2048, ubatch 512, parallel 16. Repaired to 512/256/64/2; rerun
+  pending. Reject Q4 on a >2pp matched loss; no return to generated-answer
+  parsing.
+- `phase8a_prefetch_oracle_v1`: perfect-next-token oracle projected ~+42% at
+  modeled SSD bandwidth, but that projection class is invalid. Deployable
+  held-out transition predictor achieved only ~1.0% in simulation against
+  the 3.7% staged measured ceiling. Killed under the 5% rule; preserved as a
+  falsification tool.
+- `phase8b_storage_model_v1`: offline wildcard model killed all four layout
+  branches (split residency 0.022% optimistic gain; co-access placement
+  amplified traffic; syscall coalescing byte-neutral; hot copies +0.280 GB
+  disk with 1.15–2.01% amplification). Do not implement on Kaggle.
+- `phase8c_critical_path_v1`: warm page-cache oracle bounds fully removing
+  physical storage I/O at 22.43 ms/token serial (~7.5%) and 11.61 ms/token
+  staged (~3.7%). Storage is not the main throughput bottleneck. Research
+  priority moves to compute, graph execution, runtime overhead,
+  representation, and multi-token amortization.
+
+The machine-readable canonical points and experiment decisions are in
+`frontier.json`. The staged storage result is a qualified process-time win,
+not a new rounded raw decode point. The fixed worker-pool follow-up did not
+move decoded throughput and is killed. Selective-Q4 is killed as a
+throughput path; its quality v3 likelihood rerun decides only whether the
+representation evidence is preserved. Storage-layout and prefetch branches
+are closed by measured wall-clock ceilings. Scheduling-only whole-layer
+fusion is killed (phase9a: optimistic 1.6–2.6% vs the 5% bar).
+
+Staged decomposition: 312.7 ms/token = ~87 expert GEMV + ~75.5 bounded-tax
++ ~11.6 physical I/O + ~138 remaining runtime (phase9b). The bounded tax
+(resident 225.6 vs staged-warm 301.1, same binary) is now the top
+compute-side target: local microbench puts the page-cache→slot copy term
+at ~40–50 ms, bounding zero-copy residency at 14–19% realistic. Gate+up
+activation sharing stays parked pending its own >15.6 ms proof. Erasing
+expert+tax+I/O still leaves ~138 ms vs 66.7 ms for 15 tok/s, so the program
+must open runtime/representation/multi-token redesign alongside.

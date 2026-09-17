@@ -1,0 +1,40 @@
+
+
+Loading model... |-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/ 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b1-3057bb66c
+model      : /tmp/native-sparse-selective-q4-quality-v1/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf
+ftype      : IQ2_XXS - 2.0625 bpw
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> Jibu kwa Kiswahili kwa ufupi: Mtoto ana kuharisha mara nyingi na anaonekana kuwa na kiu. Mzazi afanye nini sasa, na ni lini aende kliniki haraka?
+
+[Start thinking]
+
+Thinking Process:
+
+1.  **Analyze the Request:**
+    *   **Language:** Swahili (Kiswahili).
+    *   **Tone/Style:** Brief/Concise (ufupi).
+
+[ Prompt: 8.4 t/s | Generation: 4.6 t/s ]
+
+
+Exiting...

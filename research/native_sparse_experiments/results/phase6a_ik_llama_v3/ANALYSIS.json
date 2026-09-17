@@ -1,0 +1,42 @@
+{
+  "schema": "native-sparse-ik-llama/v3",
+  "upstream_commit": "3bb386eb68ffee0a5dc7db21da0735d594929eeb",
+  "model_sha256": "2a809de317cfd49ac9130b95619ee6ac039a855e467015b3e996eb61af84718b",
+  "configuration": {
+    "threads": 4,
+    "cpu_isa": "AVX2/FMA",
+    "n_prompt": 0,
+    "n_gen": 64,
+    "repetitions": 3,
+    "gpu_layers": 0,
+    "mmap": true,
+    "runtime_repack": false
+  },
+  "ik_llama": {
+    "sample_tok_s": [2.57113, 2.52022, 2.49255],
+    "mean_tok_s": 2.527968,
+    "stddev_tok_s": 0.03986,
+    "median_tok_s": 2.52022,
+    "ms_per_token": 395.5743059011745,
+    "avg_ns": 25320951273,
+    "peak_rss_mib": 10328.3203125,
+    "peak_rss_anon_mib": 166.12109375,
+    "peak_rss_file_mib": 10162.19921875,
+    "smoke_response_hash": "d291847873c6cfc96855bebf16434eeada90ba45f6a4d9fc67de48e37b8db479"
+  },
+  "mainline_reference": {
+    "sample_tok_s": [4.1, 4.2, 4.2],
+    "mean_tok_s": 4.166666666666667,
+    "ms_per_token": 240.0,
+    "peak_rss_mib": 10430.66796875
+  },
+  "throughput_delta_vs_mainline_fraction": -0.39328768,
+  "correctness": {
+    "ik_cold_warm_smoke_equal": true,
+    "route_equality": "unmeasured",
+    "cross_runtime_exactness": "not_claimed",
+    "native_routing_changes": false,
+    "model_changes": false
+  },
+  "decision": "Default ik_llama CPU execution is a donor/reference, not a replacement baseline: it is materially slower on the matched Qwen3.5 IQ2_XXS generation workload."
+}

@@ -1,0 +1,19 @@
+diff --git a/ggml/src/ggml-cpu/iqp.cpp b/ggml/src/ggml-cpu/iqp.cpp
+index b9201db38..6b047c332 100644
+--- a/ggml/src/ggml-cpu/iqp.cpp
++++ b/ggml/src/ggml-cpu/iqp.cpp
+@@ -23,7 +23,13 @@
+ #define GGML_IQP_MIN_BATCH_ID 8
+ 
+ bool ggml_cpu_iqp_mul_mat_id_min_batch(int64_t cne1) {
+-    return cne1 >= GGML_IQP_MIN_BATCH_ID;
++    // Research A/B: preserve the upstream default, but permit a process-local
++    // threshold override so single-token MoE decode can exercise the existing
++    // IQ panel implementation without changing routing or tensor values.
++    const char * threshold_env = getenv("GGML_IQP_MIN_BATCH_ID");
++    const int64_t threshold = threshold_env != NULL ? atoll(threshold_env) : GGML_IQP_MIN_BATCH_ID;
++    GGML_ASSERT(threshold > 0);
++    return cne1 >= threshold;
+ }
+ 
+ // src0 rows interleaved per panel

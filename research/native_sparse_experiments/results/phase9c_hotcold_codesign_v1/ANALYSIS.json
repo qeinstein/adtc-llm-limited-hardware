@@ -1,0 +1,20 @@
+{
+  "schema": "native-sparse-hotcold-codesign/v1",
+  "status": "complete",
+  "decision": "NO_GO_STANDALONE_BRANCH",
+  "method": "offline frequency analysis of phase5e corpus; 2x-byte hot format halving GEMV time assumed (optimistic)",
+  "corpus": {"tokens": 2016, "accesses": 645120, "unique_bundles": 9577},
+  "coverage": {
+    "global_top_256": 0.201,
+    "per_layer_top_16_mean": 0.364,
+    "per_layer_top_32_mean": 0.53,
+    "per_layer_top_64_mean": 0.726
+  },
+  "cache_cost_2x_bytes": {
+    "top_16_per_layer_slots_displaced": 640,
+    "top_32_per_layer_slots_displaced": 1280,
+    "top_32_extra_gb": 1.12
+  },
+  "optimistic_compute_saving_ms": {"top_16": 15.7, "top_32": 23.0},
+  "conclusion": "Net <5% plausible after displacement; keep only as add-on inside representation redesign."
+}

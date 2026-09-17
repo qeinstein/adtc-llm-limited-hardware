@@ -1,0 +1,43 @@
+{
+  "schema": "native-sparse-iqp-decode-analysis/v1",
+  "raw_result_status": "invalid_result_due_to_response_extractor_false_negative",
+  "benchmark_measurements_valid": true,
+  "corrected_correctness": {
+    "generated_payload_equal": true,
+    "response_sha256": "a3c3c73a067cbb5fab9e68bd7d06c03d3c488e74467d33c40fae339836006c8c",
+    "matches_phase0_response_sha256": true,
+    "scope": "24-token deterministic smoke comparison"
+  },
+  "runs": [
+    {
+      "label": "upstream_threshold_8",
+      "decode_tok_s": 5.167538,
+      "ms_per_token": 193.5157516016331,
+      "peak_rss_mib": 10534.78125
+    },
+    {
+      "label": "forced_iqp_threshold_1",
+      "decode_tok_s": 2.939827,
+      "ms_per_token": 340.1560704082247,
+      "peak_rss_mib": 10535.03125
+    },
+    {
+      "label": "forced_threshold_but_iqp_disabled",
+      "decode_tok_s": 5.195996,
+      "ms_per_token": 192.45588333786245,
+      "peak_rss_mib": 10534.8203125
+    }
+  ],
+  "effect": {
+    "forced_iqp_vs_upstream_percent": -43.10971685162257,
+    "forced_iqp_vs_same_binary_disabled_control_percent": -43.421299785450174,
+    "rss_delta_vs_disabled_control_mib": 0.2109375
+  },
+  "traffic": {
+    "resident_expert_pool": true,
+    "scheduled_fresh_expert_bytes_per_token": 0,
+    "logical_selected_expert_bytes_per_token": 280494080,
+    "changed_by_optimization": false
+  },
+  "conclusion": "Reject threshold-only reuse of the existing IQ panel kernel for single-row expert decode; a dedicated single-row selected-expert kernel is required."
+}

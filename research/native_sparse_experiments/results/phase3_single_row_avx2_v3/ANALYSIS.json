@@ -1,0 +1,58 @@
+{
+  "schema": "native-sparse-single-row-avx2-analysis/v3",
+  "kaggle_kernel": "toheebogunade/jamii-native-sparse-single-row-avx2",
+  "kaggle_version": 3,
+  "research_commit": "d427af8",
+  "runtime_commit": "3057bb66c86c46d5781e50e85462a760ba7d1feb",
+  "model_sha256": "2a809de317cfd49ac9130b95619ee6ac039a855e467015b3e996eb61af84718b",
+  "correctness": {
+    "status": "byte_identical_all_three_arms",
+    "response_sha256": "a3c3c73a067cbb5fab9e68bd7d06c03d3c488e74467d33c40fae339836006c8c",
+    "scope": "deterministic 24-token smoke",
+    "native_k": 8,
+    "layers": 40,
+    "router_or_weights_changed": false
+  },
+  "benchmark": {
+    "threads": 4,
+    "poll": 0,
+    "n_gen": 64,
+    "repeats": 3,
+    "resident": true,
+    "fresh_expert_bytes_per_token": 0,
+    "logical_selected_expert_bytes_per_token": 280494080,
+    "arms": [
+      {"label": "generic_control", "samples_tok_s": [4.15171, 4.19802, 4.15342], "mean_tok_s": 4.167714, "ms_per_token": 239.93968875983333, "peak_rss_mib": 10532.3203125},
+      {"label": "single_row_iqp", "samples_tok_s": [2.44449, 2.53022, 2.51855], "mean_tok_s": 2.497754, "ms_per_token": 400.3596831393324, "peak_rss_mib": 10530.15234375},
+      {"label": "raw_single_row_iq2", "samples_tok_s": [4.17929, 4.19878, 4.17472], "mean_tok_s": 4.184263, "ms_per_token": 238.99071353784407, "peak_rss_mib": 10525.2421875},
+      {"label": "single_row_iqp_profile", "samples_tok_s": [2.42374, 2.43653, 2.43893], "mean_tok_s": 2.433065, "ms_per_token": 411.0042271784765, "peak_rss_mib": 10531.1484375}
+    ],
+    "raw_row_vs_generic_percent": 0.3970761909286358,
+    "panel_row_vs_generic_percent": -40.06477929723509
+  },
+  "profile": {
+    "decode_cycles": 375381557254,
+    "gemv_cycles": 45496047102,
+    "decode_calls": 23715840,
+    "gemv_calls": 23715840,
+    "decode_fraction_percent": 89.19019528928959,
+    "gemv_fraction_percent": 10.809804710710408,
+    "aggregate_cycles_per_token_decode": 1955112277.3645833,
+    "aggregate_cycles_per_token_gemv": 236958578.65625
+  },
+  "ram_floor": {
+    "logical_model_bytes": 10656955008,
+    "logical_routed_expert_bytes": 8975810560,
+    "logical_non_routed_file_bytes": 1681144448,
+    "non_moe_arm_is_numerically_invalid": true,
+    "runs": [
+      {"label": "lazy_floor_ctx64", "pre_first_route_rss_mib": 632.74609375, "peak_rss_mib": 4847.53515625, "peak_anon_mib": 518.375, "peak_file_mib": 4329.28515625},
+      {"label": "lazy_floor_ctx512", "pre_first_route_rss_mib": 639.05859375, "peak_rss_mib": 4866.08984375, "peak_anon_mib": 536.91015625, "peak_file_mib": 4329.3671875},
+      {"label": "lazy_steady_ctx512", "pre_first_route_rss_mib": 630.55078125, "peak_rss_mib": 6538.90625, "peak_anon_mib": 539.7578125, "peak_file_mib": 5999.1484375},
+      {"label": "non_moe_floor_ctx512", "pre_first_route_rss_mib": 646.0546875, "peak_rss_mib": 1612.9140625, "peak_anon_mib": 539.74609375, "peak_file_mib": 1073.23046875}
+    ],
+    "lazy_vs_non_moe_peak_delta_mib": 4925.9921875,
+    "status": "measured_operational_non_routed_floor"
+  },
+  "conclusion": "Raw-row direct dispatch is neutral (+0.40%), while panel-backed single-row IQP is substantially slower. The measured non-MoE operational floor is 1.61 GiB RSS; bounded expert residency and a true fused multi-row raw IQ2 kernel are the next justified steps."
+}

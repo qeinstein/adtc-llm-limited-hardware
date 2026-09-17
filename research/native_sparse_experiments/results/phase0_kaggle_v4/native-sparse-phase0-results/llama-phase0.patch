@@ -1,0 +1,84 @@
+diff --git a/ggml/src/ggml-cpu/ggml-cpu.c b/ggml/src/ggml-cpu/ggml-cpu.c
+index 87a329f26..d86620afd 100644
+--- a/ggml/src/ggml-cpu/ggml-cpu.c
++++ b/ggml/src/ggml-cpu/ggml-cpu.c
+@@ -573,6 +573,52 @@ struct ggml_state {
+ 
+ static struct ggml_state g_state = {0};
+ 
++
++// Observation-only Phase-0 hook. Log IDs and packed tensor sizes for routed
++// expert matmuls. This does not alter routing or math.
++static void ggml_phase0_trace_moe_ids(
++        const struct ggml_compute_params * params,
++        const struct ggml_tensor * tensor) {
++    if (params->ith != 0 || tensor->op != GGML_OP_MUL_MAT_ID) {
++        return;
++    }
++    const char * path = getenv("GGML_PHASE0_ROUTE_TRACE");
++    if (path == NULL || path[0] == '\0') {
++        return;
++    }
++    const struct ggml_tensor * weights = tensor->src[0];
++    const struct ggml_tensor * ids = tensor->src[2];
++    if (weights == NULL || ids == NULL ||
++            strstr(weights->name, "ffn_") == NULL ||
++            strstr(weights->name, "_exps") == NULL ||
++            ids->type != GGML_TYPE_I32 || !ggml_is_contiguous(ids)) {
++        return;
++    }
++    static FILE * fp = NULL;
++    static uint64_t event_id = 0;
++    if (fp == NULL) {
++        fp = fopen(path, "a");
++        if (fp == NULL) {
++            return;
++        }
++        setvbuf(fp, NULL, _IOLBF, 0);
++    }
++    struct timespec ts;
++    clock_gettime(CLOCK_MONOTONIC, &ts);
++    const int64_t n = ggml_nelements(ids);
++    const int32_t * values = (const int32_t *) ids->data;
++    fprintf(fp,
++        "{\"event\":%" PRIu64 ",\"mono_ns\":%" PRIu64
++        ",\"weight\":\"%s\",\"weight_nbytes\":%zu,\"shape\":[%" PRId64 ",%" PRId64
++        ",%" PRId64 ",%" PRId64 "],\"ids\":[",
++        event_id++, (uint64_t) ts.tv_sec*1000000000ULL + (uint64_t) ts.tv_nsec,
++        weights->name, ggml_nbytes(weights), ids->ne[0], ids->ne[1], ids->ne[2], ids->ne[3]);
++    for (int64_t i = 0; i < n; ++i) {
++        fprintf(fp, "%s%d", i ? "," : "", values[i]);
++    }
++    fprintf(fp, "]}\n");
++}
++
+ void ggml_barrier(struct ggml_threadpool * tp) {
+     int n_threads = atomic_load_explicit(&tp->n_graph, memory_order_relaxed) & GGML_THREADPOOL_N_THREADS_MASK;
+     if (n_threads == 1) {
+@@ -1740,6 +1786,8 @@ static void ggml_compute_forward(struct ggml_compute_params * params, struct ggm
+         return;
+     }
+ 
++    ggml_phase0_trace_moe_ids(params, tensor);
++
+     // extra_buffer op?
+     if (ggml_cpu_extra_compute_forward(params, tensor)) {
+         return;
+diff --git a/src/models/qwen35moe.cpp b/src/models/qwen35moe.cpp
+index bdf772625..efd6718fb 100644
+--- a/src/models/qwen35moe.cpp
++++ b/src/models/qwen35moe.cpp
+@@ -93,8 +93,11 @@ void llama_model_qwen35moe::load_arch_tensors(llama_model_loader & ml) {
+ 
+         // Routed experts
+         layer.ffn_gate_inp  = create_tensor(tn(LLM_TENSOR_FFN_GATE_INP,  "weight", il), { n_embd, n_expert }, flags);
+-        layer.ffn_down_exps = create_tensor(tn(LLM_TENSOR_FFN_DOWN_EXPS, "weight", il), { n_ff_exp, n_embd, n_expert }, flags);
+-        create_tensor_gate_up_exps(layer, il, n_embd, n_ff_exp, n_expert, flags);
++        // Phase-0 experiment: routed expert payload is lazy; router/shared/trunk stay resident.
++        // Loading policy only.  Native IDs, K, weights, and math are unchanged.
++        const int expert_flags = flags | TENSOR_READ_LAZY;
++        layer.ffn_down_exps = create_tensor(tn(LLM_TENSOR_FFN_DOWN_EXPS, "weight", il), { n_ff_exp, n_embd, n_expert }, expert_flags);
++        create_tensor_gate_up_exps(layer, il, n_embd, n_ff_exp, n_expert, expert_flags);
+ 
+         // Shared experts
+         layer.ffn_gate_inp_shexp = create_tensor(tn(LLM_TENSOR_FFN_GATE_INP_SHEXP, "weight", il), { n_embd }, flags);

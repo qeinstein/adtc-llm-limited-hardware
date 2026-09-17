@@ -1,0 +1,443 @@
+[1789316675] Log start
+[1789316675] Cmd: /tmp/native-sparse-ik-llama-v3/ik_llama.cpp/build-native/bin/llama-cli -m /tmp/native-sparse-ik-llama-v3/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf -t 4 -c 512 -n 64 --temp 0 --seed 1234 --no-display-prompt --no-warmup -p "Give one concise reason oral rehydration solution helps a child with watery diarrhoea."
+[1789316675] main: build = 1 (3bb386eb)
+[1789316675] main: built with cc (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0 for x86_64-linux-gnu
+[1789316675] main: seed  = 1234
+[1789316675] main: llama backend init
+[1789316675] main: load the model and apply lora adapter, if any
+[1789316675] CPU: using device CPU - 0 MiB free
+[1789316675] llama_model_loader: loaded meta data with 52 key-value pairs and 733 tensors from /tmp/native-sparse-ik-llama-v3/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf (version GGUF V3 (latest))
+[1789316675] llama_model_loader: Dumping metadata keys/values. Note: KV overrides do not apply in this output.
+[1789316675] llama_model_loader: - kv   0:                       general.architecture str              = qwen35moe
+[1789316675] llama_model_loader: - kv   1:                               general.type str              = model
+[1789316675] llama_model_loader: - kv   2:                     general.sampling.top_k i32              = 20
+[1789316675] llama_model_loader: - kv   3:                     general.sampling.top_p f32              = 0.950000
+[1789316675] llama_model_loader: - kv   4:                      general.sampling.temp f32              = 1.000000
+[1789316675] llama_model_loader: - kv   5:                               general.name str              = Qwen3.5-35B-A3B
+[1789316675] llama_model_loader: - kv   6:                           general.basename str              = Qwen3.5-35B-A3B
+[1789316675] llama_model_loader: - kv   7:                       general.quantized_by str              = Unsloth
+[1789316675] llama_model_loader: - kv   8:                         general.size_label str              = 35B-A3B
+[1789316675] llama_model_loader: - kv   9:                            general.license str              = apache-2.0
+[1789316675] llama_model_loader: - kv  10:                       general.license.link str              = https://huggingface.co/Qwen/Qwen3.5-3...
+[1789316675] llama_model_loader: - kv  11:                           general.repo_url str              = https://huggingface.co/unsloth
+[1789316675] llama_model_loader: - kv  12:                   general.base_model.count u32              = 1
+[1789316675] llama_model_loader: - kv  13:                  general.base_model.0.name str              = Qwen3.5 35B A3B
+[1789316675] llama_model_loader: - kv  14:          general.base_model.0.organization str              = Qwen
+[1789316675] llama_model_loader: - kv  15:              general.base_model.0.repo_url str              = https://huggingface.co/Qwen/Qwen3.5-3...
+[1789316675] llama_model_loader: - kv  16:                               general.tags arr[str,2]       = ["unsloth", "image-text-to-text"]
+[1789316675] llama_model_loader: - kv  17:                      qwen35moe.block_count u32              = 40
+[1789316675] llama_model_loader: - kv  18:                   qwen35moe.context_length u32              = 262144
+[1789316675] llama_model_loader: - kv  19:                 qwen35moe.embedding_length u32              = 2048
+[1789316675] llama_model_loader: - kv  20:             qwen35moe.attention.head_count u32              = 16
+[1789316675] llama_model_loader: - kv  21:          qwen35moe.attention.head_count_kv u32              = 2
+[1789316675] llama_model_loader: - kv  22:          qwen35moe.rope.dimension_sections arr[i32,4]       = [11, 11, 10, 0]
+[1789316675] llama_model_loader: - kv  23:                   qwen35moe.rope.freq_base f32              = 10000000.000000
+[1789316675] llama_model_loader: - kv  24: qwen35moe.attention.layer_norm_rms_epsilon f32              = 0.000001
+[1789316675] llama_model_loader: - kv  25:                     qwen35moe.expert_count u32              = 256
+[1789316675] llama_model_loader: - kv  26:                qwen35moe.expert_used_count u32              = 8
+[1789316675] llama_model_loader: - kv  27:             qwen35moe.attention.key_length u32              = 256
+[1789316675] llama_model_loader: - kv  28:           qwen35moe.attention.value_length u32              = 256
+[1789316675] llama_model_loader: - kv  29:       qwen35moe.expert_feed_forward_length u32              = 512
+[1789316675] llama_model_loader: - kv  30: qwen35moe.expert_shared_feed_forward_length u32              = 512
+[1789316675] llama_model_loader: - kv  31:                  qwen35moe.ssm.conv_kernel u32              = 4
+[1789316675] llama_model_loader: - kv  32:                   qwen35moe.ssm.state_size u32              = 128
+[1789316675] llama_model_loader: - kv  33:                  qwen35moe.ssm.group_count u32              = 16
+[1789316675] llama_model_loader: - kv  34:               qwen35moe.ssm.time_step_rank u32              = 32
+[1789316675] llama_model_loader: - kv  35:                   qwen35moe.ssm.inner_size u32              = 4096
+[1789316675] llama_model_loader: - kv  36:          qwen35moe.full_attention_interval u32              = 4
+[1789316675] llama_model_loader: - kv  37:             qwen35moe.rope.dimension_count u32              = 64
+[1789316675] llama_model_loader: - kv  38:                       tokenizer.ggml.model str              = gpt2
+[1789316675] llama_model_loader: - kv  39:                         tokenizer.ggml.pre str              = qwen35
+[1789316675] llama_model_loader: - kv  40:                      tokenizer.ggml.tokens arr[str,248320]  = ["!", "\"", "#", "$", "%", "&", "'", ...
+[1789316675] llama_model_loader: - kv  41:                  tokenizer.ggml.token_type arr[i32,248320]  = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...
+[1789316675] llama_model_loader: - kv  42:                      tokenizer.ggml.merges arr[str,247587]  = ["Ġ Ġ", "ĠĠ ĠĠ", "i n", "Ġ t",...
+[1789316675] llama_model_loader: - kv  43:                tokenizer.ggml.eos_token_id u32              = 248046
+[1789316675] llama_model_loader: - kv  44:            tokenizer.ggml.padding_token_id u32              = 248055
+[1789316675] llama_model_loader: - kv  45:                    tokenizer.chat_template str              = {%- set image_count = namespace(value...
+[1789316675] llama_model_loader: - kv  46:               general.quantization_version u32              = 2
+[1789316675] llama_model_loader: - kv  47:                          general.file_type u32              = 19
+[1789316675] llama_model_loader: - kv  48:                      quantize.imatrix.file str              = Qwen3.5-35B-A3B-GGUF/imatrix_unsloth....
+[1789316675] llama_model_loader: - kv  49:                   quantize.imatrix.dataset str              = unsloth_calibration_Qwen3.5-35B-A3B.txt
+[1789316675] llama_model_loader: - kv  50:             quantize.imatrix.entries_count u32              = 510
+[1789316675] llama_model_loader: - kv  51:              quantize.imatrix.chunks_count u32              = 76
+[1789316675] llama_model_loader: - type  f32:  301 tensors
+[1789316675] llama_model_loader: - type q8_0:   60 tensors
+[1789316675] llama_model_loader: - type q4_K:    2 tensors
+[1789316675] llama_model_loader: - type q5_K:  180 tensors
+[1789316675] llama_model_loader: - type q6_K:   70 tensors
+[1789316675] llama_model_loader: - type iq2_xxs:   80 tensors
+[1789316675] llama_model_loader: - type iq2_s:   40 tensors
+[1789316675] load: 0 unused tokens
+[1789316676] load: printing all EOG tokens:
+[1789316676] load:   - 248044 ('<|endoftext|>')
+[1789316676] load:   - 248046 ('<|im_end|>')
+[1789316676] load:   - 248063 ('<|fim_pad|>')
+[1789316676] load:   - 248064 ('<|repo_name|>')
+[1789316676] load:   - 248065 ('<|file_sep|>')
+[1789316676] load: special tokens cache size = 33
+[1789316676] load: token to piece cache size = 1.7581 MB
+[1789316676] llm_load_print_meta: format           = GGUF V3 (latest)
+[1789316676] llm_load_print_meta: arch             = qwen35moe
+[1789316676] llm_load_print_meta: n_ctx_train      = 262144
+[1789316676] llm_load_print_meta: n_embd           = 2048
+[1789316676] llm_load_print_meta: n_layer          = 40
+[1789316676] llm_load_print_meta: n_head           = 16
+[1789316676] llm_load_print_meta: n_head_kv        = 2
+[1789316676] llm_load_print_meta: n_rot            = 64
+[1789316676] llm_load_print_meta: n_swa            = 0
+[1789316676] llm_load_print_meta: n_swa_pattern    = 1
+[1789316676] llm_load_print_meta: n_embd_head_k    = 256
+[1789316676] llm_load_print_meta: n_embd_head_v    = 256
+[1789316676] llm_load_print_meta: n_gqa            = 8
+[1789316676] llm_load_print_meta: n_embd_k_gqa     = 512
+[1789316676] llm_load_print_meta: n_embd_v_gqa     = 512
+[1789316676] llm_load_print_meta: f_norm_eps       = 0.0e+00
+[1789316676] llm_load_print_meta: f_norm_rms_eps   = 1.0e-06
+[1789316676] llm_load_print_meta: f_clamp_kqv      = 0.0e+00
+[1789316676] llm_load_print_meta: f_max_alibi_bias = 0.0e+00
+[1789316676] llm_load_print_meta: f_logit_scale    = 0.0e+00
+[1789316676] llm_load_print_meta: n_ff             = 0
+[1789316676] llm_load_print_meta: n_expert         = 256
+[1789316676] llm_load_print_meta: n_expert_used    = 8
+[1789316676] llm_load_print_meta: causal attn      = 1
+[1789316676] llm_load_print_meta: pooling type     = 0
+[1789316676] llm_load_print_meta: rope type        = 40
+[1789316676] llm_load_print_meta: rope scaling     = linear
+[1789316676] llm_load_print_meta: freq_base_train  = 10000000.0
+[1789316676] llm_load_print_meta: freq_scale_train = 1
+[1789316676] llm_load_print_meta: n_ctx_orig_yarn  = 262144
+[1789316676] llm_load_print_meta: rope_finetuned   = unknown
+[1789316676] llm_load_print_meta: mrope sections   = [11, 11, 10, 0]
+[1789316676] llm_load_print_meta: ssm_d_conv       = 4
+[1789316676] llm_load_print_meta: ssm_d_inner      = 4096
+[1789316676] llm_load_print_meta: ssm_d_state      = 128
+[1789316676] llm_load_print_meta: ssm_dt_rank      = 32
+[1789316676] llm_load_print_meta: ssm_n_group      = 16
+[1789316676] llm_load_print_meta: model type       = 35B.A3B
+[1789316676] llm_load_print_meta: model ftype      = IQ2_XXS - 2.0625 bpw
+[1789316676] llm_load_print_meta: model params     = 34.661 B
+[1789316676] llm_load_print_meta: model size       = 9.915 GiB (2.457 BPW) 
+[1789316676] llm_load_print_meta: repeating layers = 9.382 GiB (2.395 BPW[1789316676] , 33.643 B parameters)
+[1789316676] llm_load_print_meta: general.name     = Qwen3.5-35B-A3B
+[1789316676] print_info: vocab type            = BPE
+[1789316676] print_info: n_vocab               = 248320
+[1789316676] print_info: n_merges              = 247587
+[1789316676] print_info: BOS token             = 11 ','
+[1789316676] print_info: EOS token             = 248046 '<|im_end|>'
+[1789316676] print_info: EOT token             = 248046 '<|im_end|>'
+[1789316676] print_info: PAD token             = 248055 '<|vision_pad|>'
+[1789316676] print_info: LF token              = 198 'Ċ'
+[1789316676] print_info: FIM PRE token         = 248060 '<|fim_prefix|>'
+[1789316676] print_info: FIM SUF token         = 248062 '<|fim_suffix|>'
+[1789316676] print_info: FIM MID token         = 248061 '<|fim_middle|>'
+[1789316676] print_info: FIM PAD token         = 248063 '<|fim_pad|>'
+[1789316676] print_info: FIM REP token         = 248064 '<|repo_name|>'
+[1789316676] print_info: FIM SEP token         = 248065 '<|file_sep|>'
+[1789316676] print_info: EOG token             = 248044 '<|endoftext|>'
+[1789316676] print_info: EOG token             = 248046 '<|im_end|>'
+[1789316676] print_info: EOG token             = 248063 '<|fim_pad|>'
+[1789316676] print_info: EOG token             = 248064 '<|repo_name|>'
+[1789316676] print_info: EOG token             = 248065 '<|file_sep|>'
+[1789316676] print_info: max token length      = 256
+[1789316676] ======================================= HAVE_FANCY_SIMD is NOT defined
+[1789316676] Free memory 0 MiB on device 0 is less the 1024 MiB safety margin
+[1789316676] ------------------- Layer sizes:
+[1789316676] Layer  0:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer  1:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer  2:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer  3:    236.10,      1.00,    237.10       56.00  MiB
+[1789316676] Layer  4:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer  5:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer  6:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer  7:    236.10,      1.00,    237.10       56.00  MiB
+[1789316676] Layer  8:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer  9:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer 10:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer 11:    236.10,      1.00,    237.10       56.00  MiB
+[1789316676] Layer 12:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer 13:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer 14:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer 15:    236.10,      1.00,    237.10       56.00  MiB
+[1789316676] Layer 16:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer 17:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer 18:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer 19:    236.10,      1.00,    237.10       56.00  MiB
+[1789316676] Layer 20:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer 21:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer 22:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer 23:    236.10,      1.00,    237.10       56.00  MiB
+[1789316676] Layer 24:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer 25:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer 26:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer 27:    236.10,      1.00,    237.10       56.00  MiB
+[1789316676] Layer 28:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer 29:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer 30:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer 31:    236.10,      1.00,    237.10       56.00  MiB
+[1789316676] Layer 32:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer 33:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer 34:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer 35:    236.10,      1.00,    237.10       56.00  MiB
+[1789316676] Layer 36:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer 37:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer 38:    241.54,      2.09,    243.63       56.00  MiB
+[1789316676] Layer 39:    236.10,      1.00,    237.10       56.00  MiB
+[1789316676] Layer 40:    272.81,    429.00,    701.81 MiB (output layer)
+[1789316676] --------------------------------------------------------------------------
+[1789316676] Total   :   9607.15,    501.81,  10108.96 MiB
+[1789316676] Free memory 0 MiB on device 0 is less the required compute buffer size 56 MiB
+[1789316676] Memory required for model tensors + cache: 10382 MiB
+[1789316676] Memory available on all devices - compute: 0 MiB
+[1789316676] llm_load_tensors: ggml ctx size =    0.34 MiB
+[1789316676] llm_load_tensors:        CPU buffer size = 10152.78 MiB
+[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] .[1789316676] 
+[1789316676] llama_init_from_model: n_ctx         = 512
+[1789316676] llama_init_from_model: n_batch       = 512
+[1789316676] llama_init_from_model: n_ubatch      = 512
+[1789316676] llama_init_from_model: flash_attn    = 1
+[1789316676] llama_init_from_model: attn_max_b    = 256
+[1789316676] llama_init_from_model: fused_moe     = 1
+[1789316676] llama_init_from_model: grouped er    = 0
+[1789316676] llama_init_from_model: fused_up_gate = 1
+[1789316676] llama_init_from_model: fused_mmad    = 1
+[1789316676] llama_init_from_model: rope_cache    = 0
+[1789316676] llama_init_from_model: graph_reuse   = 1
+[1789316676] llama_init_from_model: k_cache_hadam = 0
+[1789316676] llama_init_from_model: v_cache_hadam = 0
+[1789316676] llama_init_from_model: split_mode_graph_scheduling = 0
+[1789316676] llama_init_from_model: reduce_type   = f16
+[1789316676] llama_init_from_model: sched_async   = 0
+[1789316676] llama_init_from_model: ser           = -1, 0
+[1789316676] llama_init_from_model: freq_base     = 10000000.0
+[1789316676] llama_init_from_model: freq_scale    = 1
+[1789316676] llama_kv_cache_init:        CPU KV buffer size =    72.81 MiB
+[1789316676] llama_init_from_model: KV self size  =   10.00 MiB, K (f16):    5.00 MiB, V (f16):    5.00 MiB
+[1789316676] llama_init_from_model:        CPU  output buffer size =     0.95 MiB
+[1789316676] llama_init_from_model:        CPU compute buffer size =   489.00 MiB
+[1789316676] llama_init_from_model: graph nodes  = 2675
+[1789316676] llama_init_from_model: graph splits = 1
+[1789316676] llama_init_from_model: enabling only_active_experts scheduling
+[1789316676] llama_init_from_gpt_params: setting dry_penalty_last_n to ctx_size = 512
+[1789316676] n_ctx: 512
+[1789316676] 
+[1789316676] system_info: n_threads = 4 / 4 | AVX = 1 | AVX_VNNI = 0 | AVX2 = 1 | AVX512 = 0 | AVX512_VBMI = 0 | AVX512_VNNI = 0 | AVX512_BF16 = 0 | FMA = 1 | NEON = 0 | SVE = 0 | ARM_FMA = 0 | F16C = 1 | FP16_VA = 0 | WASM_SIMD = 0 | SSE3 = 1 | SSSE3 = 1 | VSX = 0 | MATMUL_INT8 = 0 | 
+[1789316676] add_bos: 0
+[1789316676] tokenize the prompt
+[1789316676] prompt: "Give one concise reason oral rehydration solution helps a child with watery diarrhoea."
+[1789316676] tokens: [ 'Give':33963, ' one':799, ' concise':61446, ' reason':2781, ' oral':20029, ' re':311, 'hydration':77938, ' solution':6093, ' helps':8346, ' a':264, ' child':1623, ' with':440, ' wat':28078, 'ery':702, ' diarr':55672, 'hoe':73338, 'a':64, '.':13 ]
+[1789316676] recalculate the cached logits (check): embd_inp.empty() false, n_matching_session_tokens 0, embd_inp.size() 18, session_tokens.size() 0, embd_inp.size() 18
+[1789316676] sampling: 
+	repeat_last_n = 64, repeat_penalty = 1.000, frequency_penalty = 0.000, presence_penalty = 0.000
+	top_k = 40, tfs_z = 1.000, top_p = 0.950, min_p = 0.050, typical_p = 1.000, temp = 0.000
+	mirostat = 0, mirostat_lr = 0.100, mirostat_ent = 5.000
+	xtc_probability = 0.000, xtc_threshold = 1.000, top_n_sigma = 0.000
+	adaptive_target = -1.00, adaptive_decay = 0.90
+[1789316676] sampling order: 
+CFG -> Penalties -> dry -> top_k -> tfs_z -> typical_p -> top_p -> min_p -> xtc -> top_n_sigma -> temperature -> adaptive_p 
+[1789316676] generate: n_ctx = 512, n_batch = 2048, n_predict = 64, n_keep = 0
+[1789316676] 
+
+[1789316676] embd_inp.size(): 18, n_consumed: 0
+[1789316676] eval: [ 'Give':33963, ' one':799, ' concise':61446, ' reason':2781, ' oral':20029, ' re':311, 'hydration':77938, ' solution':6093, ' helps':8346, ' a':264, ' child':1623, ' with':440, ' wat':28078, 'ery':702, ' diarr':55672, 'hoe':73338, 'a':64, '.':13 ]
+[1789316679] n_past = 18
+[1789316679] last: [ '':271 ]
+[1789316679] n_remain: 63
+[1789316679] eval: [ '':271 ]
+[1789316679] n_past = 19
+[1789316679] last: [ '<think>':248068 ]
+[1789316679] n_remain: 62
+[1789316679] eval: [ '<think>':248068 ]
+[1789316680] n_past = 20
+[1789316680] last: [ '':271 ]
+[1789316680] n_remain: 61
+[1789316680] eval: [ '':271 ]
+[1789316680] n_past = 21
+[1789316680] last: [ '</think>':248069 ]
+[1789316680] n_remain: 60
+[1789316680] eval: [ '</think>':248069 ]
+[1789316681] n_past = 22
+[1789316681] last: [ '':271 ]
+[1789316681] n_remain: 59
+[1789316681] eval: [ '':271 ]
+[1789316681] n_past = 23
+[1789316681] last: [ 'Or':2126 ]
+[1789316681] n_remain: 58
+[1789316681] eval: [ 'Or':2126 ]
+[1789316681] n_past = 24
+[1789316681] last: [ 'al':278 ]
+[1789316681] n_remain: 57
+[1789316681] eval: [ 'al':278 ]
+[1789316682] n_past = 25
+[1789316682] last: [ ' re':311 ]
+[1789316682] n_remain: 56
+[1789316682] eval: [ ' re':311 ]
+[1789316682] n_past = 26
+[1789316682] last: [ 'hydration':77938 ]
+[1789316682] n_remain: 55
+[1789316682] eval: [ 'hydration':77938 ]
+[1789316682] n_past = 27
+[1789316682] last: [ ' solution':6093 ]
+[1789316682] n_remain: 54
+[1789316682] eval: [ ' solution':6093 ]
+[1789316683] n_past = 28
+[1789316683] last: [ ' (':318 ]
+[1789316683] n_remain: 53
+[1789316683] eval: [ ' (':318 ]
+[1789316683] n_past = 29
+[1789316683] last: [ 'ORS':9529 ]
+[1789316683] n_remain: 52
+[1789316683] eval: [ 'ORS':9529 ]
+[1789316684] n_past = 30
+[1789316684] last: [ ')':8 ]
+[1789316684] n_remain: 51
+[1789316684] eval: [ ')':8 ]
+[1789316684] n_past = 31
+[1789316684] last: [ ' works':4138 ]
+[1789316684] n_remain: 50
+[1789316684] eval: [ ' works':4138 ]
+[1789316684] n_past = 32
+[1789316684] last: [ ' because':1521 ]
+[1789316684] n_remain: 49
+[1789316684] eval: [ ' because':1521 ]
+[1789316685] n_past = 33
+[1789316685] last: [ ' it':424 ]
+[1789316685] n_remain: 48
+[1789316685] eval: [ ' it':424 ]
+[1789316685] n_past = 34
+[1789316685] last: [ ' contains':5435 ]
+[1789316685] n_remain: 47
+[1789316685] eval: [ ' contains':5435 ]
+[1789316686] n_past = 35
+[1789316686] last: [ ' a':264 ]
+[1789316686] n_remain: 46
+[1789316686] eval: [ ' a':264 ]
+[1789316686] n_past = 36
+[1789316686] last: [ ' specific':3050 ]
+[1789316686] n_remain: 45
+[1789316686] eval: [ ' specific':3050 ]
+[1789316687] n_past = 37
+[1789316687] last: [ ' ratio':11013 ]
+[1789316687] n_remain: 44
+[1789316687] eval: [ ' ratio':11013 ]
+[1789316687] n_past = 38
+[1789316687] last: [ ' of':314 ]
+[1789316687] n_remain: 43
+[1789316687] eval: [ ' of':314 ]
+[1789316687] n_past = 39
+[1789316687] last: [ ' glucose':32120 ]
+[1789316687] n_remain: 42
+[1789316687] eval: [ ' glucose':32120 ]
+[1789316688] n_past = 40
+[1789316688] last: [ ' and':321 ]
+[1789316688] n_remain: 41
+[1789316688] eval: [ ' and':321 ]
+[1789316688] n_past = 41
+[1789316688] last: [ ' sodium':37315 ]
+[1789316688] n_remain: 40
+[1789316688] eval: [ ' sodium':37315 ]
+[1789316689] n_past = 42
+[1789316689] last: [ ' that':421 ]
+[1789316689] n_remain: 39
+[1789316689] eval: [ ' that':421 ]
+[1789316689] n_past = 43
+[1789316689] last: [ ' triggers':29749 ]
+[1789316689] n_remain: 38
+[1789316689] eval: [ ' triggers':29749 ]
+[1789316689] n_past = 44
+[1789316689] last: [ ' the':279 ]
+[1789316689] n_remain: 37
+[1789316689] eval: [ ' the':279 ]
+[1789316690] n_past = 45
+[1789316690] last: [ ' intestinal':60685 ]
+[1789316690] n_remain: 36
+[1789316690] eval: [ ' intestinal':60685 ]
+[1789316690] n_past = 46
+[1789316690] last: [ ' absorption':41702 ]
+[1789316690] n_remain: 35
+[1789316690] eval: [ ' absorption':41702 ]
+[1789316690] n_past = 47
+[1789316690] last: [ ' mechanism':16456 ]
+[1789316690] n_remain: 34
+[1789316690] eval: [ ' mechanism':16456 ]
+[1789316691] n_past = 48
+[1789316691] last: [ ',':11 ]
+[1789316691] n_remain: 33
+[1789316691] eval: [ ',':11 ]
+[1789316691] n_past = 49
+[1789316691] last: [ ' allowing':10377 ]
+[1789316691] n_remain: 32
+[1789316691] eval: [ ' allowing':10377 ]
+[1789316692] n_past = 50
+[1789316692] last: [ ' the':279 ]
+[1789316692] n_remain: 31
+[1789316692] eval: [ ' the':279 ]
+[1789316692] n_past = 51
+[1789316692] last: [ ' body':2407 ]
+[1789316692] n_remain: 30
+[1789316692] eval: [ ' body':2407 ]
+[1789316692] n_past = 52
+[1789316692] last: [ ' to':310 ]
+[1789316692] n_remain: 29
+[1789316692] eval: [ ' to':310 ]
+[1789316693] n_past = 53
+[1789316693] last: [ ' rapidly':17958 ]
+[1789316693] n_remain: 28
+[1789316693] eval: [ ' rapidly':17958 ]
+[1789316693] n_past = 54
+[1789316693] last: [ ' absorb':33170 ]
+[1789316693] n_remain: 27
+[1789316693] eval: [ ' absorb':33170 ]
+[1789316693] n_past = 55
+[1789316693] last: [ ' water':2919 ]
+[1789316693] n_remain: 26
+[1789316693] eval: [ ' water':2919 ]
+[1789316694] n_past = 56
+[1789316694] last: [ ' and':321 ]
+[1789316694] n_remain: 25
+[1789316694] eval: [ ' and':321 ]
+[1789316694] n_past = 57
+[1789316694] last: [ ' electroly':69840 ]
+[1789316694] n_remain: 24
+[1789316694] eval: [ ' electroly':69840 ]
+[1789316695] n_past = 58
+[1789316695] last: [ 'tes':2262 ]
+[1789316695] n_remain: 23
+[1789316695] eval: [ 'tes':2262 ]
+[1789316695] n_past = 59
+[1789316695] last: [ ' even':1442 ]
+[1789316695] n_remain: 22
+[1789316695] eval: [ ' even':1442 ]
+[1789316695] n_past = 60
+[1789316695] last: [ ' during':2261 ]
+[1789316695] n_remain: 21
+[1789316695] eval: [ ' during':2261 ]
+[1789316696] n_past = 61
+[1789316696] last: [ ' severe':14938 ]
+[1789316696] n_remain: 20
+[1789316696] eval: [ ' severe':14938 ]
+[1789316696] n_past = 62
+[1789316696] last: [ ' diarr':55672 ]
+[1789316696] n_remain: 19
+[1789316696] eval: [ ' diarr':55672 ]
+[1789316697] n_past = 63
+[1789316697] last: [ 'hoe':73338 ]
+[1789316697] n_remain: 18
+[1789316697] eval: [ 'hoe':73338 ]
+[1789316697] n_past = 64
+[1789316697] last: [ 'a':64 ]
+[1789316697] n_remain: 17
+[1789316697] eval: [ 'a':64 ]
+[1789316697] n_past = 65
+[1789316697] last: [ '.':13 ]
+[1789316697] n_remain: 16
+[1789316697] eval: [ '.':13 ]
+[1789316698] n_past = 66
+[1789316698] last: [ '<|endoftext|>':248044 ]
+[1789316698] n_remain: 15
+[1789316698] found an EOG token
+[1789316698]  [end of text]
+[1789316698] 
+[1789316698] main: prompt eval time =    2572.53 ms /    18 tokens (  142.92 ms per token,     7.00 tokens per second)
+[1789316698] main:        eval time =   19015.97 ms /    49 tokens (  388.08 ms per token,     2.58 tokens per second)
+[1789316698] main:       total time =   21588.51 ms /    67 tokens
+[1789316698] Log end

@@ -1,0 +1,89 @@
+{
+  "schema": "native-sparse-async-reads/v2",
+  "decision": "FOLLOW-UP ONCE",
+  "runtime_commit": "3057bb66c86c46d5781e50e85462a760ba7d1feb",
+  "research_harness_commit": "a0ccb3e",
+  "model_sha256": "2a809de317cfd49ac9130b95619ee6ac039a855e467015b3e996eb61af84718b",
+  "hardware": "Kaggle 4-vCPU Intel Xeon AVX2, four threads, CPU-only",
+  "workload": {
+    "generated_tokens_per_rep": 64,
+    "repetitions": 3,
+    "prompt": "Give one concise reason oral rehydration solution helps a child with watery diarrhoea.",
+    "temperature": 0,
+    "seed": 1234,
+    "context": 512
+  },
+  "arms": {
+    "resident_control": {
+      "sample_tok_s": [4.8, 4.9, 4.8],
+      "mean_tok_s": 4.8333333333,
+      "median_tok_s": 4.8,
+      "mean_process_sec": 25.2673995167,
+      "median_process_sec": 24.509326489,
+      "peak_rss_mib": 10537.1328125
+    },
+    "bounded_serial": {
+      "sample_tok_s": [3.3, 3.3, 2.0],
+      "mean_tok_s": 2.8666666667,
+      "median_tok_s": 3.3,
+      "mean_process_sec": 37.009383578,
+      "median_process_sec": 33.227307561,
+      "peak_rss_mib": 3517.84765625,
+      "cache_bytes": 2000000000,
+      "slot_count": 2281,
+      "requests": 89280,
+      "hits": 80005,
+      "misses": 9275,
+      "hit_rate": 0.8961137993,
+      "actual_pread_calls_per_rep": 27825,
+      "logged_read_calls_per_rep": 83475,
+      "read_bytes_per_rep": 8129945600,
+      "read_ns": [9912624860, 9576716846, 13623210875]
+    },
+    "bounded_async": {
+      "sample_tok_s": [3.3, 3.2, 3.1],
+      "mean_tok_s": 3.2,
+      "median_tok_s": 3.2,
+      "mean_process_sec": 31.8391559813,
+      "median_process_sec": 31.248572955,
+      "peak_rss_mib": 3517.734375,
+      "cache_bytes": 2000000000,
+      "slot_count": 2281,
+      "requests": 89280,
+      "hits": 80005,
+      "misses": 9275,
+      "hit_rate": 0.8961137993,
+      "actual_pread_calls_per_rep": 27825,
+      "logged_read_calls_per_rep": 27825,
+      "read_bytes_per_rep": 8129945600,
+      "aggregate_worker_read_ns": [36216517120, 48223129628, 109467440916],
+      "join_wait_ns": [8005717527, 7985657445, 9528528447]
+    }
+  },
+  "traffic": {
+    "fresh_bytes_per_64_tokens": 8129945600,
+    "fresh_decimal_mb_per_64_tokens": 8129.9456,
+    "fresh_mib_per_64_tokens": 7753.3203125,
+    "fresh_bytes_per_token": 127030400,
+    "fresh_decimal_mb_per_token": 127.0304,
+    "fresh_mib_per_token": 121.1456298828
+  },
+  "correctness": {
+    "route_files_byte_identical": true,
+    "route_sha256": "400d85562944ec574faa1d0a629528237dd8c1f7638b164dda567607a3de3aa2",
+    "response_hashes_equal": true,
+    "response_hash": "5804c970f14ce9902178660a5262689f2ffb3518619336403244933d85cafca1",
+    "native_k": 8,
+    "weights_changed": false
+  },
+  "comparison": {
+    "rounded_generation_mean_delta_async_vs_serial": 0.1162790698,
+    "rounded_generation_median_delta_async_vs_serial": -0.0303030303,
+    "mean_process_elapsed_delta_async_vs_serial": -0.1397004515,
+    "median_process_elapsed_delta_async_vs_serial": -0.0595514579,
+    "mean_serial_read_wait_sec": 11.037517527,
+    "mean_async_join_wait_sec": 8.506634473,
+    "async_join_wait_delta": -0.229025328
+  },
+  "limitation": "llama-cli exposes only one-decimal generation throughput in this harness; async reads are joined before compute, so no read/compute overlap was measured."
+}

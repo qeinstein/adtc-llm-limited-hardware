@@ -1,0 +1,33 @@
+{
+  "schema": "native-sparse-prefetch-oracle/v1-analysis",
+  "status": "complete",
+  "decision": "KILL_UNDER_5PCT_RULE",
+  "hypothesis": "Perfect-next-token prefetch bounds fetch-hiding value; a route-only transition predictor captures part of it without touching native routing.",
+  "corpus": {
+    "tokens": 2016,
+    "route_requests": 645120,
+    "train_prompt_ids": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    "heldout_prompt_ids": [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
+  },
+  "perfect_oracle_2gb_cache_simulated": {
+    "baseline_tok_s": 2.976,
+    "oracle_tok_s": 4.2388,
+    "projected_gain_fraction": 0.4244,
+    "valid_for_decision": false,
+    "reason": "assumes fresh bytes block at modeled 767 MB/s SSD bandwidth; contradicted by phase 8C measured wall-clock ceiling"
+  },
+  "deployable_predictor_2_5gib_cache_heldout": {
+    "copy_last_speedup": 1.000054,
+    "transition_frequency_speedup": 1.010008,
+    "train_diagnostic_transition_speedup": 1.647516,
+    "train_diagnostic_note": "overfit reference, not deployable"
+  },
+  "measured_wall_clock_ceiling": {
+    "serial_fraction": 0.075,
+    "staged_fraction": 0.0371,
+    "source": "phase8c_critical_path_v1"
+  },
+  "tests": "test_prefetch_oracle.py + test_prefetch_predictor.py, 5 passed",
+  "conclusion": "Best deployable predictor ~1.0% in an optimistic simulator against a 3.7% staged measured ceiling. Killed; preserved as a falsification tool.",
+  "routing_unchanged": true
+}

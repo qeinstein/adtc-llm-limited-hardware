@@ -1,0 +1,43 @@
+{
+  "schema": "native-sparse-bounded-tax-zerocopy/v1",
+  "status": "complete",
+  "decision": "FOLLOW_UP_ONCE_BUILD_ZERO_COPY_PROTOTYPE",
+  "staged_decomposition_ms_per_token": {
+    "total": 312.7,
+    "expert_gemv_core": 87.0,
+    "bounded_vs_resident_tax": 75.5,
+    "removable_physical_io": 11.6,
+    "remaining_runtime": 138.0
+  },
+  "resident_control_ms_per_token": 225.6,
+  "resident_control_source": "phase7b staged ANALYSIS, 1000/4.433 tok/s; same patched binary, -lzm off",
+  "per_miss_structure": {
+    "misses_per_token": 145,
+    "pread_calls_per_token": 435,
+    "slice_bytes": 292181,
+    "bundle_bytes": 876544,
+    "bundle_pages_4k": 214,
+    "logical_copy_mb_per_token": 127.03
+  },
+  "local_copy_microbench": {
+    "machine": "local dev CPU, NOT Kaggle; order-of-magnitude only",
+    "pread_127mb_ms": 44.3,
+    "pread_gb_s": 2.87,
+    "memcpy_127mb_ms": 52.3,
+    "script": "/tmp scratch, removed after measurement"
+  },
+  "zero_copy_bound": {
+    "optimistic_ceiling_fraction": 0.241,
+    "copy_term_ms": [40, 50],
+    "copy_term_fraction": [0.13, 0.16],
+    "with_hygiene_ms": [45, 60],
+    "with_hygiene_fraction": [0.14, 0.19]
+  },
+  "strategic_floor": {
+    "erase_expert_tax_io_leaves_ms": 138.0,
+    "fifteen_tok_s_requires_ms": 66.7,
+    "conclusion": "15 raw on Kaggle needs runtime/representation/multi-token redesign beyond expert/storage"
+  },
+  "gate_up_fusion": "parked pending own >15.6 ms system-saving proof; phase4 suggests ~5 ms",
+  "kill_criteria": "<3% measured -> KILL; 3-10% -> one refinement; >10% -> EXPLOIT"
+}

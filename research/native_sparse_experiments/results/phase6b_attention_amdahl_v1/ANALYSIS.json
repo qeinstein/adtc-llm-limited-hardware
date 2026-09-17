@@ -1,0 +1,29 @@
+{
+  "schema": "native-sparse-attention-amdahl/v1",
+  "control_mean_tok_s": 4.3653466666666665,
+  "control_ms_per_token": 229.0767588112657,
+  "control_samples_tok_s": [4.34031, 4.32561, 4.43012],
+  "bypass_mean_tok_s": 5.661833333333333,
+  "bypass_ms_per_token": 176.62121496320805,
+  "bypass_samples_tok_s": [5.64407, 5.63629, 5.70514],
+  "wall_ms_saved_per_token": 52.45554384805766,
+  "wall_fraction": 0.22898675588157466,
+  "attention_free_ceiling_tok_s": 5.661834,
+  "exact_control_hash": "a3c3c73a067cbb5fab9e68bd7d06c03d3c488e74467d33c40fae339836006c8c",
+  "peak_rss_mib": {"control": 10530.30078125, "bypass": 10529.88671875},
+  "family_profile": {
+    "attn_qkv": {"calls": 23160, "cycles": 42262282257},
+    "attn_gate": {"calls": 23160, "cycles": 22101960813},
+    "attn_q": {"calls": 7720, "cycles": 14035150213},
+    "attn_k": {"calls": 7720, "cycles": 1026360484},
+    "attn_v": {"calls": 7720, "cycles": 1276725100},
+    "attn_output": {"calls": 7720, "cycles": 6827596467},
+    "flash_attn_ext": {"calls": 7720, "cycles": 911527225}
+  },
+  "validity": {
+    "control_exact": true,
+    "bypass_valid_inference": false,
+    "routes_unchanged_in_bypass": false,
+    "interpretation": "wall-clock measurement-only upper bound"
+  }
+}

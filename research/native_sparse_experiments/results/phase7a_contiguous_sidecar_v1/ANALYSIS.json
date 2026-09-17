@@ -1,0 +1,33 @@
+{
+  "schema": "native-sparse-contiguous-sidecar/v1",
+  "status": "preliminary_warm_cache_confounded",
+  "control": {
+    "sample_tok_s": [4.3, 4.1, 4.3],
+    "mean_tok_s": 4.233333333333333,
+    "median_tok_s": 4.3,
+    "ms_per_token": 236.2204724409449,
+    "peak_rss_mib": 10535.87890625
+  },
+  "sidecar": {
+    "sample_tok_s": [2.7, 3.1, 3.4],
+    "mean_tok_s": 3.066666666666667,
+    "median_tok_s": 3.1,
+    "ms_per_token": 326.0869565217391,
+    "peak_rss_mib": 3517.17578125,
+    "cache_capacity_bytes": 2000000000,
+    "slot_count": 2281,
+    "sidecar_bytes": 8975810560,
+    "sidecar_build_sec": 46.76000621,
+    "read_calls_per_repetition": 9275,
+    "read_bytes_per_repetition": 8129945600,
+    "read_ns_samples": [17809166902, 9839698047, 6051453759]
+  },
+  "correctness": {
+    "route_files_byte_identical_control_vs_sidecar": true,
+    "all_response_hashes_equal": true,
+    "response_hash": "5804c970f14ce9902178660a5262689f2ffb3518619336403244933d85cafca1",
+    "native_k": 8,
+    "weights_changed": false
+  },
+  "decision": "FOLLOW-UP ONCE: exact sidecar is valid, but the first comparison is invalid for performance because sidecar filesystem pages were not dropped between repetitions."
+}

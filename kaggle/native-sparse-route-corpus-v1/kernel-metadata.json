@@ -1,0 +1,13 @@
+{
+  "id": "toheebogunade/jamii-native-sparse-multi-prompt-route-corpus-v1",
+  "title": "Jamii Native Sparse Multi-Prompt Route Corpus v1",
+  "code_file": "route_corpus.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_internet": true,
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": []
+}

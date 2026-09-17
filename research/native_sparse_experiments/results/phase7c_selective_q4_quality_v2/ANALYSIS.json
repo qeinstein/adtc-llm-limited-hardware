@@ -1,0 +1,30 @@
+{
+  "schema": "native-sparse-selective-q4-quality/v2-analysis",
+  "status": "complete",
+  "decision": "KEEP_PENDING_LIKELIHOOD_GATE",
+  "control": {
+    "clinical_pass": 7,
+    "clinical_total": 8,
+    "safety_pass": 6,
+    "safety_total": 7
+  },
+  "selective_q4": {
+    "clinical_pass": 8,
+    "clinical_total": 8,
+    "safety_pass": 7,
+    "safety_total": 7
+  },
+  "mcq_generation_gate": {
+    "reported_control_correct": 3,
+    "reported_selective_q4_correct": 2,
+    "valid_for_decision": false,
+    "reason": "all 48-token responses ended before the requested FINAL letter; fallback-last-letter scoring classified option letters mentioned in prose rather than completed answers"
+  },
+  "quality_conclusion": "No observed clinical or safety regression in this small frozen gate; broad capability is unresolved and is superseded by phase7c selective-Q4 quality v3 likelihood evaluation.",
+  "model_sha256": "2a809de317cfd49ac9130b95619ee6ac039a855e467015b3e996eb61af84718b",
+  "candidate_sha256": "86f27f69e0cea7f8cd0420452f1b600c57cedce6589f60c2cfee06a8c0395d39",
+  "llama_commit": "3057bb66c86c46d5781e50e85462a760ba7d1feb",
+  "hardware": "Kaggle 4-vCPU Intel Xeon 2.20 GHz, AVX2, CPU-only",
+  "raw_result": "raw/result.json",
+  "kaggle_kernel": "toheebogunade/jamii-native-sparse-selective-q4-quality-v2"
+}

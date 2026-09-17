@@ -1,0 +1,41 @@
+
+
+Loading model... |-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/ 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b1-3057bb66c
+model      : /tmp/native-sparse-route-corpus/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf
+ftype      : IQ2_XXS - 2.0625 bpw
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> A clinic has two nurses and four rooms. Propose a simple morning patient-flow plan and explain it.
+
+[Start thinking]
+
+Here's a thinking process that leads to the suggested patient-flow plan:
+
+1.  **Analyze the Request:**
+    *   **Resources:** 2 Nurses, 4 Rooms.
+    *   **Goal:** Propose a *simple* morning patient-flow plan.
+    *   **Requirement:**
+
+[ Prompt: 8.2 t/s | Generation: 5.1 t/s ]
+
+
+Exiting...

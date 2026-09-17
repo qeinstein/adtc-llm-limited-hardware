@@ -1,0 +1,10 @@
+loaded 129 L00 experts
+policy=hugeND nslots=28 stride=2097152 store_bytes=58720256 dontneed=0
+policy=hugeND nslots=28 ntok=100 trace=uniform
+req=800 hit=161 miss=639 evict=611 hitrate=0.2013
+tok_ms_med=5.421 tok_ms_p90=5.952 manage_ms_med=0.9887 gemv_ms_med=4.496
+manage_ms_tot=118.63 gemv_ms_tot=448.01 manage_frac=0.2094
+minflt_tot=5999 majflt_tot=0 minflt_per_tok=60.0 minflt_med=0 maxrss_kb=138164
+minflt_per_miss=9.4 faults_avoidable_note=see_report
+checksum=756a49f3cd988cfa
+store_bytes=58720256 bytes_per_expert=876544

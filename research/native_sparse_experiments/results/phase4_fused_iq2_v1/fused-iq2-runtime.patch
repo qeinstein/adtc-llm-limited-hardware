@@ -1,0 +1,476 @@
+diff --git a/ggml/src/ggml-cpu/arch/x86/quants.c b/ggml/src/ggml-cpu/arch/x86/quants.c
+index ea54cfe44..c7f32002e 100644
+--- a/ggml/src/ggml-cpu/arch/x86/quants.c
++++ b/ggml/src/ggml-cpu/arch/x86/quants.c
+@@ -13,6 +13,9 @@
+ #include <assert.h>
+ #include <stdlib.h> // for qsort
+ #include <stdio.h>  // for GGML_ASSERT
++#if defined(__x86_64__) || defined(__i386__)
++#include <x86intrin.h>
++#endif
+ 
+ #define GROUP_MAX_EPS 1e-15f
+ #define GROUP_MAX_EPS_IQ3_XXS 1e-8f
+@@ -2775,6 +2778,144 @@ void ggml_vec_dot_iq2_xxs_q8_K(int n, float * GGML_RESTRICT s, size_t bs, const
+ #endif
+ }
+ 
++
++#if defined(__AVX2__)
++static uint64_t phase4_fused_total_cycles = 0;
++static uint64_t phase4_fused_load_cycles = 0;
++static uint64_t phase4_fused_decode_mac_cycles = 0;
++static uint64_t phase4_fused_calls = 0;
++static uint64_t phase4_fused_blocks = 0;
++
++static inline int phase4_fused_profile_enabled(void) {
++    static int enabled = -1;
++    if (enabled < 0) {
++        const char * value = getenv("GGML_FUSED_IQ2_PROFILE");
++        enabled = value != NULL && atoi(value) != 0;
++    }
++    return enabled;
++}
++
++static void phase4_fused_report(void) {
++    if (phase4_fused_profile_enabled()) {
++        fprintf(stderr,
++            "PHASE4_FUSED_IQ2_PROFILE total_cycles=%llu load_cycles=%llu "
++            "decode_mac_cycles=%llu calls=%llu blocks=%llu\n",
++            (unsigned long long) __atomic_load_n(&phase4_fused_total_cycles, __ATOMIC_RELAXED),
++            (unsigned long long) __atomic_load_n(&phase4_fused_load_cycles, __ATOMIC_RELAXED),
++            (unsigned long long) __atomic_load_n(&phase4_fused_decode_mac_cycles, __ATOMIC_RELAXED),
++            (unsigned long long) __atomic_load_n(&phase4_fused_calls, __ATOMIC_RELAXED),
++            (unsigned long long) __atomic_load_n(&phase4_fused_blocks, __ATOMIC_RELAXED));
++    }
++}
++
++static inline void phase4_fused_register_report(void) {
++    static int registered = 0;
++    if (phase4_fused_profile_enabled() && !registered) {
++        registered = 1;
++        atexit(phase4_fused_report);
++    }
++}
++#endif
++
++void ggml_vec_dot_iq2_xxs_q8_K_4x1(int n, float * GGML_RESTRICT s, size_t row_stride,
++                                    const void * GGML_RESTRICT vx, const void * GGML_RESTRICT vy) {
++    assert(n % QK_K == 0);
++    const int nb = n / QK_K;
++    const block_q8_K * GGML_RESTRICT y = vy;
++
++#if defined(__AVX2__)
++    phase4_fused_register_report();
++    const int profile = phase4_fused_profile_enabled();
++    const uint64_t total_start = profile ? __rdtsc() : 0;
++    const uint64_t * signs64 = (const uint64_t *) keven_signs_q2xs;
++    const block_iq2_xxs * x[4];
++    for (int r = 0; r < 4; ++r) {
++        x[r] = (const block_iq2_xxs *) ((const char *) vx + (size_t) r * row_stride);
++    }
++    __m256 accumf[4] = {
++        _mm256_setzero_ps(), _mm256_setzero_ps(),
++        _mm256_setzero_ps(), _mm256_setzero_ps()
++    };
++
++    for (int i = 0; i < nb; ++i) {
++        float d[4];
++        __m256i sumi1[4] = {
++            _mm256_setzero_si256(), _mm256_setzero_si256(),
++            _mm256_setzero_si256(), _mm256_setzero_si256()
++        };
++        __m256i sumi2[4] = {
++            _mm256_setzero_si256(), _mm256_setzero_si256(),
++            _mm256_setzero_si256(), _mm256_setzero_si256()
++        };
++        const uint16_t * q2[4];
++        for (int r = 0; r < 4; ++r) {
++            d[r] = GGML_CPU_FP16_TO_FP32(x[r][i].d) * y[i].d;
++            q2[r] = x[r][i].qs;
++        }
++        const int8_t * q8 = y[i].qs;
++        for (int ib32 = 0; ib32 < QK_K/32; ib32 += 2) {
++            const uint64_t load_start = profile ? __rdtsc() : 0;
++            const __m256i q8_1 = _mm256_loadu_si256((const __m256i *) q8); q8 += 32;
++            const __m256i q8_2 = _mm256_loadu_si256((const __m256i *) q8); q8 += 32;
++            if (profile) {
++                __atomic_fetch_add(&phase4_fused_load_cycles, __rdtsc() - load_start, __ATOMIC_RELAXED);
++            }
++            const uint64_t decode_start = profile ? __rdtsc() : 0;
++            for (int r = 0; r < 4; ++r) {
++                uint32_t aux32[4];
++                memcpy(aux32, q2[r], 4 * sizeof(uint32_t)); q2[r] += 8;
++                const uint8_t * aux8 = (const uint8_t *) aux32;
++                const __m256i q2_1 = _mm256_set_epi64x(
++                    iq2xxs_grid[aux8[3]], iq2xxs_grid[aux8[2]],
++                    iq2xxs_grid[aux8[1]], iq2xxs_grid[aux8[0]]);
++                const __m256i q2_2 = _mm256_set_epi64x(
++                    iq2xxs_grid[aux8[11]], iq2xxs_grid[aux8[10]],
++                    iq2xxs_grid[aux8[9]], iq2xxs_grid[aux8[8]]);
++                const __m256i s2_1 = _mm256_set_epi64x(
++                    signs64[(aux32[1] >> 21) & 127], signs64[(aux32[1] >> 14) & 127],
++                    signs64[(aux32[1] >> 7) & 127], signs64[aux32[1] & 127]);
++                const __m256i s2_2 = _mm256_set_epi64x(
++                    signs64[(aux32[3] >> 21) & 127], signs64[(aux32[3] >> 14) & 127],
++                    signs64[(aux32[3] >> 7) & 127], signs64[aux32[3] & 127]);
++                const __m256i dot1 = _mm256_maddubs_epi16(
++                    q2_1, _mm256_sign_epi8(q8_1, s2_1));
++                const __m256i dot2 = _mm256_maddubs_epi16(
++                    q2_2, _mm256_sign_epi8(q8_2, s2_2));
++                const uint16_t ls1 = aux32[1] >> 28;
++                const uint16_t ls2 = aux32[3] >> 28;
++                sumi1[r] = _mm256_add_epi32(sumi1[r],
++                    _mm256_madd_epi16(dot1, _mm256_set1_epi16(2 * ls1 + 1)));
++                sumi2[r] = _mm256_add_epi32(sumi2[r],
++                    _mm256_madd_epi16(dot2, _mm256_set1_epi16(2 * ls2 + 1)));
++            }
++            if (profile) {
++                __atomic_fetch_add(&phase4_fused_decode_mac_cycles, __rdtsc() - decode_start, __ATOMIC_RELAXED);
++            }
++        }
++        for (int r = 0; r < 4; ++r) {
++            const __m256i sum = _mm256_add_epi32(sumi1[r], sumi2[r]);
++            accumf[r] = _mm256_fmadd_ps(_mm256_set1_ps(d[r]),
++                _mm256_cvtepi32_ps(sum), accumf[r]);
++        }
++        if (profile) {
++            __atomic_fetch_add(&phase4_fused_blocks, 1, __ATOMIC_RELAXED);
++        }
++    }
++    for (int r = 0; r < 4; ++r) {
++        s[r] = 0.125f * hsum_float_8(accumf[r]);
++    }
++    if (profile) {
++        __atomic_fetch_add(&phase4_fused_total_cycles, __rdtsc() - total_start, __ATOMIC_RELAXED);
++        __atomic_fetch_add(&phase4_fused_calls, 1, __ATOMIC_RELAXED);
++    }
++#else
++    for (int r = 0; r < 4; ++r) {
++        ggml_vec_dot_iq2_xxs_q8_K(n, s + r, 0,
++            (const char *) vx + (size_t) r * row_stride, 0, vy, 0, 1);
++    }
++#endif
++}
++
+ void ggml_vec_dot_iq2_xs_q8_K(int n, float * GGML_RESTRICT s, size_t bs, const void * GGML_RESTRICT vx, size_t bx, const void * GGML_RESTRICT vy, size_t by, int nrc) {
+     assert(n % QK_K == 0);
+     assert(nrc == 1);
+diff --git a/ggml/src/ggml-cpu/ggml-cpu.c b/ggml/src/ggml-cpu/ggml-cpu.c
+index 87a329f26..f29a6bc61 100644
+--- a/ggml/src/ggml-cpu/ggml-cpu.c
++++ b/ggml/src/ggml-cpu/ggml-cpu.c
+@@ -571,6 +571,32 @@ struct ggml_state {
+     struct ggml_numa_nodes numa;
+ };
+ 
++
++static void ggml_phase3_route_trace(const struct ggml_compute_params * params,
++                                    const struct ggml_tensor * tensor) {
++    if (params->ith != 0 || tensor->op != GGML_OP_MUL_MAT_ID) return;
++    const char * path = getenv("GGML_PHASE0_ROUTE_TRACE");
++    if (path == NULL || path[0] == '\0') return;
++    const struct ggml_tensor * weights = tensor->src[0];
++    const struct ggml_tensor * ids = tensor->src[2];
++    if (weights == NULL || ids == NULL || ids->type != GGML_TYPE_I32 ||
++            strstr(weights->name, "ffn_") == NULL ||
++            strstr(weights->name, "_exps") == NULL) return;
++    static FILE * fp = NULL;
++    static uint64_t event_id = 0;
++    if (fp == NULL) {
++        fp = fopen(path, "a");
++        if (fp == NULL) return;
++        setvbuf(fp, NULL, _IOLBF, 0);
++    }
++    struct timespec ts;
++    clock_gettime(CLOCK_MONOTONIC, &ts);
++    fprintf(fp, "{\"event\":%" PRIu64 ",\"mono_ns\":%" PRIu64
++        ",\"weight\":\"%s\",\"shape\":[%" PRId64 ",%" PRId64 "]}\n",
++        event_id++, (uint64_t) ts.tv_sec * 1000000000ULL + (uint64_t) ts.tv_nsec,
++        weights->name, ids->ne[0], ids->ne[1]);
++}
++
+ static struct ggml_state g_state = {0};
+ 
+ void ggml_barrier(struct ggml_threadpool * tp) {
+@@ -1590,7 +1616,11 @@ static void ggml_compute_forward_mul_mat_id(
+ 
+     // IQ panel gemm (see iqp.h); per expert eligibility is decided below, but the work buffer is
+     // reserved for the whole node (ggml_graph_plan sizes it without params, use_ref only skips the dispatch)
+-    const bool iqp = ggml_cpu_iqp_supports_mul_mat_id(dst) && !params->use_ref;
++    const bool single_row_iqp = getenv("GGML_SINGLE_ROW_IQP") != NULL &&
++        atoi(getenv("GGML_SINGLE_ROW_IQP")) != 0;
++    const bool iqp = !params->use_ref &&
++        (ggml_cpu_iqp_supports_mul_mat_id(dst) ||
++         (single_row_iqp && ggml_cpu_iqp_supports_mul_mat_id_single(dst)));
+ 
+     char * iqp_panels = NULL;
+ 
+@@ -1669,7 +1699,22 @@ static void ggml_compute_forward_mul_mat_id(
+             continue;
+         }
+ 
+-        if (iqp && ggml_cpu_iqp_mul_mat_id_min_batch(cne1)) {
++        const char * fused_iq2_env = getenv("GGML_FUSED_IQ2");
++        const bool fused_iq2 = fused_iq2_env != NULL && atoi(fused_iq2_env) != 0;
++        if (fused_iq2 && cne1 == 1 && src0->type == GGML_TYPE_IQ2_XXS) {
++            ggml_compute_forward_mul_mat_id_fused_iq2(params, dst, cur_a, (const int32_t *) &MMID_MATRIX_ROW(cur_a, 0));
++            continue;
++        }
++
++        const char * raw_iq2_env = getenv("GGML_RAW_SINGLE_ROW_IQ2");
++        const bool raw_iq2 = raw_iq2_env != NULL && atoi(raw_iq2_env) != 0;
++        if (raw_iq2 && cne1 == 1 && src0->type == GGML_TYPE_IQ2_XXS) {
++            ggml_compute_forward_mul_mat_id_raw_iq2(params, dst, cur_a, (const int32_t *) &MMID_MATRIX_ROW(cur_a, 0));
++            continue;
++        }
++
++        if (iqp && (ggml_cpu_iqp_mul_mat_id_min_batch(cne1) ||
++                   (single_row_iqp && cne1 == 1))) {
+             ggml_compute_forward_mul_mat_id_iqp(params, dst, cur_a, cne1, (const int32_t *) &MMID_MATRIX_ROW(cur_a, 0),
+                                                 iqp_panels);
+ 
+@@ -1740,6 +1785,21 @@ static void ggml_compute_forward(struct ggml_compute_params * params, struct ggm
+         return;
+     }
+ 
++    ggml_phase3_route_trace(params, tensor);
++
++    // RAM-floor arm: retain the graph and all non-MoE work, but replace
++    // selected-expert output with zeros before any routed weight access.
++    // This arm is measurement-only and is never used for correctness.
++    const char * skip_moe = getenv("GGML_PHASE3_SKIP_MOE");
++    if (tensor->op == GGML_OP_MUL_MAT_ID && skip_moe != NULL &&
++            atoi(skip_moe) != 0) {
++        if (params->ith == 0) {
++            memset(tensor->data, 0, ggml_nbytes(tensor));
++        }
++        ggml_barrier(params->threadpool);
++        return;
++    }
++
+     // extra_buffer op?
+     if (ggml_cpu_extra_compute_forward(params, tensor)) {
+         return;
+diff --git a/ggml/src/ggml-cpu/iqp.cpp b/ggml/src/ggml-cpu/iqp.cpp
+index b9201db38..f5514879c 100644
+--- a/ggml/src/ggml-cpu/iqp.cpp
++++ b/ggml/src/ggml-cpu/iqp.cpp
+@@ -11,11 +11,48 @@
+ #include <cassert>
+ #include <cstdlib>
+ #include <cstring>
++#include <atomic>
++#include <cstdio>
++
++#if defined(__x86_64__) || defined(_M_X64)
++#include <x86intrin.h>
++#endif
+ 
+ #include "iqp.h"
++#include "quants.h"
+ 
+ #define UNUSED GGML_UNUSED
+ 
++static bool phase3_profile_enabled() {
++    const char * value = getenv("GGML_PHASE3_PROFILE");
++    return value != nullptr && atoi(value) != 0;
++}
++
++#if defined(__x86_64__) || defined(_M_X64)
++static inline uint64_t phase3_tsc() { return __rdtsc(); }
++#else
++static inline uint64_t phase3_tsc() { return 0; }
++#endif
++
++static std::atomic<uint64_t> phase3_decode_cycles{0};
++static std::atomic<uint64_t> phase3_gemv_cycles{0};
++static std::atomic<uint64_t> phase3_decode_calls{0};
++static std::atomic<uint64_t> phase3_gemv_calls{0};
++static void phase3_report() {
++    if (phase3_profile_enabled()) {
++        fprintf(stderr, "PHASE3_IQP_PROFILE decode_cycles=%llu gemv_cycles=%llu decode_calls=%llu gemv_calls=%llu\n",
++            (unsigned long long) phase3_decode_cycles.load(),
++            (unsigned long long) phase3_gemv_cycles.load(),
++            (unsigned long long) phase3_decode_calls.load(),
++            (unsigned long long) phase3_gemv_calls.load());
++    }
++}
++
++static bool phase3_report_registered = []() {
++    if (phase3_profile_enabled()) { atexit(phase3_report); }
++    return true;
++}();
++
+ // smallest src1 batch for which the decode pays for itself
+ #define GGML_IQP_MIN_BATCH 8
+ 
+@@ -1127,6 +1164,10 @@ bool ggml_cpu_iqp_supports_mul_mat_id(const struct ggml_tensor * dst) {
+     return true;
+ }
+ 
++bool ggml_cpu_iqp_supports_mul_mat_id_single(const struct ggml_tensor * dst) {
++    return iqp_supported_common(dst);
++}
++
+ void ggml_compute_forward_mul_mat_id_iqp(const struct ggml_compute_params * params,
+                                          struct ggml_tensor *               dst,
+                                          int64_t                            cur_a,
+@@ -1157,7 +1198,29 @@ void ggml_compute_forward_mul_mat_id_iqp(const struct ggml_compute_params * para
+     for (int64_t g = g0; g < g1; g++) {
+         const int64_t r = g * IQP_NB_ROWS;
+ 
++        const uint64_t decode_start = phase3_profile_enabled() ? phase3_tsc() : 0;
+         iqp_decode_panel_8(src0->type, src0_cur + r * nb01, nb01, nblocks, panel);
++        if (phase3_profile_enabled()) {
++            phase3_decode_cycles.fetch_add(phase3_tsc() - decode_start);
++            phase3_decode_calls.fetch_add(1);
++        }
++
++        // Decode the selected expert's eight output rows once, then use the
++        // one-activation AVX2 GEMV.  This avoids the panel path's four-lane
++        // tail duplication for the normal single-token MoE case.
++        if (cne1 == 1) {
++            const void * row = (const char *) params->wdata +
++                ((expert_rows[0] % ne11) + expert_rows[1] * ne11) * nbw1;
++            float * dst_col = (float *) ((char *) dst->data +
++                expert_rows[0] * nb1 + expert_rows[1] * nb2);
++            const uint64_t gemv_start = phase3_profile_enabled() ? phase3_tsc() : 0;
++            iqp_gemv_8x8_q8_K(ne00, dst_col + r, ne01, panel, row, 1, IQP_NB_ROWS);
++            if (phase3_profile_enabled()) {
++                phase3_gemv_cycles.fetch_add(phase3_tsc() - gemv_start);
++                phase3_gemv_calls.fetch_add(1);
++            }
++            continue;
++        }
+ 
+         // the dst rows are scattered, so the gemm writes into tmp and it is copied out row by row
+         float tmp[4 * IQP_NB_ROWS];
+@@ -1186,6 +1249,62 @@ void ggml_compute_forward_mul_mat_id_iqp(const struct ggml_compute_params * para
+     }
+ }
+ 
++void ggml_compute_forward_mul_mat_id_fused_iq2(const struct ggml_compute_params * params,
++                                                  struct ggml_tensor *               dst,
++                                                  int64_t                            cur_a,
++                                                  const int32_t *                    expert_rows) {
++    const struct ggml_tensor * src0 = dst->src[0];
++    const struct ggml_tensor * src1 = dst->src[1];
++    GGML_TENSOR_BINARY_OP_LOCALS
++    const int ith = params->ith;
++    const int nth = params->nth;
++    const size_t nbw1 = ggml_row_size(GGML_TYPE_Q8_K, ne10);
++    const char * src0_cur = (const char *) src0->data + cur_a * nb02;
++    const void * src1_row = (const char *) params->wdata +
++        ((expert_rows[0] % ne11) + expert_rows[1] * ne11) * nbw1;
++    const int64_t r0 = (ne01 * ith) / nth;
++    const int64_t r1 = (ne01 * (ith + 1)) / nth;
++    float * dst_col = (float *) ((char *) dst->data +
++        expert_rows[0] * nb1 + expert_rows[1] * nb2);
++    int64_t r = r0;
++    while (r < r1 && (r & 3) != 0) {
++        ggml_vec_dot_iq2_xxs_q8_K(ne00, dst_col + r, 0,
++            src0_cur + r * nb01, 0, src1_row, 0, 1);
++        ++r;
++    }
++    for (; r + 4 <= r1; r += 4) {
++        ggml_vec_dot_iq2_xxs_q8_K_4x1(ne00, dst_col + r, nb01,
++            src0_cur + r * nb01, src1_row);
++    }
++    for (; r < r1; ++r) {
++        ggml_vec_dot_iq2_xxs_q8_K(ne00, dst_col + r, 0,
++            src0_cur + r * nb01, 0, src1_row, 0, 1);
++    }
++}
++
++void ggml_compute_forward_mul_mat_id_raw_iq2(const struct ggml_compute_params * params,
++                                               struct ggml_tensor *               dst,
++                                               int64_t                            cur_a,
++                                               const int32_t *                    expert_rows) {
++    const struct ggml_tensor * src0 = dst->src[0];
++    const struct ggml_tensor * src1 = dst->src[1];
++    GGML_TENSOR_BINARY_OP_LOCALS
++    const int ith = params->ith;
++    const int nth = params->nth;
++    const size_t nbw1 = ggml_row_size(GGML_TYPE_Q8_K, ne10);
++    const char * src0_cur = (const char *) src0->data + cur_a * nb02;
++    const void * src1_row = (const char *) params->wdata +
++        ((expert_rows[0] % ne11) + expert_rows[1] * ne11) * nbw1;
++    const int64_t r0 = (ne01 * ith) / nth;
++    const int64_t r1 = (ne01 * (ith + 1)) / nth;
++    for (int64_t r = r0; r < r1; ++r) {
++        float * dst_col = (float *) ((char *) dst->data +
++            expert_rows[0] * nb1 + expert_rows[1] * nb2);
++        ggml_vec_dot_iq2_xxs_q8_K(ne00, dst_col + r, 0,
++            src0_cur + r * nb01, 0, src1_row, 0, 1);
++    }
++}
++
+ size_t ggml_cpu_iqp_scratch_size(const struct ggml_tensor * dst) {
+     return GGML_PAD((dst->src[0]->ne[0] / QK_K) * sizeof(block_iqp_x8), 64);
+ }
+diff --git a/ggml/src/ggml-cpu/iqp.h b/ggml/src/ggml-cpu/iqp.h
+index 017b03fb4..c56f281a1 100644
+--- a/ggml/src/ggml-cpu/iqp.h
++++ b/ggml/src/ggml-cpu/iqp.h
+@@ -20,6 +20,9 @@ bool ggml_cpu_iqp_supports_mul_mat(const struct ggml_tensor * dst);
+ // node level test only - per expert eligibility is decided with ggml_cpu_iqp_mul_mat_id_min_batch
+ bool ggml_cpu_iqp_supports_mul_mat_id(const struct ggml_tensor * dst);
+ 
++// Same capability test without the upstream per-expert batch threshold.
++bool ggml_cpu_iqp_supports_mul_mat_id_single(const struct ggml_tensor * dst);
++
+ // per thread panel scratch bytes, padded
+ size_t ggml_cpu_iqp_scratch_size(const struct ggml_tensor * dst);
+ 
+@@ -27,6 +30,18 @@ size_t ggml_cpu_iqp_scratch_size(const struct ggml_tensor * dst);
+ void ggml_compute_forward_mul_mat_iqp(const struct ggml_compute_params * params, struct ggml_tensor * dst);
+ 
+ // one expert: expert_rows points at its row of the matrix_rows table of (i1, i2) int32 pairs, panels at the base of the per thread panel scratches
++// Measurement-only direct raw IQ2_XXS selected-expert rows; no panel scratch.
++void ggml_compute_forward_mul_mat_id_raw_iq2(const struct ggml_compute_params * params,
++                                             struct ggml_tensor *               dst,
++                                             int64_t                            cur_a,
++                                             const int32_t *                    expert_rows);
++
++// Exact packed-IQ2_XXS four-output-row fused dot path; no decoded panel.
++void ggml_compute_forward_mul_mat_id_fused_iq2(const struct ggml_compute_params * params,
++                                               struct ggml_tensor *               dst,
++                                               int64_t                            cur_a,
++                                               const int32_t *                    expert_rows);
++
+ void ggml_compute_forward_mul_mat_id_iqp(const struct ggml_compute_params * params,
+                                          struct ggml_tensor *               dst,
+                                          int64_t                            cur_a,
+diff --git a/ggml/src/ggml-cpu/quants.h b/ggml/src/ggml-cpu/quants.h
+index 93ea7eeff..53654a581 100644
+--- a/ggml/src/ggml-cpu/quants.h
++++ b/ggml/src/ggml-cpu/quants.h
+@@ -59,6 +59,7 @@ void ggml_vec_dot_tq1_0_q8_K(int n, float * GGML_RESTRICT s, size_t bs, const vo
+ void ggml_vec_dot_tq2_0_q8_K(int n, float * GGML_RESTRICT s, size_t bs, const void * GGML_RESTRICT vx, size_t bx, const void * GGML_RESTRICT vy, size_t by, int nrc);
+ 
+ void ggml_vec_dot_iq2_xxs_q8_K(int n, float * GGML_RESTRICT s, size_t bs, const void * GGML_RESTRICT vx, size_t bx, const void * GGML_RESTRICT vy, size_t by, int nrc);
++void ggml_vec_dot_iq2_xxs_q8_K_4x1(int n, float * GGML_RESTRICT s, size_t row_stride, const void * GGML_RESTRICT vx, const void * GGML_RESTRICT vy);
+ void ggml_vec_dot_iq2_xs_q8_K (int n, float * GGML_RESTRICT s, size_t bs, const void * GGML_RESTRICT vx, size_t bx, const void * GGML_RESTRICT vy, size_t by, int nrc);
+ void ggml_vec_dot_iq2_s_q8_K  (int n, float * GGML_RESTRICT s, size_t bs, const void * GGML_RESTRICT vx, size_t bx, const void * GGML_RESTRICT vy, size_t by, int nrc);
+ void ggml_vec_dot_iq3_xxs_q8_K(int n, float * GGML_RESTRICT s, size_t bs, const void * GGML_RESTRICT vx, size_t bx, const void * GGML_RESTRICT vy, size_t by, int nrc);
+diff --git a/src/models/qwen35moe.cpp b/src/models/qwen35moe.cpp
+index bdf772625..c1d561589 100644
+--- a/src/models/qwen35moe.cpp
++++ b/src/models/qwen35moe.cpp
+@@ -93,8 +93,12 @@ void llama_model_qwen35moe::load_arch_tensors(llama_model_loader & ml) {
+ 
+         // Routed experts
+         layer.ffn_gate_inp  = create_tensor(tn(LLM_TENSOR_FFN_GATE_INP,  "weight", il), { n_embd, n_expert }, flags);
+-        layer.ffn_down_exps = create_tensor(tn(LLM_TENSOR_FFN_DOWN_EXPS, "weight", il), { n_ff_exp, n_embd, n_expert }, flags);
+-        create_tensor_gate_up_exps(layer, il, n_embd, n_ff_exp, n_expert, flags);
++        // Phase 3: route-selected expert payload is lazy; all other model
++        // tensors retain the normal loading policy.  Native math/routes
++        // are unchanged.
++        const int expert_flags = flags | TENSOR_READ_LAZY;
++        layer.ffn_down_exps = create_tensor(tn(LLM_TENSOR_FFN_DOWN_EXPS, "weight", il), { n_ff_exp, n_embd, n_expert }, expert_flags);
++        create_tensor_gate_up_exps(layer, il, n_embd, n_ff_exp, n_expert, expert_flags);
+ 
+         // Shared experts
+         layer.ffn_gate_inp_shexp = create_tensor(tn(LLM_TENSOR_FFN_GATE_INP_SHEXP, "weight", il), { n_embd }, flags);

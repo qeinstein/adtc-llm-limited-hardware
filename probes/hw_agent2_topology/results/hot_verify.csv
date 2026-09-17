@@ -1,0 +1,4 @@
+nth,part,aff,pool,barrier,trials,med_ns,p10_ns,p90_ns,min_ns,mean_ns,cv,bal,mig,vctxt,ictxt,minflt,majflt,maxdiff,nbad
+1,row,free,hot,futex,40,3640085,3314557,9308527,3210708,5753960,1.7670,1.000,0,0,16,0,0,0.000000,0
+4,row,free,hot,spin,30,1125235,995158,5049283,965463,1681244,0.8006,1.381,0,0,3,0,0,0.000000,0
+4,expert,pin,hot,spin,30,985284,941649,3778777,933029,1505112,0.6712,1.264,0,0,17,0,0,0.000000,0

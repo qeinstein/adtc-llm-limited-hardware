@@ -1,0 +1,6 @@
+per_token_ms: quant_x=28.192 gate=35.518 up=32.999 silu_mul=7.747 quant_z=5.988 down=30.760 wacc=7.666 kernel_sum=148.870 evict=610.969 wall=760.765
+checksum=000e53ec3972d4fa ysum_last=0.090763
+per_token_ms: quant_x=25.038 gate=29.900 up=29.040 silu_mul=9.655 quant_z=7.270 down=26.648 wacc=9.398 kernel_sum=136.949 evict=589.532 wall=727.439
+checksum=000e53ec3972d4fa ysum_last=0.090763
+per_token_ms: quant_x=21.761 gate=41.276 up=39.080 silu_mul=10.681 quant_z=7.951 down=33.998 wacc=8.695 kernel_sum=163.443 evict=743.628 wall=908.245
+checksum=000e53ec3972d4fa ysum_last=0.090763

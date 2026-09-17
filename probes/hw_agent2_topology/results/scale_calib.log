@@ -1,0 +1,7 @@
+nth=1 part=row aff=free pool=stream bar=spin ncpu=4 trials=30 med=3.599ms p10=3.291 p90=4.640 min=3.198 cv=0.206 bal=1.000 mig=0 ctxt=0/4 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+nth=2 part=row aff=free pool=stream bar=spin ncpu=4 trials=30 med=1.902ms p10=1.781 p90=2.510 min=1.768 cv=0.194 bal=1.058 mig=0 ctxt=0/0 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+nth=3 part=row aff=free pool=stream bar=spin ncpu=4 trials=30 med=1.291ms p10=1.194 p90=1.636 min=1.182 cv=0.225 bal=1.046 mig=0 ctxt=0/4 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+nth=4 part=row aff=free pool=stream bar=spin ncpu=4 trials=30 med=1.034ms p10=0.967 p90=3.318 min=0.957 cv=0.762 bal=1.273 mig=0 ctxt=0/0 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+nth=2 part=expert aff=pin pool=stream bar=spin ncpu=4 trials=30 med=1.849ms p10=1.597 p90=2.363 min=1.585 cv=0.206 bal=1.048 mig=0 ctxt=0/21 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+nth=3 part=expert aff=pin pool=stream bar=spin ncpu=4 trials=30 med=1.412ms p10=1.337 p90=1.611 min=1.306 cv=0.293 bal=1.567 mig=0 ctxt=0/19 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550
+nth=4 part=expert aff=pin pool=stream bar=spin ncpu=4 trials=30 med=1.029ms p10=0.946 p90=3.957 min=0.943 cv=0.728 bal=1.264 mig=0 ctxt=0/15 minflt=0 maxdiff=0 nbad=0 y0=-0.000608 ylast=-0.000550

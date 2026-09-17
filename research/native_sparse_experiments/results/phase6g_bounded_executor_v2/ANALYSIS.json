@@ -1,0 +1,44 @@
+{
+  "schema": "native-sparse-bounded-executor/v2",
+  "cache_capacity_bytes": 2000000000,
+  "slot_bytes": 876544,
+  "slots": 2281,
+  "reserved_bytes": 1999396864,
+  "control": {
+    "mean_tok_s": 4.0,
+    "sample_tok_s": [3.9, 4.1, 4.0],
+    "ms_per_token": 250.0,
+    "peak_rss_mib": 10539.5703125
+  },
+  "bounded": {
+    "mean_tok_s": 2.933333333333333,
+    "sample_tok_s": [2.9, 2.9, 3.0],
+    "ms_per_token": 340.90909090909093,
+    "peak_rss_mib": 3517.51171875,
+    "peak_anon_mib": 2446.5703125,
+    "peak_file_mib": 1070.94140625,
+    "requests": 89280,
+    "hits": 79981,
+    "misses": 9299,
+    "evictions": 7018,
+    "operational_hit_rate": 0.8958445340501792,
+    "fresh_read_bytes": 8150982656,
+    "fresh_mb_per_requested_decode_token": 127.359104,
+    "fresh_mib_per_requested_decode_token": 121.4591064453125,
+    "read_ns_samples": [11420729986, 10964873126, 10972082366],
+    "mean_read_seconds": 11.119228492666666,
+    "approx_read_bandwidth_mb_s": 733.044,
+    "logged_read_calls": 83691,
+    "inferred_actual_pread_calls": 27897
+  },
+  "correctness": {
+    "all_repetitions_deterministic_within_arms": true,
+    "control_vs_bounded_route_equal": false,
+    "first_route_event_mismatch": 225,
+    "bounded_response_hash": "5804c970f14ce9902178660a5262689f2ffb3518619336403244933d85cafca1",
+    "established_exact_control_hash": "a3c3c73a067cbb5fab9e68bd7d06c03d3c488e74467d33c40fae339836006c8c",
+    "valid_exact_result": false,
+    "reason": "v2 disabled IQP in the bounded arm"
+  },
+  "interpretation": "real bounded-storage/RSS result, not yet exact model result"
+}

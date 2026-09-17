@@ -1,0 +1,56 @@
+{
+  "schema": "native-sparse-bounded-executor/v3",
+  "hypothesis": "Explicit pread-backed global-LRU storage can feed exact IQP routed experts under a 4 GiB process budget.",
+  "control": {
+    "sample_tok_s": [4.1, 4.1, 4.0],
+    "mean_tok_s": 4.066666666666666,
+    "median_tok_s": 4.1,
+    "ms_per_token": 245.9016393442623,
+    "peak_rss_mib": 10537.1015625
+  },
+  "bounded_exact_iqp": {
+    "sample_tok_s": [3.0, 3.0, 3.0],
+    "mean_tok_s": 3.0,
+    "median_tok_s": 3.0,
+    "ms_per_token": 333.3333333333333,
+    "peak_rss_mib": 3517.4609375,
+    "peak_rss_gib": 3.4350204467773438,
+    "peak_rss_anon_mib": 2446.578125,
+    "peak_rss_file_mib": 1070.8828125
+  },
+  "throughput_delta_fraction": -0.2622950819672131,
+  "cache": {
+    "capacity_bytes": 2000000000,
+    "slot_bytes": 876544,
+    "slot_count": 2281,
+    "reserved_bytes": 1999396864,
+    "requests": 89280,
+    "hits": 80005,
+    "misses": 9275,
+    "hit_rate": 0.8961133512544803,
+    "evictions": 6994,
+    "logged_read_calls": 83475,
+    "inferred_pread_calls": 27825,
+    "read_bytes_per_repetition": 8129945600,
+    "fresh_decimal_mb_per_64_decode_tokens": 8129.9456,
+    "fresh_mib_per_64_decode_tokens": 7753.3203125,
+    "fresh_decimal_mb_per_token": 127.0304,
+    "fresh_mib_per_token": 121.1456298828125,
+    "read_ns_samples": [9492174609, 9461120508, 9391437813],
+    "read_interval_mean_sec": 9.44824431,
+    "read_bandwidth_decimal_mb_s": 860.4715683944884,
+    "read_bandwidth_mib_s": 820.6096347756275,
+    "read_wall_fraction_estimate": 0.44288645203125
+  },
+  "correctness": {
+    "route_files_byte_identical_control_vs_bounded": true,
+    "all_repetitions_route_identical": true,
+    "all_response_hashes_equal": true,
+    "response_hash": "5804c970f14ce9902178660a5262689f2ffb3518619336403244933d85cafca1",
+    "native_k": 8,
+    "layers": 40,
+    "weights_or_routes_changed": false,
+    "quality_result": "same-run deterministic smoke equivalence only"
+  },
+  "decision": "Exact bounded global-LRU storage is demonstrated below 4 GiB; serialized pread plus existing CPU execution remains too slow for the throughput target."
+}

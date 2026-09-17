@@ -1,0 +1,28 @@
+{
+  "schema": "native-sparse-amdahl-analysis/v2",
+  "control": {"tok_s": 4.732635, "ms_per_token": 211.29877964389817,
+               "samples_tok_s": [4.81477, 4.86413, 4.51901]},
+  "routed_expert_removed": {"tok_s": 8.174069, "ms_per_token": 122.33809134716138,
+                             "wall_saved_ms": 88.96068829673679,
+                             "wall_fraction": 0.4210184670572269},
+  "lm_head_removed": {"tok_s": 5.384943, "ms_per_token": 185.70298701397581,
+                       "wall_saved_ms": 25.595792629922357,
+                       "wall_fraction": 0.1211355440531126},
+  "additive_two_component_bound": {"ms_per_token": 96.74229871723902,
+                                   "tok_s": 10.336740115332868,
+                                   "independently_measured": false},
+  "summed_work_fraction": {
+    "routed_moe": 0.47443,
+    "attention_matmul": 0.24756,
+    "other_matmul": 0.06711,
+    "gated_delta_net": 0.05114,
+    "shared_expert": 0.03808,
+    "router": 0.02252,
+    "other_ops": 0.07408,
+    "full_attention": 0.00268,
+    "normalization": 0.00082
+  },
+  "correctness": {"exact_control_hash": "a3c3c73a067cbb5fab9e68bd7d06c03d3c488e74467d33c40fae339836006c8c",
+                  "native_k": 8, "layers": 40, "model_or_routes_changed": false},
+  "decision": "target_attention_projection_matmul_next; retain_exact_expert_and_output_controls"
+}

@@ -1,0 +1,40 @@
+{
+  "schema": "native-sparse-bounded-cache-budget/v1",
+  "model": "Qwen3.5-35B-A3B IQ2_XXS",
+  "measured_non_moe_floor_mib": 1612.9,
+  "reserve_mib": 256,
+  "bundle_bytes": 876544,
+  "bundle_alignment": 4096,
+  "targets": [
+    {
+      "total_mib": 4096,
+      "bytes_available_after_floor_and_reserve": 2335283609.6,
+      "slot_count": 2664,
+      "cache_bytes": 2335113216,
+      "cache_mib": 2226.9375,
+      "unused_budget_bytes": 170393.6,
+      "trace_lru_fresh_bytes_per_token": 97525047.6521739,
+      "trace_lru_hit_rate": 0.6523097826086957
+    },
+    {
+      "total_mib": 3072,
+      "bytes_available_after_floor_and_reserve": 1261541785.6,
+      "slot_count": 1439,
+      "cache_bytes": 1261346816,
+      "cache_mib": 1202.9140625,
+      "unused_budget_bytes": 194969.6,
+      "trace_lru_fresh_bytes_per_token": 110520765.2173913,
+      "trace_lru_hit_rate": 0.6059782608695652
+    },
+    {
+      "total_mib": 2560,
+      "bytes_available_after_floor_and_reserve": 724670873.6,
+      "slot_count": 826,
+      "cache_bytes": 724025344,
+      "cache_mib": 690.484375,
+      "unused_budget_bytes": 645529.6,
+      "trace_lru_fresh_bytes_per_token": 141657132.52173913,
+      "trace_lru_hit_rate": 0.49497282608695653
+    }
+  ]
+}

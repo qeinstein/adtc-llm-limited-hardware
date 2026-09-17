@@ -1,0 +1,38 @@
+
+
+Loading model... |-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/ 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b1-3057bb66c
+model      : /tmp/native-sparse-selective-q4-quality-v1/Qwen3.5-35B-A3B-selective-attn-Q4_K.gguf
+ftype      : Q5_K - Medium
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> MCQ. Malaria is commonly transmitted to people by the bite of an infected: A) female Anopheles mosquito B) housefly C) tick only D) freshwater fish. Reply at the end as FINAL: one letter.
+
+[Start thinking]
+
+Thinking Process:
+
+1.  **Analyze the Request:** The user wants me to answer a multiple-choice question (MCQ) about the transmission of malaria. I need to select the correct option and reply with "FINAL: [one
+
+[ Prompt: 8.7 t/s | Generation: 3.1 t/s ]
+
+
+Exiting...

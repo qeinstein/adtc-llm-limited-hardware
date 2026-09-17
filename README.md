@@ -109,6 +109,28 @@ torchrun --standalone --nproc_per_node=2 scripts/train_falcon_submission_v1.py
 └── model/                   # weights land here (git-ignored)
 ```
 
+## Experimental native-sparse research track
+
+The `research/experimental-massive` branch separately investigates exact
+native top-8 CPU inference for **Qwen3.5-35B-A3B IQ2_XXS**. This is research
+infrastructure, not the shipped 0.6B product path above. The current exact
+frontier is approximately **5.196 tok/s at 10.53 GiB resident**, **3.2 tok/s
+at 3,517.7 MiB with a bounded expert cache**, and **2.867 tok/s at 2,301.2
+MiB**. Native routing, K=8, selected experts, and weights remain unchanged.
+
+The bounded cache has demonstrated exact inference below 4 GiB, 3 GiB, and
+2.5 GiB. Its current logical fresh-expert traffic is **127.03 MB/token**.
+Staged asynchronous reads reduced bounded process elapsed time by 7.86% but
+did not improve decoded throughput. A fixed worker-pool follow-up was measured
+and killed because it increased readiness contention. A selective Q4 dense
+projection challenger reached 4.5 tok/s resident, but its quality gate and
+additional bounded-RSS cost remain unresolved; it is not promoted to the
+canonical frontier.
+
+See the [native-sparse research notebook](research/native_sparse_experiments/README.md),
+the [machine-readable frontier](research/native_sparse_experiments/frontier.json),
+and the [latest worker-pool report](research/native_sparse_experiments/results/phase7b_worker_pool_v1/EXPERIMENT.md).
+
 ---
 
 ## Status & honesty

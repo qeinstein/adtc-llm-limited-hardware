@@ -1,0 +1,5 @@
+q8expert_bytes=3342336 q8cache_8exp_MB=25.50 q8cache_16exp_MB=51.00
+transcode8_ms_med=40.633 iq2_gemv8_ms_med=3.389 q8_gemv8_ms_med=3.198
+q8gemv_vs_iq2gemv=1.060x transcode_vs_iq2gemv=11.99x
+maxabsdiff=0.000099 maxreldiff=13.013653 ck_iq2=872c72f7ad8d92e8 ck_q8=9e45f2c9fc80a488 bitwise=DIFFER
+overlap: fg_gemv_ms=3.702 bg_transcode_ms=40.409 hidden=NO

@@ -1,0 +1,29 @@
+{
+  "schema": "native-sparse-dense-repack/v3",
+  "control": {
+    "label": "dense_no_repack",
+    "sample_tok_s": [4.1, 4.2, 4.2],
+    "mean_tok_s": 4.166666666666667,
+    "median_tok_s": 4.2,
+    "ms_per_token": 240.0,
+    "peak_rss_mib": 10430.66796875
+  },
+  "repack": {
+    "label": "dense_repack",
+    "sample_tok_s": [4.2, 4.2, 4.2],
+    "mean_tok_s": 4.2,
+    "median_tok_s": 4.2,
+    "ms_per_token": 238.09523809523807,
+    "peak_rss_mib": 10538.18359375
+  },
+  "throughput_delta_fraction": 0.008000000000000036,
+  "rss_delta_mib": 107.515625,
+  "correctness": {
+    "no_repack_matches_control": true,
+    "repack_matches_control": true,
+    "hash": "a3c3c73a067cbb5fab9e68bd7d06c03d3c488e74467d33c40fae339836006c8c",
+    "native_k": 8,
+    "router_or_weights_changed": false
+  },
+  "decision": "standard Q5_K repack is not a material dense optimization for this workload"
+}

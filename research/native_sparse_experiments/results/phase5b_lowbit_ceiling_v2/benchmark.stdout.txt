@@ -1,0 +1,4 @@
+schema=lowbit-ceiling/v2 experts=8 repeats=80
+shape=512x2048 original_seconds=0.102149609 custom_seconds=0.152292558 lut_w2_seconds=0.621173171 gather_w2_seconds=0.413062934 original_gmacs=6.569664 custom_gmacs=4.406575 lut_w2_gmacs=1.080357 gather_w2_gmacs=1.624664 original_bytes=2162688 custom_bytes=2293760 custom_overhead_pct=6.061 w2_bytes=2097152
+shape=2048x512 original_seconds=0.108053113 custom_seconds=0.158684496 lut_w2_seconds=0.625457378 gather_w2_seconds=0.409928758 original_gmacs=6.210729 custom_gmacs=4.229075 lut_w2_gmacs=1.072957 gather_w2_gmacs=1.637086 original_bytes=2162688 custom_bytes=2293760 custom_overhead_pct=6.061 w2_bytes=2097152
+checksum=261803089280

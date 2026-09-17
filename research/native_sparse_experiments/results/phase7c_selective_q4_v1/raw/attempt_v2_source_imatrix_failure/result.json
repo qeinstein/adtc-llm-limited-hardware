@@ -1,0 +1,83 @@
+{
+  "schema": "native-sparse-selective-q4/v1",
+  "status": "failed",
+  "hypothesis": "Measured dominant Q5_K attention/GDN projections may benefit from a genuinely lower-bit Q4_K arithmetic path enough to move whole-runtime throughput.",
+  "started_unix": 1789324381.7115042,
+  "research_source": {
+    "base_commit": "ff24614",
+    "script_sha256": "14750c74610d217ae4d247b7e1f55e8ef6e54c4623e2d22b272ec04c9b4ab348"
+  },
+  "challenger": {
+    "pattern": "attn_(qkv|gate|q|k|v|output)\\.weight=q4_k",
+    "target_type": "Q4_K",
+    "unmatched_tensor_policy": "copy source GGML type",
+    "allow_requantize": true
+  },
+  "benchmark": {
+    "n_prompt": 0,
+    "n_gen": 64,
+    "repeats": 3,
+    "threads": 4,
+    "poll": 0,
+    "load_mode": "mmap",
+    "lazy_mode": "off",
+    "gpu_layers": 0,
+    "affinity": "inherited",
+    "repack": false
+  },
+  "model": {},
+  "hardware": {
+    "platform": "Linux-6.12.90+-x86_64-with-glibc2.35",
+    "python": "3.12.13",
+    "cpu_count": 4,
+    "allowed_cpu_ids": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           46 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               GenuineIntel\nModel name:                              Intel(R) Xeon(R) CPU @ 2.20GHz\nCPU family:                              6\nModel:                                   79\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                0\nBogoMIPS:                                4400.40\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc cpuid tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch pti ssbd ibrs ibpb stibp fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm rdseed adx smap xsaveopt arat md_clear arch_capabilities\nHypervisor vendor:                       KVM\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                512 KiB (2 instances)\nL3 cache:                                55 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Indirect target selection: Mitigation; Aligned branch/return thunks\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Mitigation; PTE Inversion\nVulnerability Mds:                       Mitigation; Clear CPU buffers; SMT Host state unknown\nVulnerability Meltdown:                  Mitigation; PTI\nVulnerability Mmio stale data:           Vulnerable: Clear CPU buffers attempted, no microcode; SMT Host state unknown\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Mitigation; IBRS\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; IBRS; IBPB conditional; STIBP conditional; RSB filling; PBRSB-eIBRS Not affected; BHI SW loop, KVM SW loop\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Mitigation; Clear CPU buffers; SMT Host state unknown\nVulnerability Vmscape:                   Not affected\n"
+  },
+  "runs": [],
+  "correctness": {},
+  "quality": {
+    "status": "initial deterministic smoke only"
+  },
+  "build": {
+    "commit": "3057bb66c86c46d5781e50e85462a760ba7d1feb",
+    "source_head": "3057bb66c86c46d5781e50e85462a760ba7d1feb",
+    "patch": {
+      "description": "selective-only requantizer: unmatched tensors keep source type",
+      "sha256": "25f665a8f63fd46a7a71ef1df2e9b87440f0f3765c06f893f97a5efb95f5f084"
+    },
+    "configure": [
+      "cmake",
+      "-S",
+      "/tmp/native-sparse-selective-q4-v1/llama.cpp",
+      "-B",
+      "/tmp/native-sparse-selective-q4-v1/llama.cpp/build-native",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DBUILD_SHARED_LIBS=OFF",
+      "-DGGML_NATIVE=ON",
+      "-DGGML_CUDA=OFF",
+      "-DGGML_METAL=OFF",
+      "-DGGML_VULKAN=OFF",
+      "-DLLAMA_CURL=OFF"
+    ],
+    "build": [
+      "cmake",
+      "--build",
+      "/tmp/native-sparse-selective-q4-v1/llama.cpp/build-native",
+      "--config",
+      "Release",
+      "-j4",
+      "--target",
+      "llama-bench",
+      "llama-cli",
+      "llama-quantize"
+    ],
+    "compiler": "c++ (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0"
+  },
+  "error": "RuntimeError('command exited 1: /tmp/native-sparse-selective-q4-v1/llama.cpp/build-native/bin/llama-quantize --allow-requantize --tensor-type attn_(qkv|gate|q|k|v|output)\\\\.weight=q4_k /tmp/native-sparse-selective-q4-v1/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf /tmp/native-sparse-selective-q4-v1/Qwen3.5-35B-A3B-selective-attn-Q4_K.gguf Q5_K_M 4')",
+  "finished_unix": 1789324937.1110232
+}

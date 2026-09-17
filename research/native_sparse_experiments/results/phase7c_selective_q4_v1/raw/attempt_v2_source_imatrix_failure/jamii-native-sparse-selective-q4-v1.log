@@ -1,0 +1,67 @@
+[{"stream_name":"stdout","time":1.030571958,"data":"+ git clone --filter=blob:none https://github.com/ggml-org/llama.cpp.git /tmp/native-sparse-selective-q4-v1/llama.cpp\n"}
+,{"stream_name":"stdout","time":9.643783272,"data":"+ git fetch --depth 1 origin 3057bb66c86c46d5781e50e85462a760ba7d1feb\n"}
+,{"stream_name":"stdout","time":10.690537919,"data":"+ git checkout --detach 3057bb66c86c46d5781e50e85462a760ba7d1feb\n"}
+,{"stream_name":"stdout","time":11.893564293,"data":"+ git rev-parse HEAD\n"}
+,{"stream_name":"stdout","time":11.904719926,"data":"+ cmake -S /tmp/native-sparse-selective-q4-v1/llama.cpp -B /tmp/native-sparse-selective-q4-v1/llama.cpp/build-native -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DGGML_NATIVE=ON -DGGML_CUDA=OFF -DGGML_METAL=OFF -DGGML_VULKAN=OFF -DLLAMA_CURL=OFF\n"}
+,{"stream_name":"stdout","time":14.9806542,"data":"+ cmake --build /tmp/native-sparse-selective-q4-v1/llama.cpp/build-native --config Release -j4 --target llama-bench llama-cli llama-quantize\n"}
+,{"stream_name":"stdout","time":380.381298882,"data":"+ /tmp/native-sparse-selective-q4-v1/llama.cpp/build-native/bin/llama-cli --version\n"}
+,{"stream_name":"stdout","time":380.398376045,"data":"+ c++ --version\n"}
+,{"stream_name":"stdout","time":380.400498017,"data":"+ curl -L --fail --retry 5 --retry-delay 5 -C - -o /tmp/native-sparse-selective-q4-v1/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf https://huggingface.co/unsloth/Qwen3.5-35B-A3B-GGUF/resolve/bc014a17be43adabd7066b7a86075ff935c6a4e2/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf\n"}
+,{"stream_name":"stdout","time":556.025667555,"data":"+ /tmp/native-sparse-selective-q4-v1/llama.cpp/build-native/bin/llama-quantize --allow-requantize --tensor-type attn_(qkv|gate|q|k|v|output)\\.weight=q4_k /tmp/native-sparse-selective-q4-v1/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf /tmp/native-sparse-selective-q4-v1/Qwen3.5-35B-A3B-selective-attn-Q4_K.gguf Q5_K_M 4\n"}
+,{"stream_name":"stdout","time":556.397468305,"data":"             qwen35moe.rope.freq_base f32              = 10000000.000000\n"}
+,{"stream_name":"stdout","time":556.397512383,"data":"llama_model_loader: - kv  24: qwen35moe.attention.layer_norm_rms_epsilon f32              = 0.000001\n"}
+,{"stream_name":"stdout","time":556.397519408,"data":"llama_model_loader: - kv  25:                     qwen35moe.expert_count u32              = 256\n"}
+,{"stream_name":"stdout","time":556.397524741,"data":"llama_model_loader: - kv  26:                qwen35moe.expert_used_count u32              = 8\n"}
+,{"stream_name":"stdout","time":556.397530308,"data":"llama_model_loader: - kv  27:             qwen35moe.attention.key_length u32              = 256\n"}
+,{"stream_name":"stdout","time":556.397536017,"data":"llama_model_loader: - kv  28:           qwen35moe.attention.value_length u32              = 256\n"}
+,{"stream_name":"stdout","time":556.397541574,"data":"llama_model_loader: - kv  29:       qwen35moe.expert_feed_forward_length u32              = 512\n"}
+,{"stream_name":"stdout","time":556.39754669,"data":"llama_model_loader: - kv  30: qwen35moe.expert_shared_feed_forward_length u32              = 512\n"}
+,{"stream_name":"stdout","time":556.397552202,"data":"llama_model_loader: - kv  31:                  qwen35moe.ssm.conv_kernel u32              = 4\n"}
+,{"stream_name":"stdout","time":556.397557096,"data":"llama_model_loader: - kv  32:                   qwen35moe.ssm.state_size u32              = 128\n"}
+,{"stream_name":"stdout","time":556.397562174,"data":"llama_model_loader: - kv  33:                  qwen35moe.ssm.group_count u32              = 16\n"}
+,{"stream_name":"stdout","time":556.397567443,"data":"llama_model_loader: - kv  34:               qwen35moe.ssm.time_step_rank u32              = 32\n"}
+,{"stream_name":"stdout","time":556.397572337,"data":"llama_model_loader: - kv  35:                   qwen35moe.ssm.inner_size u32              = 4096\n"}
+,{"stream_name":"stdout","time":556.397596021,"data":"llama_model_loader: - kv  36:          qwen35moe.full_attention_interval u32              = 4\n"}
+,{"stream_name":"stdout","time":556.39759915,"data":"llama_model_loader: - kv  37:             qwen35moe.rope.dimension_count u32              = 64\n"}
+,{"stream_name":"stdout","time":556.397601924,"data":"llama_model_loader: - kv  38:                       tokenizer.ggml.model str              = gpt2\n"}
+,{"stream_name":"stdout","time":556.397604606,"data":"llama_model_loader: - kv  39:                         tokenizer.ggml.pre str              = qwen35\n"}
+,{"stream_name":"stdout","time":556.397619961,"data":"llama_model_loader: - kv  40:                      tokenizer.ggml.tokens arr[str,248320]  = [\"!\", \"\\\"\", \"#\", \"$\", \"%\", \"\u0026\", \"'\", ...\n"}
+,{"stream_name":"stdout","time":556.397623995,"data":"llama_model_loader: - kv  41:                  tokenizer.ggml.token_type arr[i32,248320]  = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...\n"}
+,{"stream_name":"stdout","time":556.397626682,"data":"llama_model_loader: - kv  42:                      tokenizer.ggml.merges arr[str,247587]  = [\"Ġ Ġ\", \"ĠĠ ĠĠ\", \"i n\", \"Ġ t\",...\n"}
+,{"stream_name":"stdout","time":556.397632075,"data":"llama_model_loader: - kv  43:                tokenizer.ggml.eos_token_id u32              = 248046\n"}
+,{"stream_name":"stdout","time":556.397634732,"data":"llama_model_loader: - kv  44:            tokenizer.ggml.padding_token_id u32              = 248055\n"}
+,{"stream_name":"stdout","time":556.397637764,"data":"llama_model_loader: - kv  45:                    tokenizer.chat_template str              = {%- set image_count = namespace(value...\n"}
+,{"stream_name":"stdout","time":556.397640573,"data":"llama_model_loader: - kv  46:               general.quantization_version u32              = 2\n"}
+,{"stream_name":"stdout","time":556.397643444,"data":"llama_model_loader: - kv  47:                          general.file_type u32              = 19\n"}
+,{"stream_name":"stdout","time":556.397646056,"data":"llama_model_loader: - kv  48:                      quantize.imatrix.file str              = Qwen3.5-35B-A3B-GGUF/imatrix_unsloth....\n"}
+,{"stream_name":"stdout","time":556.397648694,"data":"llama_model_loader: - kv  49:                   quantize.imatrix.dataset str              = unsloth_calibration_Qwen3.5-35B-A3B.txt\n"}
+,{"stream_name":"stdout","time":556.397651347,"data":"llama_model_loader: - kv  50:             quantize.imatrix.entries_count u32              = 510\n"}
+,{"stream_name":"stdout","time":556.397654488,"data":"llama_model_loader: - kv  51:              quantize.imatrix.chunks_count u32              = 76\n"}
+,{"stream_name":"stdout","time":556.397658183,"data":"llama_model_loader: - type  f32:  301 tensors\n"}
+,{"stream_name":"stdout","time":556.397661934,"data":"llama_model_loader: - type q8_0:   60 tensors\n"}
+,{"stream_name":"stdout","time":556.397665577,"data":"llama_model_loader: - type q4_K:    2 tensors\n"}
+,{"stream_name":"stdout","time":556.397669309,"data":"llama_model_loader: - type q5_K:  180 tensors\n"}
+,{"stream_name":"stdout","time":556.397673031,"data":"llama_model_loader: - type q6_K:   70 tensors\n"}
+,{"stream_name":"stdout","time":556.397676464,"data":"llama_model_loader: - type iq2_xxs:   80 tensors\n"}
+,{"stream_name":"stdout","time":556.397680227,"data":"llama_model_loader: - type iq2_s:   40 tensors\n"}
+,{"stream_name":"stdout","time":556.397683958,"data":"llama_tensor_get_type: blk.0.attn_gate.weight               - applying manual override: q5_K -\u003e q4_K\n"}
+,{"stream_name":"stdout","time":556.397687824,"data":"llama_tensor_get_type: blk.0.attn_qkv.weight                - applying manual override: q5_K -\u003e q4_K\n"}
+,{"stream_name":"stdout","time":556.397696775,"data":"\n"}
+,{"stream_name":"stdout","time":556.397700875,"data":"============================================================================\n"}
+,{"stream_name":"stdout","time":556.397704872,"data":" ERROR: this quantization requires an importance matrix!\n"}
+,{"stream_name":"stdout","time":556.397708845,"data":"        - offending tensor: blk.0.ffn_down_exps.weight\n"}
+,{"stream_name":"stdout","time":556.397712706,"data":"        - target type: iq2_s\n"}
+,{"stream_name":"stdout","time":556.397716543,"data":"============================================================================\n"}
+,{"stream_name":"stdout","time":556.397720451,"data":"\n"}
+,{"stream_name":"stdout","time":556.397724048,"data":"llama_model_quantize: failed to quantize: this quantization requires an imatrix!\n"}
+,{"stream_name":"stdout","time":556.397728282,"data":"llama_quantize: failed to quantize model from '/tmp/native-sparse-selective-q4-v1/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf'\n"}
+,{"stream_name":"stdout","time":556.397732648,"data":"\n"}
+,{"stream_name":"stdout","time":556.397737125,"data":"ERROR: command exited 1: /tmp/native-sparse-selective-q4-v1/llama.cpp/build-native/bin/llama-quantize --allow-requantize --tensor-type attn_(qkv|gate|q|k|v|output)\\.weight=q4_k /tmp/native-sparse-selective-q4-v1/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf /tmp/native-sparse-selective-q4-v1/Qwen3.5-35B-A3B-selective-attn-Q4_K.gguf Q5_K_M 4\n"}
+,{"stream_name":"stdout","time":556.401627096,"data":"{\"status\": \"failed\", \"runs\": [], \"correctness\": {}, \"analysis\": null, \"error\": \"RuntimeError('command exited 1: /tmp/native-sparse-selective-q4-v1/llama.cpp/build-native/bin/llama-quantize --allow-requantize --tensor-type attn_(qkv|gate|q|k|v|output)\\\\\\\\.weight=q4_k /tmp/native-sparse-selective-q4-v1/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf /tmp/native-sparse-selective-q4-v1/Qwen3.5-35B-A3B-selective-attn-Q4_K.gguf Q5_K_M 4')\"}\n"}
+,{"stream_name":"stderr","time":559.474087956,"data":"/usr/local/lib/python3.12/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":559.474168696,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":559.951250286,"data":"/usr/local/lib/python3.12/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":559.951301278,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":561.856562525,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":563.709406179,"data":"[NbConvertApp] Writing 358864 bytes to __results__.html\n"}
+]

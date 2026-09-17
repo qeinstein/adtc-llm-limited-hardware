@@ -1,0 +1,22 @@
+[{"stream_name":"stdout","time":0.954014702,"data":"+ git clone --filter=blob:none https://github.com/ggml-org/llama.cpp.git /tmp/native-sparse-single-row-avx2/llama.cpp\n"}
+,{"stream_name":"stdout","time":11.038930041,"data":"+ git fetch --depth 1 origin 3057bb66c86c46d5781e50e85462a760ba7d1feb\n"}
+,{"stream_name":"stdout","time":12.153163272,"data":"+ git checkout --detach 3057bb66c86c46d5781e50e85462a760ba7d1feb\n"}
+,{"stream_name":"stdout","time":13.255656891,"data":"+ git rev-parse HEAD\n"}
+,{"stream_name":"stdout","time":13.270023068,"data":"+ git diff -- ggml/src/ggml-cpu/ggml-cpu.c ggml/src/ggml-cpu/iqp.cpp ggml/src/ggml-cpu/iqp.h\n"}
+,{"stream_name":"stdout","time":13.28176247,"data":"+ cmake -S /tmp/native-sparse-single-row-avx2/llama.cpp -B /tmp/native-sparse-single-row-avx2/llama.cpp/build-native -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DGGML_NATIVE=ON -DGGML_CUDA=OFF -DGGML_METAL=OFF -DGGML_VULKAN=OFF -DLLAMA_CURL=OFF\n"}
+,{"stream_name":"stdout","time":16.349055427,"data":"+ cmake --build /tmp/native-sparse-single-row-avx2/llama.cpp/build-native --config Release -j4 --target llama-bench llama-cli\n"}
+,{"stream_name":"stdout","time":381.241087916,"data":"+ /tmp/native-sparse-single-row-avx2/llama.cpp/build-native/bin/llama-cli --version\n"}
+,{"stream_name":"stdout","time":381.256754982,"data":"+ c++ --version\n"}
+,{"stream_name":"stdout","time":381.25905751,"data":"+ curl -L --fail --retry 5 --retry-delay 5 -C - -o /tmp/native-sparse-single-row-avx2/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf https://huggingface.co/unsloth/Qwen3.5-35B-A3B-GGUF/resolve/bc014a17be43adabd7066b7a86075ff935c6a4e2/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf\n"}
+,{"stream_name":"stdout","time":527.90388565,"data":"+ /tmp/native-sparse-single-row-avx2/llama.cpp/build-native/bin/llama-bench -m /tmp/native-sparse-single-row-avx2/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf -p 0 -n 64 -r 3 -t 4 -ngl 0 -lm mmap -lzm off --poll 0 --output json ENV {'GGML_SINGLE_ROW_IQP': '0', 'GGML_RAW_SINGLE_ROW_IQ2': '0'}\n"}
+,{"stream_name":"stdout","time":577.346552483,"data":"+ /tmp/native-sparse-single-row-avx2/llama.cpp/build-native/bin/llama-bench -m /tmp/native-sparse-single-row-avx2/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf -p 0 -n 64 -r 3 -t 4 -ngl 0 -lm mmap -lzm off --poll 0 --output json ENV {'GGML_SINGLE_ROW_IQP': '1'}\n"}
+,{"stream_name":"stdout","time":657.019549056,"data":"+ /tmp/native-sparse-single-row-avx2/llama.cpp/build-native/bin/llama-bench -m /tmp/native-sparse-single-row-avx2/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf -p 0 -n 64 -r 3 -t 4 -ngl 0 -lm mmap -lzm off --poll 0 --output json ENV {'GGML_RAW_SINGLE_ROW_IQ2': '1'}\n"}
+,{"stream_name":"stdout","time":705.52391388,"data":"+ /tmp/native-sparse-single-row-avx2/llama.cpp/build-native/bin/llama-bench -m /tmp/native-sparse-single-row-avx2/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf -p 0 -n 64 -r 3 -t 4 -ngl 0 -lm mmap -lzm off --poll 0 --output json ENV {'GGML_SINGLE_ROW_IQP': '1'}\n"}
+,{"stream_name":"stdout","time":882.389005011,"data":"{\"status\": \"ok\", \"runs\": [[\"generic_control\", 4.167714], [\"single_row_iqp\", 2.497754], [\"raw_single_row_iq2\", 4.184263], [\"single_row_iqp_profile\", 2.433065]], \"correctness\": true, \"error\": null}\n"}
+,{"stream_name":"stderr","time":885.388922522,"data":"/usr/local/lib/python3.12/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":885.38908105,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":885.805871146,"data":"/usr/local/lib/python3.12/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":885.805910826,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":887.503919734,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":889.296809212,"data":"[NbConvertApp] Writing 399636 bytes to __results__.html\n"}
+]

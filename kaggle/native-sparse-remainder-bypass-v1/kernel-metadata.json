@@ -1,0 +1,13 @@
+{
+  "id": "toheebogunade/jamii-native-sparse-remainder-bypass-v1",
+  "title": "Jamii native sparse remainder bypass v1",
+  "code_file": "remainder_bypass.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_internet": true,
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": []
+}

@@ -1,0 +1,25 @@
+[{"stream_name":"stdout","time":1.063864844,"data":"+ lscpu\n"}
+,{"stream_name":"stdout","time":1.1220435,"data":"+ df -h /tmp\n"}
+,{"stream_name":"stdout","time":1.141055228,"data":"+ git clone --filter=blob:none --no-checkout https://github.com/ikawrakow/ik_llama.cpp.git /tmp/native-sparse-ik-llama-v3/ik_llama.cpp\n"}
+,{"stream_name":"stdout","time":2.549276158,"data":"+ git fetch --depth 1 origin 3bb386eb68ffee0a5dc7db21da0735d594929eeb\n"}
+,{"stream_name":"stdout","time":3.234147743,"data":"+ git checkout --detach 3bb386eb68ffee0a5dc7db21da0735d594929eeb\n"}
+,{"stream_name":"stdout","time":9.44542422,"data":"+ git rev-parse HEAD\n"}
+,{"stream_name":"stdout","time":9.450308865,"data":"+ git status --short --branch\n"}
+,{"stream_name":"stdout","time":9.644240559,"data":"+ git log --oneline --decorate -5\n"}
+,{"stream_name":"stdout","time":14.291138903,"data":"+ cmake -S /tmp/native-sparse-ik-llama-v3/ik_llama.cpp -B /tmp/native-sparse-ik-llama-v3/ik_llama.cpp/build-native -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DGGML_NATIVE=ON -DGGML_CUDA=OFF -DGGML_METAL=OFF -DGGML_VULKAN=OFF -DLLAMA_CURL=OFF\n"}
+,{"stream_name":"stdout","time":16.786500267,"data":"+ cmake --build /tmp/native-sparse-ik-llama-v3/ik_llama.cpp/build-native --config Release -j4 --target llama-cli\n"}
+,{"stream_name":"stdout","time":618.132690206,"data":"+ cmake --build /tmp/native-sparse-ik-llama-v3/ik_llama.cpp/build-native --config Release -j4 --target llama-bench\n"}
+,{"stream_name":"stdout","time":632.517660349,"data":"+ /tmp/native-sparse-ik-llama-v3/ik_llama.cpp/build-native/bin/llama-cli --version\n"}
+,{"stream_name":"stdout","time":632.528804152,"data":"+ /tmp/native-sparse-ik-llama-v3/ik_llama.cpp/build-native/bin/llama-cli --help\n"}
+,{"stream_name":"stdout","time":632.534366906,"data":"+ /tmp/native-sparse-ik-llama-v3/ik_llama.cpp/build-native/bin/llama-bench --help\n"}
+,{"stream_name":"stdout","time":632.547328115,"data":"+ c++ --version\n"}
+,{"stream_name":"stdout","time":632.54947757,"data":"+ cmake --version\n"}
+,{"stream_name":"stdout","time":632.738199009,"data":"+ curl -L --fail --retry 5 --retry-delay 5 -C - -o /tmp/native-sparse-ik-llama-v3/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf https://huggingface.co/unsloth/Qwen3.5-35B-A3B-GGUF/resolve/bc014a17be43adabd7066b7a86075ff935c6a4e2/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf\n"}
+,{"stream_name":"stdout","time":959.883553421,"data":"{\"status\": \"ok\", \"blockers\": [], \"smoke_equal\": true, \"bench_status\": \"ok\", \"error\": null}\n"}
+,{"stream_name":"stderr","time":962.98603003,"data":"/usr/local/lib/python3.12/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":962.986127057,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":963.487125675,"data":"/usr/local/lib/python3.12/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":963.487157936,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":965.650177072,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":967.436410248,"data":"[NbConvertApp] Writing 398749 bytes to __results__.html\n"}
+]

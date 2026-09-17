@@ -1,0 +1,6395 @@
+{
+  "schema": "native-sparse-phase8b-storage-model/v1",
+  "status": "complete",
+  "decision_rule": "kill any branch whose optimistic end-to-end gain is below 5%; no model/runtime was run",
+  "trace": {
+    "path": "research/native_sparse_experiments/results/phase5e_route_corpus_v1/route_corpus.jsonl",
+    "sha256": "17c2861f95cd56eeb8f79d6a6ab5462b809f46e10e5d02f53558a760357fd0d0",
+    "tokens": 2016,
+    "requests": 645120,
+    "unique_prompt_ids": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31
+    ],
+    "plane_bytes": [
+      270336,
+      270336,
+      335872
+    ],
+    "bundle_bytes": 876544
+  },
+  "baseline": {
+    "runtime": "phase6g_bounded_executor_v3 exact IQP",
+    "tok_s": 3.0,
+    "ms_per_token": 333.3333333333333,
+    "io_wall_fraction": 0.44288645203125,
+    "io_bytes_are_logical_not_physical": true
+  },
+  "reuse": {
+    "cold_first_touches": 9577,
+    "reuses": 635543,
+    "p50_distinct_distance": 842,
+    "p95_distinct_distance": 5310
+  },
+  "coaccess_graph": {
+    "train_rows": 1008,
+    "test_rows": 1008,
+    "layouts": {
+      "identity": {
+        "train_coaccess_edge_mass": 1128960,
+        "train_adjacent_edge_mass": 9387,
+        "train_adjacent_edge_fraction": 0.008314732142857143
+      },
+      "train_popularity": {
+        "train_coaccess_edge_mass": 1128960,
+        "train_adjacent_edge_mass": 37822,
+        "train_adjacent_edge_fraction": 0.03350162981859411
+      },
+      "train_greedy_coaccess": {
+        "train_coaccess_edge_mass": 1128960,
+        "train_adjacent_edge_mass": 114150,
+        "train_adjacent_edge_fraction": 0.1011107568027211
+      }
+    },
+    "top_train_pairs": {
+      "0": [
+        {
+          "experts": [
+            112,
+            238
+          ],
+          "count": 110
+        },
+        {
+          "experts": [
+            200,
+            238
+          ],
+          "count": 101
+        },
+        {
+          "experts": [
+            30,
+            238
+          ],
+          "count": 100
+        },
+        {
+          "experts": [
+            43,
+            238
+          ],
+          "count": 93
+        },
+        {
+          "experts": [
+            112,
+            200
+          ],
+          "count": 90
+        },
+        {
+          "experts": [
+            175,
+            199
+          ],
+          "count": 84
+        },
+        {
+          "experts": [
+            35,
+            101
+          ],
+          "count": 84
+        },
+        {
+          "experts": [
+            30,
+            193
+          ],
+          "count": 82
+        }
+      ],
+      "1": [
+        {
+          "experts": [
+            62,
+            146
+          ],
+          "count": 151
+        },
+        {
+          "experts": [
+            146,
+            233
+          ],
+          "count": 127
+        },
+        {
+          "experts": [
+            62,
+            155
+          ],
+          "count": 122
+        },
+        {
+          "experts": [
+            146,
+            155
+          ],
+          "count": 120
+        },
+        {
+          "experts": [
+            146,
+            182
+          ],
+          "count": 111
+        },
+        {
+          "experts": [
+            146,
+            217
+          ],
+          "count": 109
+        },
+        {
+          "experts": [
+            182,
+            217
+          ],
+          "count": 104
+        },
+        {
+          "experts": [
+            140,
+            182
+          ],
+          "count": 104
+        }
+      ],
+      "2": [
+        {
+          "experts": [
+            11,
+            49
+          ],
+          "count": 155
+        },
+        {
+          "experts": [
+            11,
+            217
+          ],
+          "count": 118
+        },
+        {
+          "experts": [
+            20,
+            43
+          ],
+          "count": 112
+        },
+        {
+          "experts": [
+            49,
+            60
+          ],
+          "count": 107
+        },
+        {
+          "experts": [
+            49,
+            217
+          ],
+          "count": 106
+        },
+        {
+          "experts": [
+            20,
+            49
+          ],
+          "count": 104
+        },
+        {
+          "experts": [
+            11,
+            43
+          ],
+          "count": 103
+        },
+        {
+          "experts": [
+            43,
+            167
+          ],
+          "count": 102
+        }
+      ],
+      "3": [
+        {
+          "experts": [
+            199,
+            236
+          ],
+          "count": 166
+        },
+        {
+          "experts": [
+            117,
+            119
+          ],
+          "count": 159
+        },
+        {
+          "experts": [
+            117,
+            233
+          ],
+          "count": 146
+        },
+        {
+          "experts": [
+            25,
+            199
+          ],
+          "count": 144
+        },
+        {
+          "experts": [
+            199,
+            225
+          ],
+          "count": 140
+        },
+        {
+          "experts": [
+            226,
+            236
+          ],
+          "count": 129
+        },
+        {
+          "experts": [
+            117,
+            236
+          ],
+          "count": 118
+        },
+        {
+          "experts": [
+            117,
+            199
+          ],
+          "count": 114
+        }
+      ],
+      "4": [
+        {
+          "experts": [
+            154,
+            192
+          ],
+          "count": 216
+        },
+        {
+          "experts": [
+            154,
+            195
+          ],
+          "count": 178
+        },
+        {
+          "experts": [
+            54,
+            154
+          ],
+          "count": 155
+        },
+        {
+          "experts": [
+            15,
+            102
+          ],
+          "count": 134
+        },
+        {
+          "experts": [
+            102,
+            142
+          ],
+          "count": 131
+        },
+        {
+          "experts": [
+            58,
+            154
+          ],
+          "count": 125
+        },
+        {
+          "experts": [
+            54,
+            58
+          ],
+          "count": 117
+        },
+        {
+          "experts": [
+            142,
+            222
+          ],
+          "count": 116
+        }
+      ],
+      "5": [
+        {
+          "experts": [
+            110,
+            158
+          ],
+          "count": 238
+        },
+        {
+          "experts": [
+            43,
+            188
+          ],
+          "count": 191
+        },
+        {
+          "experts": [
+            158,
+            218
+          ],
+          "count": 184
+        },
+        {
+          "experts": [
+            43,
+            158
+          ],
+          "count": 178
+        },
+        {
+          "experts": [
+            158,
+            188
+          ],
+          "count": 147
+        },
+        {
+          "experts": [
+            90,
+            188
+          ],
+          "count": 143
+        },
+        {
+          "experts": [
+            43,
+            110
+          ],
+          "count": 138
+        },
+        {
+          "experts": [
+            43,
+            90
+          ],
+          "count": 135
+        }
+      ],
+      "6": [
+        {
+          "experts": [
+            79,
+            196
+          ],
+          "count": 244
+        },
+        {
+          "experts": [
+            14,
+            79
+          ],
+          "count": 189
+        },
+        {
+          "experts": [
+            65,
+            79
+          ],
+          "count": 179
+        },
+        {
+          "experts": [
+            79,
+            157
+          ],
+          "count": 177
+        },
+        {
+          "experts": [
+            79,
+            138
+          ],
+          "count": 175
+        },
+        {
+          "experts": [
+            65,
+            138
+          ],
+          "count": 153
+        },
+        {
+          "experts": [
+            138,
+            196
+          ],
+          "count": 137
+        },
+        {
+          "experts": [
+            14,
+            157
+          ],
+          "count": 137
+        }
+      ],
+      "7": [
+        {
+          "experts": [
+            35,
+            171
+          ],
+          "count": 352
+        },
+        {
+          "experts": [
+            35,
+            229
+          ],
+          "count": 238
+        },
+        {
+          "experts": [
+            35,
+            36
+          ],
+          "count": 223
+        },
+        {
+          "experts": [
+            14,
+            35
+          ],
+          "count": 220
+        },
+        {
+          "experts": [
+            35,
+            147
+          ],
+          "count": 184
+        },
+        {
+          "experts": [
+            35,
+            76
+          ],
+          "count": 183
+        },
+        {
+          "experts": [
+            14,
+            229
+          ],
+          "count": 181
+        },
+        {
+          "experts": [
+            36,
+            171
+          ],
+          "count": 177
+        }
+      ],
+      "8": [
+        {
+          "experts": [
+            110,
+            239
+          ],
+          "count": 236
+        },
+        {
+          "experts": [
+            61,
+            224
+          ],
+          "count": 214
+        },
+        {
+          "experts": [
+            61,
+            110
+          ],
+          "count": 193
+        },
+        {
+          "experts": [
+            110,
+            116
+          ],
+          "count": 192
+        },
+        {
+          "experts": [
+            110,
+            173
+          ],
+          "count": 176
+        },
+        {
+          "experts": [
+            116,
+            239
+          ],
+          "count": 173
+        },
+        {
+          "experts": [
+            110,
+            224
+          ],
+          "count": 172
+        },
+        {
+          "experts": [
+            77,
+            110
+          ],
+          "count": 167
+        }
+      ],
+      "9": [
+        {
+          "experts": [
+            161,
+            197
+          ],
+          "count": 257
+        },
+        {
+          "experts": [
+            59,
+            197
+          ],
+          "count": 203
+        },
+        {
+          "experts": [
+            47,
+            161
+          ],
+          "count": 186
+        },
+        {
+          "experts": [
+            59,
+            161
+          ],
+          "count": 170
+        },
+        {
+          "experts": [
+            47,
+            197
+          ],
+          "count": 157
+        },
+        {
+          "experts": [
+            197,
+            198
+          ],
+          "count": 154
+        },
+        {
+          "experts": [
+            161,
+            198
+          ],
+          "count": 146
+        },
+        {
+          "experts": [
+            47,
+            198
+          ],
+          "count": 143
+        }
+      ],
+      "10": [
+        {
+          "experts": [
+            196,
+            247
+          ],
+          "count": 276
+        },
+        {
+          "experts": [
+            157,
+            196
+          ],
+          "count": 189
+        },
+        {
+          "experts": [
+            243,
+            247
+          ],
+          "count": 185
+        },
+        {
+          "experts": [
+            196,
+            234
+          ],
+          "count": 171
+        },
+        {
+          "experts": [
+            185,
+            196
+          ],
+          "count": 166
+        },
+        {
+          "experts": [
+            157,
+            247
+          ],
+          "count": 165
+        },
+        {
+          "experts": [
+            185,
+            247
+          ],
+          "count": 161
+        },
+        {
+          "experts": [
+            196,
+            243
+          ],
+          "count": 159
+        }
+      ],
+      "11": [
+        {
+          "experts": [
+            107,
+            160
+          ],
+          "count": 158
+        },
+        {
+          "experts": [
+            107,
+            111
+          ],
+          "count": 152
+        },
+        {
+          "experts": [
+            42,
+            111
+          ],
+          "count": 144
+        },
+        {
+          "experts": [
+            111,
+            160
+          ],
+          "count": 138
+        },
+        {
+          "experts": [
+            128,
+            160
+          ],
+          "count": 135
+        },
+        {
+          "experts": [
+            111,
+            239
+          ],
+          "count": 124
+        },
+        {
+          "experts": [
+            47,
+            111
+          ],
+          "count": 122
+        },
+        {
+          "experts": [
+            3,
+            111
+          ],
+          "count": 121
+        }
+      ],
+      "12": [
+        {
+          "experts": [
+            39,
+            193
+          ],
+          "count": 249
+        },
+        {
+          "experts": [
+            60,
+            193
+          ],
+          "count": 220
+        },
+        {
+          "experts": [
+            193,
+            199
+          ],
+          "count": 190
+        },
+        {
+          "experts": [
+            193,
+            220
+          ],
+          "count": 190
+        },
+        {
+          "experts": [
+            60,
+            199
+          ],
+          "count": 168
+        },
+        {
+          "experts": [
+            39,
+            60
+          ],
+          "count": 168
+        },
+        {
+          "experts": [
+            39,
+            220
+          ],
+          "count": 157
+        },
+        {
+          "experts": [
+            60,
+            220
+          ],
+          "count": 154
+        }
+      ],
+      "13": [
+        {
+          "experts": [
+            44,
+            154
+          ],
+          "count": 242
+        },
+        {
+          "experts": [
+            44,
+            182
+          ],
+          "count": 194
+        },
+        {
+          "experts": [
+            44,
+            202
+          ],
+          "count": 189
+        },
+        {
+          "experts": [
+            154,
+            182
+          ],
+          "count": 183
+        },
+        {
+          "experts": [
+            134,
+            154
+          ],
+          "count": 174
+        },
+        {
+          "experts": [
+            44,
+            134
+          ],
+          "count": 171
+        },
+        {
+          "experts": [
+            154,
+            202
+          ],
+          "count": 170
+        },
+        {
+          "experts": [
+            66,
+            154
+          ],
+          "count": 167
+        }
+      ],
+      "14": [
+        {
+          "experts": [
+            125,
+            189
+          ],
+          "count": 275
+        },
+        {
+          "experts": [
+            52,
+            167
+          ],
+          "count": 262
+        },
+        {
+          "experts": [
+            52,
+            125
+          ],
+          "count": 243
+        },
+        {
+          "experts": [
+            28,
+            189
+          ],
+          "count": 219
+        },
+        {
+          "experts": [
+            125,
+            137
+          ],
+          "count": 199
+        },
+        {
+          "experts": [
+            52,
+            189
+          ],
+          "count": 180
+        },
+        {
+          "experts": [
+            125,
+            167
+          ],
+          "count": 179
+        },
+        {
+          "experts": [
+            28,
+            125
+          ],
+          "count": 175
+        }
+      ],
+      "15": [
+        {
+          "experts": [
+            54,
+            250
+          ],
+          "count": 223
+        },
+        {
+          "experts": [
+            162,
+            165
+          ],
+          "count": 204
+        },
+        {
+          "experts": [
+            165,
+            242
+          ],
+          "count": 198
+        },
+        {
+          "experts": [
+            165,
+            250
+          ],
+          "count": 188
+        },
+        {
+          "experts": [
+            58,
+            165
+          ],
+          "count": 181
+        },
+        {
+          "experts": [
+            54,
+            165
+          ],
+          "count": 132
+        },
+        {
+          "experts": [
+            88,
+            250
+          ],
+          "count": 131
+        },
+        {
+          "experts": [
+            242,
+            250
+          ],
+          "count": 127
+        }
+      ],
+      "16": [
+        {
+          "experts": [
+            170,
+            252
+          ],
+          "count": 284
+        },
+        {
+          "experts": [
+            28,
+            252
+          ],
+          "count": 269
+        },
+        {
+          "experts": [
+            205,
+            252
+          ],
+          "count": 150
+        },
+        {
+          "experts": [
+            28,
+            170
+          ],
+          "count": 147
+        },
+        {
+          "experts": [
+            28,
+            205
+          ],
+          "count": 139
+        },
+        {
+          "experts": [
+            0,
+            170
+          ],
+          "count": 122
+        },
+        {
+          "experts": [
+            0,
+            252
+          ],
+          "count": 121
+        },
+        {
+          "experts": [
+            46,
+            252
+          ],
+          "count": 113
+        }
+      ],
+      "17": [
+        {
+          "experts": [
+            35,
+            64
+          ],
+          "count": 257
+        },
+        {
+          "experts": [
+            64,
+            115
+          ],
+          "count": 207
+        },
+        {
+          "experts": [
+            20,
+            64
+          ],
+          "count": 192
+        },
+        {
+          "experts": [
+            35,
+            115
+          ],
+          "count": 185
+        },
+        {
+          "experts": [
+            20,
+            35
+          ],
+          "count": 164
+        },
+        {
+          "experts": [
+            64,
+            242
+          ],
+          "count": 143
+        },
+        {
+          "experts": [
+            20,
+            142
+          ],
+          "count": 141
+        },
+        {
+          "experts": [
+            35,
+            242
+          ],
+          "count": 135
+        }
+      ],
+      "18": [
+        {
+          "experts": [
+            177,
+            203
+          ],
+          "count": 194
+        },
+        {
+          "experts": [
+            155,
+            203
+          ],
+          "count": 175
+        },
+        {
+          "experts": [
+            197,
+            203
+          ],
+          "count": 148
+        },
+        {
+          "experts": [
+            43,
+            203
+          ],
+          "count": 147
+        },
+        {
+          "experts": [
+            134,
+            203
+          ],
+          "count": 147
+        },
+        {
+          "experts": [
+            201,
+            203
+          ],
+          "count": 145
+        },
+        {
+          "experts": [
+            13,
+            192
+          ],
+          "count": 143
+        },
+        {
+          "experts": [
+            43,
+            134
+          ],
+          "count": 135
+        }
+      ],
+      "19": [
+        {
+          "experts": [
+            30,
+            226
+          ],
+          "count": 180
+        },
+        {
+          "experts": [
+            30,
+            228
+          ],
+          "count": 144
+        },
+        {
+          "experts": [
+            20,
+            109
+          ],
+          "count": 138
+        },
+        {
+          "experts": [
+            30,
+            75
+          ],
+          "count": 134
+        },
+        {
+          "experts": [
+            201,
+            226
+          ],
+          "count": 130
+        },
+        {
+          "experts": [
+            30,
+            201
+          ],
+          "count": 122
+        },
+        {
+          "experts": [
+            226,
+            228
+          ],
+          "count": 121
+        },
+        {
+          "experts": [
+            75,
+            226
+          ],
+          "count": 121
+        }
+      ],
+      "20": [
+        {
+          "experts": [
+            116,
+            239
+          ],
+          "count": 173
+        },
+        {
+          "experts": [
+            116,
+            237
+          ],
+          "count": 162
+        },
+        {
+          "experts": [
+            237,
+            239
+          ],
+          "count": 151
+        },
+        {
+          "experts": [
+            224,
+            237
+          ],
+          "count": 146
+        },
+        {
+          "experts": [
+            56,
+            116
+          ],
+          "count": 141
+        },
+        {
+          "experts": [
+            66,
+            67
+          ],
+          "count": 139
+        },
+        {
+          "experts": [
+            61,
+            224
+          ],
+          "count": 135
+        },
+        {
+          "experts": [
+            56,
+            224
+          ],
+          "count": 117
+        }
+      ],
+      "21": [
+        {
+          "experts": [
+            47,
+            197
+          ],
+          "count": 202
+        },
+        {
+          "experts": [
+            47,
+            198
+          ],
+          "count": 128
+        },
+        {
+          "experts": [
+            2,
+            197
+          ],
+          "count": 124
+        },
+        {
+          "experts": [
+            16,
+            152
+          ],
+          "count": 118
+        },
+        {
+          "experts": [
+            47,
+            203
+          ],
+          "count": 104
+        },
+        {
+          "experts": [
+            47,
+            73
+          ],
+          "count": 93
+        },
+        {
+          "experts": [
+            16,
+            167
+          ],
+          "count": 88
+        },
+        {
+          "experts": [
+            47,
+            156
+          ],
+          "count": 85
+        }
+      ],
+      "22": [
+        {
+          "experts": [
+            157,
+            247
+          ],
+          "count": 202
+        },
+        {
+          "experts": [
+            243,
+            247
+          ],
+          "count": 181
+        },
+        {
+          "experts": [
+            157,
+            243
+          ],
+          "count": 124
+        },
+        {
+          "experts": [
+            185,
+            243
+          ],
+          "count": 108
+        },
+        {
+          "experts": [
+            65,
+            247
+          ],
+          "count": 100
+        },
+        {
+          "experts": [
+            58,
+            160
+          ],
+          "count": 100
+        },
+        {
+          "experts": [
+            65,
+            243
+          ],
+          "count": 99
+        },
+        {
+          "experts": [
+            176,
+            243
+          ],
+          "count": 95
+        }
+      ],
+      "23": [
+        {
+          "experts": [
+            107,
+            111
+          ],
+          "count": 149
+        },
+        {
+          "experts": [
+            128,
+            206
+          ],
+          "count": 133
+        },
+        {
+          "experts": [
+            47,
+            107
+          ],
+          "count": 101
+        },
+        {
+          "experts": [
+            150,
+            160
+          ],
+          "count": 97
+        },
+        {
+          "experts": [
+            128,
+            160
+          ],
+          "count": 96
+        },
+        {
+          "experts": [
+            80,
+            111
+          ],
+          "count": 96
+        },
+        {
+          "experts": [
+            106,
+            107
+          ],
+          "count": 95
+        },
+        {
+          "experts": [
+            160,
+            206
+          ],
+          "count": 92
+        }
+      ],
+      "24": [
+        {
+          "experts": [
+            145,
+            199
+          ],
+          "count": 124
+        },
+        {
+          "experts": [
+            145,
+            220
+          ],
+          "count": 121
+        },
+        {
+          "experts": [
+            145,
+            193
+          ],
+          "count": 114
+        },
+        {
+          "experts": [
+            60,
+            145
+          ],
+          "count": 112
+        },
+        {
+          "experts": [
+            39,
+            145
+          ],
+          "count": 108
+        },
+        {
+          "experts": [
+            20,
+            50
+          ],
+          "count": 93
+        },
+        {
+          "experts": [
+            61,
+            123
+          ],
+          "count": 84
+        },
+        {
+          "experts": [
+            93,
+            145
+          ],
+          "count": 78
+        }
+      ],
+      "25": [
+        {
+          "experts": [
+            13,
+            210
+          ],
+          "count": 137
+        },
+        {
+          "experts": [
+            44,
+            182
+          ],
+          "count": 135
+        },
+        {
+          "experts": [
+            134,
+            182
+          ],
+          "count": 125
+        },
+        {
+          "experts": [
+            44,
+            202
+          ],
+          "count": 117
+        },
+        {
+          "experts": [
+            89,
+            202
+          ],
+          "count": 107
+        },
+        {
+          "experts": [
+            66,
+            202
+          ],
+          "count": 107
+        },
+        {
+          "experts": [
+            44,
+            89
+          ],
+          "count": 98
+        },
+        {
+          "experts": [
+            44,
+            134
+          ],
+          "count": 97
+        }
+      ],
+      "26": [
+        {
+          "experts": [
+            52,
+            137
+          ],
+          "count": 199
+        },
+        {
+          "experts": [
+            137,
+            189
+          ],
+          "count": 183
+        },
+        {
+          "experts": [
+            103,
+            137
+          ],
+          "count": 163
+        },
+        {
+          "experts": [
+            28,
+            137
+          ],
+          "count": 162
+        },
+        {
+          "experts": [
+            28,
+            189
+          ],
+          "count": 159
+        },
+        {
+          "experts": [
+            52,
+            167
+          ],
+          "count": 140
+        },
+        {
+          "experts": [
+            28,
+            52
+          ],
+          "count": 129
+        },
+        {
+          "experts": [
+            82,
+            221
+          ],
+          "count": 127
+        }
+      ],
+      "27": [
+        {
+          "experts": [
+            165,
+            242
+          ],
+          "count": 180
+        },
+        {
+          "experts": [
+            58,
+            242
+          ],
+          "count": 162
+        },
+        {
+          "experts": [
+            58,
+            165
+          ],
+          "count": 157
+        },
+        {
+          "experts": [
+            204,
+            242
+          ],
+          "count": 157
+        },
+        {
+          "experts": [
+            54,
+            250
+          ],
+          "count": 140
+        },
+        {
+          "experts": [
+            162,
+            165
+          ],
+          "count": 129
+        },
+        {
+          "experts": [
+            165,
+            181
+          ],
+          "count": 120
+        },
+        {
+          "experts": [
+            54,
+            204
+          ],
+          "count": 116
+        }
+      ],
+      "28": [
+        {
+          "experts": [
+            152,
+            252
+          ],
+          "count": 235
+        },
+        {
+          "experts": [
+            152,
+            163
+          ],
+          "count": 208
+        },
+        {
+          "experts": [
+            152,
+            170
+          ],
+          "count": 174
+        },
+        {
+          "experts": [
+            170,
+            252
+          ],
+          "count": 153
+        },
+        {
+          "experts": [
+            163,
+            252
+          ],
+          "count": 151
+        },
+        {
+          "experts": [
+            150,
+            152
+          ],
+          "count": 141
+        },
+        {
+          "experts": [
+            150,
+            163
+          ],
+          "count": 134
+        },
+        {
+          "experts": [
+            150,
+            252
+          ],
+          "count": 124
+        }
+      ],
+      "29": [
+        {
+          "experts": [
+            20,
+            248
+          ],
+          "count": 190
+        },
+        {
+          "experts": [
+            15,
+            20
+          ],
+          "count": 174
+        },
+        {
+          "experts": [
+            20,
+            241
+          ],
+          "count": 171
+        },
+        {
+          "experts": [
+            20,
+            87
+          ],
+          "count": 136
+        },
+        {
+          "experts": [
+            15,
+            241
+          ],
+          "count": 132
+        },
+        {
+          "experts": [
+            15,
+            248
+          ],
+          "count": 130
+        },
+        {
+          "experts": [
+            5,
+            20
+          ],
+          "count": 130
+        },
+        {
+          "experts": [
+            82,
+            154
+          ],
+          "count": 125
+        }
+      ],
+      "30": [
+        {
+          "experts": [
+            134,
+            226
+          ],
+          "count": 171
+        },
+        {
+          "experts": [
+            155,
+            226
+          ],
+          "count": 165
+        },
+        {
+          "experts": [
+            134,
+            155
+          ],
+          "count": 163
+        },
+        {
+          "experts": [
+            155,
+            203
+          ],
+          "count": 147
+        },
+        {
+          "experts": [
+            134,
+            203
+          ],
+          "count": 144
+        },
+        {
+          "experts": [
+            43,
+            134
+          ],
+          "count": 136
+        },
+        {
+          "experts": [
+            155,
+            201
+          ],
+          "count": 136
+        },
+        {
+          "experts": [
+            197,
+            226
+          ],
+          "count": 132
+        }
+      ],
+      "31": [
+        {
+          "experts": [
+            36,
+            75
+          ],
+          "count": 150
+        },
+        {
+          "experts": [
+            36,
+            167
+          ],
+          "count": 137
+        },
+        {
+          "experts": [
+            121,
+            201
+          ],
+          "count": 133
+        },
+        {
+          "experts": [
+            75,
+            201
+          ],
+          "count": 130
+        },
+        {
+          "experts": [
+            20,
+            75
+          ],
+          "count": 126
+        },
+        {
+          "experts": [
+            20,
+            36
+          ],
+          "count": 121
+        },
+        {
+          "experts": [
+            75,
+            167
+          ],
+          "count": 116
+        },
+        {
+          "experts": [
+            30,
+            226
+          ],
+          "count": 116
+        }
+      ],
+      "32": [
+        {
+          "experts": [
+            178,
+            223
+          ],
+          "count": 161
+        },
+        {
+          "experts": [
+            119,
+            223
+          ],
+          "count": 128
+        },
+        {
+          "experts": [
+            178,
+            206
+          ],
+          "count": 121
+        },
+        {
+          "experts": [
+            119,
+            178
+          ],
+          "count": 106
+        },
+        {
+          "experts": [
+            90,
+            112
+          ],
+          "count": 96
+        },
+        {
+          "experts": [
+            90,
+            119
+          ],
+          "count": 95
+        },
+        {
+          "experts": [
+            112,
+            150
+          ],
+          "count": 92
+        },
+        {
+          "experts": [
+            90,
+            223
+          ],
+          "count": 83
+        }
+      ],
+      "33": [
+        {
+          "experts": [
+            72,
+            74
+          ],
+          "count": 125
+        },
+        {
+          "experts": [
+            83,
+            93
+          ],
+          "count": 111
+        },
+        {
+          "experts": [
+            83,
+            231
+          ],
+          "count": 109
+        },
+        {
+          "experts": [
+            72,
+            127
+          ],
+          "count": 108
+        },
+        {
+          "experts": [
+            9,
+            72
+          ],
+          "count": 98
+        },
+        {
+          "experts": [
+            74,
+            83
+          ],
+          "count": 94
+        },
+        {
+          "experts": [
+            32,
+            74
+          ],
+          "count": 93
+        },
+        {
+          "experts": [
+            72,
+            83
+          ],
+          "count": 86
+        }
+      ],
+      "34": [
+        {
+          "experts": [
+            1,
+            116
+          ],
+          "count": 157
+        },
+        {
+          "experts": [
+            1,
+            85
+          ],
+          "count": 142
+        },
+        {
+          "experts": [
+            1,
+            186
+          ],
+          "count": 141
+        },
+        {
+          "experts": [
+            26,
+            85
+          ],
+          "count": 139
+        },
+        {
+          "experts": [
+            1,
+            82
+          ],
+          "count": 136
+        },
+        {
+          "experts": [
+            63,
+            105
+          ],
+          "count": 126
+        },
+        {
+          "experts": [
+            1,
+            26
+          ],
+          "count": 124
+        },
+        {
+          "experts": [
+            85,
+            186
+          ],
+          "count": 117
+        }
+      ],
+      "35": [
+        {
+          "experts": [
+            72,
+            84
+          ],
+          "count": 146
+        },
+        {
+          "experts": [
+            32,
+            88
+          ],
+          "count": 145
+        },
+        {
+          "experts": [
+            42,
+            84
+          ],
+          "count": 137
+        },
+        {
+          "experts": [
+            84,
+            174
+          ],
+          "count": 135
+        },
+        {
+          "experts": [
+            214,
+            244
+          ],
+          "count": 133
+        },
+        {
+          "experts": [
+            42,
+            72
+          ],
+          "count": 125
+        },
+        {
+          "experts": [
+            224,
+            244
+          ],
+          "count": 112
+        },
+        {
+          "experts": [
+            84,
+            86
+          ],
+          "count": 109
+        }
+      ],
+      "36": [
+        {
+          "experts": [
+            45,
+            221
+          ],
+          "count": 132
+        },
+        {
+          "experts": [
+            75,
+            221
+          ],
+          "count": 127
+        },
+        {
+          "experts": [
+            70,
+            203
+          ],
+          "count": 105
+        },
+        {
+          "experts": [
+            83,
+            221
+          ],
+          "count": 103
+        },
+        {
+          "experts": [
+            129,
+            198
+          ],
+          "count": 102
+        },
+        {
+          "experts": [
+            194,
+            214
+          ],
+          "count": 98
+        },
+        {
+          "experts": [
+            221,
+            222
+          ],
+          "count": 96
+        },
+        {
+          "experts": [
+            20,
+            221
+          ],
+          "count": 93
+        }
+      ],
+      "37": [
+        {
+          "experts": [
+            128,
+            140
+          ],
+          "count": 198
+        },
+        {
+          "experts": [
+            28,
+            48
+          ],
+          "count": 158
+        },
+        {
+          "experts": [
+            48,
+            58
+          ],
+          "count": 151
+        },
+        {
+          "experts": [
+            57,
+            58
+          ],
+          "count": 97
+        },
+        {
+          "experts": [
+            28,
+            58
+          ],
+          "count": 95
+        },
+        {
+          "experts": [
+            57,
+            147
+          ],
+          "count": 94
+        },
+        {
+          "experts": [
+            58,
+            140
+          ],
+          "count": 92
+        },
+        {
+          "experts": [
+            72,
+            88
+          ],
+          "count": 90
+        }
+      ],
+      "38": [
+        {
+          "experts": [
+            92,
+            148
+          ],
+          "count": 167
+        },
+        {
+          "experts": [
+            40,
+            227
+          ],
+          "count": 118
+        },
+        {
+          "experts": [
+            84,
+            92
+          ],
+          "count": 117
+        },
+        {
+          "experts": [
+            120,
+            209
+          ],
+          "count": 107
+        },
+        {
+          "experts": [
+            27,
+            148
+          ],
+          "count": 102
+        },
+        {
+          "experts": [
+            84,
+            97
+          ],
+          "count": 101
+        },
+        {
+          "experts": [
+            84,
+            148
+          ],
+          "count": 101
+        },
+        {
+          "experts": [
+            79,
+            84
+          ],
+          "count": 100
+        }
+      ],
+      "39": [
+        {
+          "experts": [
+            78,
+            242
+          ],
+          "count": 129
+        },
+        {
+          "experts": [
+            38,
+            78
+          ],
+          "count": 116
+        },
+        {
+          "experts": [
+            2,
+            189
+          ],
+          "count": 94
+        },
+        {
+          "experts": [
+            78,
+            189
+          ],
+          "count": 92
+        },
+        {
+          "experts": [
+            78,
+            243
+          ],
+          "count": 86
+        },
+        {
+          "experts": [
+            38,
+            243
+          ],
+          "count": 81
+        },
+        {
+          "experts": [
+            38,
+            69
+          ],
+          "count": 76
+        },
+        {
+          "experts": [
+            110,
+            243
+          ],
+          "count": 75
+        }
+      ]
+    }
+  },
+  "capacities": {
+    "2281": {
+      "baseline_bundle_lru": {
+        "capacity_bundles": 2281,
+        "capacity_bytes": 1999396864,
+        "requests": 645120,
+        "hits": 472883,
+        "misses": 172237,
+        "hit_rate": 0.7330155629960318,
+        "logical_fresh_bytes": 150973308928,
+        "logical_fresh_bytes_per_token": 74887554.03174603
+      },
+      "split_plane_global": {
+        "policy": "split_plane_variable_global_lru",
+        "capacity_bytes": 1999396864,
+        "requests": 1935360,
+        "hits": 1418649,
+        "misses": 516711,
+        "hit_rate": 0.7330155629960318,
+        "misses_by_plane": [
+          172237,
+          172237,
+          172237
+        ],
+        "fresh_bytes": 150973308928,
+        "fresh_bytes_per_token": 74887554.03174603,
+        "max_resident_bytes": 1999396864,
+        "byte_ratio_vs_bundle_lru": 1.0,
+        "optimistic_amdahl_gain": 0.0
+      },
+      "split_plane_partitioned": {
+        "policy": "split_plane_independent_lru",
+        "capacity_bytes": 1999396864,
+        "plane_slot_capacities": [
+          2272,
+          2301,
+          2272
+        ],
+        "plane_reserved_bytes": [
+          614203392,
+          622043136,
+          763101184
+        ],
+        "misses_by_plane": [
+          172835,
+          170619,
+          172835
+        ],
+        "fresh_bytes": 150898417664,
+        "fresh_bytes_per_token": 74850405.58730158,
+        "allocation_search": "all down slots; gate/up split +/-64 around equal",
+        "byte_ratio_vs_bundle_lru": 0.9995039436802984,
+        "optimistic_amdahl_gain": 0.00021974490065312935
+      },
+      "coaccess_layouts_all_trace": {
+        "identity": {
+          "None": {
+            "max_gap_unrequested_records": null,
+            "route_layer_sets_with_misses": 67283,
+            "logical_miss_bundles": 172237,
+            "logical_bytes": 150973308928,
+            "physical_range_count_by_plane": [
+              172237,
+              172237,
+              172237
+            ],
+            "physical_records_by_plane": [
+              172237,
+              172237,
+              172237
+            ],
+            "physical_bytes": 150973308928,
+            "physical_bytes_decimal_mb": 150973.308928,
+            "physical_bytes_mib": 143979.3671875,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.0,
+            "optimistic_amdahl_gain_from_bytes_only": 0.0
+          },
+          "0": {
+            "max_gap_unrequested_records": 0,
+            "route_layer_sets_with_misses": 67283,
+            "logical_miss_bundles": 172237,
+            "logical_bytes": 150973308928,
+            "physical_range_count_by_plane": [
+              170515,
+              170515,
+              170515
+            ],
+            "physical_records_by_plane": [
+              172237,
+              172237,
+              172237
+            ],
+            "physical_bytes": 150973308928,
+            "physical_bytes_decimal_mb": 150973.308928,
+            "physical_bytes_mib": 143979.3671875,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.009997851797232893,
+            "optimistic_amdahl_gain_from_bytes_only": 0.0
+          },
+          "1": {
+            "max_gap_unrequested_records": 1,
+            "route_layer_sets_with_misses": 67283,
+            "logical_miss_bundles": 172237,
+            "logical_bytes": 150973308928,
+            "physical_range_count_by_plane": [
+              168825,
+              168825,
+              168825
+            ],
+            "physical_records_by_plane": [
+              173927,
+              173927,
+              173927
+            ],
+            "physical_bytes": 152454668288,
+            "physical_bytes_decimal_mb": 152454.668288,
+            "physical_bytes_mib": 145392.1015625,
+            "amplification_vs_logical": 1.0098120612876444,
+            "range_reduction_vs_one_read_per_miss": 0.01980991308487723,
+            "optimistic_amdahl_gain_from_bytes_only": -0.0043268262292115445
+          },
+          "2": {
+            "max_gap_unrequested_records": 2,
+            "route_layer_sets_with_misses": 67283,
+            "logical_miss_bundles": 172237,
+            "logical_bytes": 150973308928,
+            "physical_range_count_by_plane": [
+              167222,
+              167222,
+              167222
+            ],
+            "physical_records_by_plane": [
+              177133,
+              177133,
+              177133
+            ],
+            "physical_bytes": 155264868352,
+            "physical_bytes_decimal_mb": 155264.868352,
+            "physical_bytes_mib": 148072.1171875,
+            "amplification_vs_logical": 1.0284259479670455,
+            "range_reduction_vs_one_read_per_miss": 0.02911685642457773,
+            "optimistic_amdahl_gain_from_bytes_only": -0.012432943110750716
+          },
+          "4": {
+            "max_gap_unrequested_records": 4,
+            "route_layer_sets_with_misses": 67283,
+            "logical_miss_bundles": 172237,
+            "logical_bytes": 150973308928,
+            "physical_range_count_by_plane": [
+              164193,
+              164193,
+              164193
+            ],
+            "physical_records_by_plane": [
+              187688,
+              187688,
+              187688
+            ],
+            "physical_bytes": 164516790272,
+            "physical_bytes_decimal_mb": 164516.790272,
+            "physical_bytes_mib": 156895.4375,
+            "amplification_vs_logical": 1.0897077863641378,
+            "range_reduction_vs_one_read_per_miss": 0.046703089347817306,
+            "optimistic_amdahl_gain_from_bytes_only": -0.03821217945319577
+          }
+        },
+        "train_popularity": {
+          "None": {
+            "max_gap_unrequested_records": null,
+            "route_layer_sets_with_misses": 67283,
+            "logical_miss_bundles": 172237,
+            "logical_bytes": 150973308928,
+            "physical_range_count_by_plane": [
+              172237,
+              172237,
+              172237
+            ],
+            "physical_records_by_plane": [
+              172237,
+              172237,
+              172237
+            ],
+            "physical_bytes": 150973308928,
+            "physical_bytes_decimal_mb": 150973.308928,
+            "physical_bytes_mib": 143979.3671875,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.0,
+            "optimistic_amdahl_gain_from_bytes_only": 0.0
+          },
+          "0": {
+            "max_gap_unrequested_records": 0,
+            "route_layer_sets_with_misses": 67283,
+            "logical_miss_bundles": 172237,
+            "logical_bytes": 150973308928,
+            "physical_range_count_by_plane": [
+              168473,
+              168473,
+              168473
+            ],
+            "physical_records_by_plane": [
+              172237,
+              172237,
+              172237
+            ],
+            "physical_bytes": 150973308928,
+            "physical_bytes_decimal_mb": 150973.308928,
+            "physical_bytes_mib": 143979.3671875,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.021853608690351134,
+            "optimistic_amdahl_gain_from_bytes_only": 0.0
+          },
+          "1": {
+            "max_gap_unrequested_records": 1,
+            "route_layer_sets_with_misses": 67283,
+            "logical_miss_bundles": 172237,
+            "logical_bytes": 150973308928,
+            "physical_range_count_by_plane": [
+              164900,
+              164900,
+              164900
+            ],
+            "physical_records_by_plane": [
+              175810,
+              175810,
+              175810
+            ],
+            "physical_bytes": 154105200640,
+            "physical_bytes_decimal_mb": 154105.20064,
+            "physical_bytes_mib": 146966.171875,
+            "amplification_vs_logical": 1.0207446715862445,
+            "range_reduction_vs_one_read_per_miss": 0.042598280276595624,
+            "optimistic_amdahl_gain_from_bytes_only": -0.009103891683038823
+          },
+          "2": {
+            "max_gap_unrequested_records": 2,
+            "route_layer_sets_with_misses": 67283,
+            "logical_miss_bundles": 172237,
+            "logical_bytes": 150973308928,
+            "physical_range_count_by_plane": [
+              161701,
+              161701,
+              161701
+            ],
+            "physical_records_by_plane": [
+              182208,
+              182208,
+              182208
+            ],
+            "physical_bytes": 159713329152,
+            "physical_bytes_decimal_mb": 159713.329152,
+            "physical_bytes_mib": 152314.5,
+            "amplification_vs_logical": 1.0578911615971016,
+            "range_reduction_vs_one_read_per_miss": 0.061171525282024186,
+            "optimistic_amdahl_gain_from_bytes_only": -0.02499827510944841
+          },
+          "4": {
+            "max_gap_unrequested_records": 4,
+            "route_layer_sets_with_misses": 67283,
+            "logical_miss_bundles": 172237,
+            "logical_bytes": 150973308928,
+            "physical_range_count_by_plane": [
+              155671,
+              155671,
+              155671
+            ],
+            "physical_records_by_plane": [
+              202981,
+              202981,
+              202981
+            ],
+            "physical_bytes": 177921777664,
+            "physical_bytes_decimal_mb": 177921.777664,
+            "physical_bytes_mib": 169679.4296875,
+            "amplification_vs_logical": 1.1784982320871822,
+            "range_reduction_vs_one_read_per_miss": 0.09618142443261324,
+            "optimistic_amdahl_gain_from_bytes_only": -0.07326270587917849
+          }
+        },
+        "train_greedy_coaccess": {
+          "None": {
+            "max_gap_unrequested_records": null,
+            "route_layer_sets_with_misses": 67283,
+            "logical_miss_bundles": 172237,
+            "logical_bytes": 150973308928,
+            "physical_range_count_by_plane": [
+              172237,
+              172237,
+              172237
+            ],
+            "physical_records_by_plane": [
+              172237,
+              172237,
+              172237
+            ],
+            "physical_bytes": 150973308928,
+            "physical_bytes_decimal_mb": 150973.308928,
+            "physical_bytes_mib": 143979.3671875,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.0,
+            "optimistic_amdahl_gain_from_bytes_only": 0.0
+          },
+          "0": {
+            "max_gap_unrequested_records": 0,
+            "route_layer_sets_with_misses": 67283,
+            "logical_miss_bundles": 172237,
+            "logical_bytes": 150973308928,
+            "physical_range_count_by_plane": [
+              145087,
+              145087,
+              145087
+            ],
+            "physical_records_by_plane": [
+              172237,
+              172237,
+              172237
+            ],
+            "physical_bytes": 150973308928,
+            "physical_bytes_decimal_mb": 150973.308928,
+            "physical_bytes_mib": 143979.3671875,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.15763163547902015,
+            "optimistic_amdahl_gain_from_bytes_only": 0.0
+          },
+          "1": {
+            "max_gap_unrequested_records": 1,
+            "route_layer_sets_with_misses": 67283,
+            "logical_miss_bundles": 172237,
+            "logical_bytes": 150973308928,
+            "physical_range_count_by_plane": [
+              139886,
+              139886,
+              139886
+            ],
+            "physical_records_by_plane": [
+              177438,
+              177438,
+              177438
+            ],
+            "physical_bytes": 155532214272,
+            "physical_bytes_decimal_mb": 155532.214272,
+            "physical_bytes_mib": 148327.078125,
+            "amplification_vs_logical": 1.030196763761561,
+            "range_reduction_vs_one_read_per_miss": 0.18782839924058126,
+            "optimistic_amdahl_gain_from_bytes_only": -0.013197241125783021
+          },
+          "2": {
+            "max_gap_unrequested_records": 2,
+            "route_layer_sets_with_misses": 67283,
+            "logical_miss_bundles": 172237,
+            "logical_bytes": 150973308928,
+            "physical_range_count_by_plane": [
+              137296,
+              137296,
+              137296
+            ],
+            "physical_records_by_plane": [
+              182618,
+              182618,
+              182618
+            ],
+            "physical_bytes": 160072712192,
+            "physical_bytes_decimal_mb": 160072.712192,
+            "physical_bytes_mib": 152657.234375,
+            "amplification_vs_logical": 1.0602716025012047,
+            "range_reduction_vs_one_read_per_miss": 0.2028658186104031,
+            "optimistic_amdahl_gain_from_bytes_only": -0.025999460217721926
+          },
+          "4": {
+            "max_gap_unrequested_records": 4,
+            "route_layer_sets_with_misses": 67283,
+            "logical_miss_bundles": 172237,
+            "logical_bytes": 150973308928,
+            "physical_range_count_by_plane": [
+              134102,
+              134102,
+              134102
+            ],
+            "physical_records_by_plane": [
+              193725,
+              193725,
+              193725
+            ],
+            "physical_bytes": 169808486400,
+            "physical_bytes_decimal_mb": 169808.4864,
+            "physical_bytes_mib": 161941.9921875,
+            "amplification_vs_logical": 1.1247583271886994,
+            "range_reduction_vs_one_read_per_miss": 0.2214100338487085,
+            "optimistic_amdahl_gain_from_bytes_only": -0.05236064945651597
+          }
+        }
+      },
+      "coaccess_layouts_odd_prompt_holdout": {
+        "identity": {
+          "None": {
+            "max_gap_unrequested_records": null,
+            "route_layer_sets_with_misses": 33596,
+            "logical_miss_bundles": 85914,
+            "logical_bytes": 75307401216,
+            "physical_range_count_by_plane": [
+              85914,
+              85914,
+              85914
+            ],
+            "physical_records_by_plane": [
+              85914,
+              85914,
+              85914
+            ],
+            "physical_bytes": 75307401216,
+            "physical_bytes_decimal_mb": 75307.401216,
+            "physical_bytes_mib": 71818.734375,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.0
+          },
+          "0": {
+            "max_gap_unrequested_records": 0,
+            "route_layer_sets_with_misses": 33596,
+            "logical_miss_bundles": 85914,
+            "logical_bytes": 75307401216,
+            "physical_range_count_by_plane": [
+              85045,
+              85045,
+              85045
+            ],
+            "physical_records_by_plane": [
+              85914,
+              85914,
+              85914
+            ],
+            "physical_bytes": 75307401216,
+            "physical_bytes_decimal_mb": 75307.401216,
+            "physical_bytes_mib": 71818.734375,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.010114765928719405
+          },
+          "1": {
+            "max_gap_unrequested_records": 1,
+            "route_layer_sets_with_misses": 33596,
+            "logical_miss_bundles": 85914,
+            "logical_bytes": 75307401216,
+            "physical_range_count_by_plane": [
+              84201,
+              84201,
+              84201
+            ],
+            "physical_records_by_plane": [
+              86758,
+              86758,
+              86758
+            ],
+            "physical_bytes": 76047204352,
+            "physical_bytes_decimal_mb": 76047.204352,
+            "physical_bytes_mib": 72524.265625,
+            "amplification_vs_logical": 1.0098237772656378,
+            "range_reduction_vs_one_read_per_miss": 0.019938543194357172
+          },
+          "2": {
+            "max_gap_unrequested_records": 2,
+            "route_layer_sets_with_misses": 33596,
+            "logical_miss_bundles": 85914,
+            "logical_bytes": 75307401216,
+            "physical_range_count_by_plane": [
+              83400,
+              83400,
+              83400
+            ],
+            "physical_records_by_plane": [
+              88360,
+              88360,
+              88360
+            ],
+            "physical_bytes": 77451427840,
+            "physical_bytes_decimal_mb": 77451.42784,
+            "physical_bytes_mib": 73863.4375,
+            "amplification_vs_logical": 1.0284703307959122,
+            "range_reduction_vs_one_read_per_miss": 0.029261819959494395
+          },
+          "4": {
+            "max_gap_unrequested_records": 4,
+            "route_layer_sets_with_misses": 33596,
+            "logical_miss_bundles": 85914,
+            "logical_bytes": 75307401216,
+            "physical_range_count_by_plane": [
+              81892,
+              81892,
+              81892
+            ],
+            "physical_records_by_plane": [
+              93613,
+              93613,
+              93613
+            ],
+            "physical_bytes": 82055913472,
+            "physical_bytes_decimal_mb": 82055.913472,
+            "physical_bytes_mib": 78254.6171875,
+            "amplification_vs_logical": 1.089612868682636,
+            "range_reduction_vs_one_read_per_miss": 0.04681425611658174
+          }
+        },
+        "train_popularity": {
+          "None": {
+            "max_gap_unrequested_records": null,
+            "route_layer_sets_with_misses": 33596,
+            "logical_miss_bundles": 85914,
+            "logical_bytes": 75307401216,
+            "physical_range_count_by_plane": [
+              85914,
+              85914,
+              85914
+            ],
+            "physical_records_by_plane": [
+              85914,
+              85914,
+              85914
+            ],
+            "physical_bytes": 75307401216,
+            "physical_bytes_decimal_mb": 75307.401216,
+            "physical_bytes_mib": 71818.734375,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.0
+          },
+          "0": {
+            "max_gap_unrequested_records": 0,
+            "route_layer_sets_with_misses": 33596,
+            "logical_miss_bundles": 85914,
+            "logical_bytes": 75307401216,
+            "physical_range_count_by_plane": [
+              84131,
+              84131,
+              84131
+            ],
+            "physical_records_by_plane": [
+              85914,
+              85914,
+              85914
+            ],
+            "physical_bytes": 75307401216,
+            "physical_bytes_decimal_mb": 75307.401216,
+            "physical_bytes_mib": 71818.734375,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.020753311450985912
+          },
+          "1": {
+            "max_gap_unrequested_records": 1,
+            "route_layer_sets_with_misses": 33596,
+            "logical_miss_bundles": 85914,
+            "logical_bytes": 75307401216,
+            "physical_range_count_by_plane": [
+              82485,
+              82485,
+              82485
+            ],
+            "physical_records_by_plane": [
+              87560,
+              87560,
+              87560
+            ],
+            "physical_bytes": 76750192640,
+            "physical_bytes_decimal_mb": 76750.19264,
+            "physical_bytes_mib": 73194.6875,
+            "amplification_vs_logical": 1.0191586935772983,
+            "range_reduction_vs_one_read_per_miss": 0.03991200502828407
+          },
+          "2": {
+            "max_gap_unrequested_records": 2,
+            "route_layer_sets_with_misses": 33596,
+            "logical_miss_bundles": 85914,
+            "logical_bytes": 75307401216,
+            "physical_range_count_by_plane": [
+              80961,
+              80961,
+              80961
+            ],
+            "physical_records_by_plane": [
+              90608,
+              90608,
+              90608
+            ],
+            "physical_bytes": 79421898752,
+            "physical_bytes_decimal_mb": 79421.898752,
+            "physical_bytes_mib": 75742.625,
+            "amplification_vs_logical": 1.0546360313802174,
+            "range_reduction_vs_one_read_per_miss": 0.05765067392974366
+          },
+          "4": {
+            "max_gap_unrequested_records": 4,
+            "route_layer_sets_with_misses": 33596,
+            "logical_miss_bundles": 85914,
+            "logical_bytes": 75307401216,
+            "physical_range_count_by_plane": [
+              78004,
+              78004,
+              78004
+            ],
+            "physical_records_by_plane": [
+              100769,
+              100769,
+              100769
+            ],
+            "physical_bytes": 88328462336,
+            "physical_bytes_decimal_mb": 88328.462336,
+            "physical_bytes_mib": 84236.5859375,
+            "amplification_vs_logical": 1.172905463603138,
+            "range_reduction_vs_one_read_per_miss": 0.09206881299904557
+          }
+        },
+        "train_greedy_coaccess": {
+          "None": {
+            "max_gap_unrequested_records": null,
+            "route_layer_sets_with_misses": 33596,
+            "logical_miss_bundles": 85914,
+            "logical_bytes": 75307401216,
+            "physical_range_count_by_plane": [
+              85914,
+              85914,
+              85914
+            ],
+            "physical_records_by_plane": [
+              85914,
+              85914,
+              85914
+            ],
+            "physical_bytes": 75307401216,
+            "physical_bytes_decimal_mb": 75307.401216,
+            "physical_bytes_mib": 71818.734375,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.0
+          },
+          "0": {
+            "max_gap_unrequested_records": 0,
+            "route_layer_sets_with_misses": 33596,
+            "logical_miss_bundles": 85914,
+            "logical_bytes": 75307401216,
+            "physical_range_count_by_plane": [
+              73785,
+              73785,
+              73785
+            ],
+            "physical_records_by_plane": [
+              85914,
+              85914,
+              85914
+            ],
+            "physical_bytes": 75307401216,
+            "physical_bytes_decimal_mb": 75307.401216,
+            "physical_bytes_mib": 71818.734375,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.1411760597807109
+          },
+          "1": {
+            "max_gap_unrequested_records": 1,
+            "route_layer_sets_with_misses": 33596,
+            "logical_miss_bundles": 85914,
+            "logical_bytes": 75307401216,
+            "physical_range_count_by_plane": [
+              71110,
+              71110,
+              71110
+            ],
+            "physical_records_by_plane": [
+              88589,
+              88589,
+              88589
+            ],
+            "physical_bytes": 77652156416,
+            "physical_bytes_decimal_mb": 77652.156416,
+            "physical_bytes_mib": 74054.8671875,
+            "amplification_vs_logical": 1.0311357869497404,
+            "range_reduction_vs_one_read_per_miss": 0.1723118467304514
+          },
+          "2": {
+            "max_gap_unrequested_records": 2,
+            "route_layer_sets_with_misses": 33596,
+            "logical_miss_bundles": 85914,
+            "logical_bytes": 75307401216,
+            "physical_range_count_by_plane": [
+              69800,
+              69800,
+              69800
+            ],
+            "physical_records_by_plane": [
+              91209,
+              91209,
+              91209
+            ],
+            "physical_bytes": 79948701696,
+            "physical_bytes_decimal_mb": 79948.701696,
+            "physical_bytes_mib": 76245.0234375,
+            "amplification_vs_logical": 1.0616313988407011,
+            "range_reduction_vs_one_read_per_miss": 0.18755965267593178
+          },
+          "4": {
+            "max_gap_unrequested_records": 4,
+            "route_layer_sets_with_misses": 33596,
+            "logical_miss_bundles": 85914,
+            "logical_bytes": 75307401216,
+            "physical_range_count_by_plane": [
+              68189,
+              68189,
+              68189
+            ],
+            "physical_records_by_plane": [
+              96787,
+              96787,
+              96787
+            ],
+            "physical_bytes": 84838064128,
+            "physical_bytes_decimal_mb": 84838.064128,
+            "physical_bytes_mib": 80907.8828125,
+            "amplification_vs_logical": 1.126556789347487,
+            "range_reduction_vs_one_read_per_miss": 0.20631096212491562
+          }
+        }
+      },
+      "duplicate_hot_lane": {
+        "8": {
+          "hot_bundles_duplicated": 320,
+          "extra_disk_bytes": 280494080,
+          "extra_disk_decimal_gb": 0.28049408,
+          "disk_multiplier_vs_routed_bundle_store": 1.03125,
+          "placement": "base=identity;hot=train_greedy_coaccess",
+          "metrics": {
+            "None": {
+              "max_gap_unrequested_records": null,
+              "route_layer_sets_with_misses": 67283,
+              "logical_miss_bundles": 172237,
+              "logical_bytes": 150973308928,
+              "physical_range_count_by_plane": [
+                172237,
+                172237,
+                172237
+              ],
+              "physical_records_by_plane": [
+                172237,
+                172237,
+                172237
+              ],
+              "physical_bytes": 150973308928,
+              "physical_bytes_decimal_mb": 150973.308928,
+              "physical_bytes_mib": 143979.3671875,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.0,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "0": {
+              "max_gap_unrequested_records": 0,
+              "route_layer_sets_with_misses": 67283,
+              "logical_miss_bundles": 172237,
+              "logical_bytes": 150973308928,
+              "physical_range_count_by_plane": [
+                168581,
+                168581,
+                168581
+              ],
+              "physical_records_by_plane": [
+                172237,
+                172237,
+                172237
+              ],
+              "physical_bytes": 150973308928,
+              "physical_bytes_decimal_mb": 150973.308928,
+              "physical_bytes_mib": 143979.3671875,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.021226565720489754,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "1": {
+              "max_gap_unrequested_records": 1,
+              "route_layer_sets_with_misses": 67283,
+              "logical_miss_bundles": 172237,
+              "logical_bytes": 150973308928,
+              "physical_range_count_by_plane": [
+                166604,
+                166604,
+                166604
+              ],
+              "physical_records_by_plane": [
+                174214,
+                174214,
+                174214
+              ],
+              "physical_bytes": 152706236416,
+              "physical_bytes_decimal_mb": 152706.236416,
+              "physical_bytes_mib": 145632.015625,
+              "amplification_vs_logical": 1.0114783699205165,
+              "range_reduction_vs_one_read_per_miss": 0.032704935641006294,
+              "optimistic_amdahl_gain_from_bytes_only": -0.005057902104573575
+            },
+            "2": {
+              "max_gap_unrequested_records": 2,
+              "route_layer_sets_with_misses": 67283,
+              "logical_miss_bundles": 172237,
+              "logical_bytes": 150973308928,
+              "physical_range_count_by_plane": [
+                164912,
+                164912,
+                164912
+              ],
+              "physical_records_by_plane": [
+                177598,
+                177598,
+                177598
+              ],
+              "physical_bytes": 155672461312,
+              "physical_bytes_decimal_mb": 155672.461312,
+              "physical_bytes_mib": 148460.828125,
+              "amplification_vs_logical": 1.0311257163095038,
+              "range_reduction_vs_one_read_per_miss": 0.042528608835499915,
+              "optimistic_amdahl_gain_from_bytes_only": -0.013597711461452722
+            },
+            "4": {
+              "max_gap_unrequested_records": 4,
+              "route_layer_sets_with_misses": 67283,
+              "logical_miss_bundles": 172237,
+              "logical_bytes": 150973308928,
+              "physical_range_count_by_plane": [
+                161937,
+                161937,
+                161937
+              ],
+              "physical_records_by_plane": [
+                187975,
+                187975,
+                187975
+              ],
+              "physical_bytes": 164768358400,
+              "physical_bytes_decimal_mb": 164768.3584,
+              "physical_bytes_mib": 157135.3515625,
+              "amplification_vs_logical": 1.0913740949970099,
+              "range_reduction_vs_one_read_per_miss": 0.0598013202738088,
+              "optimistic_amdahl_gain_from_bytes_only": -0.038894358285639585
+            }
+          }
+        },
+        "16": {
+          "hot_bundles_duplicated": 640,
+          "extra_disk_bytes": 560988160,
+          "extra_disk_decimal_gb": 0.56098816,
+          "disk_multiplier_vs_routed_bundle_store": 1.0625,
+          "placement": "base=identity;hot=train_greedy_coaccess",
+          "metrics": {
+            "None": {
+              "max_gap_unrequested_records": null,
+              "route_layer_sets_with_misses": 67283,
+              "logical_miss_bundles": 172237,
+              "logical_bytes": 150973308928,
+              "physical_range_count_by_plane": [
+                172237,
+                172237,
+                172237
+              ],
+              "physical_records_by_plane": [
+                172237,
+                172237,
+                172237
+              ],
+              "physical_bytes": 150973308928,
+              "physical_bytes_decimal_mb": 150973.308928,
+              "physical_bytes_mib": 143979.3671875,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.0,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "0": {
+              "max_gap_unrequested_records": 0,
+              "route_layer_sets_with_misses": 67283,
+              "logical_miss_bundles": 172237,
+              "logical_bytes": 150973308928,
+              "physical_range_count_by_plane": [
+                166588,
+                166588,
+                166588
+              ],
+              "physical_records_by_plane": [
+                172237,
+                172237,
+                172237
+              ],
+              "physical_bytes": 150973308928,
+              "physical_bytes_decimal_mb": 150973.308928,
+              "physical_bytes_mib": 143979.3671875,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.03279783089580057,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "1": {
+              "max_gap_unrequested_records": 1,
+              "route_layer_sets_with_misses": 67283,
+              "logical_miss_bundles": 172237,
+              "logical_bytes": 150973308928,
+              "physical_range_count_by_plane": [
+                164301,
+                164301,
+                164301
+              ],
+              "physical_records_by_plane": [
+                174524,
+                174524,
+                174524
+              ],
+              "physical_bytes": 152977965056,
+              "physical_bytes_decimal_mb": 152977.965056,
+              "physical_bytes_mib": 145891.15625,
+              "amplification_vs_logical": 1.0132782154821554,
+              "range_reduction_vs_one_read_per_miss": 0.046076046377955926,
+              "optimistic_amdahl_gain_from_bytes_only": -0.00584636080615375
+            },
+            "2": {
+              "max_gap_unrequested_records": 2,
+              "route_layer_sets_with_misses": 67283,
+              "logical_miss_bundles": 172237,
+              "logical_bytes": 150973308928,
+              "physical_range_count_by_plane": [
+                162496,
+                162496,
+                162496
+              ],
+              "physical_records_by_plane": [
+                178134,
+                178134,
+                178134
+              ],
+              "physical_bytes": 156142288896,
+              "physical_bytes_decimal_mb": 156142.288896,
+              "physical_bytes_mib": 148908.890625,
+              "amplification_vs_logical": 1.0342377073451117,
+              "range_reduction_vs_one_read_per_miss": 0.05655579230943408,
+              "optimistic_amdahl_gain_from_bytes_only": -0.014936921959400551
+            },
+            "4": {
+              "max_gap_unrequested_records": 4,
+              "route_layer_sets_with_misses": 67283,
+              "logical_miss_bundles": 172237,
+              "logical_bytes": 150973308928,
+              "physical_range_count_by_plane": [
+                159538,
+                159538,
+                159538
+              ],
+              "physical_records_by_plane": [
+                188466,
+                188466,
+                188466
+              ],
+              "physical_bytes": 165198741504,
+              "physical_bytes_decimal_mb": 165198.741504,
+              "physical_bytes_mib": 157545.796875,
+              "amplification_vs_logical": 1.094224818128509,
+              "range_reduction_vs_one_read_per_miss": 0.07372980253952399,
+              "optimistic_amdahl_gain_from_bytes_only": -0.04005918954571552
+            }
+          }
+        },
+        "32": {
+          "hot_bundles_duplicated": 1280,
+          "extra_disk_bytes": 1121976320,
+          "extra_disk_decimal_gb": 1.12197632,
+          "disk_multiplier_vs_routed_bundle_store": 1.125,
+          "placement": "base=identity;hot=train_greedy_coaccess",
+          "metrics": {
+            "None": {
+              "max_gap_unrequested_records": null,
+              "route_layer_sets_with_misses": 67283,
+              "logical_miss_bundles": 172237,
+              "logical_bytes": 150973308928,
+              "physical_range_count_by_plane": [
+                172237,
+                172237,
+                172237
+              ],
+              "physical_records_by_plane": [
+                172237,
+                172237,
+                172237
+              ],
+              "physical_bytes": 150973308928,
+              "physical_bytes_decimal_mb": 150973.308928,
+              "physical_bytes_mib": 143979.3671875,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.0,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "0": {
+              "max_gap_unrequested_records": 0,
+              "route_layer_sets_with_misses": 67283,
+              "logical_miss_bundles": 172237,
+              "logical_bytes": 150973308928,
+              "physical_range_count_by_plane": [
+                163617,
+                163617,
+                163617
+              ],
+              "physical_records_by_plane": [
+                172237,
+                172237,
+                172237
+              ],
+              "physical_bytes": 150973308928,
+              "physical_bytes_decimal_mb": 150973.308928,
+              "physical_bytes_mib": 143979.3671875,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.05004731852041078,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "1": {
+              "max_gap_unrequested_records": 1,
+              "route_layer_sets_with_misses": 67283,
+              "logical_miss_bundles": 172237,
+              "logical_bytes": 150973308928,
+              "physical_range_count_by_plane": [
+                160824,
+                160824,
+                160824
+              ],
+              "physical_records_by_plane": [
+                175030,
+                175030,
+                175030
+              ],
+              "physical_bytes": 153421496320,
+              "physical_bytes_decimal_mb": 153421.49632,
+              "physical_bytes_mib": 146314.140625,
+              "amplification_vs_logical": 1.016216027915024,
+              "range_reduction_vs_one_read_per_miss": 0.06626334643543486,
+              "optimistic_amdahl_gain_from_bytes_only": -0.007130647762024767
+            },
+            "2": {
+              "max_gap_unrequested_records": 2,
+              "route_layer_sets_with_misses": 67283,
+              "logical_miss_bundles": 172237,
+              "logical_bytes": 150973308928,
+              "physical_range_count_by_plane": [
+                158904,
+                158904,
+                158904
+              ],
+              "physical_records_by_plane": [
+                178870,
+                178870,
+                178870
+              ],
+              "physical_bytes": 156787425280,
+              "physical_bytes_decimal_mb": 156787.42528,
+              "physical_bytes_mib": 149524.140625,
+              "amplification_vs_logical": 1.0385108890656478,
+              "range_reduction_vs_one_read_per_miss": 0.07741077701074683,
+              "optimistic_amdahl_gain_from_bytes_only": -0.016769924020109905
+            },
+            "4": {
+              "max_gap_unrequested_records": 4,
+              "route_layer_sets_with_misses": 67283,
+              "logical_miss_bundles": 172237,
+              "logical_bytes": 150973308928,
+              "physical_range_count_by_plane": [
+                155998,
+                155998,
+                155998
+              ],
+              "physical_records_by_plane": [
+                189026,
+                189026,
+                189026
+              ],
+              "physical_bytes": 165689606144,
+              "physical_bytes_decimal_mb": 165689.606144,
+              "physical_bytes_mib": 158013.921875,
+              "amplification_vs_logical": 1.0974761520463083,
+              "range_reduction_vs_one_read_per_miss": 0.09428287766275534,
+              "optimistic_amdahl_gain_from_bytes_only": -0.041384272219864515
+            }
+          }
+        },
+        "64": {
+          "hot_bundles_duplicated": 2560,
+          "extra_disk_bytes": 2243952640,
+          "extra_disk_decimal_gb": 2.24395264,
+          "disk_multiplier_vs_routed_bundle_store": 1.25,
+          "placement": "base=identity;hot=train_greedy_coaccess",
+          "metrics": {
+            "None": {
+              "max_gap_unrequested_records": null,
+              "route_layer_sets_with_misses": 67283,
+              "logical_miss_bundles": 172237,
+              "logical_bytes": 150973308928,
+              "physical_range_count_by_plane": [
+                172237,
+                172237,
+                172237
+              ],
+              "physical_records_by_plane": [
+                172237,
+                172237,
+                172237
+              ],
+              "physical_bytes": 150973308928,
+              "physical_bytes_decimal_mb": 150973.308928,
+              "physical_bytes_mib": 143979.3671875,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.0,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "0": {
+              "max_gap_unrequested_records": 0,
+              "route_layer_sets_with_misses": 67283,
+              "logical_miss_bundles": 172237,
+              "logical_bytes": 150973308928,
+              "physical_range_count_by_plane": [
+                157288,
+                157288,
+                157288
+              ],
+              "physical_records_by_plane": [
+                172237,
+                172237,
+                172237
+              ],
+              "physical_bytes": 150973308928,
+              "physical_bytes_decimal_mb": 150973.308928,
+              "physical_bytes_mib": 143979.3671875,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.08679319774496774,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "1": {
+              "max_gap_unrequested_records": 1,
+              "route_layer_sets_with_misses": 67283,
+              "logical_miss_bundles": 172237,
+              "logical_bytes": 150973308928,
+              "physical_range_count_by_plane": [
+                153446,
+                153446,
+                153446
+              ],
+              "physical_records_by_plane": [
+                176079,
+                176079,
+                176079
+              ],
+              "physical_bytes": 154340990976,
+              "physical_bytes_decimal_mb": 154340.990976,
+              "physical_bytes_mib": 147191.0390625,
+              "amplification_vs_logical": 1.0223064730574731,
+              "range_reduction_vs_one_read_per_miss": 0.10909967080244087,
+              "optimistic_amdahl_gain_from_bytes_only": -0.009782590205049901
+            },
+            "2": {
+              "max_gap_unrequested_records": 2,
+              "route_layer_sets_with_misses": 67283,
+              "logical_miss_bundles": 172237,
+              "logical_bytes": 150973308928,
+              "physical_range_count_by_plane": [
+                151314,
+                151314,
+                151314
+              ],
+              "physical_records_by_plane": [
+                180343,
+                180343,
+                180343
+              ],
+              "physical_bytes": 158078574592,
+              "physical_bytes_decimal_mb": 158078.574592,
+              "physical_bytes_mib": 150755.4765625,
+              "amplification_vs_logical": 1.047063058460145,
+              "range_reduction_vs_one_read_per_miss": 0.12147796350377682,
+              "optimistic_amdahl_gain_from_bytes_only": -0.020418006408875033
+            },
+            "4": {
+              "max_gap_unrequested_records": 4,
+              "route_layer_sets_with_misses": 67283,
+              "logical_miss_bundles": 172237,
+              "logical_bytes": 150973308928,
+              "physical_range_count_by_plane": [
+                148423,
+                148423,
+                148423
+              ],
+              "physical_records_by_plane": [
+                190410,
+                190410,
+                190410
+              ],
+              "physical_bytes": 166902743040,
+              "physical_bytes_decimal_mb": 166902.74304,
+              "physical_bytes_mib": 159170.859375,
+              "amplification_vs_logical": 1.1055115915860123,
+              "range_reduction_vs_one_read_per_miss": 0.13826297485441574,
+              "optimistic_amdahl_gain_from_bytes_only": -0.044643480049722184
+            }
+          }
+        },
+        "128": {
+          "hot_bundles_duplicated": 5120,
+          "extra_disk_bytes": 4487905280,
+          "extra_disk_decimal_gb": 4.48790528,
+          "disk_multiplier_vs_routed_bundle_store": 1.5,
+          "placement": "base=identity;hot=train_greedy_coaccess",
+          "metrics": {
+            "None": {
+              "max_gap_unrequested_records": null,
+              "route_layer_sets_with_misses": 67283,
+              "logical_miss_bundles": 172237,
+              "logical_bytes": 150973308928,
+              "physical_range_count_by_plane": [
+                172237,
+                172237,
+                172237
+              ],
+              "physical_records_by_plane": [
+                172237,
+                172237,
+                172237
+              ],
+              "physical_bytes": 150973308928,
+              "physical_bytes_decimal_mb": 150973.308928,
+              "physical_bytes_mib": 143979.3671875,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.0,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "0": {
+              "max_gap_unrequested_records": 0,
+              "route_layer_sets_with_misses": 67283,
+              "logical_miss_bundles": 172237,
+              "logical_bytes": 150973308928,
+              "physical_range_count_by_plane": [
+                148657,
+                148657,
+                148657
+              ],
+              "physical_records_by_plane": [
+                172237,
+                172237,
+                172237
+              ],
+              "physical_bytes": 150973308928,
+              "physical_bytes_decimal_mb": 150973.308928,
+              "physical_bytes_mib": 143979.3671875,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.13690438175304953,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "1": {
+              "max_gap_unrequested_records": 1,
+              "route_layer_sets_with_misses": 67283,
+              "logical_miss_bundles": 172237,
+              "logical_bytes": 150973308928,
+              "physical_range_count_by_plane": [
+                143804,
+                143804,
+                143804
+              ],
+              "physical_records_by_plane": [
+                177090,
+                177090,
+                177090
+              ],
+              "physical_bytes": 155227176960,
+              "physical_bytes_decimal_mb": 155227.17696,
+              "physical_bytes_mib": 148036.171875,
+              "amplification_vs_logical": 1.0281762919697859,
+              "range_reduction_vs_one_read_per_miss": 0.1650806737228354,
+              "optimistic_amdahl_gain_from_bytes_only": -0.012325094386429591
+            },
+            "2": {
+              "max_gap_unrequested_records": 2,
+              "route_layer_sets_with_misses": 67283,
+              "logical_miss_bundles": 172237,
+              "logical_bytes": 150973308928,
+              "physical_range_count_by_plane": [
+                141361,
+                141361,
+                141361
+              ],
+              "physical_records_by_plane": [
+                181976,
+                181976,
+                181976
+              ],
+              "physical_bytes": 159509970944,
+              "physical_bytes_decimal_mb": 159509.970944,
+              "physical_bytes_mib": 152120.5625,
+              "amplification_vs_logical": 1.0565441804025848,
+              "range_reduction_vs_one_read_per_miss": 0.17926461793923487,
+              "optimistic_amdahl_gain_from_bytes_only": -0.024430838469304827
+            },
+            "4": {
+              "max_gap_unrequested_records": 4,
+              "route_layer_sets_with_misses": 67283,
+              "logical_miss_bundles": 172237,
+              "logical_bytes": 150973308928,
+              "physical_range_count_by_plane": [
+                138346,
+                138346,
+                138346
+              ],
+              "physical_records_by_plane": [
+                192458,
+                192458,
+                192458
+              ],
+              "physical_bytes": 168697905152,
+              "physical_bytes_decimal_mb": 168697.905152,
+              "physical_bytes_mib": 160882.859375,
+              "amplification_vs_logical": 1.1174021841996784,
+              "range_reduction_vs_one_read_per_miss": 0.19676956751452945,
+              "optimistic_amdahl_gain_from_bytes_only": -0.0494258959978815
+            }
+          }
+        }
+      }
+    },
+    "1439": {
+      "baseline_bundle_lru": {
+        "capacity_bundles": 1439,
+        "capacity_bytes": 1261346816,
+        "requests": 645120,
+        "hits": 399317,
+        "misses": 245803,
+        "hit_rate": 0.618980964781746,
+        "logical_fresh_bytes": 215457144832,
+        "logical_fresh_bytes_per_token": 106873583.74603175
+      },
+      "split_plane_global": {
+        "policy": "split_plane_variable_global_lru",
+        "capacity_bytes": 1261346816,
+        "requests": 1935360,
+        "hits": 1197951,
+        "misses": 737409,
+        "hit_rate": 0.618980964781746,
+        "misses_by_plane": [
+          245803,
+          245803,
+          245803
+        ],
+        "fresh_bytes": 215457144832,
+        "fresh_bytes_per_token": 106873583.74603175,
+        "max_resident_bytes": 1261346816,
+        "byte_ratio_vs_bundle_lru": 1.0,
+        "optimistic_amdahl_gain": 0.0
+      },
+      "split_plane_partitioned": {
+        "policy": "split_plane_independent_lru",
+        "capacity_bytes": 1261346816,
+        "plane_slot_capacities": [
+          1434,
+          1460,
+          1426
+        ],
+        "plane_reserved_bytes": [
+          387661824,
+          394690560,
+          478953472
+        ],
+        "misses_by_plane": [
+          246209,
+          243867,
+          246969
+        ],
+        "fresh_bytes": 215435157504,
+        "fresh_bytes_per_token": 106862677.33333333,
+        "allocation_search": "all down slots; gate/up split +/-64 around equal",
+        "byte_ratio_vs_bundle_lru": 0.999897950341739,
+        "optimistic_amdahl_gain": 4.5198453886063916e-05
+      },
+      "coaccess_layouts_all_trace": {
+        "identity": {
+          "None": {
+            "max_gap_unrequested_records": null,
+            "route_layer_sets_with_misses": 74816,
+            "logical_miss_bundles": 245803,
+            "logical_bytes": 215457144832,
+            "physical_range_count_by_plane": [
+              245803,
+              245803,
+              245803
+            ],
+            "physical_records_by_plane": [
+              245803,
+              245803,
+              245803
+            ],
+            "physical_bytes": 215457144832,
+            "physical_bytes_decimal_mb": 215457.144832,
+            "physical_bytes_mib": 205475.9453125,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.0,
+            "optimistic_amdahl_gain_from_bytes_only": 0.0
+          },
+          "0": {
+            "max_gap_unrequested_records": 0,
+            "route_layer_sets_with_misses": 74816,
+            "logical_miss_bundles": 245803,
+            "logical_bytes": 215457144832,
+            "physical_range_count_by_plane": [
+              242539,
+              242539,
+              242539
+            ],
+            "physical_records_by_plane": [
+              245803,
+              245803,
+              245803
+            ],
+            "physical_bytes": 215457144832,
+            "physical_bytes_decimal_mb": 215457.144832,
+            "physical_bytes_mib": 205475.9453125,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.01327892662009822,
+            "optimistic_amdahl_gain_from_bytes_only": 0.0
+          },
+          "1": {
+            "max_gap_unrequested_records": 1,
+            "route_layer_sets_with_misses": 74816,
+            "logical_miss_bundles": 245803,
+            "logical_bytes": 215457144832,
+            "physical_range_count_by_plane": [
+              239376,
+              239376,
+              239376
+            ],
+            "physical_records_by_plane": [
+              248966,
+              248966,
+              248966
+            ],
+            "physical_bytes": 218229653504,
+            "physical_bytes_decimal_mb": 218229.653504,
+            "physical_bytes_mib": 208120.015625,
+            "amplification_vs_logical": 1.012868028461817,
+            "range_reduction_vs_one_read_per_miss": 0.026146955081915224,
+            "optimistic_amdahl_gain_from_bytes_only": -0.005666780062840604
+          },
+          "2": {
+            "max_gap_unrequested_records": 2,
+            "route_layer_sets_with_misses": 74816,
+            "logical_miss_bundles": 245803,
+            "logical_bytes": 215457144832,
+            "physical_range_count_by_plane": [
+              236443,
+              236443,
+              236443
+            ],
+            "physical_records_by_plane": [
+              254832,
+              254832,
+              254832
+            ],
+            "physical_bytes": 223371460608,
+            "physical_bytes_decimal_mb": 223371.460608,
+            "physical_bytes_mib": 213023.625,
+            "amplification_vs_logical": 1.0367326680309028,
+            "range_reduction_vs_one_read_per_miss": 0.038079274866458124,
+            "optimistic_amdahl_gain_from_bytes_only": -0.01600797683127264
+          },
+          "4": {
+            "max_gap_unrequested_records": 4,
+            "route_layer_sets_with_misses": 74816,
+            "logical_miss_bundles": 245803,
+            "logical_bytes": 215457144832,
+            "physical_range_count_by_plane": [
+              230631,
+              230631,
+              230631
+            ],
+            "physical_records_by_plane": [
+              275099,
+              275099,
+              275099
+            ],
+            "physical_bytes": 241136377856,
+            "physical_bytes_decimal_mb": 241136.377856,
+            "physical_bytes_mib": 229965.5703125,
+            "amplification_vs_logical": 1.1191848756931364,
+            "range_reduction_vs_one_read_per_miss": 0.061724226311314356,
+            "optimistic_amdahl_gain_from_bytes_only": -0.05013877320065385
+          }
+        },
+        "train_popularity": {
+          "None": {
+            "max_gap_unrequested_records": null,
+            "route_layer_sets_with_misses": 74816,
+            "logical_miss_bundles": 245803,
+            "logical_bytes": 215457144832,
+            "physical_range_count_by_plane": [
+              245803,
+              245803,
+              245803
+            ],
+            "physical_records_by_plane": [
+              245803,
+              245803,
+              245803
+            ],
+            "physical_bytes": 215457144832,
+            "physical_bytes_decimal_mb": 215457.144832,
+            "physical_bytes_mib": 205475.9453125,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.0,
+            "optimistic_amdahl_gain_from_bytes_only": 0.0
+          },
+          "0": {
+            "max_gap_unrequested_records": 0,
+            "route_layer_sets_with_misses": 74816,
+            "logical_miss_bundles": 245803,
+            "logical_bytes": 215457144832,
+            "physical_range_count_by_plane": [
+              237865,
+              237865,
+              237865
+            ],
+            "physical_records_by_plane": [
+              245803,
+              245803,
+              245803
+            ],
+            "physical_bytes": 215457144832,
+            "physical_bytes_decimal_mb": 215457.144832,
+            "physical_bytes_mib": 205475.9453125,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.0322941542617462,
+            "optimistic_amdahl_gain_from_bytes_only": 0.0
+          },
+          "1": {
+            "max_gap_unrequested_records": 1,
+            "route_layer_sets_with_misses": 74816,
+            "logical_miss_bundles": 245803,
+            "logical_bytes": 215457144832,
+            "physical_range_count_by_plane": [
+              230678,
+              230678,
+              230678
+            ],
+            "physical_records_by_plane": [
+              252990,
+              252990,
+              252990
+            ],
+            "physical_bytes": 221756866560,
+            "physical_bytes_decimal_mb": 221756.86656,
+            "physical_bytes_mib": 211483.828125,
+            "amplification_vs_logical": 1.0292388620155164,
+            "range_reduction_vs_one_read_per_miss": 0.06153301627726271,
+            "optimistic_amdahl_gain_from_bytes_only": -0.012783950149948708
+          },
+          "2": {
+            "max_gap_unrequested_records": 2,
+            "route_layer_sets_with_misses": 74816,
+            "logical_miss_bundles": 245803,
+            "logical_bytes": 215457144832,
+            "physical_range_count_by_plane": [
+              224142,
+              224142,
+              224142
+            ],
+            "physical_records_by_plane": [
+              266062,
+              266062,
+              266062
+            ],
+            "physical_bytes": 233215049728,
+            "physical_bytes_decimal_mb": 233215.049728,
+            "physical_bytes_mib": 222411.203125,
+            "amplification_vs_logical": 1.082419661273459,
+            "range_reduction_vs_one_read_per_miss": 0.08812341590623385,
+            "optimistic_amdahl_gain_from_bytes_only": -0.03521703956363531
+          },
+          "4": {
+            "max_gap_unrequested_records": 4,
+            "route_layer_sets_with_misses": 74816,
+            "logical_miss_bundles": 245803,
+            "logical_bytes": 215457144832,
+            "physical_range_count_by_plane": [
+              212557,
+              212557,
+              212557
+            ],
+            "physical_records_by_plane": [
+              306084,
+              306084,
+              306084
+            ],
+            "physical_bytes": 268296093696,
+            "physical_bytes_decimal_mb": 268296.093696,
+            "physical_bytes_mib": 255867.09375,
+            "amplification_vs_logical": 1.2452411077163419,
+            "range_reduction_vs_one_read_per_miss": 0.13525465515066948,
+            "optimistic_amdahl_gain_from_bytes_only": -0.09797275481550194
+          }
+        },
+        "train_greedy_coaccess": {
+          "None": {
+            "max_gap_unrequested_records": null,
+            "route_layer_sets_with_misses": 74816,
+            "logical_miss_bundles": 245803,
+            "logical_bytes": 215457144832,
+            "physical_range_count_by_plane": [
+              245803,
+              245803,
+              245803
+            ],
+            "physical_records_by_plane": [
+              245803,
+              245803,
+              245803
+            ],
+            "physical_bytes": 215457144832,
+            "physical_bytes_decimal_mb": 215457.144832,
+            "physical_bytes_mib": 205475.9453125,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.0,
+            "optimistic_amdahl_gain_from_bytes_only": 0.0
+          },
+          "0": {
+            "max_gap_unrequested_records": 0,
+            "route_layer_sets_with_misses": 74816,
+            "logical_miss_bundles": 245803,
+            "logical_bytes": 215457144832,
+            "physical_range_count_by_plane": [
+              198194,
+              198194,
+              198194
+            ],
+            "physical_records_by_plane": [
+              245803,
+              245803,
+              245803
+            ],
+            "physical_bytes": 215457144832,
+            "physical_bytes_decimal_mb": 215457.144832,
+            "physical_bytes_mib": 205475.9453125,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.19368762789713712,
+            "optimistic_amdahl_gain_from_bytes_only": 0.0
+          },
+          "1": {
+            "max_gap_unrequested_records": 1,
+            "route_layer_sets_with_misses": 74816,
+            "logical_miss_bundles": 245803,
+            "logical_bytes": 215457144832,
+            "physical_range_count_by_plane": [
+              189344,
+              189344,
+              189344
+            ],
+            "physical_records_by_plane": [
+              254653,
+              254653,
+              254653
+            ],
+            "physical_bytes": 223214559232,
+            "physical_bytes_decimal_mb": 223214.559232,
+            "physical_bytes_mib": 212873.9921875,
+            "amplification_vs_logical": 1.0360044425820678,
+            "range_reduction_vs_one_read_per_miss": 0.22969207047920492,
+            "optimistic_amdahl_gain_from_bytes_only": -0.015695599686041728
+          },
+          "2": {
+            "max_gap_unrequested_records": 2,
+            "route_layer_sets_with_misses": 74816,
+            "logical_miss_bundles": 245803,
+            "logical_bytes": 215457144832,
+            "physical_range_count_by_plane": [
+              184700,
+              184700,
+              184700
+            ],
+            "physical_records_by_plane": [
+              263941,
+              263941,
+              263941
+            ],
+            "physical_bytes": 231355899904,
+            "physical_bytes_decimal_mb": 231355.899904,
+            "physical_bytes_mib": 220638.1796875,
+            "amplification_vs_logical": 1.073790799949553,
+            "range_reduction_vs_one_read_per_miss": 0.24858524916294755,
+            "optimistic_amdahl_gain_from_bytes_only": -0.031646701454126624
+          },
+          "4": {
+            "max_gap_unrequested_records": 4,
+            "route_layer_sets_with_misses": 74816,
+            "logical_miss_bundles": 245803,
+            "logical_bytes": 215457144832,
+            "physical_range_count_by_plane": [
+              178640,
+              178640,
+              178640
+            ],
+            "physical_records_by_plane": [
+              284876,
+              284876,
+              284876
+            ],
+            "physical_bytes": 249706348544,
+            "physical_bytes_decimal_mb": 249706.348544,
+            "physical_bytes_mib": 238138.53125,
+            "amplification_vs_logical": 1.1589606310744784,
+            "range_reduction_vs_one_read_per_miss": 0.2732391386598211,
+            "optimistic_amdahl_gain_from_bytes_only": -0.06577112350597725
+          }
+        }
+      },
+      "coaccess_layouts_odd_prompt_holdout": {
+        "identity": {
+          "None": {
+            "max_gap_unrequested_records": null,
+            "route_layer_sets_with_misses": 37293,
+            "logical_miss_bundles": 121566,
+            "logical_bytes": 106557947904,
+            "physical_range_count_by_plane": [
+              121566,
+              121566,
+              121566
+            ],
+            "physical_records_by_plane": [
+              121566,
+              121566,
+              121566
+            ],
+            "physical_bytes": 106557947904,
+            "physical_bytes_decimal_mb": 106557.947904,
+            "physical_bytes_mib": 101621.578125,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.0
+          },
+          "0": {
+            "max_gap_unrequested_records": 0,
+            "route_layer_sets_with_misses": 37293,
+            "logical_miss_bundles": 121566,
+            "logical_bytes": 106557947904,
+            "physical_range_count_by_plane": [
+              119959,
+              119959,
+              119959
+            ],
+            "physical_records_by_plane": [
+              121566,
+              121566,
+              121566
+            ],
+            "physical_bytes": 106557947904,
+            "physical_bytes_decimal_mb": 106557.947904,
+            "physical_bytes_mib": 101621.578125,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.013219156672095833
+          },
+          "1": {
+            "max_gap_unrequested_records": 1,
+            "route_layer_sets_with_misses": 37293,
+            "logical_miss_bundles": 121566,
+            "logical_bytes": 106557947904,
+            "physical_range_count_by_plane": [
+              118385,
+              118385,
+              118385
+            ],
+            "physical_records_by_plane": [
+              123140,
+              123140,
+              123140
+            ],
+            "physical_bytes": 107937628160,
+            "physical_bytes_decimal_mb": 107937.62816,
+            "physical_bytes_mib": 102937.34375,
+            "amplification_vs_logical": 1.0129476991922084,
+            "range_reduction_vs_one_read_per_miss": 0.026166855864304117
+          },
+          "2": {
+            "max_gap_unrequested_records": 2,
+            "route_layer_sets_with_misses": 37293,
+            "logical_miss_bundles": 121566,
+            "logical_bytes": 106557947904,
+            "physical_range_count_by_plane": [
+              116957,
+              116957,
+              116957
+            ],
+            "physical_records_by_plane": [
+              125996,
+              125996,
+              125996
+            ],
+            "physical_bytes": 110441037824,
+            "physical_bytes_decimal_mb": 110441.037824,
+            "physical_bytes_mib": 105324.78125,
+            "amplification_vs_logical": 1.036441110178833,
+            "range_reduction_vs_one_read_per_miss": 0.037913561357616476
+          },
+          "4": {
+            "max_gap_unrequested_records": 4,
+            "route_layer_sets_with_misses": 37293,
+            "logical_miss_bundles": 121566,
+            "logical_bytes": 106557947904,
+            "physical_range_count_by_plane": [
+              114086,
+              114086,
+              114086
+            ],
+            "physical_records_by_plane": [
+              136001,
+              136001,
+              136001
+            ],
+            "physical_bytes": 119210860544,
+            "physical_bytes_decimal_mb": 119210.860544,
+            "physical_bytes_mib": 113688.3359375,
+            "amplification_vs_logical": 1.11874208249017,
+            "range_reduction_vs_one_read_per_miss": 0.06153036210782625
+          }
+        },
+        "train_popularity": {
+          "None": {
+            "max_gap_unrequested_records": null,
+            "route_layer_sets_with_misses": 37293,
+            "logical_miss_bundles": 121566,
+            "logical_bytes": 106557947904,
+            "physical_range_count_by_plane": [
+              121566,
+              121566,
+              121566
+            ],
+            "physical_records_by_plane": [
+              121566,
+              121566,
+              121566
+            ],
+            "physical_bytes": 106557947904,
+            "physical_bytes_decimal_mb": 106557.947904,
+            "physical_bytes_mib": 101621.578125,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.0
+          },
+          "0": {
+            "max_gap_unrequested_records": 0,
+            "route_layer_sets_with_misses": 37293,
+            "logical_miss_bundles": 121566,
+            "logical_bytes": 106557947904,
+            "physical_range_count_by_plane": [
+              117802,
+              117802,
+              117802
+            ],
+            "physical_records_by_plane": [
+              121566,
+              121566,
+              121566
+            ],
+            "physical_bytes": 106557947904,
+            "physical_bytes_decimal_mb": 106557.947904,
+            "physical_bytes_mib": 101621.578125,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.030962604675649485
+          },
+          "1": {
+            "max_gap_unrequested_records": 1,
+            "route_layer_sets_with_misses": 37293,
+            "logical_miss_bundles": 121566,
+            "logical_bytes": 106557947904,
+            "physical_range_count_by_plane": [
+              114431,
+              114431,
+              114431
+            ],
+            "physical_records_by_plane": [
+              124937,
+              124937,
+              124937
+            ],
+            "physical_bytes": 109512777728,
+            "physical_bytes_decimal_mb": 109512.777728,
+            "physical_bytes_mib": 104439.5234375,
+            "amplification_vs_logical": 1.0277297928697169,
+            "range_reduction_vs_one_read_per_miss": 0.05869239754536626
+          },
+          "2": {
+            "max_gap_unrequested_records": 2,
+            "route_layer_sets_with_misses": 37293,
+            "logical_miss_bundles": 121566,
+            "logical_bytes": 106557947904,
+            "physical_range_count_by_plane": [
+              111339,
+              111339,
+              111339
+            ],
+            "physical_records_by_plane": [
+              131121,
+              131121,
+              131121
+            ],
+            "physical_bytes": 114933325824,
+            "physical_bytes_decimal_mb": 114933.325824,
+            "physical_bytes_mib": 109608.9609375,
+            "amplification_vs_logical": 1.0785992794037806,
+            "range_reduction_vs_one_read_per_miss": 0.08412714081239825
+          },
+          "4": {
+            "max_gap_unrequested_records": 4,
+            "route_layer_sets_with_misses": 37293,
+            "logical_miss_bundles": 121566,
+            "logical_bytes": 106557947904,
+            "physical_range_count_by_plane": [
+              105758,
+              105758,
+              105758
+            ],
+            "physical_records_by_plane": [
+              150408,
+              150408,
+              150408
+            ],
+            "physical_bytes": 131839229952,
+            "physical_bytes_decimal_mb": 131839.229952,
+            "physical_bytes_mib": 125731.6875,
+            "amplification_vs_logical": 1.2372538374216475,
+            "range_reduction_vs_one_read_per_miss": 0.1300363588503365
+          }
+        },
+        "train_greedy_coaccess": {
+          "None": {
+            "max_gap_unrequested_records": null,
+            "route_layer_sets_with_misses": 37293,
+            "logical_miss_bundles": 121566,
+            "logical_bytes": 106557947904,
+            "physical_range_count_by_plane": [
+              121566,
+              121566,
+              121566
+            ],
+            "physical_records_by_plane": [
+              121566,
+              121566,
+              121566
+            ],
+            "physical_bytes": 106557947904,
+            "physical_bytes_decimal_mb": 106557.947904,
+            "physical_bytes_mib": 101621.578125,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.0
+          },
+          "0": {
+            "max_gap_unrequested_records": 0,
+            "route_layer_sets_with_misses": 37293,
+            "logical_miss_bundles": 121566,
+            "logical_bytes": 106557947904,
+            "physical_range_count_by_plane": [
+              100346,
+              100346,
+              100346
+            ],
+            "physical_records_by_plane": [
+              121566,
+              121566,
+              121566
+            ],
+            "physical_bytes": 106557947904,
+            "physical_bytes_decimal_mb": 106557.947904,
+            "physical_bytes_mib": 101621.578125,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.17455538555188133
+          },
+          "1": {
+            "max_gap_unrequested_records": 1,
+            "route_layer_sets_with_misses": 37293,
+            "logical_miss_bundles": 121566,
+            "logical_bytes": 106557947904,
+            "physical_range_count_by_plane": [
+              95863,
+              95863,
+              95863
+            ],
+            "physical_records_by_plane": [
+              126049,
+              126049,
+              126049
+            ],
+            "physical_bytes": 110487494656,
+            "physical_bytes_decimal_mb": 110487.494656,
+            "physical_bytes_mib": 105369.0859375,
+            "amplification_vs_logical": 1.0368770873435007,
+            "range_reduction_vs_one_read_per_miss": 0.21143247289538192
+          },
+          "2": {
+            "max_gap_unrequested_records": 2,
+            "route_layer_sets_with_misses": 37293,
+            "logical_miss_bundles": 121566,
+            "logical_bytes": 106557947904,
+            "physical_range_count_by_plane": [
+              93522,
+              93522,
+              93522
+            ],
+            "physical_records_by_plane": [
+              130731,
+              130731,
+              130731
+            ],
+            "physical_bytes": 114591473664,
+            "physical_bytes_decimal_mb": 114591.473664,
+            "physical_bytes_mib": 109282.9453125,
+            "amplification_vs_logical": 1.0753911455505651,
+            "range_reduction_vs_one_read_per_miss": 0.23068950199891414
+          },
+          "4": {
+            "max_gap_unrequested_records": 4,
+            "route_layer_sets_with_misses": 37293,
+            "logical_miss_bundles": 121566,
+            "logical_bytes": 106557947904,
+            "physical_range_count_by_plane": [
+              90423,
+              90423,
+              90423
+            ],
+            "physical_records_by_plane": [
+              141421,
+              141421,
+              141421
+            ],
+            "physical_bytes": 123961729024,
+            "physical_bytes_decimal_mb": 123961.729024,
+            "physical_bytes_mib": 118219.1171875,
+            "amplification_vs_logical": 1.1633269170656269,
+            "range_reduction_vs_one_read_per_miss": 0.2561818271556192
+          }
+        }
+      },
+      "duplicate_hot_lane": {
+        "8": {
+          "hot_bundles_duplicated": 320,
+          "extra_disk_bytes": 280494080,
+          "extra_disk_decimal_gb": 0.28049408,
+          "disk_multiplier_vs_routed_bundle_store": 1.03125,
+          "placement": "base=identity;hot=train_greedy_coaccess",
+          "metrics": {
+            "None": {
+              "max_gap_unrequested_records": null,
+              "route_layer_sets_with_misses": 74816,
+              "logical_miss_bundles": 245803,
+              "logical_bytes": 215457144832,
+              "physical_range_count_by_plane": [
+                245803,
+                245803,
+                245803
+              ],
+              "physical_records_by_plane": [
+                245803,
+                245803,
+                245803
+              ],
+              "physical_bytes": 215457144832,
+              "physical_bytes_decimal_mb": 215457.144832,
+              "physical_bytes_mib": 205475.9453125,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.0,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "0": {
+              "max_gap_unrequested_records": 0,
+              "route_layer_sets_with_misses": 74816,
+              "logical_miss_bundles": 245803,
+              "logical_bytes": 215457144832,
+              "physical_range_count_by_plane": [
+                237827,
+                237827,
+                237827
+              ],
+              "physical_records_by_plane": [
+                245803,
+                245803,
+                245803
+              ],
+              "physical_bytes": 215457144832,
+              "physical_bytes_decimal_mb": 215457.144832,
+              "physical_bytes_mib": 205475.9453125,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.03244874960842625,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "1": {
+              "max_gap_unrequested_records": 1,
+              "route_layer_sets_with_misses": 74816,
+              "logical_miss_bundles": 245803,
+              "logical_bytes": 215457144832,
+              "physical_range_count_by_plane": [
+                234027,
+                234027,
+                234027
+              ],
+              "physical_records_by_plane": [
+                249603,
+                249603,
+                249603
+              ],
+              "physical_bytes": 218788012032,
+              "physical_bytes_decimal_mb": 218788.012032,
+              "physical_bytes_mib": 208652.5078125,
+              "amplification_vs_logical": 1.0154595346680064,
+              "range_reduction_vs_one_read_per_miss": 0.04790828427643279,
+              "optimistic_amdahl_gain_from_bytes_only": -0.006800258324941133
+            },
+            "2": {
+              "max_gap_unrequested_records": 2,
+              "route_layer_sets_with_misses": 74816,
+              "logical_miss_bundles": 245803,
+              "logical_bytes": 215457144832,
+              "physical_range_count_by_plane": [
+                231026,
+                231026,
+                231026
+              ],
+              "physical_records_by_plane": [
+                255605,
+                255605,
+                255605
+              ],
+              "physical_bytes": 224049029120,
+              "physical_bytes_decimal_mb": 224049.02912,
+              "physical_bytes_mib": 213669.8046875,
+              "amplification_vs_logical": 1.039877462846263,
+              "range_reduction_vs_one_read_per_miss": 0.06011724836556109,
+              "optimistic_amdahl_gain_from_bytes_only": -0.017354683703791562
+            },
+            "4": {
+              "max_gap_unrequested_records": 4,
+              "route_layer_sets_with_misses": 74816,
+              "logical_miss_bundles": 245803,
+              "logical_bytes": 215457144832,
+              "physical_range_count_by_plane": [
+                225372,
+                225372,
+                225372
+              ],
+              "physical_records_by_plane": [
+                275314,
+                275314,
+                275314
+              ],
+              "physical_bytes": 241324834816,
+              "physical_bytes_decimal_mb": 241324.834816,
+              "physical_bytes_mib": 230145.296875,
+              "amplification_vs_logical": 1.1200595598914578,
+              "range_reduction_vs_one_read_per_miss": 0.08311940863211598,
+              "optimistic_amdahl_gain_from_bytes_only": -0.05048815817338259
+            }
+          }
+        },
+        "16": {
+          "hot_bundles_duplicated": 640,
+          "extra_disk_bytes": 560988160,
+          "extra_disk_decimal_gb": 0.56098816,
+          "disk_multiplier_vs_routed_bundle_store": 1.0625,
+          "placement": "base=identity;hot=train_greedy_coaccess",
+          "metrics": {
+            "None": {
+              "max_gap_unrequested_records": null,
+              "route_layer_sets_with_misses": 74816,
+              "logical_miss_bundles": 245803,
+              "logical_bytes": 215457144832,
+              "physical_range_count_by_plane": [
+                245803,
+                245803,
+                245803
+              ],
+              "physical_records_by_plane": [
+                245803,
+                245803,
+                245803
+              ],
+              "physical_bytes": 215457144832,
+              "physical_bytes_decimal_mb": 215457.144832,
+              "physical_bytes_mib": 205475.9453125,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.0,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "0": {
+              "max_gap_unrequested_records": 0,
+              "route_layer_sets_with_misses": 74816,
+              "logical_miss_bundles": 245803,
+              "logical_bytes": 215457144832,
+              "physical_range_count_by_plane": [
+                233413,
+                233413,
+                233413
+              ],
+              "physical_records_by_plane": [
+                245803,
+                245803,
+                245803
+              ],
+              "physical_bytes": 215457144832,
+              "physical_bytes_decimal_mb": 215457.144832,
+              "physical_bytes_mib": 205475.9453125,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.05040621961489489,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "1": {
+              "max_gap_unrequested_records": 1,
+              "route_layer_sets_with_misses": 74816,
+              "logical_miss_bundles": 245803,
+              "logical_bytes": 215457144832,
+              "physical_range_count_by_plane": [
+                228972,
+                228972,
+                228972
+              ],
+              "physical_records_by_plane": [
+                250244,
+                250244,
+                250244
+              ],
+              "physical_bytes": 219349876736,
+              "physical_bytes_decimal_mb": 219349.876736,
+              "physical_bytes_mib": 209188.34375,
+              "amplification_vs_logical": 1.0180673140685834,
+              "range_reduction_vs_one_read_per_miss": 0.0684735336834782,
+              "optimistic_amdahl_gain_from_bytes_only": -0.00793824859700365
+            },
+            "2": {
+              "max_gap_unrequested_records": 2,
+              "route_layer_sets_with_misses": 74816,
+              "logical_miss_bundles": 245803,
+              "logical_bytes": 215457144832,
+              "physical_range_count_by_plane": [
+                225620,
+                225620,
+                225620
+              ],
+              "physical_records_by_plane": [
+                256948,
+                256948,
+                256948
+              ],
+              "physical_bytes": 225226227712,
+              "physical_bytes_decimal_mb": 225226.227712,
+              "physical_bytes_mib": 214792.46875,
+              "amplification_vs_logical": 1.0453411878618244,
+              "range_reduction_vs_one_read_per_miss": 0.08211047058009868,
+              "optimistic_amdahl_gain_from_bytes_only": -0.019685689534322814
+            },
+            "4": {
+              "max_gap_unrequested_records": 4,
+              "route_layer_sets_with_misses": 74816,
+              "logical_miss_bundles": 245803,
+              "logical_bytes": 215457144832,
+              "physical_range_count_by_plane": [
+                219923,
+                219923,
+                219923
+              ],
+              "physical_records_by_plane": [
+                276818,
+                276818,
+                276818
+              ],
+              "physical_bytes": 242643156992,
+              "physical_bytes_decimal_mb": 242643.156992,
+              "physical_bytes_mib": 231402.546875,
+              "amplification_vs_logical": 1.126178280981111,
+              "range_reduction_vs_one_read_per_miss": 0.10528756768631786,
+              "optimistic_amdahl_gain_from_bytes_only": -0.05292505859841312
+            }
+          }
+        },
+        "32": {
+          "hot_bundles_duplicated": 1280,
+          "extra_disk_bytes": 1121976320,
+          "extra_disk_decimal_gb": 1.12197632,
+          "disk_multiplier_vs_routed_bundle_store": 1.125,
+          "placement": "base=identity;hot=train_greedy_coaccess",
+          "metrics": {
+            "None": {
+              "max_gap_unrequested_records": null,
+              "route_layer_sets_with_misses": 74816,
+              "logical_miss_bundles": 245803,
+              "logical_bytes": 215457144832,
+              "physical_range_count_by_plane": [
+                245803,
+                245803,
+                245803
+              ],
+              "physical_records_by_plane": [
+                245803,
+                245803,
+                245803
+              ],
+              "physical_bytes": 215457144832,
+              "physical_bytes_decimal_mb": 215457.144832,
+              "physical_bytes_mib": 205475.9453125,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.0,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "0": {
+              "max_gap_unrequested_records": 0,
+              "route_layer_sets_with_misses": 74816,
+              "logical_miss_bundles": 245803,
+              "logical_bytes": 215457144832,
+              "physical_range_count_by_plane": [
+                227065,
+                227065,
+                227065
+              ],
+              "physical_records_by_plane": [
+                245803,
+                245803,
+                245803
+              ],
+              "physical_bytes": 215457144832,
+              "physical_bytes_decimal_mb": 215457.144832,
+              "physical_bytes_mib": 205475.9453125,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.07623177910765944,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "1": {
+              "max_gap_unrequested_records": 1,
+              "route_layer_sets_with_misses": 74816,
+              "logical_miss_bundles": 245803,
+              "logical_bytes": 215457144832,
+              "physical_range_count_by_plane": [
+                221608,
+                221608,
+                221608
+              ],
+              "physical_records_by_plane": [
+                251260,
+                251260,
+                251260
+              ],
+              "physical_bytes": 220240445440,
+              "physical_bytes_decimal_mb": 220240.44544,
+              "physical_bytes_mib": 210037.65625,
+              "amplification_vs_logical": 1.0222007054429767,
+              "range_reduction_vs_one_read_per_miss": 0.09843248455063602,
+              "optimistic_amdahl_gain_from_bytes_only": -0.009736657040687047
+            },
+            "2": {
+              "max_gap_unrequested_records": 2,
+              "route_layer_sets_with_misses": 74816,
+              "logical_miss_bundles": 245803,
+              "logical_bytes": 215457144832,
+              "physical_range_count_by_plane": [
+                218001,
+                218001,
+                218001
+              ],
+              "physical_records_by_plane": [
+                258474,
+                258474,
+                258474
+              ],
+              "physical_bytes": 226563833856,
+              "physical_bytes_decimal_mb": 226563.833856,
+              "physical_bytes_mib": 216068.109375,
+              "amplification_vs_logical": 1.0515494115206079,
+              "range_reduction_vs_one_read_per_miss": 0.11310683758945173,
+              "optimistic_amdahl_gain_from_bytes_only": -0.022320937017147324
+            },
+            "4": {
+              "max_gap_unrequested_records": 4,
+              "route_layer_sets_with_misses": 74816,
+              "logical_miss_bundles": 245803,
+              "logical_bytes": 215457144832,
+              "physical_range_count_by_plane": [
+                212347,
+                212347,
+                212347
+              ],
+              "physical_records_by_plane": [
+                278132,
+                278132,
+                278132
+              ],
+              "physical_bytes": 243794935808,
+              "physical_bytes_decimal_mb": 243794.935808,
+              "physical_bytes_mib": 232500.96875,
+              "amplification_vs_logical": 1.1315240253373637,
+              "range_reduction_vs_one_read_per_miss": 0.1361089978560066,
+              "optimistic_amdahl_gain_from_bytes_only": -0.05504389079871819
+            }
+          }
+        },
+        "64": {
+          "hot_bundles_duplicated": 2560,
+          "extra_disk_bytes": 2243952640,
+          "extra_disk_decimal_gb": 2.24395264,
+          "disk_multiplier_vs_routed_bundle_store": 1.25,
+          "placement": "base=identity;hot=train_greedy_coaccess",
+          "metrics": {
+            "None": {
+              "max_gap_unrequested_records": null,
+              "route_layer_sets_with_misses": 74816,
+              "logical_miss_bundles": 245803,
+              "logical_bytes": 215457144832,
+              "physical_range_count_by_plane": [
+                245803,
+                245803,
+                245803
+              ],
+              "physical_records_by_plane": [
+                245803,
+                245803,
+                245803
+              ],
+              "physical_bytes": 215457144832,
+              "physical_bytes_decimal_mb": 215457.144832,
+              "physical_bytes_mib": 205475.9453125,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.0,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "0": {
+              "max_gap_unrequested_records": 0,
+              "route_layer_sets_with_misses": 74816,
+              "logical_miss_bundles": 245803,
+              "logical_bytes": 215457144832,
+              "physical_range_count_by_plane": [
+                215360,
+                215360,
+                215360
+              ],
+              "physical_records_by_plane": [
+                245803,
+                245803,
+                245803
+              ],
+              "physical_bytes": 215457144832,
+              "physical_bytes_decimal_mb": 215457.144832,
+              "physical_bytes_mib": 205475.9453125,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.12385121418371625,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "1": {
+              "max_gap_unrequested_records": 1,
+              "route_layer_sets_with_misses": 74816,
+              "logical_miss_bundles": 245803,
+              "logical_bytes": 215457144832,
+              "physical_range_count_by_plane": [
+                208213,
+                208213,
+                208213
+              ],
+              "physical_records_by_plane": [
+                252950,
+                252950,
+                252950
+              ],
+              "physical_bytes": 221721804800,
+              "physical_bytes_decimal_mb": 221721.8048,
+              "physical_bytes_mib": 211450.390625,
+              "amplification_vs_logical": 1.0290761300716427,
+              "range_reduction_vs_one_read_per_miss": 0.15292734425535892,
+              "optimistic_amdahl_gain_from_bytes_only": -0.012713704323942698
+            },
+            "2": {
+              "max_gap_unrequested_records": 2,
+              "route_layer_sets_with_misses": 74816,
+              "logical_miss_bundles": 245803,
+              "logical_bytes": 215457144832,
+              "physical_range_count_by_plane": [
+                204215,
+                204215,
+                204215
+              ],
+              "physical_records_by_plane": [
+                260946,
+                260946,
+                260946
+              ],
+              "physical_bytes": 228730650624,
+              "physical_bytes_decimal_mb": 228730.650624,
+              "physical_bytes_mib": 218134.546875,
+              "amplification_vs_logical": 1.061606245652006,
+              "range_reduction_vs_one_read_per_miss": 0.16919240204554054,
+              "optimistic_amdahl_gain_from_bytes_only": -0.026559896172055675
+            },
+            "4": {
+              "max_gap_unrequested_records": 4,
+              "route_layer_sets_with_misses": 74816,
+              "logical_miss_bundles": 245803,
+              "logical_bytes": 215457144832,
+              "physical_range_count_by_plane": [
+                198594,
+                198594,
+                198594
+              ],
+              "physical_records_by_plane": [
+                280379,
+                280379,
+                280379
+              ],
+              "physical_bytes": 245764530176,
+              "physical_bytes_decimal_mb": 245764.530176,
+              "physical_bytes_mib": 234379.3203125,
+              "amplification_vs_logical": 1.1406654922844717,
+              "range_reduction_vs_one_read_per_miss": 0.1920603084583996,
+              "optimistic_amdahl_gain_from_bytes_only": -0.05864530620603736
+            }
+          }
+        },
+        "128": {
+          "hot_bundles_duplicated": 5120,
+          "extra_disk_bytes": 4487905280,
+          "extra_disk_decimal_gb": 4.48790528,
+          "disk_multiplier_vs_routed_bundle_store": 1.5,
+          "placement": "base=identity;hot=train_greedy_coaccess",
+          "metrics": {
+            "None": {
+              "max_gap_unrequested_records": null,
+              "route_layer_sets_with_misses": 74816,
+              "logical_miss_bundles": 245803,
+              "logical_bytes": 215457144832,
+              "physical_range_count_by_plane": [
+                245803,
+                245803,
+                245803
+              ],
+              "physical_records_by_plane": [
+                245803,
+                245803,
+                245803
+              ],
+              "physical_bytes": 215457144832,
+              "physical_bytes_decimal_mb": 215457.144832,
+              "physical_bytes_mib": 205475.9453125,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.0,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "0": {
+              "max_gap_unrequested_records": 0,
+              "route_layer_sets_with_misses": 74816,
+              "logical_miss_bundles": 245803,
+              "logical_bytes": 215457144832,
+              "physical_range_count_by_plane": [
+                202679,
+                202679,
+                202679
+              ],
+              "physical_records_by_plane": [
+                245803,
+                245803,
+                245803
+              ],
+              "physical_bytes": 215457144832,
+              "physical_bytes_decimal_mb": 215457.144832,
+              "physical_bytes_mib": 205475.9453125,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.17544130869029262,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "1": {
+              "max_gap_unrequested_records": 1,
+              "route_layer_sets_with_misses": 74816,
+              "logical_miss_bundles": 245803,
+              "logical_bytes": 215457144832,
+              "physical_range_count_by_plane": [
+                194188,
+                194188,
+                194188
+              ],
+              "physical_records_by_plane": [
+                254294,
+                254294,
+                254294
+              ],
+              "physical_bytes": 222899879936,
+              "physical_bytes_decimal_mb": 222899.879936,
+              "physical_bytes_mib": 212573.890625,
+              "amplification_vs_logical": 1.034543923385801,
+              "range_reduction_vs_one_read_per_miss": 0.20998523207609343,
+              "optimistic_amdahl_gain_from_bytes_only": -0.015068502116243221
+            },
+            "2": {
+              "max_gap_unrequested_records": 2,
+              "route_layer_sets_with_misses": 74816,
+              "logical_miss_bundles": 245803,
+              "logical_bytes": 215457144832,
+              "physical_range_count_by_plane": [
+                189743,
+                189743,
+                189743
+              ],
+              "physical_records_by_plane": [
+                263184,
+                263184,
+                263184
+              ],
+              "physical_bytes": 230692356096,
+              "physical_bytes_decimal_mb": 230692.356096,
+              "physical_bytes_mib": 220005.375,
+              "amplification_vs_logical": 1.0707110979117422,
+              "range_reduction_vs_one_read_per_miss": 0.2280688193390642,
+              "optimistic_amdahl_gain_from_bytes_only": -0.030366015162964444
+            },
+            "4": {
+              "max_gap_unrequested_records": 4,
+              "route_layer_sets_with_misses": 74816,
+              "logical_miss_bundles": 245803,
+              "logical_bytes": 215457144832,
+              "physical_range_count_by_plane": [
+                183919,
+                183919,
+                183919
+              ],
+              "physical_records_by_plane": [
+                283302,
+                283302,
+                283302
+              ],
+              "physical_bytes": 248326668288,
+              "physical_bytes_decimal_mb": 248326.668288,
+              "physical_bytes_mib": 236822.765625,
+              "amplification_vs_logical": 1.152557129083046,
+              "range_reduction_vs_one_read_per_miss": 0.2517625903670826,
+              "optimistic_amdahl_gain_from_bytes_only": -0.06328931249747749
+            }
+          }
+        }
+      }
+    },
+    "826": {
+      "baseline_bundle_lru": {
+        "capacity_bundles": 826,
+        "capacity_bytes": 724025344,
+        "requests": 645120,
+        "hits": 314777,
+        "misses": 330343,
+        "hit_rate": 0.4879355778769841,
+        "logical_fresh_bytes": 289560174592,
+        "logical_fresh_bytes_per_token": 143631038.98412699
+      },
+      "split_plane_global": {
+        "policy": "split_plane_variable_global_lru",
+        "capacity_bytes": 724025344,
+        "requests": 1935360,
+        "hits": 944331,
+        "misses": 991029,
+        "hit_rate": 0.4879355778769841,
+        "misses_by_plane": [
+          330343,
+          330343,
+          330343
+        ],
+        "fresh_bytes": 289560174592,
+        "fresh_bytes_per_token": 143631038.98412699,
+        "max_resident_bytes": 724025344,
+        "byte_ratio_vs_bundle_lru": 1.0,
+        "optimistic_amdahl_gain": 0.0
+      },
+      "split_plane_partitioned": {
+        "policy": "split_plane_independent_lru",
+        "capacity_bytes": 724025344,
+        "plane_slot_capacities": [
+          825,
+          827,
+          826
+        ],
+        "plane_reserved_bytes": [
+          223027200,
+          223567872,
+          277430272
+        ],
+        "misses_by_plane": [
+          330542,
+          330143,
+          330343
+        ],
+        "fresh_bytes": 289559904256,
+        "fresh_bytes_per_token": 143630904.8888889,
+        "allocation_search": "all down slots; gate/up split +/-64 around equal",
+        "byte_ratio_vs_bundle_lru": 0.9999990663909484,
+        "optimistic_amdahl_gain": 4.1348297141752255e-07
+      },
+      "coaccess_layouts_all_trace": {
+        "identity": {
+          "None": {
+            "max_gap_unrequested_records": null,
+            "route_layer_sets_with_misses": 78860,
+            "logical_miss_bundles": 330343,
+            "logical_bytes": 289560174592,
+            "physical_range_count_by_plane": [
+              330343,
+              330343,
+              330343
+            ],
+            "physical_records_by_plane": [
+              330343,
+              330343,
+              330343
+            ],
+            "physical_bytes": 289560174592,
+            "physical_bytes_decimal_mb": 289560.174592,
+            "physical_bytes_mib": 276146.1015625,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.0,
+            "optimistic_amdahl_gain_from_bytes_only": 0.0
+          },
+          "0": {
+            "max_gap_unrequested_records": 0,
+            "route_layer_sets_with_misses": 78860,
+            "logical_miss_bundles": 330343,
+            "logical_bytes": 289560174592,
+            "physical_range_count_by_plane": [
+              324777,
+              324777,
+              324777
+            ],
+            "physical_records_by_plane": [
+              330343,
+              330343,
+              330343
+            ],
+            "physical_bytes": 289560174592,
+            "physical_bytes_decimal_mb": 289560.174592,
+            "physical_bytes_mib": 276146.1015625,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.016849153758366264,
+            "optimistic_amdahl_gain_from_bytes_only": 0.0
+          },
+          "1": {
+            "max_gap_unrequested_records": 1,
+            "route_layer_sets_with_misses": 78860,
+            "logical_miss_bundles": 330343,
+            "logical_bytes": 289560174592,
+            "physical_range_count_by_plane": [
+              319436,
+              319436,
+              319436
+            ],
+            "physical_records_by_plane": [
+              335684,
+              335684,
+              335684
+            ],
+            "physical_bytes": 294241796096,
+            "physical_bytes_decimal_mb": 294241.796096,
+            "physical_bytes_mib": 280610.84375,
+            "amplification_vs_logical": 1.0161680435184035,
+            "range_reduction_vs_one_read_per_miss": 0.03301719727676988,
+            "optimistic_amdahl_gain_from_bytes_only": -0.007109697676146776
+          },
+          "2": {
+            "max_gap_unrequested_records": 2,
+            "route_layer_sets_with_misses": 78860,
+            "logical_miss_bundles": 330343,
+            "logical_bytes": 289560174592,
+            "physical_range_count_by_plane": [
+              314458,
+              314458,
+              314458
+            ],
+            "physical_records_by_plane": [
+              345640,
+              345640,
+              345640
+            ],
+            "physical_bytes": 302968668160,
+            "physical_bytes_decimal_mb": 302968.66816,
+            "physical_bytes_mib": 288933.4375,
+            "amplification_vs_logical": 1.0463064148475978,
+            "range_reduction_vs_one_read_per_miss": 0.04808638294136702,
+            "optimistic_amdahl_gain_from_bytes_only": -0.020096338349107068
+          },
+          "4": {
+            "max_gap_unrequested_records": 4,
+            "route_layer_sets_with_misses": 78860,
+            "logical_miss_bundles": 330343,
+            "logical_bytes": 289560174592,
+            "physical_range_count_by_plane": [
+              304412,
+              304412,
+              304412
+            ],
+            "physical_records_by_plane": [
+              380497,
+              380497,
+              380497
+            ],
+            "physical_bytes": 333522362368,
+            "physical_bytes_decimal_mb": 333522.362368,
+            "physical_bytes_mib": 318071.7109375,
+            "amplification_vs_logical": 1.15182401322262,
+            "range_reduction_vs_one_read_per_miss": 0.07849719836654634,
+            "optimistic_amdahl_gain_from_bytes_only": -0.06300433664146965
+          }
+        },
+        "train_popularity": {
+          "None": {
+            "max_gap_unrequested_records": null,
+            "route_layer_sets_with_misses": 78860,
+            "logical_miss_bundles": 330343,
+            "logical_bytes": 289560174592,
+            "physical_range_count_by_plane": [
+              330343,
+              330343,
+              330343
+            ],
+            "physical_records_by_plane": [
+              330343,
+              330343,
+              330343
+            ],
+            "physical_bytes": 289560174592,
+            "physical_bytes_decimal_mb": 289560.174592,
+            "physical_bytes_mib": 276146.1015625,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.0,
+            "optimistic_amdahl_gain_from_bytes_only": 0.0
+          },
+          "0": {
+            "max_gap_unrequested_records": 0,
+            "route_layer_sets_with_misses": 78860,
+            "logical_miss_bundles": 330343,
+            "logical_bytes": 289560174592,
+            "physical_range_count_by_plane": [
+              315557,
+              315557,
+              315557
+            ],
+            "physical_records_by_plane": [
+              330343,
+              330343,
+              330343
+            ],
+            "physical_bytes": 289560174592,
+            "physical_bytes_decimal_mb": 289560.174592,
+            "physical_bytes_mib": 276146.1015625,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.04475953781372699,
+            "optimistic_amdahl_gain_from_bytes_only": 0.0
+          },
+          "1": {
+            "max_gap_unrequested_records": 1,
+            "route_layer_sets_with_misses": 78860,
+            "logical_miss_bundles": 330343,
+            "logical_bytes": 289560174592,
+            "physical_range_count_by_plane": [
+              302282,
+              302282,
+              302282
+            ],
+            "physical_records_by_plane": [
+              343618,
+              343618,
+              343618
+            ],
+            "physical_bytes": 301196296192,
+            "physical_bytes_decimal_mb": 301196.296192,
+            "physical_bytes_mib": 287243.171875,
+            "amplification_vs_logical": 1.0401855041577996,
+            "range_reduction_vs_one_read_per_miss": 0.08494504197152652,
+            "optimistic_amdahl_gain_from_bytes_only": -0.017486399153379795
+          },
+          "2": {
+            "max_gap_unrequested_records": 2,
+            "route_layer_sets_with_misses": 78860,
+            "logical_miss_bundles": 330343,
+            "logical_bytes": 289560174592,
+            "physical_range_count_by_plane": [
+              290746,
+              290746,
+              290746
+            ],
+            "physical_records_by_plane": [
+              366690,
+              366690,
+              366690
+            ],
+            "physical_bytes": 321419919360,
+            "physical_bytes_decimal_mb": 321419.91936,
+            "physical_bytes_mib": 306529.921875,
+            "amplification_vs_logical": 1.1100280617418865,
+            "range_reduction_vs_one_read_per_miss": 0.11986632076356996,
+            "optimistic_amdahl_gain_from_bytes_only": -0.04646566873721614
+          },
+          "4": {
+            "max_gap_unrequested_records": 4,
+            "route_layer_sets_with_misses": 78860,
+            "logical_miss_bundles": 330343,
+            "logical_bytes": 289560174592,
+            "physical_range_count_by_plane": [
+              271211,
+              271211,
+              271211
+            ],
+            "physical_records_by_plane": [
+              434371,
+              434371,
+              434371
+            ],
+            "physical_bytes": 380745293824,
+            "physical_bytes_decimal_mb": 380745.293824,
+            "physical_bytes_mib": 363107.0078125,
+            "amplification_vs_logical": 1.3149090490792903,
+            "range_reduction_vs_one_read_per_miss": 0.17900182537544307,
+            "optimistic_amdahl_gain_from_bytes_only": -0.12239820249656697
+          }
+        },
+        "train_greedy_coaccess": {
+          "None": {
+            "max_gap_unrequested_records": null,
+            "route_layer_sets_with_misses": 78860,
+            "logical_miss_bundles": 330343,
+            "logical_bytes": 289560174592,
+            "physical_range_count_by_plane": [
+              330343,
+              330343,
+              330343
+            ],
+            "physical_records_by_plane": [
+              330343,
+              330343,
+              330343
+            ],
+            "physical_bytes": 289560174592,
+            "physical_bytes_decimal_mb": 289560.174592,
+            "physical_bytes_mib": 276146.1015625,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.0,
+            "optimistic_amdahl_gain_from_bytes_only": 0.0
+          },
+          "0": {
+            "max_gap_unrequested_records": 0,
+            "route_layer_sets_with_misses": 78860,
+            "logical_miss_bundles": 330343,
+            "logical_bytes": 289560174592,
+            "physical_range_count_by_plane": [
+              257838,
+              257838,
+              257838
+            ],
+            "physical_records_by_plane": [
+              330343,
+              330343,
+              330343
+            ],
+            "physical_bytes": 289560174592,
+            "physical_bytes_decimal_mb": 289560.174592,
+            "physical_bytes_mib": 276146.1015625,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.21948399088220427,
+            "optimistic_amdahl_gain_from_bytes_only": 0.0
+          },
+          "1": {
+            "max_gap_unrequested_records": 1,
+            "route_layer_sets_with_misses": 78860,
+            "logical_miss_bundles": 330343,
+            "logical_bytes": 289560174592,
+            "physical_range_count_by_plane": [
+              243952,
+              243952,
+              243952
+            ],
+            "physical_records_by_plane": [
+              344229,
+              344229,
+              344229
+            ],
+            "physical_bytes": 301731864576,
+            "physical_bytes_decimal_mb": 301731.864576,
+            "physical_bytes_mib": 287753.9296875,
+            "amplification_vs_logical": 1.042035096853876,
+            "range_reduction_vs_one_read_per_miss": 0.26151908773608035,
+            "optimistic_amdahl_gain_from_bytes_only": -0.018276524955240236
+          },
+          "2": {
+            "max_gap_unrequested_records": 2,
+            "route_layer_sets_with_misses": 78860,
+            "logical_miss_bundles": 330343,
+            "logical_bytes": 289560174592,
+            "physical_range_count_by_plane": [
+              236281,
+              236281,
+              236281
+            ],
+            "physical_records_by_plane": [
+              359571,
+              359571,
+              359571
+            ],
+            "physical_bytes": 315179802624,
+            "physical_bytes_decimal_mb": 315179.802624,
+            "physical_bytes_mib": 300578.8828125,
+            "amplification_vs_logical": 1.0884777337494664,
+            "range_reduction_vs_one_read_per_miss": 0.2847404061838755,
+            "optimistic_amdahl_gain_from_bytes_only": -0.03770798014986976
+          },
+          "4": {
+            "max_gap_unrequested_records": 4,
+            "route_layer_sets_with_misses": 78860,
+            "logical_miss_bundles": 330343,
+            "logical_bytes": 289560174592,
+            "physical_range_count_by_plane": [
+              225930,
+              225930,
+              225930
+            ],
+            "physical_records_by_plane": [
+              395379,
+              395379,
+              395379
+            ],
+            "physical_bytes": 346567090176,
+            "physical_bytes_decimal_mb": 346567.090176,
+            "physical_bytes_mib": 330512.1328125,
+            "amplification_vs_logical": 1.1968741580720645,
+            "range_reduction_vs_one_read_per_miss": 0.31607450437878204,
+            "optimistic_amdahl_gain_from_bytes_only": -0.0802000248313699
+          }
+        }
+      },
+      "coaccess_layouts_odd_prompt_holdout": {
+        "identity": {
+          "None": {
+            "max_gap_unrequested_records": null,
+            "route_layer_sets_with_misses": 39411,
+            "logical_miss_bundles": 164281,
+            "logical_bytes": 143999524864,
+            "physical_range_count_by_plane": [
+              164281,
+              164281,
+              164281
+            ],
+            "physical_records_by_plane": [
+              164281,
+              164281,
+              164281
+            ],
+            "physical_bytes": 143999524864,
+            "physical_bytes_decimal_mb": 143999.524864,
+            "physical_bytes_mib": 137328.6484375,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.0
+          },
+          "0": {
+            "max_gap_unrequested_records": 0,
+            "route_layer_sets_with_misses": 39411,
+            "logical_miss_bundles": 164281,
+            "logical_bytes": 143999524864,
+            "physical_range_count_by_plane": [
+              161533,
+              161533,
+              161533
+            ],
+            "physical_records_by_plane": [
+              164281,
+              164281,
+              164281
+            ],
+            "physical_bytes": 143999524864,
+            "physical_bytes_decimal_mb": 143999.524864,
+            "physical_bytes_mib": 137328.6484375,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.016727436526439488
+          },
+          "1": {
+            "max_gap_unrequested_records": 1,
+            "route_layer_sets_with_misses": 39411,
+            "logical_miss_bundles": 164281,
+            "logical_bytes": 143999524864,
+            "physical_range_count_by_plane": [
+              158844,
+              158844,
+              158844
+            ],
+            "physical_records_by_plane": [
+              166970,
+              166970,
+              166970
+            ],
+            "physical_bytes": 146356551680,
+            "physical_bytes_decimal_mb": 146356.55168,
+            "physical_bytes_mib": 139576.484375,
+            "amplification_vs_logical": 1.016368295785879,
+            "range_reduction_vs_one_read_per_miss": 0.03309573231231855
+          },
+          "2": {
+            "max_gap_unrequested_records": 2,
+            "route_layer_sets_with_misses": 39411,
+            "logical_miss_bundles": 164281,
+            "logical_bytes": 143999524864,
+            "physical_range_count_by_plane": [
+              156435,
+              156435,
+              156435
+            ],
+            "physical_records_by_plane": [
+              171788,
+              171788,
+              171788
+            ],
+            "physical_bytes": 150579740672,
+            "physical_bytes_decimal_mb": 150579.740672,
+            "physical_bytes_mib": 143604.03125,
+            "amplification_vs_logical": 1.0456960938879116,
+            "range_reduction_vs_one_read_per_miss": 0.04775963136333472
+          },
+          "4": {
+            "max_gap_unrequested_records": 4,
+            "route_layer_sets_with_misses": 39411,
+            "logical_miss_bundles": 164281,
+            "logical_bytes": 143999524864,
+            "physical_range_count_by_plane": [
+              151395,
+              151395,
+              151395
+            ],
+            "physical_records_by_plane": [
+              189270,
+              189270,
+              189270
+            ],
+            "physical_bytes": 165903482880,
+            "physical_bytes_decimal_mb": 165903.48288,
+            "physical_bytes_mib": 158217.890625,
+            "amplification_vs_logical": 1.1521113214553114,
+            "range_reduction_vs_one_read_per_miss": 0.07843877259086562
+          }
+        },
+        "train_popularity": {
+          "None": {
+            "max_gap_unrequested_records": null,
+            "route_layer_sets_with_misses": 39411,
+            "logical_miss_bundles": 164281,
+            "logical_bytes": 143999524864,
+            "physical_range_count_by_plane": [
+              164281,
+              164281,
+              164281
+            ],
+            "physical_records_by_plane": [
+              164281,
+              164281,
+              164281
+            ],
+            "physical_bytes": 143999524864,
+            "physical_bytes_decimal_mb": 143999.524864,
+            "physical_bytes_mib": 137328.6484375,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.0
+          },
+          "0": {
+            "max_gap_unrequested_records": 0,
+            "route_layer_sets_with_misses": 39411,
+            "logical_miss_bundles": 164281,
+            "logical_bytes": 143999524864,
+            "physical_range_count_by_plane": [
+              157232,
+              157232,
+              157232
+            ],
+            "physical_records_by_plane": [
+              164281,
+              164281,
+              164281
+            ],
+            "physical_bytes": 143999524864,
+            "physical_bytes_decimal_mb": 143999.524864,
+            "physical_bytes_mib": 137328.6484375,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.04290818780017169
+          },
+          "1": {
+            "max_gap_unrequested_records": 1,
+            "route_layer_sets_with_misses": 39411,
+            "logical_miss_bundles": 164281,
+            "logical_bytes": 143999524864,
+            "physical_range_count_by_plane": [
+              150867,
+              150867,
+              150867
+            ],
+            "physical_records_by_plane": [
+              170646,
+              170646,
+              170646
+            ],
+            "physical_bytes": 149578727424,
+            "physical_bytes_decimal_mb": 149578.727424,
+            "physical_bytes_mib": 142649.390625,
+            "amplification_vs_logical": 1.0387445900621497,
+            "range_reduction_vs_one_read_per_miss": 0.08165277786232128
+          },
+          "2": {
+            "max_gap_unrequested_records": 2,
+            "route_layer_sets_with_misses": 39411,
+            "logical_miss_bundles": 164281,
+            "logical_bytes": 143999524864,
+            "physical_range_count_by_plane": [
+              145330,
+              145330,
+              145330
+            ],
+            "physical_records_by_plane": [
+              181720,
+              181720,
+              181720
+            ],
+            "physical_bytes": 159285575680,
+            "physical_bytes_decimal_mb": 159285.57568,
+            "physical_bytes_mib": 151906.5625,
+            "amplification_vs_logical": 1.1061534809259743,
+            "range_reduction_vs_one_read_per_miss": 0.1153572232942337
+          },
+          "4": {
+            "max_gap_unrequested_records": 4,
+            "route_layer_sets_with_misses": 39411,
+            "logical_miss_bundles": 164281,
+            "logical_bytes": 143999524864,
+            "physical_range_count_by_plane": [
+              135852,
+              135852,
+              135852
+            ],
+            "physical_records_by_plane": [
+              214547,
+              214547,
+              214547
+            ],
+            "physical_bytes": 188059885568,
+            "physical_bytes_decimal_mb": 188059.885568,
+            "physical_bytes_mib": 179347.8828125,
+            "amplification_vs_logical": 1.305975736695053,
+            "range_reduction_vs_one_read_per_miss": 0.1730510527693403
+          }
+        },
+        "train_greedy_coaccess": {
+          "None": {
+            "max_gap_unrequested_records": null,
+            "route_layer_sets_with_misses": 39411,
+            "logical_miss_bundles": 164281,
+            "logical_bytes": 143999524864,
+            "physical_range_count_by_plane": [
+              164281,
+              164281,
+              164281
+            ],
+            "physical_records_by_plane": [
+              164281,
+              164281,
+              164281
+            ],
+            "physical_bytes": 143999524864,
+            "physical_bytes_decimal_mb": 143999.524864,
+            "physical_bytes_mib": 137328.6484375,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.0
+          },
+          "0": {
+            "max_gap_unrequested_records": 0,
+            "route_layer_sets_with_misses": 39411,
+            "logical_miss_bundles": 164281,
+            "logical_bytes": 143999524864,
+            "physical_range_count_by_plane": [
+              131676,
+              131676,
+              131676
+            ],
+            "physical_records_by_plane": [
+              164281,
+              164281,
+              164281
+            ],
+            "physical_bytes": 143999524864,
+            "physical_bytes_decimal_mb": 143999.524864,
+            "physical_bytes_mib": 137328.6484375,
+            "amplification_vs_logical": 1.0,
+            "range_reduction_vs_one_read_per_miss": 0.1984709126435802
+          },
+          "1": {
+            "max_gap_unrequested_records": 1,
+            "route_layer_sets_with_misses": 39411,
+            "logical_miss_bundles": 164281,
+            "logical_bytes": 143999524864,
+            "physical_range_count_by_plane": [
+              124571,
+              124571,
+              124571
+            ],
+            "physical_records_by_plane": [
+              171386,
+              171386,
+              171386
+            ],
+            "physical_bytes": 150227369984,
+            "physical_bytes_decimal_mb": 150227.369984,
+            "physical_bytes_mib": 143267.984375,
+            "amplification_vs_logical": 1.0432490671471442,
+            "range_reduction_vs_one_read_per_miss": 0.24171997979072446
+          },
+          "2": {
+            "max_gap_unrequested_records": 2,
+            "route_layer_sets_with_misses": 39411,
+            "logical_miss_bundles": 164281,
+            "logical_bytes": 143999524864,
+            "physical_range_count_by_plane": [
+              120704,
+              120704,
+              120704
+            ],
+            "physical_records_by_plane": [
+              179120,
+              179120,
+              179120
+            ],
+            "physical_bytes": 157006561280,
+            "physical_bytes_decimal_mb": 157006.56128,
+            "physical_bytes_mib": 149733.125,
+            "amplification_vs_logical": 1.0903269398165338,
+            "range_reduction_vs_one_read_per_miss": 0.2652589161254193
+          },
+          "4": {
+            "max_gap_unrequested_records": 4,
+            "route_layer_sets_with_misses": 39411,
+            "logical_miss_bundles": 164281,
+            "logical_bytes": 143999524864,
+            "physical_range_count_by_plane": [
+              115353,
+              115353,
+              115353
+            ],
+            "physical_records_by_plane": [
+              197596,
+              197596,
+              197596
+            ],
+            "physical_bytes": 173201588224,
+            "physical_bytes_decimal_mb": 173201.588224,
+            "physical_bytes_mib": 165177.90625,
+            "amplification_vs_logical": 1.2027927757926966,
+            "range_reduction_vs_one_read_per_miss": 0.297831155154887
+          }
+        }
+      },
+      "duplicate_hot_lane": {
+        "8": {
+          "hot_bundles_duplicated": 320,
+          "extra_disk_bytes": 280494080,
+          "extra_disk_decimal_gb": 0.28049408,
+          "disk_multiplier_vs_routed_bundle_store": 1.03125,
+          "placement": "base=identity;hot=train_greedy_coaccess",
+          "metrics": {
+            "None": {
+              "max_gap_unrequested_records": null,
+              "route_layer_sets_with_misses": 78860,
+              "logical_miss_bundles": 330343,
+              "logical_bytes": 289560174592,
+              "physical_range_count_by_plane": [
+                330343,
+                330343,
+                330343
+              ],
+              "physical_records_by_plane": [
+                330343,
+                330343,
+                330343
+              ],
+              "physical_bytes": 289560174592,
+              "physical_bytes_decimal_mb": 289560.174592,
+              "physical_bytes_mib": 276146.1015625,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.0,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "0": {
+              "max_gap_unrequested_records": 0,
+              "route_layer_sets_with_misses": 78860,
+              "logical_miss_bundles": 330343,
+              "logical_bytes": 289560174592,
+              "physical_range_count_by_plane": [
+                315784,
+                315784,
+                315784
+              ],
+              "physical_records_by_plane": [
+                330343,
+                330343,
+                330343
+              ],
+              "physical_bytes": 289560174592,
+              "physical_bytes_decimal_mb": 289560.174592,
+              "physical_bytes_mib": 276146.1015625,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.04407237326052016,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "1": {
+              "max_gap_unrequested_records": 1,
+              "route_layer_sets_with_misses": 78860,
+              "logical_miss_bundles": 330343,
+              "logical_bytes": 289560174592,
+              "physical_range_count_by_plane": [
+                309132,
+                309132,
+                309132
+              ],
+              "physical_records_by_plane": [
+                336995,
+                336995,
+                336995
+              ],
+              "physical_bytes": 295390945280,
+              "physical_bytes_decimal_mb": 295390.94528,
+              "physical_bytes_mib": 281706.7578125,
+              "amplification_vs_logical": 1.0201366458499197,
+              "range_reduction_vs_one_read_per_miss": 0.06420901911043975,
+              "optimistic_amdahl_gain_from_bytes_only": -0.008839415539539153
+            },
+            "2": {
+              "max_gap_unrequested_records": 2,
+              "route_layer_sets_with_misses": 78860,
+              "logical_miss_bundles": 330343,
+              "logical_bytes": 289560174592,
+              "physical_range_count_by_plane": [
+                304113,
+                304113,
+                304113
+              ],
+              "physical_records_by_plane": [
+                347033,
+                347033,
+                347033
+              ],
+              "physical_bytes": 304189693952,
+              "physical_bytes_decimal_mb": 304189.693952,
+              "physical_bytes_mib": 290097.8984375,
+              "amplification_vs_logical": 1.0505232440221224,
+              "range_reduction_vs_one_read_per_miss": 0.0794023181965412,
+              "optimistic_amdahl_gain_from_bytes_only": -0.021886330440599733
+            },
+            "4": {
+              "max_gap_unrequested_records": 4,
+              "route_layer_sets_with_misses": 78860,
+              "logical_miss_bundles": 330343,
+              "logical_bytes": 289560174592,
+              "physical_range_count_by_plane": [
+                294393,
+                294393,
+                294393
+              ],
+              "physical_records_by_plane": [
+                380816,
+                380816,
+                380816
+              ],
+              "physical_bytes": 333801979904,
+              "physical_bytes_decimal_mb": 333801.979904,
+              "physical_bytes_mib": 318338.375,
+              "amplification_vs_logical": 1.1527896761850562,
+              "range_reduction_vs_one_read_per_miss": 0.10882628056293009,
+              "optimistic_amdahl_gain_from_bytes_only": -0.06337967169844994
+            }
+          }
+        },
+        "16": {
+          "hot_bundles_duplicated": 640,
+          "extra_disk_bytes": 560988160,
+          "extra_disk_decimal_gb": 0.56098816,
+          "disk_multiplier_vs_routed_bundle_store": 1.0625,
+          "placement": "base=identity;hot=train_greedy_coaccess",
+          "metrics": {
+            "None": {
+              "max_gap_unrequested_records": null,
+              "route_layer_sets_with_misses": 78860,
+              "logical_miss_bundles": 330343,
+              "logical_bytes": 289560174592,
+              "physical_range_count_by_plane": [
+                330343,
+                330343,
+                330343
+              ],
+              "physical_records_by_plane": [
+                330343,
+                330343,
+                330343
+              ],
+              "physical_bytes": 289560174592,
+              "physical_bytes_decimal_mb": 289560.174592,
+              "physical_bytes_mib": 276146.1015625,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.0,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "0": {
+              "max_gap_unrequested_records": 0,
+              "route_layer_sets_with_misses": 78860,
+              "logical_miss_bundles": 330343,
+              "logical_bytes": 289560174592,
+              "physical_range_count_by_plane": [
+                307986,
+                307986,
+                307986
+              ],
+              "physical_records_by_plane": [
+                330343,
+                330343,
+                330343
+              ],
+              "physical_bytes": 289560174592,
+              "physical_bytes_decimal_mb": 289560.174592,
+              "physical_bytes_mib": 276146.1015625,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.06767814059931643,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "1": {
+              "max_gap_unrequested_records": 1,
+              "route_layer_sets_with_misses": 78860,
+              "logical_miss_bundles": 330343,
+              "logical_bytes": 289560174592,
+              "physical_range_count_by_plane": [
+                300183,
+                300183,
+                300183
+              ],
+              "physical_records_by_plane": [
+                338146,
+                338146,
+                338146
+              ],
+              "physical_bytes": 296399847424,
+              "physical_bytes_decimal_mb": 296399.847424,
+              "physical_bytes_mib": 282668.921875,
+              "amplification_vs_logical": 1.0236209031219066,
+              "range_reduction_vs_one_read_per_miss": 0.0912990437212231,
+              "optimistic_amdahl_gain_from_bytes_only": -0.01035307059273749
+            },
+            "2": {
+              "max_gap_unrequested_records": 2,
+              "route_layer_sets_with_misses": 78860,
+              "logical_miss_bundles": 330343,
+              "logical_bytes": 289560174592,
+              "physical_range_count_by_plane": [
+                294580,
+                294580,
+                294580
+              ],
+              "physical_records_by_plane": [
+                349352,
+                349352,
+                349352
+              ],
+              "physical_bytes": 306222399488,
+              "physical_bytes_decimal_mb": 306222.399488,
+              "physical_bytes_mib": 292036.4375,
+              "amplification_vs_logical": 1.0575432202286714,
+              "range_reduction_vs_one_read_per_miss": 0.10826020227460553,
+              "optimistic_amdahl_gain_from_bytes_only": -0.024851762674333755
+            },
+            "4": {
+              "max_gap_unrequested_records": 4,
+              "route_layer_sets_with_misses": 78860,
+              "logical_miss_bundles": 330343,
+              "logical_bytes": 289560174592,
+              "physical_range_count_by_plane": [
+                284767,
+                284767,
+                284767
+              ],
+              "physical_records_by_plane": [
+                383510,
+                383510,
+                383510
+              ],
+              "physical_bytes": 336163389440,
+              "physical_bytes_decimal_mb": 336163.38944,
+              "physical_bytes_mib": 320590.390625,
+              "amplification_vs_logical": 1.1609448361248762,
+              "range_reduction_vs_one_read_per_miss": 0.13796569020684557,
+              "optimistic_amdahl_gain_from_bytes_only": -0.0665374769605448
+            }
+          }
+        },
+        "32": {
+          "hot_bundles_duplicated": 1280,
+          "extra_disk_bytes": 1121976320,
+          "extra_disk_decimal_gb": 1.12197632,
+          "disk_multiplier_vs_routed_bundle_store": 1.125,
+          "placement": "base=identity;hot=train_greedy_coaccess",
+          "metrics": {
+            "None": {
+              "max_gap_unrequested_records": null,
+              "route_layer_sets_with_misses": 78860,
+              "logical_miss_bundles": 330343,
+              "logical_bytes": 289560174592,
+              "physical_range_count_by_plane": [
+                330343,
+                330343,
+                330343
+              ],
+              "physical_records_by_plane": [
+                330343,
+                330343,
+                330343
+              ],
+              "physical_bytes": 289560174592,
+              "physical_bytes_decimal_mb": 289560.174592,
+              "physical_bytes_mib": 276146.1015625,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.0,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "0": {
+              "max_gap_unrequested_records": 0,
+              "route_layer_sets_with_misses": 78860,
+              "logical_miss_bundles": 330343,
+              "logical_bytes": 289560174592,
+              "physical_range_count_by_plane": [
+                296902,
+                296902,
+                296902
+              ],
+              "physical_records_by_plane": [
+                330343,
+                330343,
+                330343
+              ],
+              "physical_bytes": 289560174592,
+              "physical_bytes_decimal_mb": 289560.174592,
+              "physical_bytes_mib": 276146.1015625,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.10123114459819038,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "1": {
+              "max_gap_unrequested_records": 1,
+              "route_layer_sets_with_misses": 78860,
+              "logical_miss_bundles": 330343,
+              "logical_bytes": 289560174592,
+              "physical_range_count_by_plane": [
+                287475,
+                287475,
+                287475
+              ],
+              "physical_records_by_plane": [
+                339770,
+                339770,
+                339770
+              ],
+              "physical_bytes": 297823354880,
+              "physical_bytes_decimal_mb": 297823.35488,
+              "physical_bytes_mib": 284026.484375,
+              "amplification_vs_logical": 1.0285370054761263,
+              "range_reduction_vs_one_read_per_miss": 0.12976815007431675,
+              "optimistic_amdahl_gain_from_bytes_only": -0.012480911199805211
+            },
+            "2": {
+              "max_gap_unrequested_records": 2,
+              "route_layer_sets_with_misses": 78860,
+              "logical_miss_bundles": 330343,
+              "logical_bytes": 289560174592,
+              "physical_range_count_by_plane": [
+                281280,
+                281280,
+                281280
+              ],
+              "physical_records_by_plane": [
+                352160,
+                352160,
+                352160
+              ],
+              "physical_bytes": 308683735040,
+              "physical_bytes_decimal_mb": 308683.73504,
+              "physical_bytes_mib": 294383.75,
+              "amplification_vs_logical": 1.0660434760234059,
+              "range_reduction_vs_one_read_per_miss": 0.14852138534795656,
+              "optimistic_amdahl_gain_from_bytes_only": -0.02841852569756198
+            },
+            "4": {
+              "max_gap_unrequested_records": 4,
+              "route_layer_sets_with_misses": 78860,
+              "logical_miss_bundles": 330343,
+              "logical_bytes": 289560174592,
+              "physical_range_count_by_plane": [
+                271536,
+                271536,
+                271536
+              ],
+              "physical_records_by_plane": [
+                386068,
+                386068,
+                386068
+              ],
+              "physical_bytes": 338405588992,
+              "physical_bytes_decimal_mb": 338405.588992,
+              "physical_bytes_mib": 322728.71875,
+              "amplification_vs_logical": 1.1686883027640966,
+              "range_reduction_vs_one_read_per_miss": 0.1780179994732748,
+              "optimistic_amdahl_gain_from_bytes_only": -0.0695162232810933
+            }
+          }
+        },
+        "64": {
+          "hot_bundles_duplicated": 2560,
+          "extra_disk_bytes": 2243952640,
+          "extra_disk_decimal_gb": 2.24395264,
+          "disk_multiplier_vs_routed_bundle_store": 1.25,
+          "placement": "base=identity;hot=train_greedy_coaccess",
+          "metrics": {
+            "None": {
+              "max_gap_unrequested_records": null,
+              "route_layer_sets_with_misses": 78860,
+              "logical_miss_bundles": 330343,
+              "logical_bytes": 289560174592,
+              "physical_range_count_by_plane": [
+                330343,
+                330343,
+                330343
+              ],
+              "physical_records_by_plane": [
+                330343,
+                330343,
+                330343
+              ],
+              "physical_bytes": 289560174592,
+              "physical_bytes_decimal_mb": 289560.174592,
+              "physical_bytes_mib": 276146.1015625,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.0,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "0": {
+              "max_gap_unrequested_records": 0,
+              "route_layer_sets_with_misses": 78860,
+              "logical_miss_bundles": 330343,
+              "logical_bytes": 289560174592,
+              "physical_range_count_by_plane": [
+                279984,
+                279984,
+                279984
+              ],
+              "physical_records_by_plane": [
+                330343,
+                330343,
+                330343
+              ],
+              "physical_bytes": 289560174592,
+              "physical_bytes_decimal_mb": 289560.174592,
+              "physical_bytes_mib": 276146.1015625,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.15244458033014174,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "1": {
+              "max_gap_unrequested_records": 1,
+              "route_layer_sets_with_misses": 78860,
+              "logical_miss_bundles": 330343,
+              "logical_bytes": 289560174592,
+              "physical_range_count_by_plane": [
+                268152,
+                268152,
+                268152
+              ],
+              "physical_records_by_plane": [
+                342175,
+                342175,
+                342175
+              ],
+              "physical_bytes": 299931443200,
+              "physical_bytes_decimal_mb": 299931.4432,
+              "physical_bytes_mib": 286036.9140625,
+              "amplification_vs_logical": 1.035817317152172,
+              "range_reduction_vs_one_read_per_miss": 0.1882618974823138,
+              "optimistic_amdahl_gain_from_bytes_only": -0.015615298956949464
+            },
+            "2": {
+              "max_gap_unrequested_records": 2,
+              "route_layer_sets_with_misses": 78860,
+              "logical_miss_bundles": 330343,
+              "logical_bytes": 289560174592,
+              "physical_range_count_by_plane": [
+                261292,
+                261292,
+                261292
+              ],
+              "physical_records_by_plane": [
+                355895,
+                355895,
+                355895
+              ],
+              "physical_bytes": 311957626880,
+              "physical_bytes_decimal_mb": 311957.62688,
+              "physical_bytes_mib": 297505.9765625,
+              "amplification_vs_logical": 1.0773499060067868,
+              "range_reduction_vs_one_read_per_miss": 0.20902819190962119,
+              "optimistic_amdahl_gain_from_bytes_only": -0.03312253914575769
+            },
+            "4": {
+              "max_gap_unrequested_records": 4,
+              "route_layer_sets_with_misses": 78860,
+              "logical_miss_bundles": 330343,
+              "logical_bytes": 289560174592,
+              "physical_range_count_by_plane": [
+                251561,
+                251561,
+                251561
+              ],
+              "physical_records_by_plane": [
+                389614,
+                389614,
+                389614
+              ],
+              "physical_bytes": 341513814016,
+              "physical_bytes_decimal_mb": 341513.814016,
+              "physical_bytes_mib": 325692.953125,
+              "amplification_vs_logical": 1.179422600145909,
+              "range_reduction_vs_one_read_per_miss": 0.2384854529988527,
+              "optimistic_amdahl_gain_from_bytes_only": -0.07361417394185898
+            }
+          }
+        },
+        "128": {
+          "hot_bundles_duplicated": 5120,
+          "extra_disk_bytes": 4487905280,
+          "extra_disk_decimal_gb": 4.48790528,
+          "disk_multiplier_vs_routed_bundle_store": 1.5,
+          "placement": "base=identity;hot=train_greedy_coaccess",
+          "metrics": {
+            "None": {
+              "max_gap_unrequested_records": null,
+              "route_layer_sets_with_misses": 78860,
+              "logical_miss_bundles": 330343,
+              "logical_bytes": 289560174592,
+              "physical_range_count_by_plane": [
+                330343,
+                330343,
+                330343
+              ],
+              "physical_records_by_plane": [
+                330343,
+                330343,
+                330343
+              ],
+              "physical_bytes": 289560174592,
+              "physical_bytes_decimal_mb": 289560.174592,
+              "physical_bytes_mib": 276146.1015625,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.0,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "0": {
+              "max_gap_unrequested_records": 0,
+              "route_layer_sets_with_misses": 78860,
+              "logical_miss_bundles": 330343,
+              "logical_bytes": 289560174592,
+              "physical_range_count_by_plane": [
+                263209,
+                263209,
+                263209
+              ],
+              "physical_records_by_plane": [
+                330343,
+                330343,
+                330343
+              ],
+              "physical_bytes": 289560174592,
+              "physical_bytes_decimal_mb": 289560.174592,
+              "physical_bytes_mib": 276146.1015625,
+              "amplification_vs_logical": 1.0,
+              "range_reduction_vs_one_read_per_miss": 0.20322513266513897,
+              "optimistic_amdahl_gain_from_bytes_only": 0.0
+            },
+            "1": {
+              "max_gap_unrequested_records": 1,
+              "route_layer_sets_with_misses": 78860,
+              "logical_miss_bundles": 330343,
+              "logical_bytes": 289560174592,
+              "physical_range_count_by_plane": [
+                249745,
+                249745,
+                249745
+              ],
+              "physical_records_by_plane": [
+                343807,
+                343807,
+                343807
+              ],
+              "physical_bytes": 301361963008,
+              "physical_bytes_decimal_mb": 301361.963008,
+              "physical_bytes_mib": 287401.1640625,
+              "amplification_vs_logical": 1.0407576367593683,
+              "range_reduction_vs_one_read_per_miss": 0.24398276942450725,
+              "optimistic_amdahl_gain_from_bytes_only": -0.017730943780264186
+            },
+            "2": {
+              "max_gap_unrequested_records": 2,
+              "route_layer_sets_with_misses": 78860,
+              "logical_miss_bundles": 330343,
+              "logical_bytes": 289560174592,
+              "physical_range_count_by_plane": [
+                242321,
+                242321,
+                242321
+              ],
+              "physical_records_by_plane": [
+                358655,
+                358655,
+                358655
+              ],
+              "physical_bytes": 314376888320,
+              "physical_bytes_decimal_mb": 314376.88832,
+              "physical_bytes_mib": 299813.1640625,
+              "amplification_vs_logical": 1.0857048582836628,
+              "range_reduction_vs_one_read_per_miss": 0.2664563801866545,
+              "optimistic_amdahl_gain_from_bytes_only": -0.03656943550531
+            },
+            "4": {
+              "max_gap_unrequested_records": 4,
+              "route_layer_sets_with_misses": 78860,
+              "logical_miss_bundles": 330343,
+              "logical_bytes": 289560174592,
+              "physical_range_count_by_plane": [
+                232271,
+                232271,
+                232271
+              ],
+              "physical_records_by_plane": [
+                393428,
+                393428,
+                393428
+              ],
+              "physical_bytes": 344856952832,
+              "physical_bytes_decimal_mb": 344856.952832,
+              "physical_bytes_mib": 328881.21875,
+              "amplification_vs_logical": 1.1909681755024324,
+              "range_reduction_vs_one_read_per_miss": 0.296879304238322,
+              "optimistic_amdahl_gain_from_bytes_only": -0.07798173916890616
+            }
+          }
+        }
+      }
+    }
+  },
+  "decision_table": [
+    {
+      "capacity_bundles": 2281,
+      "baseline_fresh_decimal_mb_per_token": 74.88755403174603,
+      "split_partitioned_fresh_decimal_mb_per_token": 74.85040558730158,
+      "split_partitioned_gain_percent": 0.021974490065312935,
+      "best_holdout_layout_gap1": "identity",
+      "best_holdout_layout_gap1_amplification": 1.0098237772656378,
+      "best_duplicate_hot_count_gap1": 8,
+      "best_duplicate_gap1_amplification": 1.0114783699205165,
+      "best_duplicate_extra_disk_gb": 0.28049408,
+      "decision_split_plane": "KILL",
+      "decision_layout": "KILL",
+      "decision_duplicate": "KILL"
+    },
+    {
+      "capacity_bundles": 1439,
+      "baseline_fresh_decimal_mb_per_token": 106.87358374603174,
+      "split_partitioned_fresh_decimal_mb_per_token": 106.86267733333332,
+      "split_partitioned_gain_percent": 0.004519845388606392,
+      "best_holdout_layout_gap1": "identity",
+      "best_holdout_layout_gap1_amplification": 1.0129476991922084,
+      "best_duplicate_hot_count_gap1": 8,
+      "best_duplicate_gap1_amplification": 1.0154595346680064,
+      "best_duplicate_extra_disk_gb": 0.28049408,
+      "decision_split_plane": "KILL",
+      "decision_layout": "KILL",
+      "decision_duplicate": "KILL"
+    },
+    {
+      "capacity_bundles": 826,
+      "baseline_fresh_decimal_mb_per_token": 143.63103898412697,
+      "split_partitioned_fresh_decimal_mb_per_token": 143.6309048888889,
+      "split_partitioned_gain_percent": 4.1348297141752255e-05,
+      "best_holdout_layout_gap1": "identity",
+      "best_holdout_layout_gap1_amplification": 1.016368295785879,
+      "best_duplicate_hot_count_gap1": 8,
+      "best_duplicate_gap1_amplification": 1.0201366458499197,
+      "best_duplicate_extra_disk_gb": 0.28049408,
+      "decision_split_plane": "KILL",
+      "decision_layout": "KILL",
+      "decision_duplicate": "KILL"
+    }
+  ],
+  "overall_conclusion": {
+    "route_set_placement": "KILL unless a real filesystem benchmark proves a large syscall-only win; byte traffic cannot improve and coalescing adds amplification",
+    "duplicate_hot_copies": "KILL if no candidate reduces physical bytes; disk duplication does not change RAM/cache traffic",
+    "split_gate_up_down": "Use the reported partitioned/global replay as the only storage branch worth a runtime follow-up if its Amdahl estimate clears 5%",
+    "model_limit": "Coaccess/range metrics are not tok/s measurements; exact output/routing would remain unchanged by all storage probes"
+  }
+}

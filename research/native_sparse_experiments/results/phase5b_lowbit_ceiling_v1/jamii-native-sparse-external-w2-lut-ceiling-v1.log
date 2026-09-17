@@ -1,0 +1,16 @@
+[{"stream_name":"stdout","time":1.086038443,"data":"+ lscpu\n"}
+,{"stream_name":"stdout","time":1.127178783,"data":"+ c++ --version\n"}
+,{"stream_name":"stdout","time":1.154769667,"data":"+ git clone --filter=blob:none https://github.com/ggml-org/llama.cpp.git /tmp/native-sparse-lowbit-ceiling/llama.cpp\n"}
+,{"stream_name":"stdout","time":9.685207398,"data":"+ git fetch --depth 1 origin 3057bb66c86c46d5781e50e85462a760ba7d1feb\n"}
+,{"stream_name":"stdout","time":10.630528222,"data":"+ git checkout --detach 3057bb66c86c46d5781e50e85462a760ba7d1feb\n"}
+,{"stream_name":"stdout","time":11.695441567,"data":"+ git rev-parse HEAD\n"}
+,{"stream_name":"stdout","time":11.699112807,"data":"+ c++ -O3 -DNDEBUG -mavx2 -mfma -march=haswell -std=c++17 -I /tmp/native-sparse-lowbit-ceiling/llama.cpp/ggml/src /tmp/native-sparse-lowbit-ceiling/lowbit_ceiling.cpp -o /tmp/native-sparse-lowbit-ceiling/lowbit_ceiling\n"}
+,{"stream_name":"stdout","time":14.782098455,"data":"+ /tmp/native-sparse-lowbit-ceiling/lowbit_ceiling\n"}
+,{"stream_name":"stdout","time":17.104375203,"data":"{\"status\": \"ok\", \"error\": null}\n"}
+,{"stream_name":"stderr","time":20.147896302,"data":"/usr/local/lib/python3.12/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":20.147947832,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":20.618636517,"data":"/usr/local/lib/python3.12/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":20.618677667,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":22.635996472,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":24.508648461,"data":"[NbConvertApp] Writing 322495 bytes to __results__.html\n"}
+]

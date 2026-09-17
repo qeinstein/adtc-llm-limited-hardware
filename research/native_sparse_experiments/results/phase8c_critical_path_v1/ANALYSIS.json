@@ -1,0 +1,63 @@
+{
+  "schema": "native-sparse-critical-path/v1-analysis",
+  "status": "complete",
+  "decision": "FRONTIER_AS_BOUND",
+  "hypothesis": "v10 improves prompt batching while exact single-token decode has little same-layer overlap; a warm-page-cache oracle measures removable unhidden storage wall time.",
+  "hardware": "Kaggle 4-vCPU Intel Xeon 2.20 GHz, AVX2, 4 threads",
+  "runtime": {
+    "llama_commit": "3057bb66c86c46d5781e50e85462a760ba7d1feb",
+    "patch_sha256": "8a2f7314a886be3d14d8596a02cfbd43bd7f7c5b4eb7a0261b020b4661afeafd",
+    "precise_cli_timings": true,
+    "research_source_commit": "cae43e5fb930ec562bf5749c7df5cb0d8827a911"
+  },
+  "model_sha256": "2a809de317cfd49ac9130b95619ee6ac039a855e467015b3e996eb61af84718b",
+  "native_k": 8,
+  "threads": 4,
+  "cache": {
+    "capacity_bytes": 2000000000,
+    "slot_bytes": 876544,
+    "slots": 2281
+  },
+  "arms": {
+    "serial_cold": {
+      "decode_tok_s_mean": 3.114066,
+      "decode_ms_per_token_mean": 321.223,
+      "peak_rss_mib_max": 3517.36,
+      "physical_read_mb_per_token": 136.583
+    },
+    "serial_warm_oracle": {
+      "decode_tok_s_mean": 3.347492,
+      "decode_ms_per_token_mean": 298.793,
+      "peak_rss_mib_max": 3520.45,
+      "physical_read_mb_per_token": 0.0
+    },
+    "staged_cold": {
+      "decode_tok_s_mean": 3.198323,
+      "decode_ms_per_token_mean": 312.668,
+      "peak_rss_mib_max": 3517.8,
+      "physical_read_mb_per_token": 136.596
+    },
+    "staged_warm_oracle": {
+      "decode_tok_s_mean": 3.322881,
+      "decode_ms_per_token_mean": 301.054,
+      "peak_rss_mib_max": 3520.45,
+      "physical_read_mb_per_token": 0.0
+    }
+  },
+  "logical_fresh_expert_mb_per_token": 127.0304,
+  "blocking_io_wall_time": {
+    "serial_cold_minus_warm_ms_per_token": 22.43,
+    "serial_optimistic_end_to_end_ceiling_fraction": 0.075,
+    "staged_cold_minus_warm_ms_per_token": 11.613,
+    "staged_optimistic_end_to_end_ceiling_fraction": 0.0371
+  },
+  "correctness": {
+    "all_response_hashes_equal": true,
+    "response_sha256": "5804c970f14ce9902178660a5262689f2ffb3518619336403244933d85cafca1",
+    "weights_unchanged": true
+  },
+  "quality": "deterministic exact smoke only",
+  "conclusion": "Storage is not the main throughput bottleneck on Kaggle. All storage/prefetch proposals must be evaluated against measured wall-clock stall, not bytes/bandwidth.",
+  "raw_result": "raw/result.json",
+  "kaggle_kernel": "toheebogunade/jamii-native-sparse-critical-path-v1"
+}

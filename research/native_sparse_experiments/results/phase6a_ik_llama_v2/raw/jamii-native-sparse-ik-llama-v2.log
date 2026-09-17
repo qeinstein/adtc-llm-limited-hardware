@@ -1,0 +1,26 @@
+[{"stream_name":"stdout","time":0.851033212,"data":"+ lscpu\n"}
+,{"stream_name":"stdout","time":0.886731991,"data":"+ df -h /tmp\n"}
+,{"stream_name":"stdout","time":0.898669913,"data":"+ git clone --filter=blob:none --no-checkout https://github.com/ikawrakow/ik_llama.cpp.git /tmp/native-sparse-ik-llama-v2/ik_llama.cpp\n"}
+,{"stream_name":"stdout","time":2.782191802,"data":"+ git fetch --depth 1 origin 3bb386eb68ffee0a5dc7db21da0735d594929eeb\n"}
+,{"stream_name":"stdout","time":4.255795723,"data":"+ git checkout --detach 3bb386eb68ffee0a5dc7db21da0735d594929eeb\n"}
+,{"stream_name":"stdout","time":10.238619334,"data":"+ git rev-parse HEAD\n"}
+,{"stream_name":"stdout","time":10.241828348,"data":"+ git status --short --branch\n"}
+,{"stream_name":"stdout","time":10.509394374,"data":"+ git log --oneline --decorate -5\n"}
+,{"stream_name":"stdout","time":13.757775495,"data":"+ cmake -S /tmp/native-sparse-ik-llama-v2/ik_llama.cpp -B /tmp/native-sparse-ik-llama-v2/ik_llama.cpp/build-native -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DGGML_NATIVE=ON -DGGML_CUDA=OFF -DGGML_METAL=OFF -DGGML_VULKAN=OFF -DLLAMA_CURL=OFF\n"}
+,{"stream_name":"stdout","time":15.760890671,"data":"+ cmake --build /tmp/native-sparse-ik-llama-v2/ik_llama.cpp/build-native --config Release -j4 --target llama-cli\n"}
+,{"stream_name":"stdout","time":403.309428532,"data":"+ cmake --build /tmp/native-sparse-ik-llama-v2/ik_llama.cpp/build-native --config Release -j4 --target llama-bench\n"}
+,{"stream_name":"stdout","time":413.148915657,"data":"+ /tmp/native-sparse-ik-llama-v2/ik_llama.cpp/build-native/bin/llama-cli --version\n"}
+,{"stream_name":"stdout","time":413.155693667,"data":"+ /tmp/native-sparse-ik-llama-v2/ik_llama.cpp/build-native/bin/llama-cli --help\n"}
+,{"stream_name":"stdout","time":413.160204717,"data":"+ /tmp/native-sparse-ik-llama-v2/ik_llama.cpp/build-native/bin/llama-bench --help\n"}
+,{"stream_name":"stdout","time":413.166542427,"data":"+ c++ --version\n"}
+,{"stream_name":"stdout","time":413.168320088,"data":"+ cmake --version\n"}
+,{"stream_name":"stdout","time":413.311502085,"data":"+ curl -L --fail --retry 5 --retry-delay 5 -C - -o /tmp/native-sparse-ik-llama-v2/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf https://huggingface.co/unsloth/Qwen3.5-35B-A3B-GGUF/resolve/bc014a17be43adabd7066b7a86075ff935c6a4e2/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf\n"}
+,{"stream_name":"stdout","time":643.638866941,"data":"ERROR: none of the CLI option aliases are supported: ('-ngl', '--gpu-layers')\n"}
+,{"stream_name":"stdout","time":643.646577721,"data":"{\"status\": \"failed\", \"blockers\": [], \"smoke_equal\": null, \"bench_status\": null, \"error\": \"RuntimeError(\\\"none of the CLI option aliases are supported: ('-ngl', '--gpu-layers')\\\")\"}\n"}
+,{"stream_name":"stderr","time":646.033544465,"data":"/usr/local/lib/python3.12/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":646.033663565,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":646.429421968,"data":"/usr/local/lib/python3.12/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":646.429449698,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":648.539868553,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":649.810829333,"data":"[NbConvertApp] Writing 397942 bytes to __results__.html\n"}
+]
