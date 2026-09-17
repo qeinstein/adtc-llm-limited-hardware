@@ -65,10 +65,12 @@ unless noted. Status values: PROPOSED / INVESTIGATE / PROTOTYPE / EXPLOIT / KILL
 - Cheap falsification: (1) check checkpoint for MTP tensors; (2) existing
   llama.cpp MTP bench on Kaggle CPU, N=2/3/4.
 - Evidence: (1) DONE — our checkpoint has 0 MTP tensors (733-tensor
-  inventory). MTP weights exist separately: unsloth/Qwen3.5-35B-A3B-MTP-GGUF
-  (same quant names, MTP-inclusive). Benchmark needs that file + llama.cpp
-  MTP draft flags. Queued as Kaggle kernel after v2/Q2_K.
-- Status: INVESTIGATE (weights located; bench pending).
+  inventory). MTP weights: unsloth/Qwen3.5-35B-A3B-MTP-GGUF, IQ2_XXS file
+  11,819,120,800 B sha256 3914ae7b… (repo 63af8373; +1.16 GB vs base).
+  llama.cpp @3057bb66: COMMON_SPECULATIVE_TYPE_DRAFT_MTP exists,
+  auto-activates on MTP sidecar; flags --draft/--draft-max N (N=2/3/4).
+  First probe: same-file -md + --draft N on Kaggle CPU.
+- Status: INVESTIGATE (fully specified; kernel queued after v4/Q2_K).
 
 ## D — IQ2 is the wrong computational representation
 
