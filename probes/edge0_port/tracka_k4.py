@@ -6,7 +6,11 @@ route TRACEs from trace_p<NN>.npz topk_ids; see extract_k4.py).
 Split mirrors v3: pid<12 train (pins), else test (all sims on test).
 
 Policies (ALL atomic-event): lru, static, hyb25/50/75, lfu,
-least-stale (decayed frequency), pinL2/pinL4, belady (protected oracle).
+decayed_lfu (decayed frequency; the old "least-stale" label was wrong),
+least_stale (TRUE SpecMD/phase5e port: per-bundle EWMA reuse-interval
+prediction, victim = most distant predicted next use; ported from
+research/native_sparse_experiments/route_trace.py::_online_policy_replay),
+pinL2/pinL4, belady (protected oracle).
 Latency frame: CORRECTED model (perf_model), NOT phase1_pareto's stale
 K8/EOVH constants. K4 misses are MEASURED here (no x0.5 interim).
 
@@ -20,7 +24,7 @@ import sys
 from collections import Counter, OrderedDict
 from pathlib import Path
 
-sys.path.insert(0, "probes/edge0_port")
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 import cache_atomic as A
 import perf_model as M
 
@@ -30,7 +34,8 @@ CAPS = [320, 512, 826, 1024, 1439, 1792, 2300, 2664, 3200, 3584,
         4096, 4608, 5120, 5632, 6656]
 TARGETS = [3.0, 4.0, 5.0, 5.5, 6.0]
 BUNDLE = M.BUNDLE
-HALVE_EVERY = 20000  # least-stale decay interval (requests)
+HALVE_EVERY = 20000  # decayed_lfu count-halving interval (requests)
+LS_ALPHA = 0.25  # least_stale EWMA weight on newest interval (phase5e)
 
 
 def load_split():
@@ -91,8 +96,10 @@ def sim_lfu_atomic(toks, cap):
     return h / tot, (tot - h) / len(toks)
 
 
-def sim_stale_atomic(toks, cap):
-    """Least-stale: decayed-frequency eviction (halve counts periodically)."""
+def sim_decayed_lfu(toks, cap):
+    """Decayed LFU: halve all counts every HALVE_EVERY requests.
+
+    NOT SpecMD Least-Stale (kept under its honest name)."""
     cnt, use, cache = {}, {}, set()
     tick, nreq, h, tot = 0, 0, 0, 0
     for layers in toks:
@@ -124,6 +131,90 @@ def sim_stale_atomic(toks, cap):
                 cache.add(k)
                 cnt[k] = 1
                 use[k] = tick
+    return h / tot, (tot - h) / len(toks)
+
+
+def sim_leaststale_atomic(toks, cap):
+    """TRUE SpecMD/phase5e Least-Stale, atomic-event adaptation.
+
+    Port of research/native_sparse_experiments/route_trace.py::
+    _online_policy_replay(policy="least_stale"): each bundle's reuse
+    interval is predicted by EWMA (0.75*old + 0.25*newest, first
+    observation seeds); victim = most distant predicted next use
+    (last + max(expected_interval, 1)); ties -> most recent last-use,
+    then larger (layer, expert). New admissions seed expected_interval=0
+    (predicted next = last+1, i.e. expected soon).
+    Atomic adaptation: hits scored from pre-event state, per-request
+    `now` preserved (interval arithmetic identical to sequential), and
+    eviction never takes an event key (JOIN2 contract; sequential
+    phase5e CAN evict a just-fetched key, which atomic forbids).
+    """
+    last, expiv, cache, heap = {}, {}, set(), []
+    now, h, tot = 0, 0, 0
+
+    def push(k):
+        la = last[k]
+        pred = la + max(expiv[k], 1.0)
+        heapq.heappush(heap, (-pred, -la, -(k >> 8), -(k & 255), k))
+
+    def victim(evset):
+        aside = []
+        try:
+            while heap:
+                first, second, lay, ex, k = heapq.heappop(heap)
+                if k not in cache:
+                    continue
+                la = last[k]
+                pred = la + max(expiv[k], 1.0)
+                if (first, second, lay, ex) != (-pred, -la,
+                                               -(k >> 8), -(k & 255)):
+                    continue  # stale heap entry
+                if k in evset:  # protected: set aside, try next
+                    aside.append((first, second, lay, ex, k))
+                    continue
+                return k
+            if not cache:
+                return None  # cap <= 0: nothing can be cached
+            # Degenerate: all cached are event keys (cap <= K). phase5e
+            # raises here; atomic falls back to plain max-pred.
+            return max(cache, key=lambda kk: (last[kk] + max(expiv[kk], 1.0),
+                                              last[kk], kk))
+        finally:
+            for e in aside:
+                heapq.heappush(heap, e)
+
+    for layers in toks:
+        for reqs in layers:
+            tot += len(reqs)
+            h += sum(k in cache for k in reqs)
+            for i, k in enumerate(reqs):
+                if k in cache:
+                    t = now + i
+                    iv = t - last[k]
+                    if iv > 0:
+                        if expiv[k] == 0:
+                            expiv[k] = iv
+                        else:
+                            expiv[k] = (1.0 - LS_ALPHA) * expiv[k] + \
+                                LS_ALPHA * iv
+                    last[k] = t
+                    push(k)
+            now += len(reqs)
+            evset = set(reqs)
+            for i, k in enumerate(reqs):
+                if k in cache:
+                    continue
+                if len(cache) >= cap:
+                    evk = victim(evset)
+                    if evk is None:
+                        continue
+                    cache.discard(evk)
+                    last.pop(evk, None)
+                    expiv.pop(evk, None)
+                cache.add(k)
+                last[k] = now - len(reqs) + i
+                expiv[k] = 0.0
+                push(k)
     return h / tot, (tot - h) / len(toks)
 
 
@@ -192,7 +283,8 @@ def main():
             pins = set(k for k, _ in pop.most_common(int(cap * frac)))
             row[f"hyb{int(frac*100)}"] = A.sim_atomic(te, cap, pins)[:2]
         row["lfu"] = sim_lfu_atomic(te, cap)
-        row["stale"] = sim_stale_atomic(te, cap)
+        row["least_stale"] = sim_leaststale_atomic(te, cap)
+        row["decayed_lfu"] = sim_decayed_lfu(te, cap)
         for k in (2, 4):
             pl = set(kk for li in range(40)
                      for kk, _ in popl[li].most_common(k))
@@ -217,7 +309,7 @@ def main():
         slots = int(exp_gb * 1e9 / BUNDLE)
         best = None
         for pol in ("lru", "static", "hyb25", "hyb50", "hyb75", "lfu",
-                    "stale", "pinL2", "pinL4"):
+                    "least_stale", "decayed_lfu", "pinL2", "pinL4"):
             cs = sorted(curves)
             if slots <= cs[0]:
                 miss = curves[cs[0]][pol][1]

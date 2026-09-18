@@ -38,3 +38,25 @@
   writes curves + pareto + cache_config_k4.json (winning pins).
 - `extract_k4.py`: npz -> ids npy with EXPLICIT quirk checks (no blind
   v3 eval0-drop copy).
+
+## 2026-09-18: Least-Stale correction + Q2K transfer kernel prepped
+- User correction 2: old "least-stale" was decayed frequency, NOT SpecMD
+  Least-Stale. Renamed to `decayed_lfu` (honest label, kept in sweep).
+- TRUE least_stale ported from
+  research/native_sparse_experiments/route_trace.py::_online_policy_replay:
+  per-bundle EWMA reuse-interval (0.75/0.25, first observation seeds),
+  victim = most distant predicted next use, ties -> most recent last-use
+  then (layer, expert); atomic adaptation (pre-state scoring, per-request
+  `now`, event-key protection). Wired into curves + winner selection.
+- tests/test_cache_policies.py (5 tests): hand-computed EWMA victim order
+  (evicts A@e7, D-over-C tiebreak@e8, C@e11), multi-key protection case,
+  Belady dominance over all online sims (20 seeds, airtight single-key
+  events), decayed_lfu==LFU without decay + hand-computed decay flip
+  (4 vs 5 hits). Suite: 8 passed (5 new + 2 atomic + 1 gguf).
+- Small-Q2K transfer kernel prepped (NOT launched; launches after the IQ2
+  re-sweep picks a winner): kaggle/native-sparse-edge0tracek4q2k-v1/,
+  8 paired pids [1,4,7,10,13,15,18,21] x N_GEN=80 on a fresh Q2K-experts
+  transcode (IQ2 sha-verified in SCRATCH, s-kernel recipe + 120 assert,
+  gates read from executed file, Q2K deleted before pull).
+- Note: pytest via `| tail` backgrounded and went quiet (both files pass
+  in <1s standalone); killed the stale session, no code issue.
