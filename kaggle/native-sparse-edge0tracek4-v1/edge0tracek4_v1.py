@@ -308,8 +308,11 @@ def fetch_model():
     url = f"https://huggingface.co/{m['hf']}/resolve/{m['repo']}/{m['file']}"
     dest = WORK / m["file"]
     if not dest.exists() or dest.stat().st_size != m["size"]:
-        run_checked(["curl", "-L", "--fail", "--retry", "5",
-                     "--retry-delay", "5", "-C", "-", "-o", str(dest), url],
+        # v1 died at 75% on curl-92 (HTTP/2 reset, not retried by
+        # default): force HTTP/1.1 + retry-all-errors. Resume kept.
+        run_checked(["curl", "-L", "--fail", "--http1.1", "--retry", "5",
+                     "--retry-all-errors", "--retry-delay", "5", "-C", "-",
+                     "-o", str(dest), url],
                     log=OUT / "model-download.log")
     d = sha256(dest)
     if dest.stat().st_size != m["size"] or d != m["sha"]:
