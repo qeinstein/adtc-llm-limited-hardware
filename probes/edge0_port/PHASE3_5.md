@@ -93,5 +93,23 @@ Speed: K4 arms 1672-1774s vs native 2112 (1.19-1.26x; k412's +6% vs
 k416 is host noise — k2 cannot change executed work). Matches the
 paper's delta PATTERN (naive deep loss, k2=16 ~neutral) scaled to our
 matched-likelihood harness. Mandatory Recover-LoRA NOT needed for the
-speed sprint. Pending: mmlu_q2k_k416 joint gate + layer probe + sanity
-(r-kernel running).
+speed sprint.
+
+## r-v1: ENOSPC (dead 40min in; parser fix verified 120/733)
+
+## r-v2: joint gate LANDED, then OOM-killed (ERROR at 8384s)
+
+- transcode q2k: 120/733 -> q2_k OK (~1914s); expert-count check passed.
+- **mmlu_q2k_k416 (Q2K-experts + K4/16, transcoded worst case): 38.5
+  +/- 3.449 (1834s)**. vs native 42.0: -3.5pp; vs k416-on-IQ2 41.0:
+  -2.5pp (5 questions). Unpaired SE of the diff ~4.9pp => WITHIN
+  NOISE of both; consistent with no Q2KxK4 interaction AND with a
+  small real interaction. No Q2K+K8/MMLU-200 arm exists to separate
+  them (Q2K-alone evidence is MMLU-100/K8: 39 vs 37). Deployment
+  config point estimate: 38.5. Sprint impact: acceptable modest cost
+  (post-training recovers); does NOT overturn Q2K KEEP or K4/16
+  STRONG KEEP, which rest on their own gates.
+- After mmlu_q2k (4450s), "Killed" (SIGKILL/OOM) at 8384s during the
+  layer-probe/sanity stretch (no per-run markers; stage TBD from
+  output pull). Layer probe + sanity + Q2K speed still pending.
+  Per-stage result.json dumps should bound the loss.
