@@ -624,21 +624,27 @@ def main():
             try:
                 r = cli_run(model, pr, f"layer_p{pi}_{cfg}", 30, 0.7,
                             k1, k2, moe_out=binp, threads=1, timeout=900)
-            except subprocess.TimeoutExpired:
-                print(f"CAPTURE ABORT at p{pi}_{cfg} (hook path hangs); "
-                      f"keeping speed results", flush=True)
+            except Exception as e:  # hang OR hook crash: never fatal
+                print(f"CAPTURE ABORT at p{pi}_{cfg} "
+                      f"({type(e).__name__}: {str(e)[:200]}); keeping "
+                      f"speed results", flush=True)
                 results["capture_aborted_at"] = f"p{pi}_{cfg}"
+                results["capture_abort_why"] = f"{type(e).__name__}"
                 cap_ok = False
                 break
             layer_bins.setdefault(cfg, {})[pi] = str(binp)
         if not cap_ok:
             break
     if cap_ok:
-        probe = {}
-        for pi in range(len(LAYER_PROMPTS)):
-            probe[f"p{pi}"] = analyze_layer(
-                {c: Path(layer_bins[c][pi]) for c in ("k8", "k4", "k416")})
-        results["layer_probe"] = probe
+        try:
+            probe = {}
+            for pi in range(len(LAYER_PROMPTS)):
+                probe[f"p{pi}"] = analyze_layer(
+                    {c: Path(layer_bins[c][pi]) for c in ("k8", "k4", "k416")})
+            results["layer_probe"] = probe
+        except Exception as e:  # parse must not kill sanity+speed
+            results["layer_probe_error"] = f"{type(e).__name__}: {str(e)[:300]}"
+            print(f"analyze failed ({e}); continuing to sanity", flush=True)
     dump()
     # ---- sanity generations ----
     gates = fetch_gates()
