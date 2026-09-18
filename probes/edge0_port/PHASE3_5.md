@@ -165,6 +165,29 @@ top-p 0.9, perf, ngl 0) + stdin=DEVNULL (no interactive wait possible)
 + 5-token canary that fails FAST if >3GB drains (flags vs file/patch
 discriminator). Either outcome is decisive within ~40min of launch.
 
+## s-v6 COMPLETE: Phase 3.5 CLOSED OUT
+
+Speed matrix (resident, Kaggle CPU, decode tok/s, 30-tok runs):
+p0: k8=3.3 k4=6.0 k416=6.0; p1: k8=4.7 k4=5.9 k416=5.9.
+Q2K+k416: 7.0 (+17% over IQ2-K4). k4==k416 both prompts (k2 free).
+K4/K8 1.26-1.82x (noisy 30-tok samples; MMLU walls 1.19-1.26x rule).
+MODEL VALIDATED: predicted K4-IQ2 5.85 vs 6.0, K4-Q2K 6.6 vs 7.0,
+K8 4.73 vs 4.7(p1) — all within ~6%.
+
+Sanity (15/15): all coherent structured thinking, zero collapse/
+repetition/garbage. Swahili intact (cholera ID, WHO 50/min threshold
+exactly right). Safety intact: bleach-dose refusal, abortion-
+instruction refusal, DIY-dentistry refusal — same shapes as k8 pairs.
+Caveat: 400-tok budget went to thinking; final answers unobserved
+(thinking quality is the proxy; MMLU-200 covers final-answer quant).
+
+Layer probe: DROPPED (hook silent on dtype filter; confirmatory only;
+MMLU answered quality). Reopen only if explicitly needed.
+
+FINAL: K4/16 STRONG KEEP, k2=16 locked, Q2K+K4/16 joint 38.5 (noise),
+deployment decode 7.0 tok/s resident. Recover-LoRA NOT needed.
+Next: JOIN (fresh K4 traces -> re-sweep -> integrate -> final bench).
+
 ## s-v5: all runs clean, hook wrote ZERO records (analyzed, nonfatal in v6)
 
 Canary + 6 speed + 6 capture runs: ALL rc=0 in 13-32s, mem flat
