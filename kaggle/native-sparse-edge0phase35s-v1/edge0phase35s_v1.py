@@ -47,6 +47,15 @@ unchecked, and all phase35 runs built master (~Sept 2026), not the pin
 (MMLU deltas stand: same binary across arms). s-v2 re-pins to the TRUE
 pin 3057bb66c86c46d5781e50e85462a760ba7d1feb, ASSERTS checkout +
 rev-parse, and adds a 60s heartbeat to every cli_run.
+
+S-V3: s-v2 STILL died on the true pin (heartbeat: linear 0.7GB/min
+MemAvailable drain 31.9->15.3GB over 24min, then OOM SIGKILL) with our
+patch inactive => stock-CLI/flags/file issue, not pin or patch. Diffed
+vs the PROVEN edge0trace invocation (23 clean prompts): we lacked
+--single-turn (interactive-stdin wait risk), used -c 1024, temp 0.0, no
+top-p/perf/ngl. s-v3 adopts the trace invocation VERBATIM + stdin=
+DEVNULL (stdin waits impossible) + a 5-token leak canary that ABORTS in
+minutes if the drain persists (discriminating flags vs file/patch).
 """
 from __future__ import annotations
 
@@ -415,10 +424,14 @@ def cli_run(model, prompt, label, n_gen, temp, k1=None, k2=None,
         env["GGML_MOE_K2"] = str(k2)
     if moe_out is not None:
         env["GGML_MOE_OUT"] = str(moe_out)
-    cmd = [str(CLI), "-m", str(model), "-p", prompt, "-n", str(n_gen),
-           "-t", str(threads), "-c", "1024", "--temp", str(temp), "-s",
-           "42", "--no-warmup", "--no-display-prompt", "-lm", "mmap",
-           "-lzm", "off", "--poll", "0"]
+    # Trace-verbatim invocation (edge0trace ran 23 prompts clean on the pin;
+    # our variant without --single-turn died twice). stdin=DEVNULL forbids
+    # any interactive wait; heartbeat+timeout bound any recurrence.
+    cmd = [str(CLI), "-m", str(model), "-ngl", "0", "-t", str(threads),
+           "-c", "512", "-n", str(n_gen), "--temp", str(temp), "--top-p",
+           "0.9", "--seed", "42", "--single-turn", "--no-display-prompt",
+           "--no-warmup", "--perf", "-lm", "mmap", "-lzm", "off", "--poll",
+           "0", "-p", prompt]
     print(f"+ {label} t={threads} mem={mem_gb():.1f}GB", flush=True)
     t0 = time.monotonic()
     import threading
@@ -436,8 +449,8 @@ def cli_run(model, prompt, label, n_gen, temp, k1=None, k2=None,
     th.start()
     try:
         p = subprocess.run(cmd, text=True, stdout=subprocess.PIPE,
-                           stderr=subprocess.PIPE, env={**os.environ, **env},
-                           timeout=timeout)
+                           stderr=subprocess.PIPE, stdin=subprocess.DEVNULL,
+                           env={**os.environ, **env}, timeout=timeout)
     except subprocess.TimeoutExpired:
         print(f"  {label}: TIMEOUT after {timeout}s mem={mem_gb():.1f}GB",
               flush=True)
@@ -568,11 +581,26 @@ def main():
         q2k = WORK / "Qwen3.6-35B-A3B-UD-Q2K-experts.gguf"
         results["transcode_fallback"] = transcode_q2k(model, q2k)
     dump()
+    # ---- leak canary (s-v2: 0.7GB/min drain -> OOM at ~25min) ----
+    # Trace-verbatim flags + DEVNULL stdin should be clean (23 prompts
+    # proven). If the drain persists here, the cause is file/patch, not
+    # flags -> fail FAST with the answer instead of burning 2h.
+    m0 = mem_gb()
+    rc = cli_run(model, LAYER_PROMPTS[0], "canary_n5", 5, 0.7, 8, 8,
+                 timeout=600)
+    results["canary"] = {"perf": rc["perf"], "mem_before": m0,
+                         "mem_after": mem_gb()}
+    dump()
+    if m0 - mem_gb() > 3.0:
+        raise RuntimeError(
+            f"LEAK PERSISTS with trace flags: {m0:.1f}->{mem_gb():.1f}GB "
+            f"on a 5-token run; cause is file/patch, not flags.")
+    print(f"canary clean: mem {m0:.1f}->{mem_gb():.1f}GB", flush=True)
     # ---- layer SPEED probe (NO hook: r-v2 died with hook active) ----
     layer_perf = {}
     for pi, pr in enumerate(LAYER_PROMPTS):
         for cfg, k1, k2 in (("k8", 8, 8), ("k4", 4, 4), ("k416", 4, 16)):
-            r = cli_run(model, pr, f"speed_p{pi}_{cfg}", 30, 0.0, k1, k2)
+            r = cli_run(model, pr, f"speed_p{pi}_{cfg}", 30, 0.7, k1, k2)
             layer_perf[f"p{pi}_{cfg}"] = r["perf"]
             results["layer_perf"] = layer_perf
             dump()
@@ -582,7 +610,7 @@ def main():
         for cfg, k1, k2 in (("k8", 8, 8), ("k4", 4, 4), ("k416", 4, 16)):
             binp = SCRATCH / f"moe_p{pi}_{cfg}.bin"
             try:
-                r = cli_run(model, pr, f"layer_p{pi}_{cfg}", 30, 0.0,
+                r = cli_run(model, pr, f"layer_p{pi}_{cfg}", 30, 0.7,
                             k1, k2, moe_out=binp, threads=1, timeout=900)
             except subprocess.TimeoutExpired:
                 print(f"CAPTURE ABORT at p{pi}_{cfg} (hook path hangs); "
@@ -613,7 +641,7 @@ def main():
               [{"id": h["id"], "text": h["text"]} for h in hsel])
     gens = []
     for pr in sanity:
-        r = cli_run(model, pr["text"], f"san_{pr['id']}_k416", 400, 0.0,
+        r = cli_run(model, pr["text"], f"san_{pr['id']}_k416", 400, 0.7,
                     4, 16)
         gens.append({"id": pr["id"], "config": "k416",
                      "output": r["output"], "perf": r["perf"]})
@@ -621,7 +649,7 @@ def main():
         results["n_sanity"] = len(gens)
         dump()
     for pr in [sanity[0], sanity[6], sanity[8]]:
-        r = cli_run(model, pr["text"], f"san_{pr['id']}_k8", 400, 0.0, 8, 8)
+        r = cli_run(model, pr["text"], f"san_{pr['id']}_k8", 400, 0.7, 8, 8)
         gens.append({"id": pr["id"], "config": "k8",
                      "output": r["output"], "perf": r["perf"]})
         (OUT / "sanity.json").write_text(json.dumps(gens))
@@ -632,7 +660,7 @@ def main():
     print("freed IQ2 model from SCRATCH", flush=True)
     dump()
     # ---- Q2K decode speed ----
-    r = cli_run(q2k, LAYER_PROMPTS[0], "speed_q2k_k416", 60, 0.0, 4, 16)
+    r = cli_run(q2k, LAYER_PROMPTS[0], "speed_q2k_k416", 60, 0.7, 4, 16)
     results["speed_q2k_k416"] = r["perf"]
     dump()
     print(json.dumps({k: (v["score_percent"] if isinstance(v, dict) and

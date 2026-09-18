@@ -147,3 +147,20 @@ Re-pinned (asserts on fetch/checkout/rev-parse, HEAD recorded); 60s
 heartbeat on every cli_run (mem + elapsed; silence becomes data). If
 the speed probe flies on the pin, master regression confirmed and the
 sprint continues on the pin.
+
+## s-v2 FAILED: linear 0.7GB/min leak -> OOM (pin exonerated too)
+
+`built base: 3057bb66...` confirmed, then speed_p0_k8 drained
+MemAvailable 31.9->15.3GB linearly over 24min and OOM-SIGKILLed at
+~1527s (Kaggle: "tried to allocate more memory than is available").
+Our patch is INACTIVE on that path (k1=k2=8, no hook env) and flags
+are valid stock => stock-CLI/flags/file issue. Diff vs PROVEN
+edge0trace invocation (23 clean prompts, same pin/model family): we
+lacked --single-turn, used -c 1024, temp 0.0, no top-p/perf/ngl.
+
+## s-v3 (running): trace-verbatim + DEVNULL stdin + leak canary
+
+Adopts the trace invocation verbatim (single-turn, c512, temp 0.7,
+top-p 0.9, perf, ngl 0) + stdin=DEVNULL (no interactive wait possible)
++ 5-token canary that fails FAST if >3GB drains (flags vs file/patch
+discriminator). Either outcome is decisive within ~40min of launch.
