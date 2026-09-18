@@ -463,9 +463,11 @@ def cli_run(model, prompt, label, n_gen, temp, k1=None, k2=None,
     (OUT / f"{label}.stderr.txt").write_text(p.stderr, encoding="utf-8")
     if p.returncode:
         raise RuntimeError(f"{label} rc={p.returncode}: {p.stderr[-1500:]}")
-    m = re.search(r"eval time =\s*([0-9.]+) ms / \s*([0-9]+) runs", p.stderr)
-    assert m, f"{label}: no perf line in stderr: {p.stderr[-800:]}"
-    perf = {"ms": float(m.group(1)), "runs": int(m.group(2))}
+    text = p.stdout + "\n" + p.stderr  # pin-era --perf may print to either
+    ms = re.findall(r"eval time =\s*([0-9.]+) ms /\s*([0-9]+) runs", text)
+    assert ms, f"{label}: no perf line; out[-400:]{p.stdout[-400:]} " \
+               f"err[-400:]{p.stderr[-400:]}"
+    perf = {"ms": float(ms[-1][0]), "runs": int(ms[-1][1])}
     perf["tok_s"] = perf["runs"] / (perf["ms"] / 1000)
     return {"label": label, "elapsed_sec": el, "perf": perf,
             "output": p.stdout}

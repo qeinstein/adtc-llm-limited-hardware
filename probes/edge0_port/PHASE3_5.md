@@ -164,3 +164,11 @@ Adopts the trace invocation verbatim (single-turn, c512, temp 0.7,
 top-p 0.9, perf, ngl 0) + stdin=DEVNULL (no interactive wait possible)
 + 5-token canary that fails FAST if >3GB drains (flags vs file/patch
 discriminator). Either outcome is decisive within ~40min of launch.
+
+## s-v3 CANARY PASSED (flags were the killer) + perf-parse bug
+
+`canary_n5: done 13s mem=31.9GB` — trace-verbatim flags + DEVNULL stdin
+run clean (13s incl. load, zero drain). Old invocation (no
+--single-turn, -c 1024, temp 0.0) caused all three kills. Then died on
+OUR assert: pin-era `--perf` line not in stderr tail (rc=0, run fine).
+s-v4: search stdout+stderr for the perf line (findall, take last).
