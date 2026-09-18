@@ -2,12 +2,13 @@
 
 Covers the TRUE SpecMD/phase5e least_stale port (EWMA reuse-interval,
 hand-computed victim order incl. tiebreaks), atomic event protection,
-Belady dominance over all online policies (theorem on single-key
-events, where protection never binds), and decayed_lfu (LFU equivalence
-without decay + a hand-computed decay flip).
+Belady dominance over all online policies (single-key + multikey),
+heap-Belady equality vs an obviously-correct scan reference, and
+decayed_lfu (LFU equivalence without decay + a hand-computed decay flip).
 """
 import importlib.util
 import random
+import sys
 from pathlib import Path
 
 import pytest
@@ -19,6 +20,7 @@ def _load(name, rel):
     spec = importlib.util.spec_from_file_location(
         name, ROOT / rel)
     mod = importlib.util.module_from_spec(spec)
+    sys.modules[name] = mod  # dataclasses need the host module registered
     spec.loader.exec_module(mod)
     return mod
 
@@ -126,3 +128,75 @@ def test_decayed_lfu_decay_flips_decision(monkeypatch):
     r_dec, _ = T.sim_decayed_lfu(toks_of(s), 2)
     assert abs(r_pure - 5 / 8) < 1e-9
     assert abs(r_dec - 4 / 8) < 1e-9
+
+
+def test_belady_dominates_multikey():
+    # Per-layer-shaped 4-key events (like real traces): the protected
+    # oracle must still dominate every online policy.
+    online = [lambda t, c: A.sim_atomic(t, c)[:2],
+              T.sim_lfu_atomic, T.sim_decayed_lfu,
+              T.sim_leaststale_atomic]
+    for seed in range(10):
+        rng = random.Random(2000 + seed)
+        toks = [[rng.sample(range(20), 4) for _ in range(2)]
+                for _ in range(40)]
+        tot = 40 * 2 * 4
+        for cap in (3, 6, 10):
+            b, _ = T.sim_belady_atomic(toks, cap)
+            bh = int(round(b * tot))
+            for sim in online:
+                r, _ = sim(toks, cap)
+                assert bh >= int(round(r * tot)), (seed, cap, sim)
+
+
+def ref_belady(toks, cap):
+    """Obviously-correct protected Belady (O(cap) scan, no heap)."""
+    seq = [k for t in toks for lay in t for k in lay]
+    bounds, o = [], 0
+    for t in toks:
+        for lay in t:
+            bounds.append((o, o + len(lay)))
+            o += len(lay)
+    future = [0] * len(seq)
+    last = {}
+    for i in range(len(seq) - 1, -1, -1):
+        future[i] = last.get(seq[i], len(seq) + 1)
+        last[seq[i]] = i
+    cache, h = {}, 0
+    for a, b in bounds:
+        evset = set(seq[a:b])
+        for i in range(a, b):
+            if seq[i] in cache:
+                h += 1
+        for i in range(a, b):
+            k = seq[i]
+            if k in cache:
+                cache[k] = future[i]
+                continue
+            if len(cache) >= cap:
+                cands = [kk for kk in cache if kk not in evset] or \
+                    list(cache)
+                del cache[max(cands, key=lambda kk: cache[kk])]
+            cache[k] = future[i]
+    return h
+
+
+def test_belady_matches_scan_reference():
+    # REGRESSION: the first heap port discarded protected entries
+    # instead of setting them aside, draining the heap and falling back
+    # to unprotected max (belady lost to LRU at small caps on K4 traces).
+    # Uniform + locality-structured streams, exact hit equality.
+    for seed in range(10):
+        rng = random.Random(2000 + seed)
+        uni = [[rng.sample(range(20), 4) for _ in range(2)]
+               for _ in range(40)]
+        hot = rng.sample(range(40), 8)
+        loc = [[[rng.choice(hot) if rng.random() < 0.7
+                 else rng.randrange(40) for _ in range(4)]
+                for _ in range(2)] for _ in range(40)]
+        for toks, cap in ((uni, 3), (uni, 6), (uni, 10),
+                          (loc, 6), (loc, 10), (loc, 16)):
+            tot = sum(len(lay) for t in toks for lay in t)
+            r, _ = T.sim_belady_atomic(toks, cap)
+            assert int(round(r * tot)) == ref_belady(toks, cap), \
+                (seed, cap)

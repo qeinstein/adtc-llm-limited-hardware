@@ -21,7 +21,13 @@ SRC = Path("traces/tracek4")
 DST = Path("traces/tracek4routes")
 
 
-def main():
+def main(argv=None):
+    global SRC, DST
+    argv = sys.argv[1:] if argv is None else argv
+    if len(argv) == 2:  # override for Q2K transfer traces (same format)
+        SRC, DST = Path(argv[0]), Path(argv[1])
+    elif argv:
+        raise SystemExit("usage: extract_k4.py [SRC DST]")
     DST.mkdir(parents=True, exist_ok=True)
     files = sorted(SRC.glob("trace_p*.npz"))
     assert files, f"no npz in {SRC}"

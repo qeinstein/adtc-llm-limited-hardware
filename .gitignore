@@ -37,3 +37,7 @@ __pycache__/
 
 # NOTE: data/*.json (RAG corpus, eval sets, LoRA dataset) IS tracked on purpose — do not ignore it.
 llama.cpp/
+
+# --- JOIN K4 traces: route ids (KB) ARE tracked (sweep inputs); raw npz (275MB) is not ---
+traces/tracek4/*.npz
+traces/tracek4q2k/*.npz

@@ -147,7 +147,10 @@ def sim_leaststale_atomic(toks, cap):
     Atomic adaptation: hits scored from pre-event state, per-request
     `now` preserved (interval arithmetic identical to sequential), and
     eviction never takes an event key (JOIN2 contract; sequential
-    phase5e CAN evict a just-fetched key, which atomic forbids).
+    phase5e admits-then-evicts (it CAN drop a just-fetched key when that
+    key has the max predicted next use), which atomic forbids. Known
+    delta, verified by hand-trace: [7,3,3,7,1,8,5,2,6,2,2] cap 3 gives
+    3 hits atomic vs 2 sequential (sequential evicts 8,5,2,6,2,2 raw).
     """
     last, expiv, cache, heap = {}, {}, set(), []
     now, h, tot = 0, 0, 0
@@ -246,12 +249,18 @@ def sim_belady_atomic(toks, cap):
                 cache[k] = future[i]
                 heapq.heappush(heap, (-future[i], k))
                 continue
+            skipped = []
             while len(cache) >= cap and heap:
                 negu, evk = heapq.heappop(heap)
-                if evk in cache and cache[evk] == -negu and \
-                   evk not in evset:
-                    del cache[evk]
-                    break
+                if not (evk in cache and cache[evk] == -negu):
+                    continue
+                if evk in evset:  # protected: set aside, try next
+                    skipped.append((negu, evk))
+                    continue
+                del cache[evk]
+                break
+            for e in skipped:  # restore (else heap drains -> bogus fallback)
+                heapq.heappush(heap, e)
             if len(cache) >= cap:  # degenerate: all cached are event keys
                 evk = max(cache, key=lambda kk: cache[kk])
                 del cache[evk]
