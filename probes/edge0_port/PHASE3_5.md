@@ -172,3 +172,12 @@ run clean (13s incl. load, zero drain). Old invocation (no
 --single-turn, -c 1024, temp 0.0) caused all three kills. Then died on
 OUR assert: pin-era `--perf` line not in stderr tail (rc=0, run fine).
 s-v4: search stdout+stderr for the perf line (findall, take last).
+
+## s-v4: bracket perf format (16s, still our parser)
+
+Pin-era single-turn prints `[ Prompt: 6.1 t/s | Generation: 4.3 t/s ]`
+on stdout, not `eval time = ...`. Canary: 4.3 t/s gen on K8+IQ2
+resident — same ballpark as phase5a's 4.733 (different base/box),
+sane. Also confirms: single-turn chat mode echoes prompt + emits
+thinking preamble within -n budget (kept as-is per thinking decision).
+s-v5 parses the bracket form (eval-time kept as fallback).

@@ -463,12 +463,22 @@ def cli_run(model, prompt, label, n_gen, temp, k1=None, k2=None,
     (OUT / f"{label}.stderr.txt").write_text(p.stderr, encoding="utf-8")
     if p.returncode:
         raise RuntimeError(f"{label} rc={p.returncode}: {p.stderr[-1500:]}")
-    text = p.stdout + "\n" + p.stderr  # pin-era --perf may print to either
-    ms = re.findall(r"eval time =\s*([0-9.]+) ms /\s*([0-9]+) runs", text)
-    assert ms, f"{label}: no perf line; out[-400:]{p.stdout[-400:]} " \
-               f"err[-400:]{p.stderr[-400:]}"
-    perf = {"ms": float(ms[-1][0]), "runs": int(ms[-1][1])}
-    perf["tok_s"] = perf["runs"] / (perf["ms"] / 1000)
+    text = p.stdout + "\n" + p.stderr
+    # pin-era single-turn prints "[ Prompt: X t/s | Generation: Y t/s ]"
+    # on stdout (v4 log); keep the eval-time form as fallback.
+    b = re.findall(r"\[\s*Prompt:\s*([0-9.]+)\s*t/s\s*\|\s*Generation:"
+                   r"\s*([0-9.]+)\s*t/s\s*\]", text)
+    if b:
+        perf = {"tok_s": float(b[-1][1]), "prompt_tps": float(b[-1][0]),
+                "src": "bracket"}
+    else:
+        ms = re.findall(r"eval time =\s*([0-9.]+) ms /\s*([0-9]+) runs",
+                        text)
+        assert ms, f"{label}: no perf line; out[-400:]{p.stdout[-400:]} " \
+                   f"err[-400:]{p.stderr[-400:]}"
+        perf = {"ms": float(ms[-1][0]), "runs": int(ms[-1][1]),
+                "tok_s": int(ms[-1][1]) / (float(ms[-1][0]) / 1000),
+                "src": "evaltime"}
     return {"label": label, "elapsed_sec": el, "perf": perf,
             "output": p.stdout}
 
