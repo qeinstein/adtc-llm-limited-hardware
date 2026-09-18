@@ -894,6 +894,11 @@ static void join4_force_close(void) {
 // barrier wait, which IS node wall on thread 0), processes markers, sets
 // decode mode at expert nodes, and arms the pending record.
 static void join4_node_start(const struct ggml_tensor * node, int node_n) {
+    // Resident arm never runs phase6_init: ensure the atexit report here.
+    if (!phase6_report_registered) {
+        phase6_report_registered = 1;
+        atexit(phase6_report);
+    }
     const uint64_t now = phase6_now_ns();
     if (join4_pending_valid) {
         join4_accum(join4_pending_bucket, join4_pending_expert,

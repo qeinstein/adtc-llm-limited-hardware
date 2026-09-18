@@ -207,16 +207,41 @@ KV_RE = re.compile(r"([a-z_]+)=([0-9]+)")
 
 def parse_perf(text):
     detailed = PERF_RE.findall(text)
-    if not detailed:
-        raise RuntimeError("no parseable llama performance line")
-    elapsed, runs, ms, tps = detailed[-1]
-    out = {"ms_per_token": float(ms), "tokens_per_second": float(tps),
-           "eval_ms": float(elapsed), "eval_runs": int(runs)}
+    if detailed:
+        elapsed, runs, ms, tps = detailed[-1]
+        out = {"ms_per_token": float(ms), "tokens_per_second": float(tps),
+               "eval_ms": float(elapsed), "eval_runs": int(runs),
+               "perf_source": "detailed"}
+    else:
+        summary = SUMMARY_RE.findall(text)
+        if not summary:
+            raise RuntimeError("no parseable llama performance line")
+        prompt, generation = summary[-1]
+        out = {"prompt_tokens_per_second": float(prompt),
+               "tokens_per_second": float(generation),
+               "ms_per_token": 1000.0 / float(generation),
+               "perf_source": "summary"}
     pre = PREFILL_RE.findall(text)
     if pre:
         ms_p, n_p = pre[-1]
         out.update({"prefill_ms": float(ms_p), "prefill_tokens": int(n_p)})
     return out
+
+
+def fill_perf_from_prof(perf, prof):
+    """Summary-only CLI output lacks eval wall/runs; derive exactly from
+    the profiler's decode-graph count (eval_ms = ms/tok x dec_graphs)."""
+    if "eval_ms" not in perf:
+        perf["eval_ms"] = perf["ms_per_token"] * prof["dec_graphs"]
+        perf["eval_runs"] = prof["dec_graphs"]
+    return perf
+
+
+def prefill_c_ms(prof):
+    """Prefill wall from C section counters (exact, both arms)."""
+    return sum(prof[f"pre_{k}_ns"] for k in
+               ("attn", "gdn", "moe_rest", "expert_node", "shared",
+                "lmhead", "misc")) / 1e6
 
 
 def parse_kv_list(text):
@@ -487,7 +512,10 @@ EXPECTED = {
 }
 
 
-def run_case(arm, pid, rep, model, pins_path, tag=""):
+def run_case(arm, pid, rep, model, pins_path, tag="", cold=True):
+    """One CLI run. cold=True drops the file cache first (cold-start cost);
+    warm runs (cold=False) measure steady state. The executor cache starts
+    empty every run (fresh process) either way."""
     name = arm["name"]
     prefix = f"{name}_p{pid:02d}_r{rep}{tag}"
     trace = OUT / f"{prefix}.routes.jsonl"
@@ -521,9 +549,12 @@ def run_case(arm, pid, rep, model, pins_path, tag=""):
                   "GGML_PHASE6_CACHE_BYTES", "GGML_PHASE6_ASYNC",
                   "GGML_PHASE6_PINS", "GGML_PHASE6_ZERO_COPY"):
             env.pop(k, None)
-    cache_drop = drop_file_cache(model)
-    os.sync()
-    time.sleep(SETTLE_SEC)
+    if cold:
+        cache_drop = drop_file_cache(model)
+        os.sync()
+        time.sleep(SETTLE_SEC)
+    else:
+        cache_drop = {"available": True, "called": False, "warm": True}
     start = time.monotonic_ns()
     proc = subprocess.Popen(cmd, stdin=subprocess.DEVNULL,
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -557,6 +588,8 @@ def run_case(arm, pid, rep, model, pins_path, tag=""):
         raise RuntimeError(f"{prefix}: no PHASE6_PROFILE line (timers dead?)")
     prof = parse_kv_list(prof_m[-1])
     cache = parse_kv_list(cache_m[-1]) if cache_m else {}
+    fill_perf_from_prof(perf, prof)
+    perf["prefill_c_ms"] = prefill_c_ms(prof)
     if arm["bounded"]:
         if not cache_m:
             raise RuntimeError(f"{prefix}: bounded arm has no cache line")
@@ -580,7 +613,7 @@ def run_case(arm, pid, rep, model, pins_path, tag=""):
     m_min = re.search(r"Minor \(reclaiming a frame\) page faults: (\d+)", time_txt)
     m_maj = re.search(r"Major \(requiring I/O\) page faults: (\d+)", time_txt)
     return {"arm": name, "pid": pid, "rep": rep, "category": category,
-            "elapsed_sec": elapsed, "cache_drop": cache_drop,
+            "cold": cold, "elapsed_sec": elapsed, "cache_drop": cache_drop,
             "peak_rss_mib": max((x["rss_kib"] for x in valid), default=0) / 1024,
             "peak_rss_anon_mib": max((x["rss_anon_kib"] for x in valid), default=0) / 1024,
             "peak_rss_file_mib": max((x["rss_file_kib"] for x in valid), default=0) / 1024,
@@ -596,7 +629,8 @@ def run_case(arm, pid, rep, model, pins_path, tag=""):
             "trace_sha256": sha256(trace) if trace.exists() else None}
 
 
-def arm_summary(name, runs):
+def cond_summary(runs):
+    """Timing/profile means over a run subset (cold or warm)."""
     import statistics as st
     dec_toks = sum(r["prof"]["dec_graphs"] for r in runs)
     dec_wall_ms = sum(r["decode_perf"]["eval_ms"] for r in runs)
@@ -611,24 +645,42 @@ def arm_summary(name, runs):
     sec["graph_sum"] = sum(sec[k] for k in
                            ("attn", "gdn", "moe_rest", "expert_node",
                             "shared", "lmhead", "misc"))
-    out = {"runs": len(runs), "dec_toks": dec_toks,
-           "tps_total": tps_total, "ms_per_tok": 1000 / tps_total,
-           "tps_mean_runs": st.mean(tps_runs),
-           "tps_stdev_runs": st.stdev(tps_runs) if len(tps_runs) > 1 else 0.0,
-           "sections_ms_tok": sec,
+    return {"runs": len(runs), "dec_toks": dec_toks,
+            "tps_total": tps_total, "ms_per_tok": 1000 / tps_total,
+            "tps_mean_runs": st.mean(tps_runs),
+            "tps_stdev_runs": st.stdev(tps_runs) if len(tps_runs) > 1 else 0.0,
+            "sections_ms_tok": sec,
+            "ttft_ms_mean": st.mean(r["prof"]["ttft_ns"] / 1e6 for r in runs),
+            "prefill_c_ms_mean": st.mean(r["decode_perf"]["prefill_c_ms"] for r in runs)}
+
+
+def arm_summary(name, runs):
+    warm = [r for r in runs if not r["cold"]]
+    cold = [r for r in runs if r["cold"]]
+    out = {"warm": cond_summary(warm) if warm else None,
+           "cold": cond_summary(cold) if cold else None,
+           # Headline = warm steady state (flattened for convenience)
+           "runs": len(runs),
+           "dec_toks": sum(r["prof"]["dec_graphs"] for r in runs),
            "peak_rss_mib_max": max(r["peak_rss_mib"] for r in runs),
            "peak_rss_anon_mib_max": max(r["peak_rss_anon_mib"] for r in runs),
            "peak_rss_file_mib_max": max(r["peak_rss_file_mib"] for r in runs),
            "time_maxrss_kib_max": max((r["time_maxrss_kib"] or 0 for r in runs), default=None),
            "read_bytes_total": sum(r["read_bytes_max"] for r in runs),
            "minflt_max": max(r["minflt_max"] for r in runs),
-           "majflt_max": max(r["majflt_max"] for r in runs),
-           "ttft_ms_mean": st.mean(r["prof"]["ttft_ns"] / 1e6 for r in runs),
-           "prefill_ms_mean": st.mean(r["decode_perf"].get("prefill_ms", float("nan")) for r in runs)}
+           "majflt_max": max(r["majflt_max"] for r in runs)}
+    w = out["warm"] or out["cold"]
+    out.update({"tps_total": w["tps_total"], "ms_per_tok": w["ms_per_tok"],
+                "sections_ms_tok": w["sections_ms_tok"],
+                "ttft_ms_mean": w["ttft_ms_mean"],
+                "prefill_c_ms_mean": w["prefill_c_ms_mean"]})
     if runs[0]["cache"]:
+        # Hit rate is file-temp independent (executor cache always starts
+        # empty); aggregate over ALL runs for max N.
         req = sum(r["cache"]["dec_requests"] for r in runs)
         hit = sum(r["cache"]["dec_hits"] for r in runs)
         mis = sum(r["cache"]["dec_misses"] for r in runs)
+        dec_toks = out["dec_toks"]
         out["cache"] = {
             "hit_rate": hit / req, "miss_tok": mis / dec_toks,
             "bytes_tok": sum(r["cache"]["dec_read_bytes"] for r in runs) / dec_toks,
@@ -687,14 +739,17 @@ def main():
     if s0["trace_sha256"] != s1["trace_sha256"]:
         raise RuntimeError("SMOKE FAIL: bounded routes != resident routes")
     print("  smoke: bit-exact outputs + routes OK", flush=True)
-    # FULL LOOP
+    # FULL LOOP (first run per arm cold, rest warm; the file stays
+    # warm within an arm after the first drop)
     runs = []
     for arm in ARMS:
         for pid in range(len(PROMPTS)):
             for rep in range(1, arm["reps"] + 1):
-                print(f"===== {arm['name']} pid={pid:02d} rep={rep} =====", flush=True)
+                cold = (pid == 0 and rep == 1)
+                print(f"===== {arm['name']} pid={pid:02d} rep={rep} "
+                      f"{'cold' if cold else 'warm'} =====", flush=True)
                 r = run_case(arm, pid, rep, q2k_path,
-                             pins_map.get(arm.get("pins", "")))
+                             pins_map.get(arm.get("pins", "")), cold=cold)
                 runs.append(r)
                 c = r["cache"]
                 extra = (f" hit={c['dec_hits']/c['dec_requests']:.3f}"
