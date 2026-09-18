@@ -109,7 +109,20 @@ speed sprint.
   config point estimate: 38.5. Sprint impact: acceptable modest cost
   (post-training recovers); does NOT overturn Q2K KEEP or K4/16
   STRONG KEEP, which rest on their own gates.
-- After mmlu_q2k (4450s), "Killed" (SIGKILL/OOM) at 8384s during the
-  layer-probe/sanity stretch (no per-run markers; stage TBD from
-  output pull). Layer probe + sanity + Q2K speed still pending.
-  Per-stage result.json dumps should bound the loss.
+- After mmlu_q2k (4450s), "Killed" (SIGKILL, no traceback) at 8384s.
+  Output pull (selective --file-pattern; full pull OOMs the 2GB local
+  box on the 13GB file) shows result.json ends at mmlu_q2k_k416 and
+  ZERO layer_*/san_* files => died 66min into the FIRST layer-probe
+  run (layer_p0_k8, hook active, 30 tokens). Hook code reviewed: no
+  deadlock/leak shape (buffered streaming writes, no accumulation);
+  mechanism UNKNOWN. Secondary find: hook-after-barrier RACES the next
+  node on MT (torn-read risk on in-place buffers) => captures must run
+  1-threaded. JSON-verified: mmlu_q2k_k416=38.5; WORK free 8.68GB,
+  SCRATCH 1089GB (capacity vindicated).
+
+## s-v1 (running): attach + timeouts + canary
+
+Attaches r-v2 outputs (q2k file, no re-transcode/re-MMLU); layer SPEED
+probe without hook (4T); CAPTURE canary with hook at 1T (race-free),
+abort-on-first-900s-hang; sanity + speed_q2k. Every subprocess now has
+timeout + progress prints + MemAvailable logging + per-run dumps.

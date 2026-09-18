@@ -154,10 +154,11 @@ fetch + existing kernels. Thinking stays (UI surfaces reasoning; NOT a
 blocker; post-training may shorten). KEEP/KILL per decision log (2B:
 dense-Q2K stays out of credible until/unless gated).
 
-Pending: mmlu_q2k_k416 joint gate + layer probe + sanity/speed
-(r-kernel; v1 crashed after MMLU on the GGUF parser bug, fixed);
+Pending: layer probe + sanity/speed (s-kernel; r-v2 SIGKILLed 66min
+into first hook-active run, mechanism unknown, canary discriminates);
 fresh K4/16 traces; K4 cache re-sweep (replaces §2C interim); 3.6
 dense-inventory check; integrated profiler; final tok/s.
 Resolved since audit: K8 patched control 42.0 == native (harness
 valid); full k2 sweep 8..32 flat within noise, k2=16 LOCKED (-1.0pp,
-k412 -0.5pp equivalent); K4 wall 1.19-1.26x (see PHASE3_5.md).
+k412 -0.5pp equivalent); K4 wall 1.19-1.26x; joint mmlu_q2k_k416 =
+38.5 (-3.5pp point, within noise, see PHASE3_5.md).
