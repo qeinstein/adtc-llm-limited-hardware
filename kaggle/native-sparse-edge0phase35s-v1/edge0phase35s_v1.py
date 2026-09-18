@@ -616,6 +616,11 @@ def main():
             layer_perf[f"p{pi}_{cfg}"] = r["perf"]
             results["layer_perf"] = layer_perf
             dump()
+    # ---- Q2K decode speed FIRST (decisive; must not depend on
+    # hook/capture/analyze/sanity surviving) ----
+    r = cli_run(q2k, LAYER_PROMPTS[0], "speed_q2k_k416", 60, 0.7, 4, 16)
+    results["speed_q2k_k416"] = r["perf"]
+    dump()
     # ---- layer CAPTURE canary (hook, 1 thread = race-free) ----
     layer_bins, cap_ok = {}, True
     for pi, pr in enumerate(LAYER_PROMPTS):
@@ -659,27 +664,36 @@ def main():
               [{"id": h["id"], "text": h["text"]} for h in hsel])
     gens = []
     for pr in sanity:
-        r = cli_run(model, pr["text"], f"san_{pr['id']}_k416", 400, 0.7,
-                    4, 16)
-        gens.append({"id": pr["id"], "config": "k416",
-                     "output": r["output"], "perf": r["perf"]})
+        try:
+            r = cli_run(model, pr["text"], f"san_{pr['id']}_k416", 400,
+                        0.7, 4, 16)
+            gens.append({"id": pr["id"], "config": "k416",
+                         "output": r["output"], "perf": r["perf"]})
+        except Exception as e:  # per-prompt nonfatal; keep the rest
+            print(f"sanity {pr['id']} k416 FAILED ({type(e).__name__}); "
+                  f"continuing", flush=True)
+            gens.append({"id": pr["id"], "config": "k416",
+                         "error": f"{type(e).__name__}: {str(e)[:200]}"})
         (OUT / "sanity.json").write_text(json.dumps(gens))
         results["n_sanity"] = len(gens)
         dump()
     for pr in [sanity[0], sanity[6], sanity[8]]:
-        r = cli_run(model, pr["text"], f"san_{pr['id']}_k8", 400, 0.7, 8, 8)
-        gens.append({"id": pr["id"], "config": "k8",
-                     "output": r["output"], "perf": r["perf"]})
+        try:
+            r = cli_run(model, pr["text"], f"san_{pr['id']}_k8", 400, 0.7,
+                        8, 8)
+            gens.append({"id": pr["id"], "config": "k8",
+                         "output": r["output"], "perf": r["perf"]})
+        except Exception as e:
+            print(f"sanity {pr['id']} k8 FAILED ({type(e).__name__}); "
+                  f"continuing", flush=True)
+            gens.append({"id": pr["id"], "config": "k8",
+                         "error": f"{type(e).__name__}: {str(e)[:200]}"})
         (OUT / "sanity.json").write_text(json.dumps(gens))
         results["n_sanity"] = len(gens)
         dump()
     results["n_sanity"] = len(gens)
     model.unlink(missing_ok=True)  # last model use done; 10.76GB back
     print("freed IQ2 model from SCRATCH", flush=True)
-    dump()
-    # ---- Q2K decode speed ----
-    r = cli_run(q2k, LAYER_PROMPTS[0], "speed_q2k_k416", 60, 0.7, 4, 16)
-    results["speed_q2k_k416"] = r["perf"]
     dump()
     print(json.dumps({k: (v["score_percent"] if isinstance(v, dict) and
                           "score_percent" in v else v)
