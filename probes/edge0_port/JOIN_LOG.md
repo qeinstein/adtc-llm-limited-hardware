@@ -90,3 +90,20 @@
   script ready (replay_q2k.py: winner+LRU on Q2K vs IQ2 + hot Jaccard),
   smoke-tested on IQ2 subset (recompute matches config to 4dp).
 - Suite: 10 passed (7 policy + 2 atomic + 1 gguf).
+
+## 2026-09-18: Q2K transfer validation PASSES -> lock hyb25 + 915 pins
+- Q2K kernel COMPLETE: 120/120 q2k experts (12.26GB, 1534s transcode),
+  8x82 toks, RMS 0.96-1.01, cov 0.963, parity >=0.9994 (all gates pass).
+- Paired replay (same 8 pids, 3662 slots): winner hyb25 IQ2 0.9169/13.3
+  -> Q2K 0.9229/12.3 (+0.6pp, NO degradation); LRU 0.9070/14.9 ->
+  0.9148/13.6 (+0.8pp). Earlier IQ2-test-vs-Q2K "drop" was pure prompt
+  mix (8-pid subset is harder than the 11-pid test split).
+- Pins TRANSFER: hyb25 beats LRU by +1.0pp IQ2-paired, +0.8pp Q2K.
+  DECISION: lock 6.0GB hyb25 + 915 pins (cache_config_k4.json).
+- Jaccard: paired top512 0.668 (mix-confounded 0.517); mean per-pid
+  top256 0.551 - real trajectory drift, yet policy holds.
+- tps impact: ~12.3 miss/tok on harder mix -> ~8.2 tpsLo (vs 8.33
+  projected); no Q2K-specific downgrade.
+- Infra note: kaggle OAuth token expired mid-session; SDK has a 30-min
+  past-expiry grace bug (uses dead token); forced refresh_access_token()
+  directly. New token good to 2026-09-19 07:45 UTC.
