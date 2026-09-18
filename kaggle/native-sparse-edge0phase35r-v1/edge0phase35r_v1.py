@@ -447,8 +447,18 @@ def analyze_layer(bins):
 def main():
     t_start = time.time()
     runtime = setup_runtime()
+    # Capacity preflight (r-v1 died 40min in on ENOSPC): IQ2 10.76GB +
+    # Q2K out ~13.1GB = ~24GB exceeds the 20GB /kaggle/working cap, so
+    # the model stages in SCRATCH (no need to persist it) and only the
+    # transcode output lives in WORK. Fail in seconds if tight.
+    wfree = shutil.disk_usage(WORK).free / 1e9
+    sfree = shutil.disk_usage(SCRATCH).free / 1e9
+    print(f"disk free: WORK {wfree:.1f}GB SCRATCH {sfree:.1f}GB", flush=True)
+    if wfree < 15 or sfree < 15:
+        raise RuntimeError(f"disk too tight: WORK {wfree:.1f} SCRATCH {sfree:.1f}")
     build()
-    model = WORK / B_FILE
+    shutil.rmtree(LLAMA / ".git", ignore_errors=True)  # ~1GB back in SCRATCH
+    model = SCRATCH / B_FILE  # 10.76GB stages in /tmp (see preflight)
     if not model.exists():
         fetch_file(B_URL, model, B_SIZE, B_SHA)
     ds = SCRATCH / "mmlu-test.bin"
@@ -465,6 +475,9 @@ def main():
             ("mmlu_k424", 4, 24), ("mmlu_k432", 4, 32)]
     def dump():
         results["wall_sec"] = time.time() - t_start
+        results["disk_free_gb"] = {
+            "work": shutil.disk_usage(WORK).free / 1e9,
+            "scratch": shutil.disk_usage(SCRATCH).free / 1e9}
         (OUT / "result.json").write_text(json.dumps(results, indent=1))
 
     mmlu = {}
@@ -520,6 +533,8 @@ def main():
                      "output": r["output"], "perf": r["perf"]})
     (OUT / "sanity.json").write_text(json.dumps(gens))
     results["n_sanity"] = len(gens)
+    model.unlink(missing_ok=True)  # last model use done; 10.76GB back
+    print("freed IQ2 model from SCRATCH", flush=True)
     dump()
     # ---- Q2K decode speed ----
     r = cli_run(q2k, LAYER_PROMPTS[0], "speed_q2k_k416", 60, 0.0, 4, 16)
