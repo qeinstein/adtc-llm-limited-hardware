@@ -107,3 +107,26 @@
 - Infra note: kaggle OAuth token expired mid-session; SDK has a 30-min
   past-expiry grace bug (uses dead token); forced refresh_access_token()
   directly. New token good to 2026-09-19 07:45 UTC.
+
+## 2026-09-18: JOIN4 executor built + verified, final bench pushed
+- Vehicle: staged (v10-style async, phase10i winner) + static pins +
+  section timers + decode/prefill split + TTFT (probes/edge0_port/
+  join4_phase6.h, ~1000 lines). One binary, env knobs; resident = env
+  OFF (stock mmap, hooks compiled in). -lzm on/off is part of the arm
+  definition (functionally required: OFF forces resident load).
+- Timers: barrier-flushed per-node attribution (thread 0) into ATTN /
+  GDN / MOE-rest(=router+k2) / EXPERT / SHARED / LMHEAD / MISC via
+  cb-name markers (substring; names verified "cb-il"); expert nodes
+  timed individually, in-node fetch_prep subtracted for compute.
+  Decode/prefill by MoE ids rows; exact by construction (every node in
+  exactly one bucket). TTFT = first prefill start -> first decode end.
+- All 18 patch anchors verified on pin 3057bb6; FULL LOCAL BUILD GREEN
+  (llama-cli links, 17.9MB) before push. K1K2 merged (disjoint anchors
+  except g_state/extra_buffer, merged into single insertions).
+- Pins: 80/80/1346/915 per target, preloaded at init (sim semantics),
+  never evicted (violations abort). Decode-split traffic counters.
+- Kernel: kaggle/native-sparse-edge0join4-v1/ (self-contained 97KB;
+  template + mk injector committed; C+pins round-trip verified).
+  5 arms x 23 trace-matched prompts (temp 0.7/seed 1000+pid/N_GEN=80):
+  resident x3, b3/b4/b5 x2, b6 x3 + smoke gate (bit-exact outputs AND
+  routes resident-vs-b6 or abort). Cold-consistent (drop+settle/run).
