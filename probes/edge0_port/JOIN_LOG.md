@@ -130,3 +130,17 @@
   5 arms x 23 trace-matched prompts (temp 0.7/seed 1000+pid/N_GEN=80):
   resident x3, b3/b4/b5 x2, b6 x3 + smoke gate (bit-exact outputs AND
   routes resident-vs-b6 or abort). Cold-consistent (drop+settle/run).
+
+## 2026-09-18: JOIN4 v1 failed at smoke, v2 pushed
+- v1 post-mortem (from pulled smoke logs, no guessing): (1) parse_perf
+  lacked the SUMMARY fallback (CLI prints the summary box only, no
+  detailed eval lines); the perf line WAS in the output. (2) Resident
+  arm printed no PROFILE line: atexit report was registered only in
+  phase6_init, which resident never runs. (3) Perf data: smoke
+  resident = 6.17 t/s cold (77s wall incl. cold 12GB file faults).
+- v2 fixes: summary fallback + eval fill from dec_graphs + prefill
+  from C counters; report registration in the timer hook; cold/warm
+  protocol (first run/arm cold, rest warm; headlines = warm steady
+  state; per-run drops would have cost ~4h). Regression tests on the
+  real failed stdout (tests/test_join4_parse.py; suite 14 pass).
+- Local rebuild green; kernel rebuilt (100KB) + pushed as v2.
