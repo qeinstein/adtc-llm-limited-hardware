@@ -9,6 +9,9 @@
   order vs the K8->K4 1st-order shift). Redo on Q2K iff marginals say so.
 - Status: RUNNING (~2h). Monitor: kaggle.com/code/toheebogunade/
   jamii-native-sparse-edge0tracek4-v1
+- v1 died 12min in on curl-92 (HuggingFace HTTP/2 stream reset at 75%
+  of the 10GB pull; default --retry doesn't cover 92). v2 forces
+  HTTP/1.1 + --retry-all-errors (resume kept). Infra flake, not code.
 
 ## 2026-09-16: atomic K-event semantics (JOIN-2)
 - Old sims (C/Python/Track-A) were per-request sequential: within one
