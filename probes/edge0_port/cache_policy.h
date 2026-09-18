@@ -62,7 +62,10 @@ static inline int edge0_cache_pinned(edge0_cache_t * c, int key) {
 
 static int edge0_ht_find(edge0_cache_t * c, int32_t key) {
     uint32_t h = edge0_hash(key) & (uint32_t) c->ht_mask;
-    while (c->ht_key[h] != -1) {
+    // Bounded scan: live <= cap < hts, but tombs can saturate small
+    // tables, and an unbroken live/tomb cycle would spin forever.
+    for (int i = 0; i <= c->ht_mask; i++) {
+        if (c->ht_key[h] == -1) return -1;
         if (c->ht_key[h] == key) return c->ht_val[h];
         h = (h + 1) & (uint32_t) c->ht_mask;
     }
@@ -72,19 +75,26 @@ static int edge0_ht_find(edge0_cache_t * c, int32_t key) {
 static void edge0_ht_insert(edge0_cache_t * c, int32_t key, int32_t val) {
     uint32_t h = edge0_hash(key) & (uint32_t) c->ht_mask;
     int32_t tomb = -1;
-    while (c->ht_key[h] != -1) {
+    for (int i = 0; i <= c->ht_mask; i++) {
+        if (c->ht_key[h] == -1) break;
         if (c->ht_key[h] == key) { c->ht_val[h] = val; return; }
         if (c->ht_key[h] == -2 && tomb < 0) tomb = (int32_t) h;
         h = (h + 1) & (uint32_t) c->ht_mask;
     }
-    if (tomb >= 0) h = (uint32_t) tomb;
+    if (c->ht_key[h] != -1) {
+        if (tomb < 0) return;  // unreachable (live <= cap < hts); no hang
+        h = (uint32_t) tomb;
+    } else if (tomb >= 0) {
+        h = (uint32_t) tomb;
+    }
     c->ht_key[h] = key;
     c->ht_val[h] = val;
 }
 
 static void edge0_ht_remove(edge0_cache_t * c, int32_t key) {
     uint32_t h = edge0_hash(key) & (uint32_t) c->ht_mask;
-    while (c->ht_key[h] != -1) {
+    for (int i = 0; i <= c->ht_mask; i++) {
+        if (c->ht_key[h] == -1) return;
         if (c->ht_key[h] == key) { c->ht_key[h] = -2; return; }
         h = (h + 1) & (uint32_t) c->ht_mask;
     }

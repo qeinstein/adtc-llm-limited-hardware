@@ -26,6 +26,11 @@
   tests/test_cache_atomic.py; C driver cache_atomic_test doubles as the
   JOIN-3 cross-check tool. Empirical atomic-vs-seq delta reported by
   the K4 re-sweep itself.
+- Test caught a REAL latent bug: ht probe loops were unbounded
+  `while(key!=-1)`; tombstone saturation on small tables spins forever
+  (hit at seed-1/dyn-7/event-29). Fixed with bounded scans + tomb
+  fallback (behavior-identical on unsaturated tables; old MATCH stands).
+  Suite green: 2 passed in 0.83s.
 
 ## 2026-09-16: K4 re-sweep prepped (awaiting traces)
 - `tracka_k4.py`: atomic lru/static/hyb/lfu/least-stale/pinL/belady on
