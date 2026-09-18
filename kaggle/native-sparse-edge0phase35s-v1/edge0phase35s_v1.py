@@ -31,8 +31,9 @@ stage so a crash preserves the completed prefix.
 S-KERNEL (s-v1): r-v2 landed transcode + mmlu_q2k_k416 (38.5) then was
 SIGKILLed 66min into the FIRST layer-probe run (layer_p0_k8, hook
 active) with zero output — mechanism UNKNOWN (hook code reviewed: no
-deadlock/leak; post-mortem in PHASE3_5.md). This run attaches r-v2's
-outputs (q2k file + result.json, no re-transcode/re-MMLU) and runs:
+deadlock/leak; post-mortem in PHASE3_5.md). Attach of r-v2 outputs was
+REJECTED (ERROR-state kernels have no attachable outputs), so this run
+re-transcodes (tested path, ~32min) and runs:
 (1) layer SPEED probe, NO hook, 4 threads (tok/s per config);
 (2) layer CAPTURE canary, hook, 1 thread (race-free: hook-after-barrier
 races the next node on MT; 1T serializes), abort-on-first-hang;
@@ -519,7 +520,7 @@ def main():
     dump()
     # ---- attach r-v2 outputs (q2k file + result.json) ----
     ggufs = sorted(ATTACH.rglob("*.gguf")) if ATTACH.exists() else []
-    rj = sorted(ATTACH.rglob("result.json"))
+    rj = sorted(ATTACH.rglob("result.json")) if ATTACH.exists() else []
     print(f"attached: {len(ggufs)} gguf {[g.name for g in ggufs]} "
           f"mem={mem_gb():.1f}GB", flush=True)
     if rj:
