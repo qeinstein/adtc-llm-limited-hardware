@@ -165,6 +165,24 @@ top-p 0.9, perf, ngl 0) + stdin=DEVNULL (no interactive wait possible)
 + 5-token canary that fails FAST if >3GB drains (flags vs file/patch
 discriminator). Either outcome is decisive within ~40min of launch.
 
+## s-v5: all runs clean, hook wrote ZERO records (analyzed, nonfatal in v6)
+
+Canary + 6 speed + 6 capture runs: ALL rc=0 in 13-32s, mem flat
+32GB. Then analyze_layer FileNotFoundError (no .bin) killed the run
+BEFORE sanity+speed (late order — v6's reorder fixes exactly this).
+V5 outputs unrecoverable (Kaggle serves latest version only; v6
+already latest) but REDUNDANT: v6 re-runs the speed matrix identically.
+
+Hook post-mortem (pin source fetched + audited): call site VERIFIED
+live (single node loop, ith==thread-idx, node==current). Naming MUST
+execute (MMLU K-scaling proves our build_moe_ffn patch runs; naming is
+in the same function, env-gated, env was set). Therefore the silent
+drop is the `type!=F32 || !contiguous` filter — moe_out is almost
+certainly NOT F32 on this path (ne[0]=2048/nt-range certain). Recovery
+(if wanted): relax the filter, log actual dtype, fp16->f32 convert;
+~1h micro-kernel. Value is confirmatory only (MMLU answered quality);
+default is SKIP unless layer-error data is explicitly needed.
+
 ## s-v3 CANARY PASSED (flags were the killer) + perf-parse bug
 
 `canary_n5: done 13s mem=31.9GB` — trace-verbatim flags + DEVNULL stdin
