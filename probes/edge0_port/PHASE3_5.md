@@ -126,3 +126,24 @@ Attaches r-v2 outputs (q2k file, no re-transcode/re-MMLU); layer SPEED
 probe without hook (4T); CAPTURE canary with hook at 1T (race-free),
 abort-on-first-900s-hang; sanity + speed_q2k. Every subprocess now has
 timeout + progress prints + MemAvailable logging + per-run dumps.
+
+## PIN TYPO (all phase35 runs built master, not the pin)
+
+The three phase35 scripts carried LLAMA_COMMIT=3057bb6c... (typo) vs
+the true 3057bb66c86c46d5781e50e85462a760ba7d1feb ("ui: add cache
+#28802", verified upstream; 51 other kernel files use it). The bogus
+SHA fails fetch ("not our ref", verified) and checkout, both unchecked
+=> v1, r-v1, r-v2, s-v1 all built ggml-org/llama.cpp MASTER (~Sept
+2026). MMLU DELTAS STAND (same binary across arms within each run);
+only the provenance label was wrong. s-v1's hook-free llama-cli death
+(25min silence + SIGKILL, 32GB free at start) is therefore most likely
+a MASTER-ERA regression/interaction, not our patch (inactive on that
+path) or capacity. Hook exonerated as the kill cause (same death
+without it); 1T-capture rule stands (torn-read race is real).
+
+## s-v2 (running): true pin + asserts + heartbeat
+
+Re-pinned (asserts on fetch/checkout/rev-parse, HEAD recorded); 60s
+heartbeat on every cli_run (mem + elapsed; silence becomes data). If
+the speed probe flies on the pin, master regression confirmed and the
+sprint continues on the pin.

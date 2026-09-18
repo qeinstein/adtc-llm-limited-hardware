@@ -39,6 +39,14 @@ re-transcodes (tested path, ~32min) and runs:
 races the next node on MT; 1T serializes), abort-on-first-hang;
 (3) sanity (no hook) + speed_q2k. EVERY subprocess has a timeout,
 progress prints, mem logging, and per-run dumps — no more silent death.
+
+S-V2: root-caused the s-v1/r-v2 kills as (probably) a master-era
+llama-cli regression: the phase35 scripts carried a TYPO pin
+(3057bb6c... instead of 3057bb66...), the fetch/checkout failures were
+unchecked, and all phase35 runs built master (~Sept 2026), not the pin
+(MMLU deltas stand: same binary across arms). s-v2 re-pins to the TRUE
+pin 3057bb66c86c46d5781e50e85462a760ba7d1feb, ASSERTS checkout +
+rev-parse, and adds a 60s heartbeat to every cli_run.
 """
 from __future__ import annotations
 
@@ -71,7 +79,7 @@ def mem_gb():
 # NOTE: no mkdir at import (keeps `import edge0phase35_v1` side-effect-free
 # for tests); setup_runtime() creates SCRATCH+OUT before anything needs them.
 
-LLAMA_COMMIT = "3057bb6cf3e9bfc8f2572a2a4c9b7d8a5e6f9e5c"
+LLAMA_COMMIT = "3057bb66c86c46d5781e50e85462a760ba7d1feb"
 LLAMA = SCRATCH / "llama.cpp"
 BUILD = SCRATCH / "build"
 PERPLEXITY = BUILD / "bin" / "llama-perplexity"
@@ -219,9 +227,11 @@ def setup_runtime():
     if not (LLAMA / ".git").exists():
         run(["git", "clone", "https://github.com/ggml-org/llama.cpp.git",
              str(LLAMA)])
-    run(["git", "-C", str(LLAMA), "fetch", "--depth", "1", "origin",
-         LLAMA_COMMIT])
-    run(["git", "-C", str(LLAMA), "checkout", LLAMA_COMMIT])
+    p1 = run(["git", "-C", str(LLAMA), "fetch", "--depth", "1",
+                "origin", LLAMA_COMMIT])
+    assert p1.returncode == 0, f"pin fetch failed: {p1.stderr[-500:]}"
+    p2 = run(["git", "-C", str(LLAMA), "checkout", LLAMA_COMMIT])
+    assert p2.returncode == 0, f"pin checkout failed: {p2.stderr[-500:]}"
     g = LLAMA / "src" / "llama-graph.cpp"
     assert g.exists(), "llama checkout failed"
     replace_once(g, "#include <cstring>\n#include <numeric>",
@@ -255,7 +265,11 @@ def setup_runtime():
                  "        }\n    }")
     d = run(["git", "-C", str(LLAMA), "diff", "--stat"])
     (OUT / "patch-stat.txt").write_text(d.stdout)
-    return {"commit": LLAMA_COMMIT}
+    head = subprocess.run(["git", "-C", str(LLAMA), "rev-parse", "HEAD"],
+                          text=True, stdout=subprocess.PIPE).stdout.strip()
+    print(f"built base: {head} (want {LLAMA_COMMIT})", flush=True)
+    assert head == LLAMA_COMMIT, f"NOT on pin: {head}"
+    return {"commit": LLAMA_COMMIT, "built_head": head}
 
 
 def build():
@@ -407,6 +421,19 @@ def cli_run(model, prompt, label, n_gen, temp, k1=None, k2=None,
            "-lzm", "off", "--poll", "0"]
     print(f"+ {label} t={threads} mem={mem_gb():.1f}GB", flush=True)
     t0 = time.monotonic()
+    import threading
+    alive = {"on": True}
+
+    def beat():
+        t = 0
+        while alive["on"]:
+            time.sleep(60)
+            t += 60
+            if alive["on"]:
+                print(f"  {label}: +{t}s mem={mem_gb():.1f}GB", flush=True)
+
+    th = threading.Thread(target=beat, daemon=True)
+    th.start()
     try:
         p = subprocess.run(cmd, text=True, stdout=subprocess.PIPE,
                            stderr=subprocess.PIPE, env={**os.environ, **env},
@@ -415,6 +442,8 @@ def cli_run(model, prompt, label, n_gen, temp, k1=None, k2=None,
         print(f"  {label}: TIMEOUT after {timeout}s mem={mem_gb():.1f}GB",
               flush=True)
         raise
+    finally:
+        alive["on"] = False
     el = time.monotonic() - t0
     print(f"  {label}: done {el:.0f}s mem={mem_gb():.1f}GB", flush=True)
     (OUT / f"{label}.stdout.txt").write_text(p.stdout, encoding="utf-8")

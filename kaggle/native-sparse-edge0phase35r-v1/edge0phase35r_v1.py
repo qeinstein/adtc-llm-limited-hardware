@@ -48,7 +48,7 @@ REMAINDER = True  # r-kernel: v1 MMLU arms complete; run transcode onward
 # NOTE: no mkdir at import (keeps `import edge0phase35_v1` side-effect-free
 # for tests); setup_runtime() creates SCRATCH+OUT before anything needs them.
 
-LLAMA_COMMIT = "3057bb6cf3e9bfc8f2572a2a4c9b7d8a5e6f9e5c"
+LLAMA_COMMIT = "3057bb66c86c46d5781e50e85462a760ba7d1feb"
 LLAMA = SCRATCH / "llama.cpp"
 BUILD = SCRATCH / "build"
 PERPLEXITY = BUILD / "bin" / "llama-perplexity"
