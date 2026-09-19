@@ -1,0 +1,68 @@
+# Full-mixture LoRA config. Same rank as pilot unless the pilot shows clear
+# underfit (then a sibling r16 config is added with identical gates).
+# UNEXECUTED (no training compute).
+base_model: Qwen/Qwen3.6-35B-A3B
+base_revision: 995ad96eacd98c81ed38be0c5b274b04031597b0
+torch_dtype: bfloat16
+attn_implementation: flash_attention_2
+
+lora:
+  r: 8
+  alpha: 32
+  dropout: 0.05
+  bias: none
+  target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+    - in_proj_qkv
+    - in_proj_a
+    - in_proj_b
+    - in_proj_z
+    - out_proj
+    - gate_up_proj
+    - down_proj
+    - gate_proj
+    - up_proj
+  forbidden_substrings:
+    - mlp.gate
+    - shared_expert_gate
+    - lm_head
+    - embed_tokens
+    - visual
+    - mtp
+    - layernorm
+    - conv1d
+
+data:
+  mixture: data/manifests/full_mixture.jsonl  # written by build_dataset.py
+  max_seq_length: 2048
+  assistant_only_loss: true
+  packing: false
+
+optim:
+  lr: 5.0e-5
+  lr_scheduler: cosine
+  warmup_ratio: 0.03
+  weight_decay: 0.0
+  max_grad_norm: 1.0
+  per_device_batch: 1
+  grad_accum: 32
+  epochs: 1
+  gradient_checkpointing: true
+  eval_every_steps: 100
+  early_stopping_patience: 2
+
+moe:
+  aux_loss: framework_default
+  monitor_expert_utilization: true
+
+seeds:
+  data: 7
+  train: 11
+
+logging:
+  log_every: 10
+  save_total_limit: 5
+  output_dir: training/runs/full_r8

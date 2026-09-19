@@ -1,0 +1,71 @@
+# Canonical emergency red-flag patterns (case-insensitive regex).
+# EN + Kiswahili. A hit raises input risk to EMERGENCY and requires the
+# output to contain escalation language (see output_lint.py).
+version: 1
+rules:
+  - id: chest-pain
+    category: cardiovascular
+    patterns:
+      - crush\w* chest pain|chest pain.{0,20}(left arm|jaw|sweat)|pressure in (my|the) chest
+      - maumivu ya kifua|kifua kubana
+  - id: stroke
+    category: neurologic
+    patterns:
+      - face (droop|sag)|slurred speech|cannot (lift|move).{0,15}(arm|leg)|sudden (weakness|numbness).{0,15}(side|face)
+      - uso umepinda|hakuweza (kuinua|kusema)|kupooza (upande|ghafla)
+  - id: breathing
+    category: respiratory
+    patterns:
+      - (can't|cannot|difficulty|trouble|struggl).{0,15}breath|blue lips|ribs showing|gasping|choking
+      - kushindwa kupumua|midomo (ya|ni) bluu|mbavu zinaonekana|kakamaa koo
+  - id: anaphylaxis
+    category: allergy
+    patterns:
+      - (lips|face|tongue|throat).{0,15}swell|swollen.{0,15}(lips|throat|tongue)|wheez.{0,10}(vomit|swell)|allerg.{0,10}(severe|attack)
+      - midomo kuvimba|kovimba (koo|ulimi)
+  - id: seizure
+    category: neurologic
+    patterns:
+      - seiz|convuls|shaking.{0,15}unconscious|fit.{0,10}minutes|degedege
+  - id: sepsis
+    category: infection
+    patterns:
+      - (fever|infection).{0,30}(confus|unresponsive|no urine|breathing fast)|sepsis|septic
+  - id: bleeding
+    category: trauma
+    patterns:
+      - (heavy|severe|unstoppable|won't stop|will not stop).{0,15}bleed|bleed.{0,15}(heavily|severely|profusely)|kutokwa damu (nyingi|kusikokoma)|damu (nyingi|haitoki kukoma)
+  - id: overdose
+    category: poisoning
+    patterns:
+      - (overdose|too many pills|whole bottle|half a bottle).{0,20}(paracetamol|tablet|syrup|medicine|dawa)|took.{0,15}too much.{0,15}(medicine|tablet)
+      - amekunywa dawa (nyingi|kupita kiasi)|chupa (nzima|nusu) ya dawa
+  - id: poisoning
+    category: poisoning
+    patterns:
+      - drank (bleach|poison|pesticide|kerosene|acid)|swallowed.{0,15}(bleach|poison|battery)|sumu|bleach|pesticide.{0,15}(child|indoors|drooling)
+      - amekunywa (bleach|sumu|javel)|dawa ya wadudu
+  - id: dehydration-severe
+    category: pediatric
+    patterns:
+      - (no tears|sunken eyes|sunken fontanelle).{0,20}(diarrh|vomit)|diarrh.{0,15}(10|ten) times|lethargic.{0,15}(diarrh|vomit)
+      - macho yamezamia|hakuna machozi|kuharisha (sana|mara nyingi)
+  - id: ob-emergency
+    category: obstetric
+    patterns:
+      - (pregnant|pregnancy).{0,30}(bleeding|severe headache|vision|swollen face|seizure|no movement|waters broke|labou?r.{0,10}(early|preterm))|heavy.{0,15}vaginal bleeding
+      - mjamzito.{0,30}(damu|kichwa|kuvimba|degedege)|kutokwa damu (ukiwa|na) mjamzito
+  - id: pediatric-redflag
+    category: pediatric
+    patterns:
+      - (baby|infant|newborn|month-old).{0,25}(fever|refus.{0,10}feed|blue|seizure|floppy|not (waking|breathing))|fever.{0,15}(3-month|newborn|infant)
+      - mtoto (mchanga|ana homa).{0,25}(hataki kunyonya|degedege|bluu)
+  - id: self-harm
+    category: mental-health
+    patterns:
+      - (kill (myself|himself|herself|themselves)|suicid|end (my|his|her|their) life|want to die|self[- ]?harm|cutting myself)
+      - anataka kujiua|kujidhuru|kutaka kufa
+  - id: altered-consciousness
+    category: neurologic
+    patterns:
+      - unconscious|unresponsive|won't wake|collapsed|fainted.{0,15}(not|won't).{0,10}(wake|up)|hazuilai|kupoteza fahamu|amezimia

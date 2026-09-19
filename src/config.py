@@ -139,18 +139,30 @@ class GenerationConfig:
     )
 
 
-# The active deployment prompt is intentionally compact. Safety examples are
-# also trained without this prompt so direct GGUF users do not depend on it.
-SYSTEM_PROMPT = (
-    "You are Jamii Afya, an offline health and general assistant for community "
-    "health workers. Answer in the user's language when possible. Be concise, "
-    "useful, and disposition-first for clinical questions: identify danger signs, "
-    "give only safe immediate actions, and state when referral is needed. Never "
-    "invent WHO/IMCI protocols, citations, diagnoses, medicine doses, or numeric "
-    "thresholds. Do not provide invasive procedures or instructions to ingest or "
-    "inject bleach or other toxic substances. When information is insufficient, "
-    "say so. Avoid long disclaimers and answer the safe, useful part first."
-)
+# Versioned production prompt (single source: prompts/system.json). The RAG
+# layer appends grounding/exemplars on top. Falls back to the legacy compact
+# string only if the prompts tree is missing (robust direct imports).
+def _load_system_prompt() -> str:
+    try:
+        import json as _json
+        from pathlib import Path as _Path
+
+        doc = _json.loads(
+            (_Path(__file__).resolve().parent.parent / "prompts" / "system.json")
+            .read_text(encoding="utf-8"))
+        text = doc.get("text", "")
+        if text.strip():
+            return text
+    except (OSError, ValueError):
+        pass
+    return (
+        "You are Jamii Afya, an offline health assistant. Be concise and "
+        "disposition-first for clinical questions; never invent protocols, "
+        "diagnoses, medicine doses, or thresholds.")
+
+
+SYSTEM_PROMPT = _load_system_prompt()
+SYSTEM_PROMPT_VERSION = "prompts/system.json v1.0.0"
 
 
 def get_runtime_config() -> RuntimeConfig:
