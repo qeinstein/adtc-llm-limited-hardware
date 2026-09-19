@@ -182,8 +182,41 @@ static uint64_t join4_pending_t0 = 0;
 static int join4_pending_bucket = JOIN4_SEC_MISC;
 static int join4_pending_expert = 0;
 static int join4_pending_resolve = 0; // 0=none, 1=attn, 2=gdn (closer nodes)
+static int join4_pending_wb = -1; // weight bucket, -1 = not a matmul
 static uint64_t join4_markers_seen = 0;
 static uint64_t join4_force_closes = 0;
+// JOIN4b: weight-bucket timers. EVERY MUL_MAT/MUL_MAT_ID attributed by its
+// src0 (weight) tensor name from the loader: immutable, always present,
+// independent of cb-name sections (v2 sections leaked unnamed bodies into
+// MISC: shexp matmuls run before their "ffn_shexp" opener, etc.).
+// Both attributions run (sections + weight buckets); residual cross-checks.
+enum {
+    JOIN4_WB_EXPS = 0, JOIN4_WB_ATTN, JOIN4_WB_GDN, JOIN4_WB_SHEXP,
+    JOIN4_WB_ROUTER, JOIN4_WB_OUT, JOIN4_WB_OTHER, JOIN4_WB_N
+};
+static uint64_t join4_dec_wb[JOIN4_WB_N];
+static uint64_t join4_pre_wb[JOIN4_WB_N];
+static uint64_t join4_dec_wb_cnt[JOIN4_WB_N];
+static uint64_t join4_pre_wb_cnt[JOIN4_WB_N];
+static uint64_t join4_wb_unmatched_logged = 0;
+
+static int join4_wbucket(const char * wname) {
+    if (wname == NULL) return JOIN4_WB_OTHER;
+    if (strstr(wname, "_exps")) return JOIN4_WB_EXPS;
+    if (strstr(wname, "attn_q") || strstr(wname, "attn_k") ||
+        strstr(wname, "attn_v") || strstr(wname, "attn_o") ||
+        strstr(wname, "qkv")) return JOIN4_WB_ATTN;
+    if (strstr(wname, "ssm_") || strstr(wname, "conv") ||
+        strstr(wname, "delta")) return JOIN4_WB_GDN;
+    if (strstr(wname, "shexp")) return JOIN4_WB_SHEXP;
+    if (strstr(wname, "ffn_gate_inp")) return JOIN4_WB_ROUTER;
+    if (strstr(wname, "output")) return JOIN4_WB_OUT;
+    return JOIN4_WB_OTHER;
+}
+
+// Nodelist ground truth: first graph's node sequence (env-gated, 1 run).
+static FILE * join4_nodelist_fp = NULL;
+static int join4_nodelist_done = 0;
 static uint64_t join4_decode_graphs = 0;
 static uint64_t join4_prefill_graphs = 0;
 static uint64_t join4_graph_moe_nodes = 0;
@@ -331,7 +364,12 @@ static void phase6_report(void) {
         "pre_attn_ns=%llu pre_gdn_ns=%llu pre_moe_rest_ns=%llu "
         "pre_expert_node_ns=%llu pre_expert_cnt=%llu pre_fetchprep_ns=%llu "
         "pre_shared_ns=%llu pre_lmhead_ns=%llu pre_misc_ns=%llu "
-        "markers=%llu force_closes=%llu\n",
+        "markers=%llu force_closes=%llu "
+        "wb_dec_exps=%llu wb_dec_attn=%llu wb_dec_gdn=%llu "
+        "wb_dec_shexp=%llu wb_dec_router=%llu wb_dec_out=%llu "
+        "wb_dec_other=%llu wb_pre_exps=%llu wb_pre_attn=%llu "
+        "wb_pre_gdn=%llu wb_pre_shexp=%llu wb_pre_router=%llu "
+        "wb_pre_out=%llu wb_pre_other=%llu\n",
         (unsigned long long) join4_decode_graphs,
         (unsigned long long) join4_prefill_graphs,
         (unsigned long long) join4_ttft_ns,
@@ -354,7 +392,21 @@ static void phase6_report(void) {
         (unsigned long long) join4_pre_ns[JOIN4_SEC_LMHEAD],
         (unsigned long long) join4_pre_ns[JOIN4_SEC_MISC],
         (unsigned long long) join4_markers_seen,
-        (unsigned long long) join4_force_closes);
+        (unsigned long long) join4_force_closes,
+        (unsigned long long) join4_dec_wb[JOIN4_WB_EXPS],
+        (unsigned long long) join4_dec_wb[JOIN4_WB_ATTN],
+        (unsigned long long) join4_dec_wb[JOIN4_WB_GDN],
+        (unsigned long long) join4_dec_wb[JOIN4_WB_SHEXP],
+        (unsigned long long) join4_dec_wb[JOIN4_WB_ROUTER],
+        (unsigned long long) join4_dec_wb[JOIN4_WB_OUT],
+        (unsigned long long) join4_dec_wb[JOIN4_WB_OTHER],
+        (unsigned long long) join4_pre_wb[JOIN4_WB_EXPS],
+        (unsigned long long) join4_pre_wb[JOIN4_WB_ATTN],
+        (unsigned long long) join4_pre_wb[JOIN4_WB_GDN],
+        (unsigned long long) join4_pre_wb[JOIN4_WB_SHEXP],
+        (unsigned long long) join4_pre_wb[JOIN4_WB_ROUTER],
+        (unsigned long long) join4_pre_wb[JOIN4_WB_OUT],
+        (unsigned long long) join4_pre_wb[JOIN4_WB_OTHER]);
     }
     if (phase6_enabled()) {
     if (phase6_zc_enabled()) {
@@ -866,19 +918,23 @@ static void join4_flush_attn_scratch(int to_gdn) {
 
 // Attribute one node's wall time (decode/prefill by current mode).
 // resolve: 0=none, 1=attn, 2=gdn (section closers bypass scratch).
-static void join4_accum(int bucket, int expert, int resolve, uint64_t dt) {
+// wb: weight bucket (-1 = not a matmul; matmuls counted in BOTH).
+static void join4_accum(int bucket, int expert, int resolve, int wb,
+                        uint64_t dt) {
     if (join4_decode_mode) {
         if (expert) { join4_dec_expert_ns += dt; join4_dec_expert_cnt++; }
         else if (resolve == 1) join4_dec_attn_ns += dt;
         else if (resolve == 2) join4_dec_gdn_ns += dt;
         else if (bucket == JOIN4_SEC_ATTN_TENT) join4_scratch_dec_ns += dt;
         else { join4_dec_ns[bucket] += dt; join4_dec_cnt[bucket]++; }
+        if (wb >= 0) { join4_dec_wb[wb] += dt; join4_dec_wb_cnt[wb]++; }
     } else {
         if (expert) { join4_pre_expert_ns += dt; join4_pre_expert_cnt++; }
         else if (resolve == 1) join4_pre_attn_ns += dt;
         else if (resolve == 2) join4_pre_gdn_ns += dt;
         else if (bucket == JOIN4_SEC_ATTN_TENT) join4_scratch_pre_ns += dt;
         else { join4_pre_ns[bucket] += dt; join4_pre_cnt[bucket]++; }
+        if (wb >= 0) { join4_pre_wb[wb] += dt; join4_pre_wb_cnt[wb]++; }
     }
 }
 
@@ -902,9 +958,28 @@ static void join4_node_start(const struct ggml_tensor * node, int node_n) {
     const uint64_t now = phase6_now_ns();
     if (join4_pending_valid) {
         join4_accum(join4_pending_bucket, join4_pending_expert,
-                    join4_pending_resolve, now - join4_pending_t0);
+                    join4_pending_resolve, join4_pending_wb,
+                    now - join4_pending_t0);
         join4_pending_valid = 0;
         join4_pending_resolve = 0;
+        join4_pending_wb = -1;
+    }
+    // Nodelist ground truth (first graph only, env-gated).
+    if (!join4_nodelist_done) {
+        if (join4_nodelist_fp == NULL) {
+            const char * nlp = getenv("GGML_PHASE6_NODELIST");
+            if (nlp != NULL && nlp[0] != '\0') {
+                join4_nodelist_fp = fopen(nlp, "w");
+            } else {
+                join4_nodelist_done = 1;
+            }
+        }
+        if (join4_nodelist_fp != NULL && node != NULL) {
+            const char * s0 = (node->src[0] != NULL) ? node->src[0]->name : NULL;
+            fprintf(join4_nodelist_fp, "%d op=%d name=%s src0=%s\n", node_n,
+                    (int) node->op, node->name ? node->name : "-",
+                    (s0 && s0[0]) ? s0 : "-");
+        }
     }
     if (node_n == 0) {
         join4_graph_moe_nodes = 0;
@@ -990,6 +1065,19 @@ static void join4_node_start(const struct ggml_tensor * node, int node_n) {
         join4_pending_expert = 0;
     }
     join4_pending_resolve = expert ? 0 : resolve;
+    // Weight bucket for matmuls (both attributions run).
+    join4_pending_wb = -1;
+    if (node != NULL && (node->op == GGML_OP_MUL_MAT ||
+                         node->op == GGML_OP_MUL_MAT_ID) &&
+        node->src[0] != NULL) {
+        const char * wname = node->src[0]->name;
+        join4_pending_wb = join4_wbucket(wname);
+        if (join4_pending_wb == JOIN4_WB_OTHER &&
+            join4_wb_unmatched_logged < 20 && wname != NULL && wname[0]) {
+            join4_wb_unmatched_logged++;
+            fprintf(stderr, "PHASE6_WB_UNMATCHED %s\n", wname);
+        }
+    }
     join4_pending_t0 = now;
     join4_pending_valid = 1;
 }
@@ -1000,9 +1088,16 @@ static void join4_graph_end(void) {
     const uint64_t now = phase6_now_ns();
     if (join4_pending_valid) {
         join4_accum(join4_pending_bucket, join4_pending_expert,
-                    join4_pending_resolve, now - join4_pending_t0);
+                    join4_pending_resolve, join4_pending_wb,
+                    now - join4_pending_t0);
         join4_pending_valid = 0;
         join4_pending_resolve = 0;
+        join4_pending_wb = -1;
+    }
+    if (join4_nodelist_fp != NULL) {
+        fclose(join4_nodelist_fp);
+        join4_nodelist_fp = NULL;
+        join4_nodelist_done = 1;
     }
     // Hygiene: no section may span graphs (counts surprises, no loss:
     // every node was already attributed; only scratch re-homes here).

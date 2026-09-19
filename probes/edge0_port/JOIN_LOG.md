@@ -144,3 +144,23 @@
   state; per-run drops would have cost ~4h). Regression tests on the
   real failed stdout (tests/test_join4_parse.py; suite 14 pass).
 - Local rebuild green; kernel rebuilt (100KB) + pushed as v2.
+
+## 2026-09-19: JOIN4 v2 COMPLETE (bit-exact) + section bug -> join4b
+- 5 arms x 23 prompts, sha-gate PASSED (1 output/pid everywhere).
+  Warm: resident 5.84, b3 5.26, b4 5.11, b5 5.45, b6 4.95 t/s.
+  RSS: 12.07 / 2.37 / 3.33 / 4.28 / 5.23 GB (all under target).
+  Miss/tok: 65.9 / 33.8 / 18.3 / 16.9; bytes/tok 68/35/19/17MB.
+- Sim validation: bench sits between sim-cold-per-prompt and
+  sim-warm-continuous; gap = prefill warmup (uncaptured in traces) +
+  easier full mix. Mechanism coherent, capacity gradient matches.
+- b6<b5 explained: prompt-noise + disk-jitter outliers (b6-pid15
+  53ms fetch on NORMAL misses) + 80-tok cold runs compress arms;
+  long sessions favor b6 (10.8 vs 22.6 warm miss/tok).
+- TIMER BUG: MISC=106ms (60%)! shexp matmuls run BEFORE their
+  "ffn_shexp" opener (source-confirmed) -> all in MISC; TAIL markers
+  never match (242 markers/graph = 6/layer exact; force_closes 40).
+  Arch: 30 GDN + 10 full + 40 MoE + 40 shexp layers.
+- FIX: weight-bucket timers (every matmul by loader weight name) +
+  nodelist ground truth + unmatched-weight log. Local build green.
+  join4b kernel (resident+b6, 12 prompts): pushed for PERF_MODEL-
+  grade sections. v2 tps/RSS/traffic/fetch numbers STAND.
