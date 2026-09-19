@@ -200,9 +200,12 @@ def parse_perf(text):
         if not summary:
             raise RuntimeError("no parseable llama performance line")
         prompt, generation = summary[-1]
+        g = float(generation)
         out = {"prompt_tokens_per_second": float(prompt),
-               "tokens_per_second": float(generation),
-               "ms_per_token": 1000.0 / float(generation),
+               "tokens_per_second": g,
+               # Prefill-only runs print Generation: 0.00 (no decode happened,
+               # not an error): never divide by zero here.
+               "ms_per_token": (1000.0 / g) if g > 0 else float("inf"),
                "perf_source": "summary"}
     pre = PREFILL_RE.findall(text)
     if pre:
@@ -215,8 +218,12 @@ def fill_perf_from_prof(perf, prof):
     """Summary-only CLI output lacks eval wall/runs; derive exactly from
     the profiler's decode-graph count (eval_ms = ms/tok x dec_graphs)."""
     if "eval_ms" not in perf:
-        perf["eval_ms"] = perf["ms_per_token"] * prof["dec_graphs"]
-        perf["eval_runs"] = prof["dec_graphs"]
+        if prof["dec_graphs"] > 0:
+            perf["eval_ms"] = perf["ms_per_token"] * prof["dec_graphs"]
+            perf["eval_runs"] = prof["dec_graphs"]
+        else:
+            perf["eval_ms"] = 0.0
+            perf["eval_runs"] = 0
     return perf
 
 
@@ -496,7 +503,7 @@ EXPECTED = {
 
 
 def run_case(arm, pid, rep, model, pins_path, tag="", cold=True,
-             nodelist=None, n_gen=None):
+             nodelist=None, n_gen=None, expect_decode=True):
     """One CLI run. cold=True drops the file cache first (cold-start cost);
     warm runs (cold=False) measure steady state. The executor cache starts
     empty every run (fresh process) either way."""
@@ -568,14 +575,22 @@ def run_case(arm, pid, rep, model, pins_path, tag="", cold=True,
     if proc.returncode:
         raise RuntimeError(f"{prefix} exited {proc.returncode}: {err[-3000:]}")
     valid = [x for x in samples if x.get("valid")]
-    perf = parse_perf(out + "\n" + err)
+    if expect_decode:
+        perf = parse_perf(out + "\n" + err)
+    else:
+        # Diagnostic prefill-only run (nodelist): no decode happened, so
+        # there is no decode perf to parse; profile counters still apply.
+        perf = {"perf_source": "diagnostic-prefill-only",
+                "tokens_per_second": 0.0, "ms_per_token": float("inf"),
+                "eval_ms": 0.0, "eval_runs": 0}
     cache_m = CACHE_RE.findall(err)
     prof_m = PROF_RE.findall(err)
     if not prof_m:
         raise RuntimeError(f"{prefix}: no PHASE6_PROFILE line (timers dead?)")
     prof = parse_kv_list(prof_m[-1])
     cache = parse_kv_list(cache_m[-1]) if cache_m else {}
-    fill_perf_from_prof(perf, prof)
+    if expect_decode:
+        fill_perf_from_prof(perf, prof)
     perf["prefill_c_ms"] = prefill_c_ms(prof)
     wb_unmatched = sorted(set(re.findall(r"PHASE6_WB_UNMATCHED (\S+)", err)))
     if arm["bounded"]:
@@ -591,7 +606,7 @@ def run_case(arm, pid, rep, model, pins_path, tag="", cold=True,
     else:
         if cache_m:
             raise RuntimeError(f"{prefix}: resident arm emitted cache line?!")
-    if prof.get("dec_graphs", 0) <= 0:
+    if expect_decode and prof.get("dec_graphs", 0) <= 0:
         raise RuntimeError(f"{prefix}: no decode graphs counted")
     if prof.get("markers", 0) <= 0:
         raise RuntimeError(f"{prefix}: no section markers seen")
@@ -736,7 +751,7 @@ def main():
     # NODELIST ground truth (one short resident run; first graph only)
     print("===== NODELIST (resident, pid 21, n=1) =====", flush=True)
     nl = run_case(res, 21, 0, q2k_path, None, tag="_nodelist", cold=False,
-                  nodelist=OUT / "nodelist.txt", n_gen=1)
+                  nodelist=OUT / "nodelist.txt", n_gen=1, expect_decode=False)
     print(f"  nodelist nodes: {len((OUT / 'nodelist.txt').read_text().splitlines())}",
           flush=True)
     # FULL LOOP (first run per arm cold, rest warm; the file stays

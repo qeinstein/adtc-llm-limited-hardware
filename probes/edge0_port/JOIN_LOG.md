@@ -164,3 +164,51 @@
   nodelist ground truth + unmatched-weight log. Local build green.
   join4b kernel (resident+b6, 12 prompts): pushed for PERF_MODEL-
   grade sections. v2 tps/RSS/traffic/fetch numbers STAND.
+
+## 2026-09-19: JOIN4b v1 FAILED (nodelist ZeroDivision) -> v2 pushed
+- v1 ran 2788s then died AFTER smoke: nodelist run (n=1) is prefill-
+  only (dec_graphs=0, Generation 0.00) and parse_perf divided by it.
+  Smoke itself was green: resident 6.28, b6 4.28 t/s, bit-exact OK.
+- v1 telemetry still paid: only 20 unmatched weights, ALL
+  blk.N.attn_gate.weight (10 full-attn layers x gate). Matcher now
+  uses the attn_ prefix (post_attention_norm verified unaffected).
+- v2 fixes: parse_perf zero-guard + fill_perf zero-graph guard +
+  run_case expect_decode=False for the nodelist diagnostic (decode
+  asserts skipped, prefill/profile parsing kept). Anchors re-verified
+  + local llama-cli rebuild green. Regression tests on the real
+  failed stdout (tests/fixtures/join4b_nodelist_stdout.txt); suite
+  134 pass. Kernel version 2 pushed.
+
+## 2026-09-19: JOIN4b v2 COMPLETE (bit-exact, wb unmatched NONE)
+- resident 6.63 t/s (150.9ms), b6 4.86 t/s (205.9ms), rss 5232MiB.
+  Decode wb split resident: attn 46.5, exps 18.2, out 15.1, gdn 12.3,
+  shexp 7.7, router 4.2, other 0.0 (matmul sum 104 of 148 graph ms).
+  Full-attn QKVO = largest bucket (31%), bigger than routed experts.
+  b6: fetch 16.5 labeled + ~20 hiding in expert "compute" (async
+  ready-wait); all buckets ~10% inflated (prefetch contention).
+
+## 2026-09-19: P0 scheduler sprint (poll/threads) + P1/P3 notes
+- New order: P0 scheduler flags FIRST (all CLI runs forced --poll 0;
+  #27331 reports 13-21% barrier/tail bubbles, biggest win = killing
+  scheduler oversleep). No broad branches; no re-transcode.
+- P1 inspection (done, decision awaits P0 numbers): #27331's 3 commits
+  (trace/CPU-DAG/Metal-hybrid, fork head-with-nothing, branch
+  taskgraph-hybrid-split) contain NO usleep hunk to port -- the win is
+  the experiment's never-sleep spin scheduler vs stock cond_wait. On
+  our pin, workers with --poll 0 sleep on EVERY gap (n_rounds=0 ->
+  straight to pthread_cond_wait); --poll N spins 1024*128*N relax
+  rounds first. So P0's poll sweep directly bounds the P1 mechanism:
+  if poll>=25 saturates, the "patch" is just the flag, no code port.
+- P3 MOOT on inspection: transcode log shows output.weight ALREADY
+  q4_K (override q8_0->q4_K), token_embd q4_K. Nothing to test.
+- P0 vehicle: dataset republication of the JOIN4b v1 Q2K artifact
+  (only surviving copy; join4/join4b/tracek4q2k latest all unlinked;
+  kernel_sources can't pin versions). Kernel gates the artifact by
+  size+sha + reproducing pid-21 n=80 hash 099f8728, then sweeps
+  poll 0/25/50/100 @t4, threads 1-4 @best, one affinity A/B, winner
+  on b3 (755 slots/80 pins). sched_src.py + parity test (7 pass).
+- SPRINT STOPPED by user: P0/P1/P2 cancelled (expected gains too
+  small vs remaining time; P1 unsupported on pinned threadpool; P2
+  quality risk). Upload killed, 12GB staging freed. FROZEN config =
+  JOIN4b v2 (Qwen3.6 + K4/16 + Q2_K + staged async + locked pins,
+  t=4 poll=0). sched kernel dir kept unpushed for reference.

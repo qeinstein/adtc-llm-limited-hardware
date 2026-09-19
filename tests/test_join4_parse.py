@@ -1,6 +1,8 @@
 """JOIN4: parser regression tests (the v1 kernel died on its smoke run
 because parse_perf had no summary fallback and the resident arm printed
-no PROFILE line; both fixed, pinned here)."""
+no PROFILE line; both fixed, pinned here. The join4b v1 kernel died on
+its nodelist run because a prefill-only summary prints Generation 0.00
+and parse_perf divided by it; guarded, pinned here)."""
 import importlib.util
 import sys
 from pathlib import Path
@@ -17,7 +19,13 @@ def _load(name, rel):
 
 
 J = _load("join4_src", "kaggle/native-sparse-edge0join4-v1/join4_src.py")
+JB = _load("join4b_src", "kaggle/native-sparse-edge0join4b-v1/join4b_src.py")
 FIX = (ROOT / "tests/fixtures/join4_smoke_stdout.txt").read_text()
+FIXB_NL = (ROOT / "tests/fixtures/join4b_nodelist_stdout.txt").read_text()
+
+
+def _load_sched():
+    return _load("sched_src", "kaggle/native-sparse-edge0sched-v1/sched_src.py")
 
 
 def test_parse_perf_summary_only():
@@ -58,3 +66,41 @@ def test_prefill_c_ms():
             ("attn", "gdn", "moe_rest", "expert_node", "shared",
              "lmhead", "misc")}
     assert J.prefill_c_ms(prof) == 7.0
+
+
+def test_parse_perf_prefill_only_no_crash():
+    # Real join4b v1 nodelist stdout: prefill-only run prints
+    # Generation 0.00 (dec_graphs=0); must not divide by zero.
+    import math
+    p = JB.parse_perf(FIXB_NL)
+    assert p["perf_source"] == "summary"
+    assert p["tokens_per_second"] == 0.0
+    assert math.isinf(p["ms_per_token"])
+    assert abs(p["prompt_tokens_per_second"] - 9.119650) < 1e-6
+
+
+def test_fill_perf_from_prof_zero_graphs():
+    # Prefill-only profile: eval wall is exactly 0, never NaN.
+    import math
+    p = JB.parse_perf(FIXB_NL)
+    JB.fill_perf_from_prof(p, {"dec_graphs": 0})
+    assert p["eval_ms"] == 0.0 and p["eval_runs"] == 0
+    assert not math.isnan(p["eval_ms"])
+
+
+def test_sched_src_parity():
+    # P0 sched kernel copies the JOIN4b parsers + fixes: the copied
+    # guards must behave identically on the real failed stdout, and
+    # run_case must expose the scheduler flags.
+    import inspect
+    import math
+    S = _load_sched()
+    p = S.parse_perf(FIXB_NL)
+    assert p["tokens_per_second"] == 0.0 and math.isinf(p["ms_per_token"])
+    S.fill_perf_from_prof(p, {"dec_graphs": 0})
+    assert p["eval_ms"] == 0.0 and p["eval_runs"] == 0
+    sig = inspect.signature(S.run_case)
+    assert sig.parameters["poll"].default == 0
+    assert sig.parameters["threads"].default == 4
+    assert "taskset" in sig.parameters
+    assert S.EXPECTED_PID21_N80_SHA == "099f8728ef2db3b494f8a69ca9ea612331ca47342abc0e99a33e831041b7ce7e"

@@ -203,9 +203,7 @@ static uint64_t join4_wb_unmatched_logged = 0;
 static int join4_wbucket(const char * wname) {
     if (wname == NULL) return JOIN4_WB_OTHER;
     if (strstr(wname, "_exps")) return JOIN4_WB_EXPS;
-    if (strstr(wname, "attn_q") || strstr(wname, "attn_k") ||
-        strstr(wname, "attn_v") || strstr(wname, "attn_o") ||
-        strstr(wname, "qkv")) return JOIN4_WB_ATTN;
+    if (strstr(wname, "attn_") || strstr(wname, "qkv")) return JOIN4_WB_ATTN;
     if (strstr(wname, "ssm_") || strstr(wname, "conv") ||
         strstr(wname, "delta")) return JOIN4_WB_GDN;
     if (strstr(wname, "shexp")) return JOIN4_WB_SHEXP;
