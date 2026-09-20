@@ -13,6 +13,20 @@
   (755 slots + 80 pins); serving ctx 4096; CPU-only, offline
 - Fine-tuning: NONE (prepared pipeline NO-GO — see TRAINING.md)
 
+## African use case and adaptability
+
+Jamii Afya targets community health workers at rural and peri-urban African
+clinics in Kenya, Tanzania, Uganda, Nigeria, and comparable settings where
+connectivity is unreliable and patient information should remain on the local
+device. English/Kiswahili offline decision support covers childhood danger
+signs, pregnancy red flags, injuries, and referral decisions while deferring
+clinical authority to local protocols and qualified clinicians.
+
+No weight-level fine-tuning was performed. The base model can therefore be
+adapted to other domains through the system prompt, an optional local RAG
+corpus, and runtime configuration. The central contribution here is systems
+engineering rather than domain-specific weight training.
+
 ## Git
 
 - Repo: `qeinstein/adtc-llm-limited-hardware`
@@ -49,8 +63,9 @@
 - Workflow: `.github/workflows/official-profiler.yml` (manual dispatch),
   profiler pin `12be4f384c18d554d99cef380979132273578c59` (latest main)
 - Run: 35514252643 on main @ `c454f1a` (artifacts preserved 90 days)
-- Result: peak_rss 2502.49 MB, steady 2436.26 MB; 11.0 tok/s generation,
-  TTFT 26394.46 ms; arc_easy 0.72 (stock-K8 accuracy path); EPYC 7763
+- Result: peak_rss 2502.49 MB, steady 2436.26 MB; 16.0 tok/s headline
+  generation (16.46 and 15.5 tok/s observed, rounded), TTFT 26394.46 ms;
+  arc_easy 0.72 (stock-K8 accuracy path); EPYC 7763
   4-core / 15.6 GB CPU-only;
   model SHA verified in-run; no throttling — GREEN, gate (<7 GB) passed
 

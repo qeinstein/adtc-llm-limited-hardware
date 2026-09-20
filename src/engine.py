@@ -173,7 +173,7 @@ class MedicalLLMEngine:
         message = choices[0].get("message", {}) if choices else {}
         thinking = message.get("reasoning_content", "") or ""
         text = message.get("content", "") or ""
-        if not thinking and "<think>" in text:
+        if not thinking and ("<think>" in text or text.lstrip().startswith("</think>")):
             from src.sparse import split_thinking
 
             thinking, text = split_thinking(text)
@@ -226,7 +226,11 @@ class MedicalLLMEngine:
                     usage["timings"] = chunk["timings"]
                 yield "usage", usage
                 continue
-            delta = chunk.get("choices", [{}])[0].get("delta", {})
+            choice = chunk.get("choices", [{}])[0]
+            if choice.get("finish_reason"):
+                yield "finish", str(choice["finish_reason"])
+                continue
+            delta = choice.get("delta", {})
             if delta.get("reasoning_content"):
                 if not structured_reasoning:
                     yield from parser.finish()
@@ -293,7 +297,7 @@ class MedicalLLMEngine:
         message = choices[0].get("message", {}) if choices else {}
         thinking = message.get("reasoning_content", "") or ""
         text = message.get("content", "") or ""
-        if not thinking and "<think>" in text:
+        if not thinking and ("<think>" in text or text.lstrip().startswith("</think>")):
             from src.sparse import split_thinking
 
             thinking, text = split_thinking(text)

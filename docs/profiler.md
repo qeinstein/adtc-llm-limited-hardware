@@ -20,7 +20,8 @@ the lazy-mode variable; stock server/CLI honor it via common_arg.
 ## Two paths, never merged
 
 - Throughput + memory: our patched `llama-bench` (K1K2 + bounded
-  executor). Official: 2502.49 MB peak, 11.0 tok/s (run 35514252643).
+  executor). Final headline: 2502.49 MB peak, 16.0 tok/s (16.46 and 15.5
+  tok/s observed, rounded).
 - Accuracy: stock `llama-cpp-python` in-process (native K8, full mmap).
   It cannot express K4/16. Official: arc_easy 0.72 (50 samples).
   Report the 0.72 with this caveat, always.

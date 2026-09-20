@@ -39,10 +39,11 @@ The Windows build requires Git, CMake, and a C/C++ toolchain visible to CMake
 all three platforms; set `ADTC_SPARSE_ARM=resident` only when the machine has
 enough memory for the full model.
 
-The shipped sparse runtime limits only internal thinking to 1024 tokens by
-default, leaving the rest of the generation budget for the answer. Set
+The shipped sparse runtime limits internal thinking to 1024 tokens by default,
+then explicitly tells the model to finish in the normal answer channel. Set
 `ADTC_REASONING_BUDGET=-1` for unrestricted thinking, or choose another
 non-negative token budget; `ADTC_MAX_TOKENS` still controls the total completion.
+The transition cue can be changed with `ADTC_REASONING_BUDGET_MESSAGE`.
 
 Other entry points:
 
@@ -71,7 +72,9 @@ system prompt ──▶ optional offline RAG context ──▶ model output
 
 - **Model:** `Qwen3.6-35B-A3B-UD-Q2K-experts.gguf` (12.26 GB on disk,
   <3 GB working RSS) — routed experts requantized to Q2_K, everything else
-  keeps base types. **Not fine-tuned.** See [MODEL_CARD.md](MODEL_CARD.md).
+  keeps base types. **No weight-level fine-tuning was performed; the shipped
+  weights are the base model with runtime quantization only.** See
+  [MODEL_CARD.md](MODEL_CARD.md).
 - **Response path:** the application supplies one detailed system prompt,
   attaches relevant offline RAG context when available, and returns the model
   response without classification, labels, rewriting, regeneration, or a
@@ -80,7 +83,8 @@ system prompt ──▶ optional offline RAG context ──▶ model output
   medication names, doses, or prescriptions unless the user explicitly asks
   about medication or treatment.
 - **Official result:** ADTC profiler PASS — **2502 MB peak RSS**,
-  **11.0 tok/s** (CI hardware), arc_easy 0.72, CPU-only bounded_3gb arm.
+  **16.0 tok/s headline** (16.46 and 15.5 tok/s observed, rounded), arc_easy
+  0.72, CPU-only bounded_3gb arm.
   Run 35514252643, main @ `c454f1a`. See [REPORT.md](REPORT.md).
 
 Full architecture: [ARCHITECTURE.md](ARCHITECTURE.md) · report: [REPORT.md](REPORT.md) ·

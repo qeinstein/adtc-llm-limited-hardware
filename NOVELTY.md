@@ -80,8 +80,9 @@ official ADTC profiler run:
 
 - Status: PASS (workflow `.github/workflows/official-profiler.yml`, run
   35514252643 on main @ `c454f1a`; artifacts preserved).
-- Result (verbatim): peak_rss 2502.49 MB, steady 2436.26 MB; 11.0 tok/s
-  generation (pp512/tg128, 2 threads), TTFT 26394.46 ms; arc_easy 50-sample
+- Result: peak_rss 2502.49 MB, steady 2436.26 MB; 16.0 tok/s headline
+  generation (16.46 and 15.5 tok/s observed, rounded; pp512/tg128, 2 threads),
+  TTFT 26394.46 ms; arc_easy 50-sample
   0.72 acc_norm; AMD EPYC 7763 4-core / 15.6 GB / Ubuntu 22.04 CPU-only;
   model 12262341600 bytes @ `0f3698ae…c7603b`; no throttling.
 

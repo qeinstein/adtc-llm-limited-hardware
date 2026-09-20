@@ -115,6 +115,15 @@ class RuntimeConfig:
     reasoning_budget: int = field(
         default_factory=lambda: max(-1, _env_int("ADTC_REASONING_BUDGET", 1024))
     )
+    # A short transition cue helps the sampler move from a capped thinking
+    # block into the model's normal answer channel instead of ending after a
+    # reasoning trace.
+    reasoning_budget_message: str = field(
+        default_factory=lambda: _env_str(
+            "ADTC_REASONING_BUDGET_MESSAGE",
+            "Finish thinking and provide the final answer now.",
+        )
+    )
     # Optional speculative decoding draft model (path); empty disables it.
     draft_model_path: str = field(default_factory=lambda: _env_str("ADTC_DRAFT_MODEL", ""))
 
@@ -154,7 +163,7 @@ def _load_system_prompt() -> str:
 
 
 SYSTEM_PROMPT = _load_system_prompt()
-SYSTEM_PROMPT_VERSION = "prompts/system.json v2.2.0"
+SYSTEM_PROMPT_VERSION = "prompts/system.json v2.3.0"
 
 
 def get_runtime_config() -> RuntimeConfig:

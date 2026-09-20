@@ -313,6 +313,7 @@ def chat_stream(req: ChatRequest):
         text_parts: list[str] = []
         peak = 0.0
         usage: dict = {}
+        finish_reason = ""
         try:
             if _backend() == "sparse":
                 server = _get_sparse()
@@ -326,6 +327,9 @@ def chat_stream(req: ChatRequest):
                     if kind == "usage":
                         if isinstance(piece, dict):
                             usage.update(piece)
+                        continue
+                    if kind == "finish":
+                        finish_reason = str(piece)
                         continue
                     (thinking_parts if kind == "thinking" else text_parts).append(piece)
                     yield f"data: {json.dumps({'kind': kind, 'piece': piece})}\n\n"
@@ -343,6 +347,9 @@ def chat_stream(req: ChatRequest):
                             if isinstance(piece, dict):
                                 usage.update(piece)
                             continue
+                        if kind == "finish":
+                            finish_reason = str(piece)
+                            continue
                         (thinking_parts if kind == "thinking" else text_parts).append(piece)
                         yield f"data: {json.dumps({'kind': kind, 'piece': piece})}\n\n"
         except Exception as exc:  # noqa: BLE001 - stream must report failures
@@ -352,7 +359,12 @@ def chat_stream(req: ChatRequest):
         reply = "".join(text_parts)
         thinking = "".join(thinking_parts)
         telemetry = _telemetry(time.time() - start, peak, usage)
-        yield f"data: {json.dumps({'kind': 'done', 'reply': reply, 'thinking': thinking, 'sources': sources, 'telemetry': telemetry})}\n\n"
+        done = {
+            "kind": "done", "reply": reply, "thinking": thinking,
+            "finish_reason": finish_reason, "sources": sources,
+            "telemetry": telemetry,
+        }
+        yield f"data: {json.dumps(done)}\n\n"
 
     return StreamingResponse(_gen(), media_type="text/event-stream")
 

@@ -25,6 +25,11 @@ def test_split_thinking_absent():
     assert (t, a) == ("", "plain answer")
 
 
+def test_split_thinking_orphan_close_marker_non_streaming():
+    t, a = sparse.split_thinking("</think>answer")
+    assert (t, a) == ("", "answer")
+
+
 def test_streaming_legacy_thinking_markers_are_split_across_chunks():
     parser = sparse._StreamingThinkingParser()
     events = []
@@ -78,6 +83,40 @@ def test_sparse_stream_exposes_usage_and_timings(monkeypatch):
     }) in events
 
 
+def test_sparse_stream_keeps_structured_thinking_and_answer_separate(monkeypatch):
+    monkeypatch.setattr(
+        sparse,
+        "_post_sse",
+        lambda *args, **kwargs: iter([
+            {"choices": [{"delta": {"reasoning_content": "careful"}}]},
+            {"choices": [{"delta": {"content": "answer"}}]},
+        ]),
+    )
+    server = object.__new__(sparse.SparseServer)
+    server.base_url = "http://127.0.0.1:1"
+    server.timeout_s = 1.0
+    assert list(server.stream_chat_events([{"role": "user", "content": "hi"}])) == [
+        ("thinking", "careful"),
+        ("text", "answer"),
+    ]
+
+
+def test_sparse_stream_reports_finish_reason(monkeypatch):
+    monkeypatch.setattr(
+        sparse,
+        "_post_sse",
+        lambda *args, **kwargs: iter([
+            {"choices": [{"delta": {}, "finish_reason": "length"}]},
+        ]),
+    )
+    server = object.__new__(sparse.SparseServer)
+    server.base_url = "http://127.0.0.1:1"
+    server.timeout_s = 1.0
+    assert list(server.stream_chat_events([{"role": "user", "content": "hi"}])) == [
+        ("finish", "length"),
+    ]
+
+
 def test_server_cmd_frozen_flags():
     argv = sparse.server_cmd("/m/model.gguf", port=8421, n_ctx=2048,
                             threads=4, poll=0)
@@ -93,6 +132,14 @@ def test_server_cmd_reasoning_budget_is_configurable():
     assert argv[argv.index("--reasoning-budget") + 1] == "0"
     with pytest.raises(ValueError):
         sparse.server_cmd("/m/model.gguf", reasoning_budget=-2)
+
+
+def test_server_cmd_can_prompt_the_model_to_finish_after_budget():
+    argv = sparse.server_cmd(
+        "/m/model.gguf", reasoning_budget=1024,
+        reasoning_budget_message="Answer now.",
+    )
+    assert argv[argv.index("--reasoning-budget-message") + 1] == "Answer now."
 
 
 def test_build_env_resident():

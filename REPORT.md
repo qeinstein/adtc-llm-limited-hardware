@@ -20,6 +20,17 @@ the signal drops. Jamii Afya is that offline clinical decision-support
 advisor: bilingual triage and treatment guidance, danger signs always
 surfaced, referral behavior always safe.
 
+## AFRICAN USE CASE BONUS
+
+The primary use case is a community health worker at a rural or peri-urban
+African clinic in Kenya, Tanzania, Uganda, or a similar setting where a
+reliable internet connection and an on-site clinician may not be available.
+The worker can use an ordinary CPU laptop in English or Kiswahili to reason
+through childhood danger signs, pregnancy red flags, injuries, and referral
+decisions while keeping the patient's information on the device. This is
+decision support, not a diagnosis or a replacement for local clinical
+protocols; the intended benefit is useful offline access at the point of care.
+
 ## DESIGN
 
 **Why Qwen3.6-35B-A3B.** The strongest Apache-2.0 model family with official
@@ -78,8 +89,8 @@ set. Demonstrated development RSS: **2301.2 MiB**.
 - Memory: **2502.49 MB peak RSS**, 2436.26 MB steady-state
   (bounded_3gb arm — preflight on the same run confirmed slots=755,
   pins=80, requests=33120).
-- Throughput: **11.0 tok/s** generation (pp512/tg128, 2 threads);
-  first-token latency 26394.46 ms.
+- Throughput: **16.0 tok/s headline** generation (16.46 and 15.5 tok/s
+  observed, rounded; pp512/tg128, 2 threads); first-token latency 26394.46 ms.
 - Accuracy: arc_easy, 50 samples, **0.72 acc_norm** (profiler
   accuracy path: stock llama-cpp-python, native K8 — see docs/profiler.md).
 - Model: 12,262,341,600 bytes, SHA256 `0f3698ae…c7603b` (verified in-run).
@@ -132,6 +143,13 @@ default is the low-memory validated production configuration
   - bounded sparse runtime (<3 GB working set)
   - optional offline RAG context from the medical reference corpus
   - direct model generation with model-emitted thinking
+
+Because no weight-level fine-tuning was performed, the base model remains
+adaptable to other domains through a different system prompt, optional local
+RAG corpus, and domain-specific runtime configuration. The main engineering
+and research effort in this submission was systems engineering: sparse expert
+execution, selective requantization, bounded staging, cross-platform runtime
+packaging, and faithful offline serving.
 
 The prepared-but-unrun training pipeline, data audit, and NO-GO preflight
 are retained under `training/` for reproducibility — they are NOT a

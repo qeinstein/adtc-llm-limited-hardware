@@ -147,14 +147,18 @@ def build_env(arm: str, pins_path: str | None = None,
 def server_cmd(model_path: str | Path, *, port: int = DEFAULT_PORT,
                n_ctx: int = 2048, threads: int = 4, poll: int = 0,
                host: str = "127.0.0.1",
-               reasoning_budget: int = DEFAULT_REASONING_BUDGET) -> list[str]:
+               reasoning_budget: int = DEFAULT_REASONING_BUDGET,
+               reasoning_budget_message: str | None = None) -> list[str]:
     """llama-server argv for the frozen config (pure, testable)."""
     if reasoning_budget < -1:
         raise ValueError("reasoning_budget must be -1 or greater")
-    return [str(_binary_path("llama-server")), "-m", str(model_path), "--host", host,
-            "--port", str(port), "-t", str(threads), "--poll", str(poll),
-            "-c", str(n_ctx), "-ngl", "0", "--reasoning-budget",
-            str(reasoning_budget)]
+    argv = [str(_binary_path("llama-server")), "-m", str(model_path),
+            "--host", host, "--port", str(port), "-t", str(threads),
+            "--poll", str(poll), "-c", str(n_ctx), "-ngl", "0",
+            "--reasoning-budget", str(reasoning_budget)]
+    if reasoning_budget_message:
+        argv.extend(["--reasoning-budget-message", reasoning_budget_message])
+    return argv
 
 
 def split_thinking(text: str) -> tuple[str, str]:
@@ -305,6 +309,7 @@ class SparseServer:
             get_runtime_config().reasoning_budget
             if reasoning_budget is None else reasoning_budget
         )
+        self.reasoning_budget_message = get_runtime_config().reasoning_budget_message
         if self.reasoning_budget < -1:
             raise ValueError("reasoning_budget must be -1 or greater")
         self.timeout_s = timeout_s
@@ -349,7 +354,8 @@ class SparseServer:
             self.proc = subprocess.Popen(
                 server_cmd(self.model_path, port=self.port, n_ctx=self.n_ctx,
                            threads=self.threads, poll=self.poll,
-                           reasoning_budget=self.reasoning_budget),
+                           reasoning_budget=self.reasoning_budget,
+                           reasoning_budget_message=self.reasoning_budget_message),
                 **popen_kwargs)
             self.wait_ready(wait_s)
         except Exception:
@@ -460,7 +466,7 @@ class SparseServer:
         msg = (data.get("choices") or [{}])[0].get("message", {})
         thinking = msg.get("reasoning_content", "") or ""
         text = msg.get("content", "") or ""
-        if not thinking and ("<think>" in text):
+        if not thinking and ("<think>" in text or text.lstrip().startswith("</think>")):
             thinking, text = split_thinking(text)
         usage = dict(data.get("usage") or {})
         if data.get("timings"):
@@ -472,7 +478,7 @@ class SparseServer:
         self, messages: list[dict], *, max_tokens: int | None = None,
         temperature: float | None = None, top_p: float | None = None,
     ) -> Iterator[tuple[str, str | dict[str, Any]]]:
-        """Yield thinking/text deltas plus the server's final usage event."""
+        """Yield channels, finish reason, and the server's final usage event."""
         from src.config import get_generation_config
 
         gen = get_generation_config()
@@ -491,7 +497,11 @@ class SparseServer:
                     usage["timings"] = ev["timings"]
                 yield ("usage", usage)
                 continue
-            delta = (ev.get("choices") or [{}])[0].get("delta", {})
+            choice = (ev.get("choices") or [{}])[0]
+            if choice.get("finish_reason"):
+                yield ("finish", str(choice["finish_reason"]))
+                continue
+            delta = choice.get("delta", {})
             if delta.get("reasoning_content"):
                 if not structured_reasoning:
                     yield from parser.finish()

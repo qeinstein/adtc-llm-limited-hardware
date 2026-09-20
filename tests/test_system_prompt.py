@@ -32,3 +32,4 @@ def test_backend_loads_versioned_prompt():
     assert "generic invitation to ask about other conditions" in C.SYSTEM_PROMPT
     assert "Prefer readable paragraphs" in C.SYSTEM_PROMPT
     assert "acute trauma" in C.SYSTEM_PROMPT
+    assert "normal user-facing final answer" in C.SYSTEM_PROMPT

@@ -15,7 +15,7 @@
   "cross_disciplinary_pairing": {
     "discipline": "medicine",
     "load_bearing": true,
-    "description": "Jamii Afya is an offline clinical decision-support advisor for community health workers in rural African clinics. Its design is driven by primary-care clinical workflows and bilingual English/Kiswahili patient communication, so the medical discipline is load-bearing on both the knowledge base and the safety behaviour."
+    "description": "Jamii Afya is an offline clinical decision-support advisor for community health workers in rural and peri-urban African clinics, including English/Kiswahili settings in East Africa. It supports childhood danger-sign, pregnancy-red-flag, injury, and referral conversations when connectivity is unreliable and patient data should remain local. Its design is driven by primary-care clinical workflows and bilingual patient communication, so the medical discipline is load-bearing on both the knowledge base and the safety behaviour. No weight-level fine-tuning was performed; the submission focuses on adaptable systems engineering, sparse execution, bounded staging, and offline runtime delivery."
   },
   "test_prompts": [
     {
