@@ -87,7 +87,7 @@ set. Demonstrated development RSS: **2301.2 MiB**.
 `.github/workflows/official-profiler.yml`, profiler pin `12be4f3`), recorded
 against main @ `c454f1a` on an AMD EPYC 7763 4-core / 15.6 GB RAM / Ubuntu
 22.04 CPU-only runner. The current release submission is
-`7d8ea9c008eac906e6a583d4981a79412092881e`; the snapshot values below are
+`966c52c452ac35e2e4bc1643f3f405514edf9461`; the snapshot values below are
 carried forward for release documentation and require a fresh full profiler
 run on that commit before they can be called a current Gate-2 audit result:
 - Memory: **2502.49 MB peak RSS**, 2436.26 MB steady-state
@@ -138,7 +138,7 @@ default is the low-memory validated production configuration
   `Qwen3.6-35B-A3B-UD-IQ2_XXS.gguf` @ `a483e9e6`, SHA256 `2e8f5f70…7bef`).
 - Final artifact SHA256: `0f3698ae…c7603b` (12,262,341,600 bytes).
 - Runtime: llama.cpp @ `3057bb6` + `probes/edge0_port` patch set.
-- Current submission Git commit SHA: `7d8ea9c008eac906e6a583d4981a79412092881e`.
+- Current submission Git commit SHA: `966c52c452ac35e2e4bc1643f3f405514edf9461`.
   Benchmark evidence source commit: `c454f1a6342b5426c943c2096029c26f993e694d`
   (see FINAL_RELEASE_REPORT.md).
 - **Weight-level fine-tuning: NONE.** The shipping weights were NOT
