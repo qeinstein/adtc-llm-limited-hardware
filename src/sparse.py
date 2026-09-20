@@ -17,10 +17,12 @@ model's ``<think>`` markers.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import socket
 import subprocess
+import sys
 import time
 import urllib.error
 import urllib.request
@@ -33,9 +35,37 @@ CACHE_CFG_PATH = ROOT / "probes" / "edge0_port" / "cache_config_k4.json"
 
 LLAMA_DIR = Path(os.environ.get("ADTC_LLAMA_DIR", str(ROOT / "runtime" / "llama.cpp")))
 BUILD_DIR = LLAMA_DIR / "build-native"
-SERVER_BIN = BUILD_DIR / "bin" / "llama-server"
-CLI_BIN = BUILD_DIR / "bin" / "llama-cli"
-BENCH_BIN = BUILD_DIR / "bin" / "llama-bench"
+RUNTIME_PIN = "3057bb66c86c46d5781e50e85462a760ba7d1feb"
+PATCH_HEADER = ROOT / "probes" / "edge0_port" / "join4_phase6.h"
+STAMP_PATH = LLAMA_DIR / ".edge0-stamp"
+
+
+def _binary_candidates(name: str) -> list[Path]:
+    """Return CMake single- and multi-config output locations."""
+    return [
+        BUILD_DIR / "bin" / name,
+        BUILD_DIR / "bin" / f"{name}.exe",
+        BUILD_DIR / "bin" / "Release" / name,
+        BUILD_DIR / "bin" / "Release" / f"{name}.exe",
+    ]
+
+
+def _binary_path(name: str) -> Path:
+    for candidate in _binary_candidates(name):
+        if candidate.is_file():
+            return candidate
+    # Keep a deterministic path before the first build.  Windows generators
+    # normally place the eventual executable under bin/Release/*.exe.
+    return _binary_candidates(name)[1 if os.name == "nt" else 0]
+
+
+def _expected_stamp() -> str:
+    return RUNTIME_PIN + " " + hashlib.sha256(PATCH_HEADER.read_bytes()).hexdigest()
+
+
+SERVER_BIN = _binary_path("llama-server")
+CLI_BIN = _binary_path("llama-cli")
+BENCH_BIN = _binary_path("llama-bench")
 
 DEFAULT_PORT = int(os.environ.get("ADTC_SPARSE_PORT", "8421"))
 
@@ -46,14 +76,26 @@ def load_freeze() -> dict:
 
 
 def is_built() -> bool:
-    return SERVER_BIN.is_file() and CLI_BIN.is_file() and BENCH_BIN.is_file()
+    if not all(any(path.is_file() for path in _binary_candidates(name))
+               for name in ("llama-server", "llama-cli", "llama-bench")):
+        return False
+    try:
+        return STAMP_PATH.read_text(encoding="utf-8").strip() == _expected_stamp()
+    except OSError:
+        return False
 
 
 def ensure_built() -> None:
     if is_built():
         return
-    subprocess.run(["bash", str(ROOT / "scripts" / "build_runtime.sh")],
-                   check=True)
+    if os.name == "nt":
+        # Native Windows has no guaranteed /bin/sh.  Keep the build entrypoint
+        # in Python so PowerShell, cmd, and Git Bash all use the same recipe.
+        subprocess.run([sys.executable, str(ROOT / "scripts" / "build_runtime.py")],
+                       check=True)
+    else:
+        subprocess.run(["bash", str(ROOT / "scripts" / "build_runtime.sh")],
+                       check=True)
 
 
 def export_pins(tag: str, dest_dir: Path | None = None) -> Path:
@@ -105,7 +147,7 @@ def server_cmd(model_path: str | Path, *, port: int = DEFAULT_PORT,
                n_ctx: int = 2048, threads: int = 4, poll: int = 0,
                host: str = "127.0.0.1") -> list[str]:
     """llama-server argv for the frozen config (pure, testable)."""
-    return [str(SERVER_BIN), "-m", str(model_path), "--host", host,
+    return [str(_binary_path("llama-server")), "-m", str(model_path), "--host", host,
             "--port", str(port), "-t", str(threads), "--poll", str(poll),
             "-c", str(n_ctx), "-ngl", "0"]
 
@@ -187,6 +229,8 @@ class SparseServer:
         self.poll = poll
         self.timeout_s = timeout_s
         self.proc: subprocess.Popen | None = None
+        self._log_file = None
+        self.log_path = ROOT / "runtime" / f"llama-server-{self.port}.log"
         if arm != "resident":
             tag = {"bounded_3gb": "3.0", "bounded_4gb": "4.0",
                    "bounded_5gb": "5.0", "bounded_6gb": "6.0"}[arm]
@@ -204,14 +248,45 @@ class SparseServer:
         ensure_built()
         if self.proc is not None:
             return
-        log = open(ROOT / "runtime" / f"llama-server-{self.port}.log",
-                   "ab", buffering=0)
-        self.proc = subprocess.Popen(
-            server_cmd(self.model_path, port=self.port, n_ctx=self.n_ctx,
-                       threads=self.threads, poll=self.poll),
-            env=self._env, stdout=log, stderr=subprocess.STDOUT,
-            stdin=subprocess.DEVNULL, start_new_session=True)
-        self.wait_ready(wait_s)
+        self.log_path.parent.mkdir(parents=True, exist_ok=True)
+        self._log_file = open(self.log_path, "ab", buffering=0)
+        self._log_file.write(
+            f"\n=== llama-server start {time.strftime('%Y-%m-%d %H:%M:%S %z')} "
+            f"model={self.model_path} arm={self.arm} ctx={self.n_ctx} ===\n".encode()
+        )
+        try:
+            popen_kwargs = {
+                "env": self._env,
+                "stdout": self._log_file,
+                "stderr": subprocess.STDOUT,
+                "stdin": subprocess.DEVNULL,
+            }
+            if os.name == "nt":
+                popen_kwargs["creationflags"] = getattr(
+                    subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+            else:
+                popen_kwargs["start_new_session"] = True
+            self.proc = subprocess.Popen(
+                server_cmd(self.model_path, port=self.port, n_ctx=self.n_ctx,
+                           threads=self.threads, poll=self.poll),
+                **popen_kwargs)
+            self.wait_ready(wait_s)
+        except Exception:
+            # Do not leave a dead child or a stale file descriptor behind.  In
+            # particular, this lets the web app retry after a transient build,
+            # port, or runtime-startup failure.
+            self.stop()
+            raise
+
+    def _log_tail(self, lines: int = 80) -> str:
+        """Return the latest child output without masking the original error."""
+        try:
+            if self._log_file is not None:
+                self._log_file.flush()
+            text = self.log_path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            return ""
+        return "\n".join(text.splitlines()[-lines:]).strip()
 
     def wait_ready(self, wait_s: float = 300.0) -> None:
         deadline = time.time() + wait_s
@@ -219,9 +294,11 @@ class SparseServer:
         last = ""
         while time.time() < deadline:
             if self.proc is not None and self.proc.poll() is not None:
+                tail = self._log_tail()
+                detail = f"\nLast runtime log output:\n{tail}" if tail else ""
                 raise RuntimeError(
                     f"llama-server exited {self.proc.returncode} during startup; "
-                    f"see runtime/llama-server-{self.port}.log")
+                    f"see {self.log_path}{detail}")
             try:
                 with urllib.request.urlopen(url, timeout=5) as resp:
                     if resp.status == 200:
@@ -229,7 +306,11 @@ class SparseServer:
             except (OSError, urllib.error.URLError) as exc:
                 last = repr(exc)
             time.sleep(1.0)
-        raise TimeoutError(f"llama-server not ready in {wait_s}s ({last})")
+        tail = self._log_tail()
+        detail = f"\nLast runtime log output:\n{tail}" if tail else ""
+        raise TimeoutError(
+            f"llama-server not ready in {wait_s}s ({last}); "
+            f"see {self.log_path}{detail}")
 
     def rss_mb(self) -> float:
         """Current server-process RSS in MiB (0.0 if unavailable)."""
@@ -241,19 +322,32 @@ class SparseServer:
                     return int(line.split()[1]) / 1024.0
         except (FileNotFoundError, ProcessLookupError, PermissionError, ValueError):
             pass
+        try:
+            import psutil
+
+            return psutil.Process(self.proc.pid).memory_info().rss / (1024 * 1024)
+        except Exception:
+            pass
         return 0.0
 
     def stop(self) -> None:
-        if self.proc is not None:
+        proc = self.proc
+        self.proc = None
+        if proc is not None:
             try:
-                self.proc.terminate()
-                self.proc.wait(timeout=15)
+                proc.terminate()
+                proc.wait(timeout=15)
             except Exception:
                 try:
-                    self.proc.kill()
+                    proc.kill()
                 except Exception:
                     pass
-            self.proc = None
+        if self._log_file is not None:
+            try:
+                self._log_file.close()
+            except Exception:
+                pass
+            self._log_file = None
 
     def _payload(self, messages: list[dict], max_tokens: int,
                  temperature: float, top_p: float, stream: bool) -> dict:

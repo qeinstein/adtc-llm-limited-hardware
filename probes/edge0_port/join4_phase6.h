@@ -25,12 +25,27 @@
 
 // Phase 7B pipeline explicit byte-bounded expert store.  The loader registers the
 // original GGUF offsets, while this C backend owns only fixed anonymous slots.
-#if defined(__linux__)
+#if defined(_WIN32)
+#include <windows.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <io.h>
+#include <limits.h>
+#include <sys/stat.h>
+#else
 #include <pthread.h>
 #include <sched.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#endif
+
+// The bounded executor was originally validated on Linux, but the product's
+// one-command workflow is also run on Apple Silicon and Windows.  macOS names
+// the anonymous mapping flag MAP_ANON; keep the POSIX implementation source-
+// level portable without changing the Linux path.
+#if defined(__APPLE__) && !defined(MAP_ANONYMOUS) && defined(MAP_ANON)
+#define MAP_ANONYMOUS MAP_ANON
 #endif
 
 struct phase6_record {
@@ -49,6 +64,7 @@ struct phase6_slot {
     uint64_t age;
     int valid;
     int ready_mask;
+    int committed;
 };
 
 struct phase6_async_task {
@@ -96,7 +112,12 @@ static uint64_t phase6_preload_ns = 0;
 static uint64_t phase6_pin_violations = 0;
 enum { PHASE6_MAX_ASYNC_TASKS = 4096 };
 static struct phase6_async_task phase6_async_task_records[PHASE6_MAX_ASYNC_TASKS];
-static pthread_t phase6_async_threads[PHASE6_MAX_ASYNC_TASKS];
+#if defined(_WIN32)
+typedef HANDLE phase6_thread_t;
+#else
+typedef pthread_t phase6_thread_t;
+#endif
+static phase6_thread_t phase6_async_threads[PHASE6_MAX_ASYNC_TASKS];
 static int phase6_async_task_count = 0;
 static int phase6_async_started_count = 0;
 static int phase6_async_layer = -1;
@@ -148,10 +169,84 @@ static int phase6_zc_enabled(void) {
 }
 
 static uint64_t phase6_now_ns(void) {
+#if defined(_WIN32)
+    static LARGE_INTEGER frequency;
+    static int frequency_ready = 0;
+    LARGE_INTEGER now;
+    if (!frequency_ready) {
+        QueryPerformanceFrequency(&frequency);
+        frequency_ready = 1;
+    }
+    QueryPerformanceCounter(&now);
+    return (uint64_t) ((long double) now.QuadPart * 1000000000.0L /
+                       (long double) frequency.QuadPart);
+#else
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return (uint64_t) ts.tv_sec * 1000000000ULL + (uint64_t) ts.tv_nsec;
+#endif
 }
+
+#if defined(_WIN32)
+typedef __int64 phase6_ssize_t;
+static SRWLOCK phase6_io_lock = SRWLOCK_INIT;
+
+// Windows CRT descriptors do not expose POSIX pread(). Serialize seek/read
+// pairs around the duplicated descriptor so async cache fills remain correct
+// on native Windows (the Linux/macOS implementation stays lock-free).
+static phase6_ssize_t phase6_pread(int fd, void * dst, size_t bytes,
+                                   size_t offset) {
+    const size_t chunk = bytes > (size_t) INT_MAX ? (size_t) INT_MAX : bytes;
+    AcquireSRWLockExclusive(&phase6_io_lock);
+    const __int64 current = _lseeki64(fd, 0, SEEK_CUR);
+    if (current < 0 || _lseeki64(fd, (__int64) offset, SEEK_SET) < 0) {
+        ReleaseSRWLockExclusive(&phase6_io_lock);
+        return -1;
+    }
+    const int got = _read(fd, dst, (unsigned int) chunk);
+    const int saved_errno = errno;
+    (void) _lseeki64(fd, current, SEEK_SET);
+    ReleaseSRWLockExclusive(&phase6_io_lock);
+    if (got < 0) errno = saved_errno;
+    return (phase6_ssize_t) got;
+}
+
+static int phase6_dup(int fd) { return _dup(fd); }
+static int phase6_close(int fd) { return _close(fd); }
+
+static void phase6_ready_or(int * address, int value) {
+    InterlockedOr((volatile LONG *) address, (LONG) value);
+}
+
+static int phase6_ready_load(const int * address) {
+    return (int) InterlockedCompareExchange((volatile LONG *) address, 0, 0);
+}
+
+static void phase6_atomic_add_u64(uint64_t * address, uint64_t value) {
+    InterlockedExchangeAdd64((volatile LONG64 *) address, (LONG64) value);
+}
+#else
+typedef ssize_t phase6_ssize_t;
+static phase6_ssize_t phase6_pread(int fd, void * dst, size_t bytes,
+                                   size_t offset) {
+    return pread(fd, dst, bytes, offset);
+}
+
+static int phase6_dup(int fd) { return dup(fd); }
+static int phase6_close(int fd) { return close(fd); }
+
+static void phase6_ready_or(int * address, int value) {
+    __atomic_fetch_or(address, value, __ATOMIC_RELEASE);
+}
+
+static int phase6_ready_load(const int * address) {
+    return __atomic_load_n(address, __ATOMIC_ACQUIRE);
+}
+
+static void phase6_atomic_add_u64(uint64_t * address, uint64_t value) {
+    __atomic_fetch_add(address, value, __ATOMIC_RELAXED);
+}
+#endif
 
 // JOIN4 section timers: barrier-flushed per-node attribution (thread 0).
 // Every node lands in exactly one bucket => sum == graph wall by design.
@@ -226,7 +321,7 @@ static void phase6_zc_evict_range(int layer, int expert) {
     if (phase6_zc_file_map == NULL) return;
     const uint64_t start = phase6_now_ns();
     long page = 4096;
-#if defined(__linux__)
+#if defined(__linux__) || defined(__APPLE__)
     const long configured = sysconf(_SC_PAGESIZE);
     if (configured > 0) page = configured;
 #endif
@@ -238,7 +333,7 @@ static void phase6_zc_evict_range(int layer, int expert) {
         const size_t aligned_begin = (begin / psize) * psize;
         const size_t aligned_end = ((end + psize - 1) / psize) * psize;
         if (aligned_end > phase6_zc_file_size) continue;
-#if defined(__linux__)
+#if defined(__linux__) || defined(__APPLE__)
         if (madvise(phase6_zc_file_map + aligned_begin, aligned_end - aligned_begin, MADV_DONTNEED) != 0) {
             phase6_zc_madvise_errors++;
         }
@@ -273,11 +368,16 @@ void ggml_cpu_phase6_register_lazy_tensor(const struct ggml_tensor * tensor,
     // llama_model_loader owns the original descriptor and may destroy it
     // after model construction.  The explicit cache owns this duplicate so
     // pread remains valid during generation.
-    const int owned_fd = dup(fd);
+    const int owned_fd = phase6_dup(fd);
     if (owned_fd < 0) {
         fprintf(stderr, "PHASE6_BOUNDED_CACHE_ERROR dup failed errno=%d\n", errno);
         abort();
     }
+#if defined(_WIN32)
+    // GGUF offsets are byte offsets; never let the CRT translate 0x0a bytes
+    // as text while filling a staged expert plane.
+    _setmode(owned_fd, _O_BINARY);
+#endif
     phase6_records[layer][kind] = (struct phase6_record) {
         tensor, owned_fd, base_offset, expert_stride, layer, kind, 1
     };
@@ -313,7 +413,8 @@ static int phase6_pinned(int layer, int expert) {
 static void phase6_copy_read(int fd, void * dst, size_t bytes, size_t offset) {
     size_t done = 0;
     while (done < bytes) {
-        const ssize_t got = pread(fd, (char *) dst + done, bytes - done, offset + done);
+        const phase6_ssize_t got = phase6_pread(fd, (char *) dst + done,
+                                                bytes - done, offset + done);
         if (got < 0) {
             if (errno == EINTR) continue;
             phase6_fail("async pread failed");
@@ -481,17 +582,30 @@ static void phase6_report(void) {
             admitted_pages, admitted_resident, evicted_pages, evicted_resident,
             smaps_rss_kb, smaps_anon_kb, smaps_file_kb);
     }
-#if defined(__linux__)
+#if defined(_WIN32) || defined(__linux__) || defined(__APPLE__)
     for (int layer = 0; layer < 40; ++layer) {
         for (int kind = 0; kind < 3; ++kind) {
             if (phase6_records[layer][kind].valid && phase6_records[layer][kind].fd >= 0) {
-                close(phase6_records[layer][kind].fd);
+                phase6_close(phase6_records[layer][kind].fd);
                 phase6_records[layer][kind].fd = -1;
             }
         }
     }
 #endif
     }
+}
+
+static void phase6_prepare_slot_memory(int slot) {
+#if defined(_WIN32)
+    if (phase6_slots[slot].committed) return;
+    void * memory = VirtualAlloc(
+        phase6_storage + (size_t) slot * phase6_slot_bytes,
+        phase6_slot_bytes, MEM_COMMIT, PAGE_READWRITE);
+    if (memory == NULL) phase6_fail("fixed cache commit failed");
+    phase6_slots[slot].committed = 1;
+#else
+    (void) slot;
+#endif
 }
 
 static void phase6_init(void) {
@@ -528,13 +642,16 @@ static void phase6_init(void) {
             phase6_zc_evict_layer[i] = -1;
             phase6_zc_evict_expert[i] = -1;
         }
+#if defined(_WIN32)
+        phase6_fail("zero-copy cache is unsupported on Windows");
+#else
         const int map_fd = phase6_records[0][0].fd;
         struct stat st;
         if (map_fd < 0 || fstat(map_fd, &st) != 0 || st.st_size <= 0) {
             phase6_fail("zero-copy fstat failed");
         }
         phase6_zc_file_size = (size_t) st.st_size;
-#if defined(__linux__)
+#if defined(__linux__) || defined(__APPLE__)
         phase6_zc_file_map = (unsigned char *) mmap(NULL, phase6_zc_file_size,
             PROT_READ, MAP_SHARED, map_fd, 0);
         if (phase6_zc_file_map == MAP_FAILED) phase6_zc_file_map = NULL;
@@ -546,13 +663,25 @@ static void phase6_init(void) {
             madvise(phase6_zc_file_map, phase6_zc_file_size, MADV_RANDOM);
         }
 #endif
+#endif
         if (phase6_zc_file_map == NULL || phase6_slots == NULL) {
             phase6_fail("zero-copy file mapping failed");
         }
     } else {
-#if defined(__linux__)
+#if defined(_WIN32)
+        // Reserve the complete logical arena, but commit individual slots as
+        // they are first filled.  This preserves the bounded working set on
+        // Windows instead of requiring a contiguous 3 GB commit up front.
+        phase6_storage = (unsigned char *) VirtualAlloc(
+            NULL, phase6_slot_bytes * phase6_slot_count,
+            MEM_RESERVE, PAGE_READWRITE);
+#elif defined(__linux__) || defined(__APPLE__)
+        int phase6_map_flags = MAP_PRIVATE | MAP_ANONYMOUS;
+#ifdef MAP_NORESERVE
+        phase6_map_flags |= MAP_NORESERVE;
+#endif
         phase6_storage = (unsigned char *) mmap(NULL, phase6_slot_bytes * phase6_slot_count,
-            PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0);
+            PROT_READ | PROT_WRITE, phase6_map_flags, -1, 0);
         if (phase6_storage == MAP_FAILED) phase6_storage = NULL;
 #endif
         if (phase6_storage == NULL || phase6_slots == NULL) phase6_fail("fixed cache allocation failed");
@@ -569,9 +698,10 @@ static void phase6_init(void) {
                 }
                 if (slot < 0) phase6_fail("pin preload found no free slot");
                 phase6_slots[slot] = (struct phase6_slot) {
-                    layer, expert, ++phase6_age, 1, 7
+                    layer, expert, ++phase6_age, 1, 7, 0
                 };
                 phase6_bundle_slots[layer][expert] = slot;
+                phase6_prepare_slot_memory(slot);
                 unsigned char * dst = phase6_storage + (size_t) slot * phase6_slot_bytes;
                 size_t in_slot = 0;
                 for (int kind = 0; kind < 3; ++kind) {
@@ -601,7 +731,8 @@ static void phase6_read_exact(int fd, void * dst, size_t bytes, size_t offset) {
     size_t done = 0;
     const uint64_t start = phase6_now_ns();
     while (done < bytes) {
-        const ssize_t got = pread(fd, (char *) dst + done, bytes - done, offset + done);
+        const phase6_ssize_t got = phase6_pread(fd, (char *) dst + done,
+                                                bytes - done, offset + done);
         if (got < 0) {
             if (errno == EINTR) continue;
             phase6_fail("pread failed");
@@ -659,9 +790,11 @@ static int phase6_reserve_slot(int layer, int expert) {
          * arm's file-range eviction (phase6_zc_evict_range above) is KEEP:
          * it bounds file-backed RSS, a different mechanism. */
     }
+    const int committed = phase6_slots[slot].committed;
     phase6_slots[slot] = (struct phase6_slot) {
         layer, expert, ++phase6_age, 1,
-        (phase6_async_enabled() && !phase6_zc_enabled()) ? 0 : 7
+        (phase6_async_enabled() && !phase6_zc_enabled()) ? 0 : 7,
+        committed
     };
     phase6_bundle_slots[layer][expert] = slot;
     return slot;
@@ -688,6 +821,7 @@ static int phase6_load(int layer, int expert) {
     }
     phase6_note(layer, expert, 0);
     slot = phase6_reserve_slot(layer, expert);
+    phase6_prepare_slot_memory(slot);
     unsigned char * dst = phase6_storage + (size_t) slot * phase6_slot_bytes;
     size_t in_slot = 0;
     for (int kind = 0; kind < 3; ++kind) {
@@ -702,6 +836,7 @@ static int phase6_load(int layer, int expert) {
 static void * phase6_async_read_worker(void * opaque) {
     struct phase6_async_task * task = (struct phase6_async_task *) opaque;
     const uint64_t start = phase6_now_ns();
+    phase6_prepare_slot_memory(task->slot);
     unsigned char * dst = phase6_storage + (size_t) task->slot * phase6_slot_bytes;
     size_t in_slot = 0;
     for (int kind = 0; kind < 3; ++kind) {
@@ -710,19 +845,33 @@ static void * phase6_async_read_worker(void * opaque) {
                          record->base_offset + (size_t) task->expert * record->slice_bytes);
         in_slot += record->slice_bytes;
         task->read_bytes += record->slice_bytes;
-        __atomic_fetch_or(&phase6_slots[task->slot].ready_mask, 1 << kind, __ATOMIC_RELEASE);
+        phase6_ready_or(&phase6_slots[task->slot].ready_mask, 1 << kind);
     }
     task->read_ns = phase6_now_ns() - start;
     return NULL;
 }
 
+#if defined(_WIN32)
+static DWORD WINAPI phase6_async_read_worker_win(LPVOID opaque) {
+    (void) phase6_async_read_worker(opaque);
+    return 0;
+}
+#endif
+
 static void phase6_reap_async(void) {
     if (phase6_async_started_count == 0) return;
     const uint64_t start = phase6_now_ns();
     for (int i = 0; i < phase6_async_started_count; ++i) {
+#if defined(_WIN32)
+        if (WaitForSingleObject(phase6_async_threads[i], INFINITE) != WAIT_OBJECT_0) {
+            phase6_fail("pipeline WaitForSingleObject failed");
+        }
+        CloseHandle(phase6_async_threads[i]);
+#else
         if (pthread_join(phase6_async_threads[i], NULL) != 0) {
             phase6_fail("pipeline pthread_join failed");
         }
+#endif
         phase6_read_ns += phase6_async_task_records[i].read_ns;
         phase6_read_calls += 3;
         phase6_read_bytes += phase6_async_task_records[i].read_bytes;
@@ -770,10 +919,19 @@ static void phase6_prepare_async(const struct ggml_tensor * tensor,
         }
     }
     for (int i = first_new; i < phase6_async_task_count; ++i) {
+#if defined(_WIN32)
+        phase6_async_threads[i] = CreateThread(
+            NULL, 0, phase6_async_read_worker_win,
+            &phase6_async_task_records[i], 0, NULL);
+        if (phase6_async_threads[i] == NULL) {
+            phase6_fail("pipeline CreateThread failed");
+        }
+#else
         if (pthread_create(&phase6_async_threads[i], NULL, phase6_async_read_worker,
                            &phase6_async_task_records[i]) != 0) {
             phase6_fail("pipeline pthread_create failed");
         }
+#endif
     }
     phase6_async_started_count = phase6_async_task_count;
     phase6_async_tasks += (uint64_t) (phase6_async_task_count - first_new);
@@ -854,15 +1012,17 @@ static const char * phase6_tensor_ptr(const struct ggml_tensor * tensor, int exp
     if (phase6_async_enabled()) {
         const int want = 1 << kind;
         const uint64_t start = phase6_now_ns();
-        while ((__atomic_load_n(&phase6_slots[slot].ready_mask, __ATOMIC_ACQUIRE) & want) == 0) {
-#if defined(__linux__)
+        while ((phase6_ready_load(&phase6_slots[slot].ready_mask) & want) == 0) {
+#if defined(_WIN32)
+            SwitchToThread();
+#elif defined(__linux__) || defined(__APPLE__)
             sched_yield();
 #endif
         }
         const uint64_t waited = phase6_now_ns() - start;
         if (waited != 0) {
-            __atomic_fetch_add(&phase6_ready_wait_ns, waited, __ATOMIC_RELAXED);
-            __atomic_fetch_add(&phase6_ready_wait_events, 1, __ATOMIC_RELAXED);
+            phase6_atomic_add_u64(&phase6_ready_wait_ns, waited);
+            phase6_atomic_add_u64(&phase6_ready_wait_events, 1);
         }
     }
     size_t in_slot = 0;

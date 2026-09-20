@@ -31,3 +31,34 @@ def test_bench_lazy_env_patch_maps_all_modes():
                  "LLAMA_LAZY_MODE_OFF"):
         assert mode in p
     assert "cmd_params_defaults.lazy_mode" in p  # default preserved
+
+
+def test_bounded_cache_has_apple_mmap_path():
+    """The web demo is routinely built on Apple Silicon as well as Linux.
+
+    The phase-6 header is embedded into llama.cpp by the build script, so a
+    source-level contract test catches a platform regression before a 12 GB
+    model download and build are attempted.
+    """
+    header = (ROOT / "probes/edge0_port/join4_phase6.h").read_text()
+    assert "defined(__linux__) || defined(__APPLE__)" in header
+    assert "MAP_ANONYMOUS MAP_ANON" in header
+    assert "int phase6_map_flags = MAP_PRIVATE | MAP_ANONYMOUS;" in header
+
+
+def test_bounded_cache_has_windows_path():
+    header = (ROOT / "probes/edge0_port/join4_phase6.h").read_text()
+    for marker in (
+        "#include <windows.h>",
+        "VirtualAlloc",
+        "CreateThread",
+        "WaitForSingleObject",
+        "static phase6_ssize_t phase6_pread",
+        "SwitchToThread",
+    ):
+        assert marker in header
+
+
+def test_native_windows_build_and_download_entrypoints_exist():
+    assert (ROOT / "scripts" / "build_runtime.py").is_file()
+    assert (ROOT / "scripts" / "download_model.py").is_file()

@@ -22,6 +22,23 @@ verifies the model, builds the pinned sparse runtime if needed, starts the
 backend + frontend, waits for readiness, and prints the URL. Ctrl+C stops
 the frontend (a lingering backend `llama-server` may need a manual kill).
 
+The runtime cache and launcher support Linux, macOS, and native Windows. On
+Windows, use GNU Make from Git Bash for the same command, or run the
+platform-neutral setup directly from PowerShell:
+
+```powershell
+py -3 -m venv venv
+venv\Scripts\python -m pip install -r requirements.txt
+venv\Scripts\python scripts\download_model.py
+venv\Scripts\python scripts\build_runtime.py
+venv\Scripts\python -m uvicorn src.webapp:app --host 0.0.0.0 --port 8420
+```
+
+The Windows build requires Git, CMake, and a C/C++ toolchain visible to CMake
+(Visual Studio Build Tools or clang-cl). The default bounded arm is used on
+all three platforms; set `ADTC_SPARSE_ARM=resident` only when the machine has
+enough memory for the full model.
+
 Other entry points:
 
 ```bash

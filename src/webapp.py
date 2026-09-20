@@ -88,13 +88,16 @@ def _get_sparse():
 
         rt = get_runtime_config()
         port = int(os.environ.get("ADTC_SPARSE_PORT", "0")) or free_port()
-        _sparse = SparseServer(
+        server = SparseServer(
             resolve_model_path(),
             arm=os.environ.get("ADTC_SPARSE_ARM", "bounded_3gb"),
             port=port, n_ctx=rt.n_ctx,
             threads=min(rt.n_threads, os.cpu_count() or rt.n_threads),
             poll=int(os.environ.get("ADTC_POLL", "0")))
-        _sparse.start()
+        # Publish only a ready server.  If startup aborts, the next request
+        # must be able to retry instead of reusing a dead SparseServer object.
+        server.start()
+        _sparse = server
     return _sparse
 
 

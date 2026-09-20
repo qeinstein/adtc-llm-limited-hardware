@@ -3,7 +3,15 @@
 # Prefer the project venv once `make setup` has created it. Falling back to a
 # system interpreter made `make test` miss pytest even when the project venv
 # already contained the declared test dependencies.
-PYTHON ?= $(if $(wildcard venv/bin/python),./venv/bin/python,$(shell command -v python3 2>/dev/null || command -v python 2>/dev/null))
+ifeq ($(OS),Windows_NT)
+VENV_PYTHON ?= venv/Scripts/python.exe
+PYTHON ?= $(if $(wildcard $(VENV_PYTHON)),$(VENV_PYTHON),$(shell command -v python 2>/dev/null || command -v py 2>/dev/null))
+MODEL_COMMAND = $(PYTHON) scripts/download_model.py
+else
+VENV_PYTHON ?= ./venv/bin/python
+PYTHON ?= $(if $(wildcard $(VENV_PYTHON)),$(VENV_PYTHON),$(shell command -v python3 2>/dev/null || command -v python 2>/dev/null))
+MODEL_COMMAND = bash download_model.sh
+endif
 export PYTHONPATH := .
 
 .PHONY: help setup setup-dev test lint validate data model run demo webui bench scalar bench-audit accuracy profiler clean
@@ -27,13 +35,13 @@ help:
 
 setup:
 	$(PYTHON) -m venv venv
-	./venv/bin/python -m pip install --upgrade pip
-	./venv/bin/python -m pip install -r requirements.txt
-	./venv/bin/python -m pip install -r requirements-test.txt
+	$(VENV_PYTHON) -m pip install --upgrade pip
+	$(VENV_PYTHON) -m pip install -r requirements.txt
+	$(VENV_PYTHON) -m pip install -r requirements-test.txt
 
 setup-dev:
-	@test -x venv/bin/python || $(MAKE) setup
-	./venv/bin/python -m pip install -r requirements-dev.txt
+	@test -f "$(VENV_PYTHON)" || $(MAKE) setup
+	$(VENV_PYTHON) -m pip install -r requirements-dev.txt
 
 test:
 	$(PYTHON) -m pytest tests/ -q
@@ -48,7 +56,7 @@ data:
 	$(PYTHON) scripts/prepare_dataset.py
 
 model:
-	bash download_model.sh
+	$(MODEL_COMMAND)
 
 run:
 	$(PYTHON) -m src.main
@@ -60,13 +68,13 @@ webui:
 	@# Always run out of a local venv. System Python on macOS/Debian is
 	@# "externally managed" (PEP 668) and refuses pip installs, so installing
 	@# into it is not just bad practice here -- it hard-fails.
-	@test -x venv/bin/python || ( echo "Creating venv..." && $(PYTHON) -m venv venv )
+	@test -f "$(VENV_PYTHON)" || ( echo "Creating venv..." && $(PYTHON) -m venv venv )
 	@echo "Installing dependencies (first run only, ~1 min)..."
-	@./venv/bin/python -m pip install -q --upgrade pip
-	@./venv/bin/python -m pip install -q -r requirements.txt
-	@bash download_model.sh
+	@$(VENV_PYTHON) -m pip install -q --upgrade pip
+	@$(VENV_PYTHON) -m pip install -q -r requirements.txt
+	@$(MODEL_COMMAND)
 	@echo "Ensuring the pinned sparse runtime is built (first run only, ~10-20 min)..."
-	@./venv/bin/python -c "from src.sparse import ensure_built; ensure_built()"
+	@$(VENV_PYTHON) -c "from src.sparse import ensure_built; ensure_built()"
 	@echo ""
 	@echo "=================================================================="
 	@echo " Jamii Afya is starting..."
@@ -78,8 +86,8 @@ webui:
 	@echo " Press Ctrl+C to stop the server."
 	@echo "=================================================================="
 	@echo ""
-	@( sleep 3 && ./venv/bin/python -c "import webbrowser; webbrowser.open('http://localhost:8420')" ) &
-	./venv/bin/python -m uvicorn src.webapp:app --host 0.0.0.0 --port 8420
+	@( sleep 3 && $(VENV_PYTHON) -c "import webbrowser; webbrowser.open('http://localhost:8420')" ) &
+	$(VENV_PYTHON) -m uvicorn src.webapp:app --host 0.0.0.0 --port 8420
 
 bench:
 	$(PYTHON) -m src.benchmark
