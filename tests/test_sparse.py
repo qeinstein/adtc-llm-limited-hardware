@@ -37,6 +37,47 @@ def test_streaming_legacy_thinking_markers_are_split_across_chunks():
     assert merged == {"text": "before  after", "thinking": "reasoning"}
 
 
+def test_streaming_orphan_close_marker_is_not_visible():
+    parser = sparse._StreamingThinkingParser()
+    events = []
+    for chunk in ("</thi", "nk>answer"):
+        events.extend(parser.feed(chunk))
+    events.extend(parser.finish())
+    assert events == [("text", "answer")]
+
+
+def test_stream_payload_requests_usage():
+    payload = sparse.SparseServer._payload(
+        object(), [], 32, 0.7, 0.95, True
+    )
+    assert payload["stream_options"] == {"include_usage": True}
+
+
+def test_sparse_stream_exposes_usage_and_timings(monkeypatch):
+    monkeypatch.setattr(
+        sparse,
+        "_post_sse",
+        lambda *args, **kwargs: iter([
+            {"choices": [{"delta": {"content": "answer"}}]},
+            {
+                "choices": [],
+                "usage": {"completion_tokens": 3, "prompt_tokens": 8},
+                "timings": {"predicted_per_second": 12.5},
+            },
+        ]),
+    )
+    server = object.__new__(sparse.SparseServer)
+    server.base_url = "http://127.0.0.1:1"
+    server.timeout_s = 1.0
+    events = list(server.stream_chat_events([{"role": "user", "content": "hi"}]))
+    assert ("text", "answer") in events
+    assert ("usage", {
+        "completion_tokens": 3,
+        "prompt_tokens": 8,
+        "timings": {"predicted_per_second": 12.5},
+    }) in events
+
+
 def test_server_cmd_frozen_flags():
     argv = sparse.server_cmd("/m/model.gguf", port=8421, n_ctx=2048,
                             threads=4, poll=0)

@@ -411,13 +411,17 @@ function addStreamingMessage() {
   wrap.appendChild(label);
 
   const det = document.createElement('details');
-  det.className = 'thinking'; det.style.display = 'none';
+  // Show the state immediately, even before the first reasoning delta. This
+  // makes the model's work visible instead of making a slow first token look
+  // like a frozen interface.
+  det.className = 'thinking';
   const sum = document.createElement('summary');
   sum.innerHTML = '<span class="caret">▸</span><span class="pulse"></span>' +
-    '<span class="tlabel">Working through this…</span>' +
-    '<span class="tstatus">view thinking output</span>';
+    '<span class="tlabel">Thinking…</span>' +
+    '<span class="tstatus">click to view</span>';
   const tbody = document.createElement('div');
   tbody.className = 'tbody';
+  tbody.innerHTML = '<p>The model is working. Any reasoning it emits will appear here.</p>';
   det.appendChild(sum); det.appendChild(tbody);
   wrap.appendChild(det);
 
@@ -441,13 +445,14 @@ function addStreamingMessage() {
   return {
     pushThinking(piece) {
       thinking += piece;
-      if (!thinkShown) { det.style.display = ''; thinkShown = true; }
+      if (!thinkShown) { thinkShown = true; }
       tbody.innerHTML = renderMD(thinking);
       tbody.scrollTop = tbody.scrollHeight;
       stickScroll();
     },
     pushText(piece) {
       answer += piece;
+      answer = answer.replace(/^<\/think>\s*/i, '');
       if (!ansShown) { body.innerHTML = ''; anshead.style.display = ''; ansShown = true; }
       body.innerHTML = renderMD(answer);
       stickScroll();
@@ -456,14 +461,20 @@ function addStreamingMessage() {
       // Some server/runtime combinations put the complete answer in the
       // final event without emitting separate text chunks. Do not leave the
       // answer body blank just because the streamed buffer is empty.
-      answer = answer || finalReply || '';
+      // Keep the assembled reply when a runtime only sends it in `done`:
+      // answer = answer || finalReply || '';
+      answer = (answer || finalReply || '').replace(/^<\/think>\s*/i, '');
       det.classList.add('done');
       const st = sum.querySelector('.tstatus');
       const lb = sum.querySelector('.tlabel');
       if (thinkShown) {
         lb.textContent = 'Reasoning complete';
-        st.textContent = 'view thinking output';
+        st.textContent = 'click to view';
         sum.appendChild(copyThink);
+      } else {
+        lb.textContent = 'Model response complete';
+        st.textContent = 'no separate reasoning output';
+        tbody.innerHTML = '<p>No separate reasoning trace was returned for this response.</p>';
       }
       if (!ansShown) {
         body.innerHTML = '';
@@ -486,7 +497,8 @@ function addStreamingMessage() {
     },
     fail(msg) {
       det.classList.add('done');
-      if (thinkShown) sum.querySelector('.tlabel').textContent = 'Reasoning interrupted';
+      sum.querySelector('.tlabel').textContent = 'Generation interrupted';
+      sum.querySelector('.tstatus').textContent = 'click to view partial output';
       if (!ansShown) body.innerHTML = '';
       body.innerHTML += `<p><em>${esc(msg)} (partial output above, if any).</em></p>`;
       stickScroll();
@@ -569,7 +581,11 @@ async function send() {
     }
     // Prefer the final event, but retain streamed text if an older/runtime
     // response omits the assembled reply. This keeps follow-up history intact.
-    reply = doneEv.reply || streamedText;
+    reply = (doneEv.reply || streamedText || '').replace(/^<\/think>\s*/i, '');
+    if (doneEv.thinking && !sawPieces) {
+      sawPieces = true;
+      stream.pushThinking(doneEv.thinking);
+    }
     if (!sawPieces && reply) {
       // Early-exit event (model-missing preview): plain single message.
       stream.finish(doneEv.sources || [], '', '', reply);
@@ -581,9 +597,13 @@ async function send() {
     }
     {
       const t = doneEv.telemetry || {};
-      const meta = (t.throughput_tps ? `${t.throughput_tps} tok/s · ` : '') +
-        `${t.elapsed_sec || 0}s` +
-        (t.peak_rss_mb ? ` · ${t.peak_rss_mb} MB` : '');
+      const tps = Number.isFinite(Number(t.throughput_tps)) &&
+        Number(t.completion_tokens || 0) > 0
+        ? `${Number(t.throughput_tps).toFixed(2)} tok/s`
+        : '— tok/s';
+      const elapsed = Number(t.elapsed_sec || 0).toFixed(3).replace(/\.000$/, '');
+      const ram = t.peak_rss_mb ? ` · ${t.peak_rss_mb} MB` : ' · RAM unavailable';
+      const meta = `${tps} · ${elapsed}s${ram}`;
       stream.finish(
         doneEv.sources || [],
         meta,

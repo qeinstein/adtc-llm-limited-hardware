@@ -170,11 +170,14 @@ def _prepare(req: ChatRequest):
 def _telemetry(elapsed: float, peak: float, usage: dict | None = None) -> dict:
     usage = usage or {}
     completion = int(usage.get("completion_tokens", 0) or 0)
+    timings = usage.get("timings") or {}
+    runtime_tps = float(timings.get("predicted_per_second", 0) or 0)
+    throughput = runtime_tps if runtime_tps > 0 else completion / max(elapsed, 1e-3)
     return {
         "elapsed_sec": round(max(elapsed, 1e-3), 3),
         "prompt_tokens": int(usage.get("prompt_tokens", 0) or 0),
         "completion_tokens": completion,
-        "throughput_tps": round(completion / max(elapsed, 1e-3), 2),
+        "throughput_tps": round(throughput, 2),
         "peak_rss_mb": round(peak, 1),
     }
 
@@ -313,12 +316,17 @@ def chat_stream(req: ChatRequest):
         try:
             if _backend() == "sparse":
                 server = _get_sparse()
-                for kind, piece in server.stream_chat(
-                    messages,
-                    max_tokens=gen.max_tokens,
-                    temperature=gen.temperature,
-                    top_p=gen.top_p,
+                events = getattr(server, "stream_chat_events", None)
+                if events is None:
+                    events = server.stream_chat
+                for kind, piece in events(
+                    messages, max_tokens=gen.max_tokens,
+                    temperature=gen.temperature, top_p=gen.top_p,
                 ):
+                    if kind == "usage":
+                        if isinstance(piece, dict):
+                            usage.update(piece)
+                        continue
                     (thinking_parts if kind == "thinking" else text_parts).append(piece)
                     yield f"data: {json.dumps({'kind': kind, 'piece': piece})}\n\n"
                 peak = server.rss_mb()
@@ -331,6 +339,10 @@ def chat_stream(req: ChatRequest):
                         yield f"data: {json.dumps({'kind': 'text', 'piece': piece})}\n\n"
                 else:
                     for kind, piece in events(messages, generation=gen):
+                        if kind == "usage":
+                            if isinstance(piece, dict):
+                                usage.update(piece)
+                            continue
                         (thinking_parts if kind == "thinking" else text_parts).append(piece)
                         yield f"data: {json.dumps({'kind': kind, 'piece': piece})}\n\n"
         except Exception as exc:  # noqa: BLE001 - stream must report failures

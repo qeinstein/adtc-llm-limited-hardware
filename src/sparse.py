@@ -27,7 +27,7 @@ import time
 import urllib.error
 import urllib.request
 from pathlib import Path
-from typing import Iterator
+from typing import Any, Iterator
 
 ROOT = Path(__file__).resolve().parent.parent
 FREEZE_PATH = ROOT / "configs" / "final_runtime.json"
@@ -166,7 +166,9 @@ def split_thinking(text: str) -> tuple[str, str]:
     """
     start, end = text.find("<think>"), text.find("</think>")
     if start < 0:
-        return "", text
+        # Some chat templates emit only the closing marker in the visible
+        # content stream. It is a formatting token, not part of the answer.
+        return "", text.removeprefix("</think>").lstrip()
     if end < 0 or end < start:
         return text[start + len("<think>"):].strip(), ""
     thinking = text[start + len("<think>"):end].strip()
@@ -180,6 +182,8 @@ class _StreamingThinkingParser:
     def __init__(self) -> None:
         self.mode = "text"
         self.pending = ""
+        self.at_start = True
+        self.leading = ""
 
     @staticmethod
     def _suffix_length(value: str, marker: str) -> int:
@@ -190,7 +194,26 @@ class _StreamingThinkingParser:
         return 0
 
     def feed(self, piece: str) -> Iterator[tuple[str, str]]:
-        self.pending += piece
+        # Be tolerant of runtimes/templates that start the visible channel
+        # with an orphan closing marker (``</think>answer``). Keep a partial
+        # marker across network chunks, but do not hide a normal answer that
+        # merely begins with a ``<`` character.
+        if self.at_start:
+            candidate = self.leading + piece
+            close = "</think>"
+            if close.startswith(candidate) and candidate != close:
+                self.leading = candidate
+                return
+            if candidate.startswith(close):
+                self.leading = ""
+                self.at_start = False
+                self.pending += candidate[len(close):]
+            else:
+                self.leading = ""
+                self.at_start = False
+                self.pending += candidate
+        else:
+            self.pending += piece
         marker = "<think>" if self.mode == "text" else "</think>"
         while self.pending:
             at = self.pending.find(marker)
@@ -209,6 +232,9 @@ class _StreamingThinkingParser:
             break
 
     def finish(self) -> Iterator[tuple[str, str]]:
+        if self.leading:
+            yield "text", self.leading
+            self.leading = ""
         if self.pending:
             yield self.mode, self.pending
             self.pending = ""
@@ -406,9 +432,16 @@ class SparseServer:
 
     def _payload(self, messages: list[dict], max_tokens: int,
                  temperature: float, top_p: float, stream: bool) -> dict:
-        return {"messages": messages, "max_tokens": max_tokens,
-                "temperature": temperature, "top_p": top_p,
-                "stream": stream, "cache_prompt": True}
+        payload = {"messages": messages, "max_tokens": max_tokens,
+                   "temperature": temperature, "top_p": top_p,
+                   "stream": stream, "cache_prompt": True}
+        # llama-server only sends usage/timing data for streamed completions
+        # when the OpenAI-compatible option is explicitly enabled. Keeping
+        # this in the request, rather than estimating tokens in the browser,
+        # makes the displayed rate the runtime's actual decode rate.
+        if stream:
+            payload["stream_options"] = {"include_usage": True}
+        return payload
 
     def chat(self, messages: list[dict], *, max_tokens: int | None = None,
              temperature: float | None = None, top_p: float | None = None,
@@ -429,13 +462,17 @@ class SparseServer:
         text = msg.get("content", "") or ""
         if not thinking and ("<think>" in text):
             thinking, text = split_thinking(text)
+        usage = dict(data.get("usage") or {})
+        if data.get("timings"):
+            usage["timings"] = data["timings"]
         return {"thinking": thinking.strip(), "text": text.strip(),
-                "usage": data.get("usage", {})}
+                "usage": usage}
 
-    def stream_chat(self, messages: list[dict], *, max_tokens: int | None = None,
-                    temperature: float | None = None, top_p: float | None = None,
-                    ) -> Iterator[tuple[str, str]]:
-        """Yield ("thinking"|"text", piece) SSE events in arrival order."""
+    def stream_chat_events(
+        self, messages: list[dict], *, max_tokens: int | None = None,
+        temperature: float | None = None, top_p: float | None = None,
+    ) -> Iterator[tuple[str, str | dict[str, Any]]]:
+        """Yield thinking/text deltas plus the server's final usage event."""
         from src.config import get_generation_config
 
         gen = get_generation_config()
@@ -448,6 +485,12 @@ class SparseServer:
                             self._payload(messages, max_tokens, temperature,
                                           top_p, True),
                             timeout=self.timeout_s):
+            if "usage" in ev or "timings" in ev:
+                usage = dict(ev.get("usage") or {})
+                if ev.get("timings"):
+                    usage["timings"] = ev["timings"]
+                yield ("usage", usage)
+                continue
             delta = (ev.get("choices") or [{}])[0].get("delta", {})
             if delta.get("reasoning_content"):
                 if not structured_reasoning:
@@ -461,6 +504,17 @@ class SparseServer:
                     yield from parser.feed(delta["content"])
         if not structured_reasoning:
             yield from parser.finish()
+
+    def stream_chat(self, messages: list[dict], *, max_tokens: int | None = None,
+                    temperature: float | None = None, top_p: float | None = None,
+                    ) -> Iterator[tuple[str, str]]:
+        """Yield ("thinking"|"text", piece) SSE events in arrival order."""
+        for kind, piece in self.stream_chat_events(
+            messages, max_tokens=max_tokens, temperature=temperature,
+            top_p=top_p,
+        ):
+            if kind in ("thinking", "text"):
+                yield kind, str(piece)
 
 
 def free_port() -> int:

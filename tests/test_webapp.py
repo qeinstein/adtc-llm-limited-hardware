@@ -48,6 +48,18 @@ class FakeSparse:
         return 100.0
 
 
+class FakeSparseWithUsage(FakeSparse):
+    def stream_chat_events(self, messages, **kwargs):
+        self.chat_calls.append((messages, kwargs))
+        yield "thinking", "model reasoning"
+        yield "text", "model answer"
+        yield "usage", {
+            "prompt_tokens": 10,
+            "completion_tokens": 5,
+            "timings": {"predicted_per_second": 9.5},
+        }
+
+
 @pytest.fixture
 def faked(tmp_path, monkeypatch):
     model = tmp_path / "model.gguf"
@@ -176,6 +188,17 @@ def test_stream_has_no_deterministic_meta_event(faked, monkeypatch):
     assert frames[-1]["reply"] == "model answer"
     assert "urgency" not in frames[-1]
     assert "guard_ok" not in frames[-1]
+
+
+def test_stream_telemetry_keeps_model_usage(faked, monkeypatch):
+    monkeypatch.setattr(webapp, "_rag", FakeRAG())
+    server = FakeSparseWithUsage()
+    monkeypatch.setattr(webapp, "_get_sparse", lambda: server)
+
+    frames = _drain(webapp.chat_stream(webapp.ChatRequest(message=QUESTION)))
+
+    assert frames[-1]["telemetry"]["completion_tokens"] == 5
+    assert frames[-1]["telemetry"]["throughput_tps"] == 9.5
 
 
 def test_missing_model_returns_only_a_runtime_message(monkeypatch, tmp_path):

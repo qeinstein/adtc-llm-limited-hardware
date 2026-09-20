@@ -194,23 +194,38 @@ class MedicalLLMEngine:
         messages: list[dict[str, str]],
         generation: Optional[GenerationConfig] = None,
         **overrides: Any,
-    ) -> Iterator[tuple[str, str]]:
-        """Yield structured thinking/text events from the fallback backend."""
+    ) -> Iterator[tuple[str, str | dict[str, Any]]]:
+        """Yield structured output events and final usage from the fallback."""
         from src.sparse import _StreamingThinkingParser
 
         gen = generation or get_generation_config()
         parser = _StreamingThinkingParser()
         structured_reasoning = False
-        for chunk in self.llm.create_chat_completion(
-            messages=messages,
-            max_tokens=overrides.get("max_tokens", gen.max_tokens),
-            temperature=overrides.get("temperature", gen.temperature),
-            top_p=overrides.get("top_p", gen.top_p),
-            top_k=overrides.get("top_k", gen.top_k),
-            repeat_penalty=overrides.get("repeat_penalty", gen.repeat_penalty),
-            stop=list(overrides.get("stop", gen.stop)),
-            stream=True,
-        ):
+        stream_args = {
+            "messages": messages,
+            "max_tokens": overrides.get("max_tokens", gen.max_tokens),
+            "temperature": overrides.get("temperature", gen.temperature),
+            "top_p": overrides.get("top_p", gen.top_p),
+            "top_k": overrides.get("top_k", gen.top_k),
+            "repeat_penalty": overrides.get("repeat_penalty", gen.repeat_penalty),
+            "stop": list(overrides.get("stop", gen.stop)),
+            "stream": True,
+            "stream_options": {"include_usage": True},
+        }
+        try:
+            chunks = self.llm.create_chat_completion(**stream_args)
+        except TypeError:
+            # Older llama-cpp-python releases do not know stream_options. The
+            # answer still works there; only server-provided usage is absent.
+            stream_args.pop("stream_options")
+            chunks = self.llm.create_chat_completion(**stream_args)
+        for chunk in chunks:
+            if "usage" in chunk or "timings" in chunk:
+                usage = dict(chunk.get("usage") or {})
+                if chunk.get("timings"):
+                    usage["timings"] = chunk["timings"]
+                yield "usage", usage
+                continue
             delta = chunk.get("choices", [{}])[0].get("delta", {})
             if delta.get("reasoning_content"):
                 if not structured_reasoning:
