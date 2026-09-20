@@ -22,6 +22,12 @@
 7. **Kiswahili looping to context limit.** → repetition lint (n-gram,
    trailing-loop, length caps) + regen/fallback (J7-*, K suite).
 
+Note: the one-regen-else-fallback backstop runs on the non-stream
+endpoint; the streamed UI path runs the same lint but advisory (a
+failure surfaces as a visible caution banner), since regenerating
+mid-stream would double latency. All pre-generation deterministic
+gates apply identically on both paths.
+
 ## Regression suites (rules tier, runs without the model)
 
 - evals/judge_regressions (70), evals/clinical_guidance (72),

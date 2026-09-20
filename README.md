@@ -19,7 +19,8 @@ make webui            # build runtime, launch UI -> http://localhost:8420
 
 `make webui` is the only normal command: it creates a venv, installs deps,
 verifies the model, builds the pinned sparse runtime if needed, starts the
-backend + frontend, waits for readiness, prints the URL, and cleans up on exit.
+backend + frontend, waits for readiness, and prints the URL. Ctrl+C stops
+the frontend (a lingering backend `llama-server` may need a manual kill).
 
 Other entry points:
 
@@ -80,7 +81,7 @@ novelty & prior art: [NOVELTY.md](NOVELTY.md)
 ├── metadata.json            # profiler manifest (strict schema; `make validate`)
 ├── download_model.sh        # fetch + SHA256-verify the Q2K GGUF (static URL)
 ├── model/manifest.json      # machine-readable artifact manifest
-├── MODEL_CARD.md            # artifact card (provenance, honesty, limits)
+├── MODEL_CARD.md            # artifact card (provenance, honesty)
 ├── REPORT.md                # technical report (Gate-2)
 ├── provenance/              # truthful provenance package (no fake training logs)
 ├── src/                     # RAG (stdlib) · sparse backend · web UI · CLI

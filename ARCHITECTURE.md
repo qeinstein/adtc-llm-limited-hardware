@@ -107,7 +107,7 @@ keeps higher-quality types (see `configs/final_runtime.json`):
 - attention q/k/v/o/gate: q5_K · shared gate/up: q5_K, down: q6_K
 - LM head + token embeddings: q4_K · ssm_out: q6_K
 - norms, router, SSM params: f32
-- Final artifact: 11683.8 MiB, 2.83 BPW (from 10247.8 MiB IQ2 source).
+- Final artifact: 11694.3 MiB, 2.83 BPW (from 10258.3 MiB IQ2 source).
 
 Quality gates (matched MMLU, transcoded worst-case IQ2→Q2_K, `PHASE1_REPORT.md` §9):
 
@@ -307,7 +307,7 @@ active path: dense floor + 4 experts × 40 layers per token, staged
 through a fixed budget. The 35B parameters are *addressable* from SSD;
 the ~3B active parameters are *computable* from RAM. Throughput then
 follows CPU matmul roofline, not model size — which is why a Core i5
-with a commodity SSD sustains 5+ tok/s on a model 5× its RAM.
+with a commodity SSD sustains 5+ tok/s (dev) on a model 5× its RAM.
 
 ## 13. Benchmark Methodology
 

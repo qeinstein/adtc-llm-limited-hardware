@@ -53,7 +53,8 @@
   profiler pin `12be4f384c18d554d99cef380979132273578c59` (latest main)
 - Run: 35514252643 on main @ `c454f1a` (artifacts preserved 90 days)
 - Result: peak_rss 2502.49 MB, steady 2436.26 MB; 11.0 tok/s generation,
-  TTFT 26394.46 ms; arc_easy 0.72; EPYC 7763 4-core / 15.6 GB CPU-only;
+  TTFT 26394.46 ms; arc_easy 0.72 (stock-K8 accuracy path); EPYC 7763
+  4-core / 15.6 GB CPU-only;
   model SHA verified in-run; no throttling — GREEN, gate (<7 GB) passed
 
 ## Development RSS (separate from official)

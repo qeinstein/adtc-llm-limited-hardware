@@ -1,5 +1,8 @@
 # Native MoE profiler contract (llama.cpp source-verified)
 
+(Historical research note — written against older pins. Frozen pins are
+adtc-profiler @ `12be4f3` + llama.cpp @ `3057bb6`; see `docs/profiler.md`.)
+
 Profiler: `Africa-Deep-Tech-Foundation/adtc-profiler @ ac2e137`.
 llama.cpp: `ggml-org/llama.cpp @ e5a8d43` (master; the audit builds master at
 audit time — revision is NOT pinned, see UNKNOWN-1).

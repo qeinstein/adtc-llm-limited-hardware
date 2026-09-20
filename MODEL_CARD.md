@@ -83,6 +83,7 @@ required expert already staged?
 combine using K16 normalization mass
   ↓
 next layer
+```
 
 ## Reproduce
 

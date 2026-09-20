@@ -1,0 +1,88 @@
+{
+  "schema_version": "1.2.0",
+  "profiler_version": "adtc-profiler 0.1.0",
+  "submission": {
+    "team_id": "jamii-afya",
+    "domain": "healthcare_medical",
+    "language_scope": [
+      "en",
+      "sw"
+    ],
+    "african_alpha_claim": true,
+    "budget_laptop_claim": true,
+    "submitter": {
+      "name": "Toheeb Ogunade",
+      "email": "ogunadetoheeb4@gmail.com",
+      "github_handle": "qeinstein"
+    },
+    "cross_disciplinary_pairing": {
+      "discipline": "medicine",
+      "load_bearing": true,
+      "description": "Jamii Afya is an offline clinical decision-support advisor for community health workers in rural African clinics. Its design is driven by primary-care clinical workflows and bilingual English/Kiswahili patient communication, so the medical discipline is load-bearing on both the knowledge base and the safety behaviour."
+    },
+    "test_prompts": [
+      {
+        "prompt_id": "tp_001",
+        "prompt": "Mtoto wa miaka miwili ana joto la nyuzi 39 Celsius na kikohozi kikavu, na anapumua haraka. Kama mhudumu wa afya kijijini, nifanye tathmini na hatua gani za kwanza?"
+      },
+      {
+        "prompt_id": "tp_002",
+        "prompt": "A pregnant woman at 30 weeks presents with severe headache, blurred vision, and swelling of the face. What danger signs should I check for and what should I do in a rural clinic without a doctor on site?"
+      }
+    ],
+    "model": {
+      "name": "JamiiAfya-Qwen36-35B-A3B-Q2K",
+      "runtime": "llama.cpp",
+      "quantization": "GGUF (routed experts Q2_K; K4/16 sparse execution)",
+      "parameters_estimate": "35B-A3B",
+      "packaging": "binary_bundle",
+      "base_model_commit_sha": "a483e9e6cbd595906af30beda3187c2663a1118c"
+    }
+  },
+  "environment": {
+    "measured_on": "participant_laptop",
+    "cpu_model": "AMD EPYC 7763 64-Core Processor",
+    "ram_gb": 15.6,
+    "gpu": "none",
+    "os": "Ubuntu 22.04.5 LTS"
+  },
+  "throughput": {
+    "tokens_per_second_generation": 11.0,
+    "first_token_latency_ms": 26394.46,
+    "prompt_tokens": 512,
+    "generated_tokens": 128,
+    "threads_used": 2
+  },
+  "memory": {
+    "peak_rss_mb": 2502.49,
+    "steady_state_rss_mb": 2436.26,
+    "peak_vms_mb": 16962.8
+  },
+  "accuracy": [
+    {
+      "benchmark": "arc_easy",
+      "dataset_version": "lm-eval-harness",
+      "language": "en",
+      "samples": 50,
+      "score": 0.72,
+      "metric": "acc_norm"
+    }
+  ],
+  "cpu_thermal": {
+    "cpu_percent_p99": 55.1,
+    "core_temp_c_peak": null,
+    "throttled": false
+  },
+  "reproducibility": {
+    "git_commit_sha": "c454f1a6342b",
+    "docker_image_digest": "unknown",
+    "random_seed": 42
+  },
+  "model_info": {
+    "params_count": 34660610688,
+    "context_length": 262144,
+    "architecture": "qwen35moe",
+    "claimed_params_estimate": "35B-A3B",
+    "params_match": null
+  }
+}
