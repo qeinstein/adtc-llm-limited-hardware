@@ -142,7 +142,9 @@ win throughput; the bounded arm is bit-exact vs resident.
 
 ## ORIGINALITY / ATTRIBUTION
 
-All report wording and system design choices are our own. External work used:
+All report wording and system design choices are our own. The full
+prior-art review with explicit claimed-vs-not-claimed novelty is
+NOVELTY.md. External work used:
 
 - Qwen3.6-35B-A3B weights and architecture — Qwen team, Apache-2.0.
 - Base GGUF quantization — Unsloth (`unsloth/Qwen3.6-35B-A3B-GGUF`).

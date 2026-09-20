@@ -66,7 +66,8 @@ output safety lint ──▶ streamed answer (thinking shown separately, collaps
   protected, guaranteed final answer.
 
 Full architecture: [ARCHITECTURE.md](ARCHITECTURE.md) · report: [REPORT.md](REPORT.md) ·
-evaluation: [EVALUATION.md](EVALUATION.md) · training preflight (NO-GO record): [TRAINING.md](TRAINING.md)
+evaluation: [EVALUATION.md](EVALUATION.md) · training preflight (NO-GO record): [TRAINING.md](TRAINING.md) ·
+novelty & prior art: [NOVELTY.md](NOVELTY.md)
 
 ---
 

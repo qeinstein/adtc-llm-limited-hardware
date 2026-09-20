@@ -443,4 +443,6 @@ tests — NOT production paths: `scripts/*falcon*`, `tests/test_falcon*`,
 `configs/falcon-*`, `kaggle/phase04-falcon-*`, `docs/research/falcon*`,
 `eval/falcon_final_48q.json`, `requirements-falcon-production.txt`.
 Production code, configs, metadata, docs, and UI contain zero Falcon
-references.
+references. External prior-art comparison (AirLLM, Fiddler, FlashMoE,
+HotPin, TokenQL, SwapMoE, llama.cpp offload work, and more) with
+explicit claimed/non-claimed novelty: NOVELTY.md.
