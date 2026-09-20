@@ -44,7 +44,9 @@ verify_model() {
     [ "$(file_size "$MODEL_FILE")" -ge "$MIN_SIZE" ] || { echo "[download_model] ERROR: artifact is too small" >&2; return 1; }
     [ "${#MODEL_SHA256}" -eq 64 ] || { echo "[download_model] ERROR: MODEL_SHA256 or hosted .sha256 sidecar is required" >&2; return 1; }
     actual="$(sha256_file "$MODEL_FILE")"
-    [ "$actual" = "${MODEL_SHA256,,}" ] || { echo "[download_model] ERROR: SHA256 mismatch expected=$MODEL_SHA256 actual=$actual" >&2; return 1; }
+    # Portable lowercase (no ${VAR,,}: macOS ships bash 3.2, which lacks it).
+    expected_hash="$(printf '%s' "$MODEL_SHA256" | tr '[:upper:]' '[:lower:]')"
+    [ "$actual" = "$expected_hash" ] || { echo "[download_model] ERROR: SHA256 mismatch expected=$MODEL_SHA256 actual=$actual" >&2; return 1; }
     echo "[download_model] verified $MODEL_FILE ($(file_size "$MODEL_FILE") bytes) sha256=$actual"
 }
 
