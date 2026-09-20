@@ -111,6 +111,16 @@ def index() -> FileResponse:
     return FileResponse(STATIC_DIR / "index.html")
 
 
+@app.get("/architecture")
+def architecture_page() -> FileResponse:
+    return FileResponse(STATIC_DIR / "architecture.html")
+
+
+@app.get("/profiler")
+def profiler_page() -> FileResponse:
+    return FileResponse(STATIC_DIR / "profiler.html")
+
+
 @app.get("/chat")
 def chat_page() -> FileResponse:
     return FileResponse(STATIC_DIR / "chat.html")

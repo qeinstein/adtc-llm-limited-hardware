@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jamii Afya — Profiler result</title>
+<style>
+  :root { --bg:#fff; --ink:#141413; --soft:#3d3d3a; --muted:#75736e; --rule:#e3e2dd; --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,ui-serif,serif; --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+  * { box-sizing:border-box; }
+  html { -webkit-font-smoothing:antialiased; }
+  body { margin:0; color:var(--ink); background:var(--bg); font:17px/1.65 var(--sans); }
+  a { color:var(--ink); }
+  .wrap { max-width:48rem; margin:0 auto; padding:0 2rem; }
+  nav { border-bottom:1px solid var(--rule); }
+  nav .wrap { height:64px; display:flex; align-items:baseline; justify-content:space-between; gap:1rem; }
+  .brand { font:1.15rem var(--serif); text-decoration:none; }
+  .navlinks { display:flex; gap:1.2rem; font-size:.84rem; }
+  .navlinks a { color:var(--muted); text-decoration:none; }
+  .navlinks a:hover { color:var(--ink); }
+  header, section { padding:5rem 0; border-bottom:1px solid var(--rule); }
+  header { padding-top:6.5rem; }
+  .eyebrow { color:var(--muted); font:.72rem/1.2 var(--mono); letter-spacing:.1em; text-transform:uppercase; }
+  h1,h2 { font-family:var(--serif); font-weight:400; letter-spacing:-.025em; line-height:1.12; }
+  h1 { max-width:43rem; margin:1.4rem 0 1.5rem; font-size:clamp(2.35rem,6vw,3.7rem); }
+  h2 { margin:0 0 1.25rem; font-size:clamp(1.65rem,3.5vw,2.2rem); }
+  h3 { margin:0 0 .35rem; font-size:1rem; }
+  p { max-width:40rem; margin:0 0 1.15rem; color:var(--soft); }
+  .lede { font-size:1.15rem; }
+  .result { margin-top:2.5rem; padding:1.5rem; border:1px solid var(--ink); }
+  .result-label { margin:0 0 .9rem; color:var(--muted); font:.73rem var(--mono); letter-spacing:.07em; text-transform:uppercase; }
+  .result h2 { margin:0; font-size:2.2rem; }
+  .result p { margin:.5rem 0 0; font-size:.9rem; }
+  .metrics { display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; margin-top:2rem; }
+  .metric { padding:1.35rem 1.4rem; border-top:1px solid var(--ink); }
+  .metric b { display:block; font:2.2rem/1 var(--serif); }
+  .metric span { display:block; margin-top:.45rem; color:var(--muted); font-size:.82rem; }
+  pre { overflow:auto; margin:2rem 0 0; padding:1.35rem 1.4rem; background:#171716; color:#f5f5f0; font:.82rem/1.65 var(--mono); white-space:pre-wrap; }
+  .grid { display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; margin-top:2rem; }
+  .card { padding:1.35rem 1.4rem; border-top:1px solid var(--ink); }
+  .card p { margin:0; font-size:.95rem; }
+  .note { margin-top:2rem; padding:1.35rem 1.4rem; background:#f7f7f4; border-left:2px solid var(--ink); }
+  .note p { margin:0; }
+  footer { padding:2.5rem 0 4rem; color:var(--muted); font-size:.82rem; }
+  footer .wrap { display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+  @media (max-width:640px) { .navlinks { gap:.7rem; font-size:.75rem; } .metrics,.grid { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<nav><div class="wrap">
+  <a class="brand" href="/">Jamii Afya</a>
+  <span class="navlinks"><a href="/">Home</a><a href="/architecture">Architecture</a><a href="/chat">Try it</a></span>
+</div></nav>
+
+<header><div class="wrap">
+  <p class="eyebrow">Official ADTC profiler evidence</p>
+  <h1>The number is not a local estimate.</h1>
+  <p class="lede">This page records the official ADTC profiler result for the bounded sparse runtime. The profiler, not a hand-picked development measurement, is the source of the 16.0 tok/s headline.</p>
+  <div class="result">
+    <p class="result-label">Recorded result · run 35514252643</p>
+    <h2>35B model. 2.50 GB peak RSS. 16.0 tok/s.</h2>
+    <p>Qwen3.6-35B-A3B-UD-Q2K-experts.gguf · CPU-only · bounded_3gb · no network during inference</p>
+  </div>
+  <div class="metrics">
+    <div class="metric"><b>2,502.49 MB</b><span>Peak RSS</span></div>
+    <div class="metric"><b>2,436.26 MB</b><span>Steady-state RSS</span></div>
+    <div class="metric"><b>16.0 tok/s</b><span>Official generation headline</span></div>
+    <div class="metric"><b>0.72</b><span>ARC-Easy acc_norm / 50 samples</span></div>
+  </div>
+</div></header>
+
+<section><div class="wrap">
+  <p class="eyebrow">What the run measured</p>
+  <h2>The bounded executor was actually active.</h2>
+  <p>Before the expensive profiler invocation, the preflight exercised the same patched llama-bench binary and recorded real expert requests, cache hits, misses, evictions, asynchronous loads, and storage reads. This prevents the profiler from silently measuring the resident path instead of the bounded path.</p>
+  <pre>model:       Qwen3.6-35B-A3B-UD-Q2K-experts.gguf
+runtime:     llama.cpp · bounded_3gb · CPU-only
+router:      K4/16
+experts:     755 staging slots · 80 pinned experts
+peak_rss:    2502.49 MB
+steady_rss:  2436.26 MB
+generation:  16.0 tok/s headline
+accuracy:    arc_easy · 0.72 acc_norm · 50 samples</pre>
+</div></section>
+
+<section><div class="wrap">
+  <p class="eyebrow">How to read it</p>
+  <h2>Strong evidence, deliberately limited claims.</h2>
+  <div class="grid">
+    <div class="card"><h3>What it proves</h3><p>A 12.26 GB sparse model artifact can execute through the bounded runtime with a roughly 2.5 GB measured resident working set and a 16.0 tok/s official profiler headline.</p></div>
+    <div class="card"><h3>What it does not prove</h3><p>It does not prove frontier-server latency, phone deployment, clinician validation, or production medical safety. Even 35B remains a compromise against the real target.</p></div>
+    <div class="card"><h3>Throughput wording</h3><p>The profiler observed individual runs at 16.46 and 15.5 tok/s. The submission uses the rounded <strong>16.0 tok/s</strong> headline.</p></div>
+    <div class="card"><h3>Weight provenance</h3><p>No weight-level fine-tuning was performed. The result comes from runtime systems engineering, selective quantization, sparse execution, and bounded staging.</p></div>
+  </div>
+  <div class="note"><p>Full methodology, commit identities, platform details, and limitations are documented in the repository's <strong>REPORT.md</strong>. <a href="/architecture">Read the architecture</a> to see how the memory boundary works.</p></div>
+</div></section>
+
+<footer><div class="wrap"><span>Jamii Afya — official profiler result</span><span><a href="/architecture">Architecture</a> · <a href="/chat">Open advisor</a></span></div></footer>
+</body>
+</html>

@@ -35,7 +35,7 @@
   nav { border-bottom: 1px solid var(--rule); }
   nav .wrap { display: flex; align-items: baseline; justify-content: space-between; height: 64px; }
   .brand { font-family: var(--serif); font-size: 1.15rem; letter-spacing: -0.01em; }
-  .navlinks { display: flex; gap: 1.75rem; font-size: 0.875rem; }
+  .navlinks { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .35rem 1.25rem; font-size: 0.875rem; }
   .navlinks a { color: var(--muted); text-decoration: none; }
   .navlinks a:hover { color: var(--ink); }
 
@@ -127,6 +127,8 @@
       <a href="#problem">Problem</a>
       <a href="#target">Target</a>
       <a href="#approach">How it works</a>
+      <a href="/architecture">Architecture</a>
+      <a href="/profiler">Profiler</a>
       <a href="#notes">Development journey</a>
       <a href="/chat">Try it</a>
     </span>
@@ -144,6 +146,8 @@
     <div class="actions">
       <a class="btn btn-primary" href="/chat">Try the advisor</a>
       <a class="btn btn-ghost" href="#approach">How it works</a>
+      <a class="btn btn-ghost" href="/architecture">Architecture</a>
+      <a class="btn btn-ghost" href="/profiler">Profiler result</a>
     </div>
   </div>
 </header>

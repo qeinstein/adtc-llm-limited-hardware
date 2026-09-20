@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -10,6 +11,15 @@ from src import webapp
 from src.rag import RAGResult
 
 QUESTION = "What should I do about this headache?"
+
+
+def test_public_architecture_pages_are_static_html():
+    for page in (webapp.index, webapp.architecture_page, webapp.profiler_page):
+        response = page()
+        body = Path(response.path).read_text(encoding="utf-8")
+        assert response.media_type == "text/html"
+        assert body.lstrip().startswith("<!DOCTYPE html>")
+        assert "<script" not in body.lower()
 
 
 class FakeRAG:

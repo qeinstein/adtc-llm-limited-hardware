@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jamii Afya — Architecture</title>
+<style>
+  :root { --bg:#fff; --ink:#141413; --soft:#3d3d3a; --muted:#75736e; --rule:#e3e2dd; --soft-rule:#f0efec; --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,ui-serif,serif; --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; -webkit-font-smoothing:antialiased; }
+  body { margin:0; color:var(--ink); background:var(--bg); font:17px/1.65 var(--sans); }
+  a { color:var(--ink); }
+  .wrap { max-width:48rem; margin:0 auto; padding:0 2rem; }
+  nav { border-bottom:1px solid var(--rule); }
+  nav .wrap { height:64px; display:flex; align-items:baseline; justify-content:space-between; gap:1rem; }
+  .brand { font:1.15rem var(--serif); text-decoration:none; }
+  .navlinks { display:flex; gap:1.2rem; font-size:.84rem; }
+  .navlinks a { color:var(--muted); text-decoration:none; }
+  .navlinks a:hover { color:var(--ink); }
+  header, section { padding:5rem 0; border-bottom:1px solid var(--rule); }
+  header { padding-top:6.5rem; }
+  .eyebrow { color:var(--muted); font: .72rem/1.2 var(--mono); letter-spacing:.1em; text-transform:uppercase; }
+  h1,h2 { font-family:var(--serif); font-weight:400; letter-spacing:-.025em; line-height:1.12; }
+  h1 { max-width:42rem; margin:1.4rem 0 1.5rem; font-size:clamp(2.35rem,6vw,3.7rem); }
+  h2 { margin:0 0 1.25rem; font-size:clamp(1.65rem,3.5vw,2.2rem); }
+  h3 { margin:0 0 .35rem; font-size:1rem; }
+  p { max-width:40rem; margin:0 0 1.15rem; color:var(--soft); }
+  .lede { font-size:1.15rem; }
+  .flow { margin:3rem 0 1rem; display:grid; gap:.7rem; justify-items:center; }
+  .node { width:min(100%,31rem); padding:1.1rem 1.4rem; border:1px solid var(--ink); background:#fff; text-align:center; }
+  .node strong { display:block; font:1.05rem var(--serif); }
+  .node span { display:block; margin-top:.2rem; color:var(--muted); font-size:.86rem; }
+  .arrow { color:var(--muted); font:1.4rem var(--mono); line-height:1; }
+  .grid { display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; margin-top:2rem; }
+  .card { padding:1.35rem 1.4rem; border-top:1px solid var(--ink); }
+  .card p { margin:0; font-size:.95rem; }
+  .metric { margin-top:2rem; display:grid; grid-template-columns:repeat(2,1fr); border-top:1px solid var(--rule); border-bottom:1px solid var(--rule); }
+  .metric div { padding:1.4rem 1.4rem 1.4rem 0; }
+  .metric div + div { padding-left:1.4rem; border-left:1px solid var(--rule); }
+  .metric b { display:block; font:2.2rem/1 var(--serif); }
+  .metric span { display:block; margin-top:.45rem; color:var(--muted); font-size:.82rem; }
+  .callout { margin-top:2rem; padding:1.35rem 1.4rem; background:#f7f7f4; border-left:2px solid var(--ink); }
+  .callout p { margin:0; }
+  footer { padding:2.5rem 0 4rem; color:var(--muted); font-size:.82rem; }
+  footer .wrap { display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+  @media (max-width:640px) { .navlinks { gap:.7rem; font-size:.75rem; } .grid,.metric { grid-template-columns:1fr; } .metric div + div { padding-left:0; border-left:0; border-top:1px solid var(--rule); } }
+</style>
+</head>
+<body>
+<nav><div class="wrap">
+  <a class="brand" href="/">Jamii Afya</a>
+  <span class="navlinks"><a href="/">Home</a><a href="/chat">Try it</a><a href="/profiler">Profiler</a></span>
+</div></nav>
+
+<header><div class="wrap">
+  <p class="eyebrow">Architecture</p>
+  <h1>We did not shrink the model. We shrank its working set.</h1>
+  <p class="lede">Jamii Afya separates where model parameters live from how much memory must be resident for the next token. The full sparse model stays on disk; the runtime stages only the bounded expert working set it needs.</p>
+  <div class="flow" aria-label="Jamii Afya response path">
+    <div class="node"><strong>Conversation + user question</strong><span>English, Kiswahili, or another supported prompt</span></div>
+    <div class="arrow">↓</div>
+    <div class="node"><strong>Short system prompt</strong><span>Role, uncertainty, safety, and answer boundaries</span></div>
+    <div class="arrow">↓</div>
+    <div class="node"><strong>Optional offline RAG</strong><span>Relevant local reference context only when retrieval helps</span></div>
+    <div class="arrow">↓</div>
+    <div class="node"><strong>Qwen3.6-35B-A3B</strong><span>Real router, CPU-only sparse runtime</span></div>
+    <div class="arrow">↓</div>
+    <div class="node"><strong>Model output</strong><span>No classifier, answer card, rewrite, or deterministic fallback</span></div>
+  </div>
+</div></header>
+
+<section><div class="wrap">
+  <p class="eyebrow">The memory boundary</p>
+  <h2>A 12.26 GB model does not require 12.26 GB of resident RAM.</h2>
+  <p>The routed expert bank is storage-heavy, but only a subset of experts is needed for each token. Jamii Afya keeps explicit staging slots in memory and reuses them as routing changes.</p>
+  <div class="metric">
+    <div><b>12.26 GB</b><span>Complete GGUF artifact on disk</span></div>
+    <div><b>2.50 GB</b><span>Official profiler peak RSS</span></div>
+  </div>
+  <div class="grid">
+    <div class="card"><h3>K4/16 execution</h3><p>Execute the top four routed experts while normalizing against the probability mass of the top sixteen. Execution count and router reference mass are kept separate.</p></div>
+    <div class="card"><h3>Selective Q2_K</h3><p>Requantize the storage-dominant routed expert tensors while preserving more suitable types for sensitive dense, shared, router, embedding, and state-space components.</p></div>
+    <div class="card"><h3>Bounded staging</h3><p>A fixed pool of <strong>755 slots</strong> and <strong>80 pinned experts</strong> stages missing tensors, reuses slots, and evicts explicitly. The cache shape does not grow with the model.</p></div>
+    <div class="card"><h3>Cross-platform runtime</h3><p>The repository packages the pinned llama.cpp runtime for Linux, macOS, and native Windows, with model hash verification and offline operation after setup.</p></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <p class="eyebrow">What is novel here</p>
+  <h2>The claim is the composition, not a false invention story.</h2>
+  <p>We are not claiming to have invented MoE execution, expert offloading, SSD-backed inference, or quantization independently. The contribution is the measured operating point: a much stronger sparse model, a real router, K4/16, selective routed-expert quantization, explicit bounded staging, and CPU-only llama.cpp below 3 GB RSS.</p>
+  <div class="callout"><p><strong>No weight-level fine-tuning was performed.</strong> The reusable layer is the inference system. Healthcare is the current submission domain; the same runtime can be adapted to agriculture, education, coding, enterprise work, and local-language tools.</p></div>
+</div></section>
+
+<footer><div class="wrap"><span>Jamii Afya — architecture</span><span><a href="/profiler">View profiler evidence</a> · <a href="/chat">Open advisor</a></span></div></footer>
+</body>
+</html>
