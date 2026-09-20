@@ -101,13 +101,4 @@ research records, not production paths.
 
 ---
 
-## Status & honesty
-
-- The shipping weights are **NOT fine-tuned** and **NOT clinically validated**.
-  Safety comes from the system prompt, deterministic rules, guidance retrieval,
-  and output lint — not from the weights alone.
-- Memory/speed numbers marked *development* were measured on dev hardware;
-  the **official profiler** number (CI workflow) is authoritative.
-- Everything except the weights is testable offline (`make test`).
-
 *Medical content is derived from public WHO/IMCI/national-guideline material and is for clinical decision support only — not a substitute for a qualified clinician.*
