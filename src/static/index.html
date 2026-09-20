@@ -97,6 +97,7 @@
   .fig { padding: 1.75rem 1.5rem 0 0; }
   .fig .n { font-family: var(--serif); font-size: 2rem; line-height: 1; letter-spacing: -0.02em; }
   .fig .l { font-size: 0.85rem; color: var(--muted); margin-top: 0.45rem; }
+  .figs-note { font-size: 0.8rem; color: var(--muted); margin: 1.5rem 0 0; }
   @media (max-width: 640px) { .figs { grid-template-columns: 1fr; } .fig { padding-bottom: 1.25rem; } }
 
   blockquote {
@@ -118,8 +119,8 @@
     <span class="brand">Jamii&nbsp;Afya</span>
     <span class="navlinks">
       <a href="#problem">Problem</a>
-      <a href="#approach">Approach</a>
-      <a href="#notes">Engineering notes</a>
+      <a href="#approach">How it works</a>
+      <a href="#notes">Development journey</a>
       <a href="/chat">Try it</a>
     </span>
   </div>
@@ -129,9 +130,10 @@
   <div class="wrap">
     <h1>An offline clinical advisor,<br>built for the hardware<br>rural clinics actually have.</h1>
     <p class="lede">
-      Jamii Afya runs entirely on a commodity 8&nbsp;GB laptop — no GPU, no internet,
-      no subscription. It answers clinical questions in English and Kiswahili, grounds
-      every response in WHO/IMCI guidance, and always surfaces danger signs.
+      Jamii Afya runs entirely on a commodity 8&nbsp;GB laptop — no GPU, no cloud API,
+      and no internet required after setup. It supports English and Kiswahili, applies
+      deterministic safety rules before generation, and selectively adds offline
+      clinical guidance for higher-risk cases.
     </p>
     <div class="actions">
       <a class="btn btn-primary" href="/chat">Try the advisor</a>
@@ -159,45 +161,48 @@
 
 <section id="approach">
   <div class="wrap">
-    <p class="kicker">Approach</p>
-    <h2>We worked backwards from how the system is actually measured.</h2>
+    <p class="kicker">How it works</p>
+    <h2>Instead of shrinking the model, we shrank its working set.</h2>
     <p class="tight">
-      Rather than assume a bigger model is better, every significant decision here was
-      settled by measurement on hardware matching the real evaluation machine.
+      Jamii Afya keeps a 35-billion-parameter sparse model on a CPU-only laptop by
+      bounding what must be resident in RAM at any moment. Four decisions make
+      that possible.
     </p>
     <ol class="steps">
       <li>
         <div>
-          <h3>A big model that fits in small RAM</h3>
-          <p>A 35-billion-parameter sparse mixture-of-experts where only ~3B
-          parameters work on any token. Narrow K4/16 routing plus bounded
-          expert staging keeps the working set under 3&nbsp;GB on a CPU-only
-          laptop — the capability stays, the RAM bill does not.</p>
+          <h3>35B model, bounded working set</h3>
+          <p>Qwen3.6-35B-A3B runs with its real router: K4/16 execution,
+          routed experts quantized to Q2_K, and bounded SSD-backed expert
+          staging. Only a small working set is resident at any moment — the
+          capability stays, the RAM bill does not.</p>
         </div>
       </li>
       <li>
         <div>
-          <h3>Grounded in real clinical guidance</h3>
-          <p>Answers are retrieved from a curated bank of WHO/IMCI-based guidelines
-          before the model responds, so recommendations trace back to real protocol
-          rather than model memory.</p>
+          <h3>Safety before generation</h3>
+          <p>Clinical facts are extracted from the question first, and
+          deterministic rules establish urgency before the model generates
+          anything. The rules can override the model — never the other
+          way round.</p>
         </div>
       </li>
       <li>
         <div>
-          <h3>Adapted without retraining</h3>
-          <p>The weights are not fine-tuned. Instead: a clinical system prompt,
-          18 domains of structured guidance, deterministic safety rules, and
-          output linting — all inspectable, all versioned, none of it baked
-          opaquely into parameters.</p>
+          <h3>Guidance when it matters</h3>
+          <p>Structured clinical guidance is selectively injected for urgent
+          and emergency cases, and for sensitive contexts such as pregnancy,
+          pediatrics and medication questions — instead of padding every
+          prompt with guidance the case does not need.</p>
         </div>
       </li>
       <li>
         <div>
-          <h3>Bilingual, without inventing medicine</h3>
-          <p>English and Kiswahili end to end, with repetition guards for the
-          failure shapes real testing found. Authority claims (WHO, IMCI, NCDC)
-          must come from retrieved guidance or they are removed.</p>
+          <h3>No weight-level fine-tuning</h3>
+          <p>The weights are untouched. Adaptation comes from the medical
+          system prompt, 35 structured guidance cards across 18 domains,
+          deterministic rules, output linting, regeneration and a safe
+          fallback — all inspectable, all versioned.</p>
         </div>
       </li>
     </ol>
@@ -206,8 +211,8 @@
 
 <section id="notes">
   <div class="wrap">
-    <p class="kicker">Engineering notes</p>
-    <h2>What went wrong, and what it taught us.</h2>
+    <p class="kicker">Development journey</p>
+    <h2>What we tried, what failed, what survived.</h2>
     <p class="tight">
       The useful parts of a build log are the mistakes. These are the ones that changed
       the design.
@@ -215,48 +220,44 @@
 
     <div class="log">
       <div class="log-item">
-        <span class="tag">Discovery</span>
-        <p>The evaluation machine deliberately disables the CPU acceleration most
-        laptops rely on. We rebuilt our entire testing process around that environment
-        rather than trusting numbers from a fast development machine — a detail easy to
-        miss, and one that invalidates optimistic benchmarks.</p>
+        <span class="tag">Small models fit. Quality didn't.</span>
+        <p>We started with sub-billion-parameter small models, because that was
+        the obvious answer to an 8&nbsp;GB laptop. They were easy to run, but did
+        not meet the capability and safety target we wanted for clinical use.</p>
       </div>
       <div class="log-item">
-        <span class="tag">Correction</span>
-        <p>Our first instinct — route every token to all 8 experts — moved gigabytes
-        per answer and blew the RAM budget. Measuring each expert's contribution
-        showed narrow K4/16 routing keeps the answers while fitting the budget,
-        so the sparse executor stages only what each token actually needs.</p>
+        <span class="tag">A larger sparse model changed the question.</span>
+        <p>Qwen3.6-35B-A3B had far stronger capability, so the problem stopped
+        being model size and became active memory footprint: how little of the
+        model needs to be resident at once.</p>
       </div>
       <div class="log-item">
-        <span class="tag">Bug caught by testing</span>
-        <p>Our accuracy checker once reported results no better than random. Rather than
-        accept "the model is bad," we tested the checker itself against a question with
-        an obvious answer and found it was reading the model's confidence scores
-        incorrectly. Distrust your instruments until you have verified them.</p>
+        <span class="tag">Naive sparse execution was still too expensive.</span>
+        <p>Native expert execution and residency still consumed too much memory.
+        K4/16 execution cut the experts computed per token while retaining
+        broader router normalization — that became the execution point.</p>
       </div>
       <div class="log-item">
-        <span class="tag">Safety</span>
-        <p>Retrieval returned the two correct guidelines for a pre-eclampsia case, then
-        padded the context with a loosely-related third about diabetes — and the model
-        answered about blood sugar. A weak match is worse than no match, because the
-        model cannot tell which part of its context to ignore. Weak matches are now
-        discarded.</p>
+        <span class="tag">The profiler caught a real systems bug.</span>
+        <p>An early profiler run used roughly 15&nbsp;GB because llama-bench
+        wasn't honoring the bounded lazy-runtime mode. Fixing that runtime path
+        produced the verified 2.50&nbsp;GB peak / 11&nbsp;tok/s run.</p>
       </div>
       <div class="log-item">
-        <span class="tag">Root cause</span>
-        <p>An early evaluation came back with empty answers — not wrong ones. The model
-        had spent its whole token budget thinking and never reached a reply. Reasoning
-        now gets its own allowance with a protected, guaranteed answer budget, and
-        urgent safety verdicts render before reasoning finishes.</p>
+        <span class="tag">Medical safety became a system, not a prompt.</span>
+        <p>Historical failures around pediatric triage, pregnancy, bleach
+        ingestion, authority claims and Kiswahili repetition led to
+        deterministic rules, selective guidance, output linting and fallback —
+        instead of trusting one prompt to get everything right.</p>
       </div>
     </div>
 
     <div class="figs">
-      <div class="fig"><div class="n">2</div><div class="l">Languages — English and Kiswahili</div></div>
-      <div class="fig"><div class="n">&lt;3&thinsp;GB</div><div class="l">Working-set RSS, bounded arm (dev-measured)</div></div>
-      <div class="fig"><div class="n">0</div><div class="l">Network calls after install</div></div>
+      <div class="fig"><div class="n">35B-A3B</div><div class="l">Sparse model</div></div>
+      <div class="fig"><div class="n">2.50&nbsp;GB</div><div class="l">Peak RSS — official ADTC profiler software*</div></div>
+      <div class="fig"><div class="n">11&nbsp;tok/s</div><div class="l">CPU generation — same profiler run*</div></div>
     </div>
+    <p class="figs-note">*Measured using the official ADTC profiler software on GitHub Actions hardware; organizer laptop results may differ.</p>
   </div>
 </section>
 
