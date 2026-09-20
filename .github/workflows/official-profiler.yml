@@ -1,0 +1,155 @@
+name: Official ADTC profiler (Q2K submission)
+
+# Runs the OFFICIAL organizer-supplied profiler, unmodified, against the
+# frozen Q2K artifact + patched runtime. The profiler's number is the
+# authoritative submission measurement; dev numbers live separately.
+# Trigger manually for the release PR/commit; MUST pass before merge.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PROFILER_SPEC: git+https://github.com/Africa-Deep-Tech-Foundation/adtc-profiler.git@12be4f384c18d554d99cef380979132273578c59
+  FINAL_MODEL_NAME: Qwen3.6-35B-A3B-UD-Q2K-experts.gguf
+
+jobs:
+  official-profiler:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 720
+    steps:
+      - name: Checkout exact submission commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Record clean-checkout identity
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          mkdir -p artifacts
+          {
+            echo "submission_commit=$(git rev-parse HEAD)"
+            echo "workflow_sha=$GITHUB_SHA"
+            echo "branch=${GITHUB_REF_NAME}"
+            echo "profiler_spec=$PROFILER_SPEC"
+            echo "runner=$(uname -a)"
+            echo "cpu=$(grep -m1 'model name' /proc/cpuinfo || true)"
+            echo "cores=$(nproc)"
+            echo "memory=$(free -h)"
+            echo "disk=$(df -h /)"
+          } > artifacts/environment.txt
+
+      - name: Reclaim disk (model is 12.3 GB)
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL 2>/dev/null || true
+          df -h /
+
+      - name: Validate metadata + manifest before downloading
+        run: |
+          set -euo pipefail
+          make validate
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          meta = json.loads(Path("metadata.json").read_text())
+          assert meta["_runtime"]["model_path"] == "model/Qwen3.6-35B-A3B-UD-Q2K-experts.gguf"
+          assert meta["model"]["runtime"] == "llama.cpp"
+          assert len(meta["test_prompts"]) == 2
+          man = json.loads(Path("model/manifest.json").read_text())
+          assert man["sha256"] == "0f3698ae92f91db2eb10a3650bdb6693ff8cfaf7060cbc5f256845c700c7603b"
+          assert (man["k1"], man["k2"]) == (4, 16)
+          print("metadata + manifest: VALID")
+          PY
+
+      - name: Install build tools and Python
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y cmake build-essential python3-dev
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Build frozen sparse runtime (patched llama-bench on PATH)
+        run: |
+          bash scripts/build_runtime.sh
+          echo "$GITHUB_WORKSPACE/runtime/llama.cpp/build-native/bin" >> "$GITHUB_PATH"
+          command -v llama-bench
+
+      - name: Install the pinned official ADTC profiler
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --prefer-binary llama-cpp-python
+          python -m pip install "$PROFILER_SPEC"
+          python - <<'PY'
+          import adtc_profiler
+          print("adtc-profiler import: PASS")
+          PY
+
+      - name: Download exact artifact through repository mechanism
+        run: |
+          set -euo pipefail
+          bash download_model.sh
+          test -f "model/$FINAL_MODEL_NAME"
+          actual="$(sha256sum "model/$FINAL_MODEL_NAME" | awk '{print $1}')"
+          expected="$(python3 -c "import json; print(json.load(open('model/manifest.json'))['sha256'])")"
+          test "$actual" = "$expected"
+          printf '{"filename":"%s","bytes":%s,"sha256":"%s"}\n' "$FINAL_MODEL_NAME" "$(stat -c%s "model/$FINAL_MODEL_NAME")" "$actual" | tee artifacts/sha256-manifest.json
+
+      - name: Run full official ADTC participant profiler (unmodified)
+        run: |
+          set -o pipefail
+          adtc-profiler run \
+            --submission "$GITHUB_WORKSPACE" \
+            --mode participant \
+            --output artifacts/adtc-submission.json \
+            2>&1 | tee artifacts/adtc-profiler-full.log
+
+      - name: Validate profiler report and print concise summary
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          from adtc_profiler.report import validate
+          report = json.loads(Path("artifacts/adtc-submission.json").read_text())
+          validate(report)
+          if not report.get("accuracy"):
+              raise SystemExit("official full run emitted no accuracy metrics")
+          peak = float((report.get("memory") or {}).get("peak_rss_mb", 1e12))
+          if peak >= 7168:
+              raise SystemExit(f"peak RSS is not below 7 GB: {peak} MB")
+          summary = {
+              "accuracy": report.get("accuracy"),
+              "generation_tok_s": (report.get("throughput") or {}).get("tokens_per_second_generation"),
+              "prompt_tok_s": (report.get("throughput") or {}).get("tokens_per_second_prompt"),
+              "first_token_latency_ms": (report.get("throughput") or {}).get("first_token_latency_ms"),
+              "peak_rss_mb": peak,
+              "steady_rss_mb": (report.get("memory") or {}).get("steady_state_rss_mb"),
+              "overall_score": report.get("overall_score", report.get("score")),
+              "model_size": Path("model").joinpath(os.environ["FINAL_MODEL_NAME"]).stat().st_size,
+              "profiler_commit": "12be4f384c18d554d99cef380979132273578c59",
+              "submission_commit": os.environ.get("GITHUB_SHA"),
+              "gguf_sha256": json.loads(Path("artifacts/sha256-manifest.json").read_text())["sha256"],
+              "interpretation": "Official ADTC profiler software, GitHub Actions hardware self-check",
+          }
+          Path("artifacts/adtc-summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+          print(json.dumps(summary, indent=2))
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as fh:
+              fh.write("## Official profiler result\n```json\n")
+              fh.write(json.dumps(summary, indent=2))
+              fh.write("\n```\n")
+          PY
+
+      - name: Preserve complete profiler output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-profiler-output
+          path: artifacts/
+          retention-days: 90
