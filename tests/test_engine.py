@@ -21,6 +21,18 @@ class FakeLLM:
         }
 
 
+class TerminalContentFakeLLM(FakeLLM):
+    def create_chat_completion(self, *, stream=False, **kwargs):
+        if stream:
+            return iter([
+                {"choices": [{
+                    "delta": {"content": "final answer"},
+                    "finish_reason": "stop",
+                }]},
+            ])
+        return super().create_chat_completion(stream=stream, **kwargs)
+
+
 def _engine():
     engine = object.__new__(MedicalLLMEngine)
     engine.llm = FakeLLM()
@@ -39,3 +51,12 @@ def test_fallback_stream_discards_legacy_thinking_events():
     ]))
     assert all(kind != "thinking" for kind, _ in events)
     assert "".join(piece for kind, piece in events if kind == "text") == "answer"
+
+
+def test_fallback_stream_keeps_terminal_content_with_finish_reason():
+    engine = _engine()
+    engine.llm = TerminalContentFakeLLM()
+    events = list(engine.stream_chat_events([
+        {"role": "user", "content": "hello"},
+    ]))
+    assert events == [("text", "final answer"), ("finish", "stop")]

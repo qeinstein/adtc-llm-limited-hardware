@@ -531,9 +531,9 @@ async function send() {
       const elapsed = Number(t.elapsed_sec || 0).toFixed(3).replace(/\.000$/, '');
       const ram = t.peak_rss_mb ? ` · ${t.peak_rss_mb} MB` : ' · RAM unavailable';
       const meta = `${tps} · ${elapsed}s${ram}`;
-      const noAnswer = reply ? '' : (doneEv.finish_reason
-        ? `The model stopped with finish reason “${doneEv.finish_reason}” before emitting a final answer. Please try again.`
-        : 'The model ended without a final answer. Please try again.');
+      const noAnswer = reply ? '' : (doneEv.finish_reason === 'length'
+        ? 'The model reached the output limit before emitting a final answer. Please try again.'
+        : 'The model returned no visible answer. Please try again.');
       stream.finish(
         doneEv.sources || [],
         meta,

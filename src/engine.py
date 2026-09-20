@@ -226,9 +226,6 @@ class MedicalLLMEngine:
                 yield "usage", usage
                 continue
             choice = chunk.get("choices", [{}])[0]
-            if choice.get("finish_reason"):
-                yield "finish", str(choice["finish_reason"])
-                continue
             delta = choice.get("delta", {})
             if delta.get("reasoning_content"):
                 if not structured_reasoning:
@@ -243,6 +240,11 @@ class MedicalLLMEngine:
                     for kind, piece in parser.feed(delta["content"]):
                         if kind == "text":
                             yield kind, piece
+            # The terminal chunk may carry both the final content delta and
+            # finish_reason="stop". Read content before handling the finish
+            # marker so a valid final answer is not dropped.
+            if choice.get("finish_reason"):
+                yield "finish", str(choice["finish_reason"])
         if not structured_reasoning:
             for kind, piece in parser.finish():
                 if kind == "text":

@@ -116,6 +116,26 @@ def test_sparse_stream_reports_finish_reason(monkeypatch):
     ]
 
 
+def test_sparse_stream_keeps_terminal_content_with_finish_reason(monkeypatch):
+    monkeypatch.setattr(
+        sparse,
+        "_post_sse",
+        lambda *args, **kwargs: iter([
+            {"choices": [{
+                "delta": {"content": "final answer"},
+                "finish_reason": "stop",
+            }]},
+        ]),
+    )
+    server = object.__new__(sparse.SparseServer)
+    server.base_url = "http://127.0.0.1:1"
+    server.timeout_s = 1.0
+    assert list(server.stream_chat_events([{"role": "user", "content": "hi"}])) == [
+        ("text", "final answer"),
+        ("finish", "stop"),
+    ]
+
+
 def test_server_cmd_frozen_flags():
     argv = sparse.server_cmd("/m/model.gguf", port=8421, n_ctx=2048,
                             threads=4, poll=0)

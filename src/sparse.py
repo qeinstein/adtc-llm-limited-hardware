@@ -514,9 +514,6 @@ class SparseServer:
                 yield ("usage", usage)
                 continue
             choice = (ev.get("choices") or [{}])[0]
-            if choice.get("finish_reason"):
-                yield ("finish", str(choice["finish_reason"]))
-                continue
             delta = choice.get("delta", {})
             if delta.get("reasoning_content"):
                 if not structured_reasoning:
@@ -531,6 +528,11 @@ class SparseServer:
                     for kind, piece in parser.feed(delta["content"]):
                         if kind == "text":
                             yield (kind, piece)
+            # Some OpenAI-compatible servers put the last content delta and
+            # finish_reason="stop" in the same SSE event. Consume the delta
+            # before recording the finish reason or the final answer vanishes.
+            if choice.get("finish_reason"):
+                yield ("finish", str(choice["finish_reason"]))
         if not structured_reasoning:
             for kind, piece in parser.finish():
                 if kind == "text":
