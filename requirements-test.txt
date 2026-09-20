@@ -4,7 +4,6 @@
 pytest>=8.0.0
 ruff>=0.5.0
 numpy>=1.24.0            # imported by kernel modules under test (edge0trace)
-pyyaml>=6.0.0            # guidance-card loader under test
 httpx>=0.27.0            # starlette TestClient (sparse/webapp endpoint tests)
 --extra-index-url https://download.pytorch.org/whl/cpu
 torch>=2.0.0             # CPU wheel; historical falcon training-script tests

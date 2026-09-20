@@ -8,7 +8,6 @@ import pytest
 from src import webapp
 from src.rag import RAGResult
 
-
 QUESTION = "What should I do about this headache?"
 
 

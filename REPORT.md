@@ -175,7 +175,7 @@ NOVELTY.md. External work used:
   set (K4/16 graph patch, lazy experts, JOIN4 bounded executor).
 - K4/16 reference-mass renormalization — paper 2609.04575, Eq.2.
 - Clinical guidance content — public WHO/IMCI/NCDC/national-guideline
-  material, curated into structured cards (see GUIDANCE.md).
+  material, curated into the offline retrieval corpus.
 - Training-prep stack only (no shipped weights from it): Axolotl,
   Transformers, PEFT, TRL, bitsandbytes; datasets AfriMedQA, MedQA, MedMCQA,
   OASST1, PubMedQA, MMLU (see data/DATA_CARD.md + LICENSE_LEDGER).

@@ -66,17 +66,15 @@ jobs:
       - name: Stale-reference audit (production surfaces)
         run: |
           set -euo pipefail
-          # Zero Falcon references in code/configs/UI/metadata, except the one
-          # explicitly marked-historical module (which must keep its marker).
+          # Zero Falcon references in production code/configs/UI/metadata.
           hits=$(grep -rli "falcon" src/ runtime/ metadata.json download_model.sh \
-            Makefile model/manifest.json src/static/ prompts/ guidance/ \
-            --exclude=fact_answer.py --exclude-dir=__pycache__ 2>/dev/null || true)
+            Makefile model/manifest.json src/static/ prompts/ \
+            --exclude-dir=__pycache__ 2>/dev/null || true)
           if [ -n "$hits" ]; then echo "::error::stale Falcon refs: $hits"; exit 1; fi
-          grep -q "HISTORICAL/EXPERIMENTAL (Falcon line, superseded)" src/fact_answer.py
           # Docs must never present Falcon as current (historical mentions live
           # only in rejected/superseded sections; see ARCHITECTURE.md §18).
           bad=$(grep -rni "falcon" README.md REPORT.md ARCHITECTURE.md \
-            MODEL_CARD.md SAFETY.md GUIDANCE.md EVALUATION.md TRAINING.md \
+            MODEL_CARD.md EVALUATION.md TRAINING.md \
             2>/dev/null | grep -i "active\|current\|production\|shipped\|deployed\|serving\|latest" \
             | grep -vi "not production\|zero falcon\|requirements-falcon-production" || true)
           if [ -n "$bad" ]; then echo "::error::Falcon framed as current: $bad"; exit 1; fi
@@ -116,21 +114,24 @@ jobs:
           fi
           echo "size audit: PASS"
 
-      - name: UI static check (HTML parses, modes + stop wired)
+      - name: UI static check (HTML parses, model stream + stop wired)
         run: |
           python3 - <<'PY'
           from html.parser import HTMLParser
           from pathlib import Path
           text = Path("src/static/chat.html").read_text()
           HTMLParser().feed(text)  # raises on malformed markup
-          for needle in ('data-mode="fast"', 'data-mode="medium"',
-                         'data-mode="high"', 'id="stop"', 'kind', 'meta'):
+          for needle in ('id="stop"', 'kind', 'history'):
               assert needle in text, needle
-          assert "carefulEl" not in text, "dead careful-mode wiring remains"
-          print("chat.html: PARSES + modes/stop present")
+          for removed in ('data-mode=', 'currentMode', 'safety_override',
+                          'guard_failures', 'kind === \'meta\''):
+              assert removed not in text, removed
+          print("chat.html: PARSES + direct model stream present")
           PY
 
       - name: Lint touched production modules
         run: |
           python -m pip install -q ruff
-          python -m ruff check src/modes.py src/webapp.py src/config.py src/main.py src/manifest.py tests/test_modes.py tests/test_webapp_modes.py
+          python -m ruff check src/webapp.py src/config.py src/main.py src/manifest.py \
+            src/rag.py tests/test_webapp.py tests/test_rag.py \
+            tests/test_system_prompt.py

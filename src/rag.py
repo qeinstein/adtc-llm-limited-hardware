@@ -10,11 +10,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from src.compressor import compress_documents
 from src.config import GUIDELINES_PATH, SYSTEM_PROMPT
 from src.retriever import BM25Retriever, content_tokens
+
 
 @dataclass
 class RAGResult:
@@ -54,7 +55,7 @@ def _has_sufficient_lexical_support(query: str, document: dict[str, Any]) -> boo
 class RAGPipeline:
     def __init__(
         self,
-        retriever: Optional[BM25Retriever] = None,
+        retriever: BM25Retriever | None = None,
         guidelines_path: Path | str = GUIDELINES_PATH,
     ):
         if retriever is not None:
@@ -68,7 +69,7 @@ class RAGPipeline:
     def system_prompt(self) -> str:
         return SYSTEM_PROMPT
 
-    def system_prompt_for(self, result: "RAGResult") -> str:
+    def system_prompt_for(self, result: RAGResult) -> str:
         """Return the unchanged system prompt for every request."""
         return self.system_prompt
 
