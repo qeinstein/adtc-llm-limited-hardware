@@ -70,7 +70,7 @@ jobs:
           # explicitly marked-historical module (which must keep its marker).
           hits=$(grep -rli "falcon" src/ runtime/ metadata.json download_model.sh \
             Makefile model/manifest.json src/static/ prompts/ guidance/ \
-            --exclude=fact_answer.py 2>/dev/null || true)
+            --exclude=fact_answer.py --exclude-dir=__pycache__ 2>/dev/null || true)
           if [ -n "$hits" ]; then echo "::error::stale Falcon refs: $hits"; exit 1; fi
           grep -q "HISTORICAL/EXPERIMENTAL (Falcon line, superseded)" src/fact_answer.py
           # Docs must never present Falcon as current (historical mentions live
@@ -95,7 +95,8 @@ jobs:
           set -euo pipefail
           if grep -rEn "hf_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|xox[bap]-|-----BEGIN (RSA |OPENSSH )?PRIVATE KEY-----" \
               --include="*.py" --include="*.sh" --include="*.json" --include="*.md" --include="*.yml" \
-              . 2>/dev/null | grep -v ".git/"; then
+              --exclude-dir=__pycache__ --exclude-dir=.git \
+              . 2>/dev/null; then
             echo "::error::possible secret committed"; exit 1
           fi
           echo "secret scan: PASS"
