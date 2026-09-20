@@ -14,6 +14,7 @@ Runs 100% locally/offline: no CDN assets, no external calls, single static page.
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
@@ -37,7 +38,16 @@ CAREFUL_MODE_SUFFIX = (
     "clear recommendation."
 )
 
-app = FastAPI(title="Jamii Afya")
+@asynccontextmanager
+async def _lifespan(app: FastAPI):
+    yield
+    global _sparse
+    if _sparse is not None:
+        _sparse.stop()
+        _sparse = None
+
+
+app = FastAPI(title="Jamii Afya", lifespan=_lifespan)
 
 _engine = None  # lazy-loaded on first request so the server starts even pre-download
 _sparse = None  # managed llama-server for the frozen Qwen sparse system

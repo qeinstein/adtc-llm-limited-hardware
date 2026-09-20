@@ -186,3 +186,20 @@ def test_chat_end_to_end_guard(monkeypatch, tmp_path):
     assert body["telemetry"]["guard"]["regened"] is True
     assert len(calls) == 2  # initial + one corrective regen
     w._sparse = None
+
+
+def test_webapp_shutdown_stops_sparse(monkeypatch):
+    import src.webapp as w
+    from fastapi.testclient import TestClient
+
+    stopped = []
+
+    class FakeSrv:
+        def stop(self):
+            stopped.append(True)
+
+    monkeypatch.setattr(w, "_sparse", FakeSrv())
+    with TestClient(w.app):
+        pass
+    assert stopped == [True]
+    assert w._sparse is None
