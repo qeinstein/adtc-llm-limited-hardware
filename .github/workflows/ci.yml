@@ -104,7 +104,9 @@ jobs:
       - name: No giant files committed (weights stay out of git)
         run: |
           set -euo pipefail
-          big=$(git ls-files | while read -r f; do
+          # Allowed: the curated training-data chain (audited, needed to
+          # reproduce a future provisioned run). Everything else >20MB fails.
+          big=$(git ls-files | grep -v -e "^data/chat/full_chat.jsonl$" -e "^data/manifests/full_mixture.jsonl$" | while read -r f; do
             s=$(stat -c%s "$f" 2>/dev/null || echo 0)
             if [ "$s" -gt 20000000 ]; then echo "$f ($s)"; fi
           done)
