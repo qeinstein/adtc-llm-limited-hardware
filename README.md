@@ -64,6 +64,9 @@ output safety lint ──▶ streamed answer (thinking shown separately, collaps
 - **Reasoning modes:** Fast / Medium (default) / High change thinking effort
   only — safety behavior is identical. Reasoning gets its own allowance with a
   protected, guaranteed final answer.
+- **Official result:** ADTC profiler PASS — **2502 MB peak RSS**,
+  **11.0 tok/s** (CI hardware), arc_easy 0.72, CPU-only bounded_3gb arm.
+  Run 35514252643, main @ `c454f1a`. See [REPORT.md](REPORT.md).
 
 Full architecture: [ARCHITECTURE.md](ARCHITECTURE.md) · report: [REPORT.md](REPORT.md) ·
 evaluation: [EVALUATION.md](EVALUATION.md) · training preflight (NO-GO record): [TRAINING.md](TRAINING.md) ·
