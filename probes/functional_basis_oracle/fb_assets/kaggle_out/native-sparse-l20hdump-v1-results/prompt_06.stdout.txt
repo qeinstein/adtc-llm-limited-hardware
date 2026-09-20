@@ -1,0 +1,38 @@
+
+
+Loading model... |-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\ 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b1-3057bb66c
+model      : /tmp/native-sparse-l20hdump/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf
+ftype      : IQ2_XXS - 2.0625 bpw
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> Which intervention most directly prevents cholera: A clean water B antibiotics C vitamins D bed rest?
+
+[Start thinking]
+
+The user is asking for the intervention that most directly prevents cholera among the given options: A clean water, B antibiotics, C vitamins, D bed rest.
+
+1.  **Analyze the disease:** Cholera is an acute diarrheal infection caused by ingestion of the bacterium *Vibrio cholera
+
+[ Prompt: 9.6 t/s | Generation: 7.6 t/s ]
+
+
+Exiting...

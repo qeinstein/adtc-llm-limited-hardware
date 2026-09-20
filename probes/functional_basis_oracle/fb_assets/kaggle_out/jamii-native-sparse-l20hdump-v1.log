@@ -1,0 +1,47 @@
+[{"stream_name":"stdout","time":1.018716089,"data":"+ git clone --filter=blob:none https://github.com/ggml-org/llama.cpp.git /tmp/native-sparse-l20hdump/llama.cpp\n"}
+,{"stream_name":"stdout","time":10.739534726,"data":"+ git fetch --depth 1 origin 3057bb66c86c46d5781e50e85462a760ba7d1feb\n"}
+,{"stream_name":"stdout","time":12.437052363,"data":"+ git checkout --detach 3057bb66c86c46d5781e50e85462a760ba7d1feb\n"}
+,{"stream_name":"stdout","time":14.236783181,"data":"+ git diff -- ggml/src/ggml-cpu/ggml-cpu.c\n"}
+,{"stream_name":"stdout","time":14.24427276,"data":"+ cmake -S /tmp/native-sparse-l20hdump/llama.cpp -B /tmp/native-sparse-l20hdump/llama.cpp/build-native -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DGGML_NATIVE=ON -DGGML_CUDA=OFF -DGGML_METAL=OFF -DGGML_VULKAN=OFF -DLLAMA_CURL=OFF\n"}
+,{"stream_name":"stdout","time":16.884503149,"data":"+ cmake --build /tmp/native-sparse-l20hdump/llama.cpp/build-native --config Release -j4 --target llama-cli\n"}
+,{"stream_name":"stdout","time":242.053900591,"data":"+ curl -L --fail --retry 5 --retry-delay 5 -C - -o /tmp/native-sparse-l20hdump/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf https://huggingface.co/unsloth/Qwen3.5-35B-A3B-GGUF/resolve/bc014a17be43adabd7066b7a86075ff935c6a4e2/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf\n"}
+,{"stream_name":"stdout","time":477.883319536,"data":"===== prompt 00 clinical =====\n"}
+,{"stream_name":"stdout","time":492.563230793,"data":"===== prompt 01 clinical =====\n"}
+,{"stream_name":"stdout","time":505.945255137,"data":"===== prompt 02 clinical =====\n"}
+,{"stream_name":"stdout","time":519.205807543,"data":"===== prompt 03 clinical =====\n"}
+,{"stream_name":"stdout","time":532.478905596,"data":"===== prompt 04 clinical =====\n"}
+,{"stream_name":"stdout","time":549.518922625,"data":"===== prompt 05 clinical =====\n"}
+,{"stream_name":"stdout","time":566.783733402,"data":"===== prompt 06 mcqa =====\n"}
+,{"stream_name":"stdout","time":583.574277602,"data":"===== prompt 07 mcqa =====\n"}
+,{"stream_name":"stdout","time":597.913950923,"data":"===== prompt 08 mcqa =====\n"}
+,{"stream_name":"stdout","time":612.416733117,"data":"===== prompt 09 mcqa =====\n"}
+,{"stream_name":"stdout","time":626.327257321,"data":"===== prompt 10 reasoning =====\n"}
+,{"stream_name":"stdout","time":640.505184229,"data":"===== prompt 11 reasoning =====\n"}
+,{"stream_name":"stdout","time":654.181834838,"data":"===== prompt 12 reasoning =====\n"}
+,{"stream_name":"stdout","time":667.926980133,"data":"===== prompt 13 reasoning =====\n"}
+,{"stream_name":"stdout","time":681.922711873,"data":"===== prompt 14 reasoning =====\n"}
+,{"stream_name":"stdout","time":695.531531997,"data":"===== prompt 15 general =====\n"}
+,{"stream_name":"stdout","time":708.982117474,"data":"===== prompt 16 general =====\n"}
+,{"stream_name":"stdout","time":722.781883567,"data":"===== prompt 17 general =====\n"}
+,{"stream_name":"stdout","time":736.356618141,"data":"===== prompt 18 general =====\n"}
+,{"stream_name":"stdout","time":750.254643956,"data":"===== prompt 19 general =====\n"}
+,{"stream_name":"stdout","time":764.388345185,"data":"===== prompt 20 general =====\n"}
+,{"stream_name":"stdout","time":778.107826246,"data":"===== prompt 21 swahili =====\n"}
+,{"stream_name":"stdout","time":793.510026322,"data":"===== prompt 22 swahili =====\n"}
+,{"stream_name":"stdout","time":808.07281235,"data":"===== prompt 23 swahili =====\n"}
+,{"stream_name":"stdout","time":822.675301253,"data":"===== prompt 24 swahili =====\n"}
+,{"stream_name":"stdout","time":837.277668726,"data":"===== prompt 25 swahili =====\n"}
+,{"stream_name":"stdout","time":852.557726403,"data":"===== prompt 26 instruction =====\n"}
+,{"stream_name":"stdout","time":867.195689247,"data":"===== prompt 27 instruction =====\n"}
+,{"stream_name":"stdout","time":881.569227842,"data":"===== prompt 28 instruction =====\n"}
+,{"stream_name":"stdout","time":895.991378471,"data":"===== prompt 29 instruction =====\n"}
+,{"stream_name":"stdout","time":910.256527552,"data":"===== prompt 30 short =====\n"}
+,{"stream_name":"stdout","time":923.644378566,"data":"===== prompt 31 short =====\n"}
+,{"stream_name":"stdout","time":937.475276633,"data":"{\"status\": \"ok\", \"prompts\": 32, \"rows\": 5866}\n"}
+,{"stream_name":"stderr","time":940.494121881,"data":"/usr/local/lib/python3.12/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":940.494206631,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":941.080345963,"data":"/usr/local/lib/python3.12/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":941.080395873,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":943.790635566,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":945.567660589,"data":"[NbConvertApp] Writing 327589 bytes to __results__.html\n"}
+]

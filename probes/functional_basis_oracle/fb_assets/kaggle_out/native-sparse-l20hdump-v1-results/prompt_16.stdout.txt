@@ -1,0 +1,40 @@
+
+
+Loading model... |-\|/-\|/-\|/-\|/-\|/-\|/-\|/ 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b1-3057bb66c
+model      : /tmp/native-sparse-l20hdump/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf
+ftype      : IQ2_XXS - 2.0625 bpw
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> How do I make a weekly study plan when I work irregular hours?
+
+[Start thinking]
+
+Here's a thinking process that leads to the suggested weekly study plan for someone with irregular work hours:
+
+1.  **Analyze the User's Request:**
+    *   **Goal:** Create a weekly study plan.
+    *   **Constraint:** Work hours are irregular (shift work, on-call, freelance
+
+[ Prompt: 11.0 t/s | Generation: 7.5 t/s ]
+
+
+Exiting...
