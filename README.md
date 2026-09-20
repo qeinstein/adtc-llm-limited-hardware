@@ -45,6 +45,22 @@ enterprise work, local-language tools, and other African ecosystems with a new
 system prompt, offline reference corpus, and—when justified—future domain
 adaptation.
 
+## What is novel here
+
+We are not claiming to have invented sparse Mixture-of-Experts execution,
+expert offloading, SSD-backed inference, or quantization independently. The
+novelty is the **measured systems composition and operating point**:
+
+**Qwen3.6-35B-A3B + the real router + K4/16 execution + routed-expert-only
+Q2_K quantization + explicit bounded expert staging + CPU-only llama.cpp,
+measured below 3 GB RSS at 16.0 tok/s on the official ADTC profiler.**
+
+The runtime uses a fixed **755-slot** staging pool with **80 pinned experts**,
+keeps the 12.26 GB model artifact on disk, and proves through preflight traffic
+that the bounded executor—not a resident fallback—is the path being measured.
+That distinction is the project's systems contribution. The full prior-art
+boundary and claim discipline are documented in [NOVELTY.md](NOVELTY.md).
+
 > Built for the **Africa Deep Tech Challenge 2026 — The Laptop LLM Challenge.**
 
 > **Read [ARCHITECTURE.md](ARCHITECTURE.md) before running or evaluating this
