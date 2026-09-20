@@ -123,7 +123,8 @@ jobs:
           HTMLParser().feed(text)  # raises on malformed markup
           for needle in ('id="stop"', 'kind', 'history', 'min-height: 0',
                          'streamedText', 'finalReply',
-                         'answer = answer || finalReply || \'\''):
+                         'answer = answer || finalReply || \'\'',
+                         'tbody.innerHTML = renderMD(thinking)'):
               assert needle in text, needle
           for removed in ('data-mode=', 'currentMode', 'safety_override',
                           'guard_failures', 'kind === \'meta\''):

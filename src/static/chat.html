@@ -103,23 +103,45 @@
 
   /* Thinking panel: model-emitted reasoning text ( NOT hidden chain-of-thought ).
      Collapsed + subdued by default; streams live; expands on click. */
-  details.thinking { margin-bottom: 0.75rem; border: 1px solid var(--rule-soft);
+  details.thinking { margin-bottom: 0.55rem; border: 1px solid var(--rule-soft);
                      border-radius: 6px; background: var(--surface); }
   details.thinking summary { cursor: pointer; list-style: none; display: flex;
-    align-items: center; gap: 0.5rem; padding: 0.55rem 0.85rem;
-    font-size: 0.8rem; color: var(--muted); user-select: none; }
+    align-items: center; gap: 0.45rem; padding: 0.42rem 0.7rem;
+    font-size: 0.76rem; color: var(--muted); user-select: none; }
   details.thinking summary::-webkit-details-marker { display: none; }
   details.thinking summary .caret { font-family: var(--mono); font-size: 0.72rem;
     transition: transform 0.15s; }
   details.thinking[open] summary .caret { transform: rotate(90deg); }
-  details.thinking summary .tstatus { font-family: var(--mono); font-size: 0.68rem;
+  details.thinking summary .tstatus { font-family: var(--mono); font-size: 0.63rem;
     text-transform: uppercase; letter-spacing: 0.06em; }
   details.thinking summary .pulse { width: 6px; height: 6px; border-radius: 50%;
     background: var(--muted); animation: blink 1.2s infinite ease-in-out; }
   details.thinking.done summary .pulse { animation: none; background: var(--rule); }
-  details.thinking .tbody { padding: 0 0.85rem 0.7rem; font-size: 0.82rem;
-    color: var(--muted); white-space: pre-wrap; word-wrap: break-word;
-    max-height: 16rem; overflow-y: auto; }
+  details.thinking .tbody {
+    padding: 0 0.7rem 0.5rem; color: var(--muted); font-size: 0.75rem;
+    line-height: 1.35; word-wrap: break-word; max-height: 16rem; overflow-y: auto;
+  }
+  details.thinking .tbody h1, details.thinking .tbody h2,
+  details.thinking .tbody h3 { font-family: var(--serif); font-weight: 400;
+    line-height: 1.2; margin: 0.5rem 0 0.2rem; }
+  details.thinking .tbody h1 { font-size: 1rem; }
+  details.thinking .tbody h2 { font-size: 0.92rem; }
+  details.thinking .tbody h3 { font-size: 0.86rem; }
+  details.thinking .tbody p { margin: 0.22rem 0; }
+  details.thinking .tbody ul, details.thinking .tbody ol {
+    margin: 0.22rem 0; padding-left: 1.15rem;
+  }
+  details.thinking .tbody li { margin: 0.04rem 0; }
+  details.thinking .tbody code { font-family: var(--mono); font-size: 0.78em;
+    background: var(--bg); border-radius: 3px; padding: 0.05rem 0.25rem; }
+  details.thinking .tbody pre { margin: 0.35rem 0; padding: 0.45rem 0.6rem;
+    overflow-x: auto; line-height: 1.3; background: var(--bg); border-radius: 4px; }
+  details.thinking .tbody pre code { background: none; padding: 0; }
+  details.thinking .tbody table { border-collapse: collapse; margin: 0.3rem 0;
+    font-size: 0.72rem; }
+  details.thinking .tbody th, details.thinking .tbody td {
+    border: 1px solid var(--rule); padding: 0.18rem 0.35rem; text-align: left;
+  }
   .copybtn { border: 1px solid var(--rule); background: var(--bg); color: var(--muted);
     border-radius: 4px; font-size: 0.68rem; font-family: var(--mono);
     padding: 0.1rem 0.45rem; cursor: pointer; margin-left: auto; }
@@ -386,7 +408,7 @@ function addStreamingMessage() {
     pushThinking(piece) {
       thinking += piece;
       if (!thinkShown) { det.style.display = ''; thinkShown = true; }
-      tbody.textContent = thinking;
+      tbody.innerHTML = renderMD(thinking);
       tbody.scrollTop = tbody.scrollHeight;
       stickScroll();
     },
