@@ -104,6 +104,12 @@
     margin: 2rem 0 0; padding: 0 0 0 1.5rem; border-left: 2px solid var(--ink);
     font-family: var(--serif); font-size: 1.2rem; line-height: 1.5; color: var(--ink);
   }
+  .signal {
+    margin-top: 2.5rem; padding: 1.5rem 0; border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+  .signal strong { display: block; font-family: var(--serif); font-size: 1.45rem; font-weight: 400; line-height: 1.25; }
+  .signal span { display: block; color: var(--muted); font-size: 0.88rem; margin-top: 0.45rem; }
 
   .close { padding: 6rem 0; }
   .close h2 { margin-bottom: 1.25rem; }
@@ -119,6 +125,7 @@
     <span class="brand">Jamii&nbsp;Afya</span>
     <span class="navlinks">
       <a href="#problem">Problem</a>
+      <a href="#target">Target</a>
       <a href="#approach">How it works</a>
       <a href="#notes">Development journey</a>
       <a href="/chat">Try it</a>
@@ -128,12 +135,11 @@
 
 <header>
   <div class="wrap">
-    <h1>An offline clinical advisor,<br>built for the hardware<br>rural clinics actually have.</h1>
+    <h1>A stronger model,<br>running on the hardware<br>Africa actually has.</h1>
     <p class="lede">
       Jamii Afya runs entirely on a commodity 8&nbsp;GB laptop — no GPU, no cloud API,
-      and no internet required after setup. It supports English and Kiswahili, applies
-      sends a system prompt to the model and adds relevant offline clinical
-      references when they are useful.
+      and no internet required after setup. It brings a 35B sparse model closer to
+      African hands and doorsteps, with healthcare as the current submission use case.
     </p>
     <div class="actions">
       <a class="btn btn-primary" href="/chat">Try the advisor</a>
@@ -156,6 +162,35 @@
       A health worker needs trustworthy guidance in the language the patient speaks —
       not a chatbot guessing, and not something that stops working when the signal drops.
     </blockquote>
+  </div>
+</section>
+
+<section id="target">
+  <div class="wrap">
+    <p class="kicker">The target</p>
+    <h2>We did not build another tiny-model demo.</h2>
+    <p class="tight">
+      A 0.5B, 1.5B, or 4B model can be useful for a narrow task. That does not make
+      it a substitute for broader reasoning, language, planning, and clinical
+      context. If Africa keeps treating “small enough to run” as the same thing as
+      frontier intelligence, the capability gap becomes the design.
+    </p>
+    <p class="tight">
+      Fine-tuning can specialise a model. Retrieval can add local facts. Neither
+      changes the base model's underlying capacity. We chose the harder direction:
+      bring a considerably stronger sparse model closer to the hardware African
+      users can actually afford.
+    </p>
+    <div class="signal">
+      <strong>12.26 GB on disk → 2.50 GB peak RSS → 16.0 tok/s</strong>
+      <span>Official ADTC profiler headline, CPU-only, bounded sparse runtime.</span>
+    </div>
+    <p class="tight" style="margin-top:1.5rem">
+      This is a genuine systems breakthrough for the direction, but even this 35B
+      system is still a failure against the real target: it is storage-backed,
+      slower than a server, and not clinically validated. It is nevertheless a
+      meaningful step beyond accepting tiny models as Africa's permanent ceiling.
+    </p>
   </div>
 </section>
 
@@ -238,7 +273,7 @@
         <span class="tag">The profiler caught a real systems bug.</span>
         <p>An early profiler run used roughly 15&nbsp;GB because llama-bench
         wasn't honoring the bounded lazy-runtime mode. Fixing that runtime path
-        produced the verified 2.50&nbsp;GB peak / 11&nbsp;tok/s run.</p>
+        produced the verified 2.50&nbsp;GB peak / 16.0&nbsp;tok/s headline.</p>
       </div>
       <div class="log-item">
         <span class="tag">The model should own the answer.</span>
@@ -251,7 +286,7 @@
     <div class="figs">
       <div class="fig"><div class="n">35B-A3B</div><div class="l">Sparse model</div></div>
       <div class="fig"><div class="n">2.50&nbsp;GB</div><div class="l">Peak RSS — official ADTC profiler software*</div></div>
-      <div class="fig"><div class="n">11&nbsp;tok/s</div><div class="l">CPU generation — same profiler run*</div></div>
+      <div class="fig"><div class="n">16.0&nbsp;tok/s</div><div class="l">CPU generation — official profiler headline*</div></div>
     </div>
     <p class="figs-note">*Measured using the official ADTC profiler software on GitHub Actions hardware; organizer laptop results may differ.</p>
   </div>

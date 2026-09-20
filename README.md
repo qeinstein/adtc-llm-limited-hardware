@@ -1,8 +1,49 @@
-# Jamii Afya — Offline Clinical Advisor (ADTC 2026)
+# Jamii Afya — Bringing Frontier Intelligence to African Doorsteps
 
-**Domain:** Healthcare & Medical · **Languages:** English + Kiswahili · **Runtime:** llama.cpp / GGUF, CPU-only, 100% offline
+**This is not a project about making small models available to Africa. That is
+already possible.**
 
-*Jamii Afya* ("community health") is an offline clinical **decision-support** assistant for community health workers and nurses in rural African clinics. It runs a 35B-parameter sparse mixture-of-experts in under 3 GB of working RAM on a commodity 8 GB laptop — no GPU, no internet — answers in the language of the question, and can add relevant local reference material through offline RAG. It is decision support — not a diagnosis, and not a replacement for a clinician.
+The world is already moving toward frontier intelligence. If Africa is still
+stuck celebrating 0.5B, 1.5B, or 4B models because they fit on a laptop, we are
+not solving the real problem. We are designing around our infrastructure gap
+and quietly accepting that the gap should remain. That is painful, and it is
+not a serious long-term strategy for the continent.
+
+Small models can be useful for narrow, stable tasks. They are not frontier
+intelligence. They do not offer the same breadth of reasoning, language,
+planning, coding, and context handling as a much stronger model. [Scaling
+studies](https://arxiv.org/abs/2001.08361) and [compute-optimal training
+research](https://arxiv.org/abs/2203.15556) make the relationship between model
+capacity, data, and capability difficult to ignore. Fine-tuning can specialise a
+model; it cannot turn a small base checkpoint into a frontier model.
+[LoRA](https://arxiv.org/abs/2106.09685) and related methods adapt a fixed
+pretrained parameter budget, and recent research on reasoning
+[distillation](https://arxiv.org/abs/2502.12143) has documented a learnability
+gap in very small models. The point is not that fine-tuning is useless. The
+point is that an interesting fine-tune does not erase the capability ceiling of
+the base model.
+
+**The next thing Africa needs to do is not keep fine-tuning smaller models. It
+is to bring frontier intelligence a step closer to our hands and doorsteps.**
+
+Jamii Afya is a proof of that direction. We took a considerably stronger,
+35-billion-parameter sparse Mixture-of-Experts model and made it run on
+commodity CPU-only hardware with no cloud and no internet during inference. The
+official ADTC profiler measured **2,502.49 MB peak RSS** and **16.0 tok/s** while
+the full model artifact remained **12.26 GB on disk**.
+
+This is a genuine systems breakthrough for Africa, but it is not magic and it is
+not finished. **Even this 35B system is still a failure against the real target:**
+it is storage-backed, slower than a server, and nowhere near a phone-sized
+deployment. It is nevertheless a considerably more meaningful failure in the
+right direction than treating a tiny model as Africa's permanent ceiling simply
+because it is convenient to run.
+
+The runtime is domain-portable. Healthcare is the current ADTC submission use
+case; the underlying system can be adapted to agriculture, education, coding,
+enterprise work, local-language tools, and other African ecosystems with a new
+system prompt, offline reference corpus, and—when justified—future domain
+adaptation.
 
 > Built for the **Africa Deep Tech Challenge 2026 — The Laptop LLM Challenge.**
 
