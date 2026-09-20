@@ -36,6 +36,7 @@
     "base_model_commit_sha": "a483e9e6cbd595906af30beda3187c2663a1118c"
   },
   "_runtime": {
-    "model_path": "model/Qwen3.6-35B-A3B-UD-Q2K-experts.gguf"
+    "model_path": "model/Qwen3.6-35B-A3B-UD-Q2K-experts.gguf",
+    "git_commit_sha": "c454f1a6342b5426c943c2096029c26f993e694d"
   }
 }
