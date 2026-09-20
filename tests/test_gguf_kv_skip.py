@@ -11,9 +11,13 @@ from pathlib import Path
 
 KDIR = Path(__file__).resolve().parents[1] / "kaggle" / \
     "native-sparse-edge0phase35-v1"
+BDIR = Path(__file__).resolve().parents[1] / "kaggle" / \
+    "native-sparse-edge0base-v1"
 sys.path.insert(0, str(KDIR))
+sys.path.insert(0, str(BDIR))
 
 import edge0phase35_v1 as k35
+import edge0base_v1 as kbase
 
 
 def _str(b):
@@ -61,4 +65,14 @@ def test_kv_skip_all_scalar_types(tmp_path):
     f = tmp_path / "synth.gguf"
     build_gguf(f)
     assert k35.gguf_tensor_table(f) == [
+        ("blk.0.ffn_gate_exps", "iq2_xxs"), ("output.weight", "q8_0")]
+
+
+def test_kv_skip_edge0base_parser(tmp_path):
+    # edge0base duplicated the walker with wrong header offsets and no
+    # vtype-9 (array) support; v3 died in transcode_q2k with "kv walk".
+    # Same synthetic file must walk identically there.
+    f = tmp_path / "synth.gguf"
+    build_gguf(f)
+    assert kbase.gguf_tensor_table(f) == [
         ("blk.0.ffn_gate_exps", "iq2_xxs"), ("output.weight", "q8_0")]

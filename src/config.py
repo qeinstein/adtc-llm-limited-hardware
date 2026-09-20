@@ -92,9 +92,12 @@ class RuntimeConfig:
     running ``llama-bench`` on the raw GGUF — not by this engine. See REPORT.md.
     """
 
-    # Context window: kept small on purpose — the KV cache is O(n_ctx) RAM, and
-    # our RAG pipeline compresses context so long windows are unnecessary.
-    n_ctx: int = field(default_factory=lambda: _env_int("ADTC_N_CTX", 2048))
+    # Context window: 4096 fits the ~1400-token prompt plus the High-mode
+    # completion budget (2304) with margin. KV cost is small (GQA Q8_0:
+    # ~40KB/token, ~164MB at 4096) and GDN state is context-constant, so
+    # this stays inside the bounded-RSS arms. (The frozen profiler/bench
+    # config uses its own flags; this drives serving only.)
+    n_ctx: int = field(default_factory=lambda: _env_int("ADTC_N_CTX", 4096))
     # Target eval machine is 4 vCPU; default to a safe value and clamp at runtime.
     n_threads: int = field(default_factory=lambda: _env_int("ADTC_N_THREADS", 4))
     n_batch: int = field(default_factory=lambda: _env_int("ADTC_N_BATCH", 256))
@@ -129,7 +132,7 @@ class GenerationConfig:
     top_k: int = 40
     repeat_penalty: float = 1.1
     # Keep output bounded at the chat-turn and common prompt boundaries. The
-    # active Falcon artifact is trained for the same compact assistant style.
+    # shipped Qwen3.6 sparse artifact answers in the same compact style.
     stop: tuple[str, ...] = (
         "\nQ:", "\nA:", "\nS:", "\nJ:",
         "\nQuestion:", "\nAnswer:", "\nSwali:", "\nJibu:",

@@ -61,8 +61,9 @@ def main() -> None:
 
     import torch
     from datasets import Dataset
-    from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
-    from transformers import AutoModelForCausalLM, AutoTokenizer
+    from peft import LoraConfig, get_peft_model
+    from transformers import (AutoModelForCausalLM, AutoTokenizer,
+                              EarlyStoppingCallback)
     from trl import SFTConfig, SFTTrainer
 
     if not torch.cuda.is_available():
@@ -118,7 +119,9 @@ def main() -> None:
         logging_steps=cfg["logging"]["log_every"], report_to="none")
     trainer = SFTTrainer(model=model, processing_class=tok, args=sft,
                          train_dataset=split["train"],
-                         eval_dataset=split["test"])
+                         eval_dataset=split["test"],
+                         callbacks=[EarlyStoppingCallback(
+                             early_stopping_patience=cfg["optim"]["early_stopping_patience"])])
     trainer.train()
     trainer.save_model()
     print("saved", cfg["logging"]["output_dir"], flush=True)

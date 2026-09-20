@@ -8,6 +8,7 @@ also flag unknown top-level keys (except ``_runtime``, which the profiler strips
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 DOMAINS = {
@@ -101,5 +102,10 @@ def validate_metadata(meta: dict[str, Any]) -> list[str]:
             errs.append(f"'model.packaging' must be one of {sorted(PACKAGING)}")
         if model.get("runtime") != "llama.cpp":
             errs.append("'model.runtime' must be 'llama.cpp' (only accepted runtime)")
+        sha = model.get("base_model_commit_sha")
+        if sha is not None and not (
+                isinstance(sha, str)
+                and re.fullmatch(r"[0-9a-f]{40}", sha)):
+            errs.append("'model.base_model_commit_sha' must be a 40-hex SHA")
 
     return errs

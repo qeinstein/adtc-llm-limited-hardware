@@ -1,0 +1,93 @@
+# Production QLoRA config — Qwen3.6-35B-A3B on 2xT4 (Axolotl FSDP2).
+# PREFLIGHT STATUS: LOAD GATE RED (see training/PREFLIGHT.md). DO NOT RUN
+# on 2xT4: per-rank load is 22.0GB vs 14.56GB usable (exact, +51%).
+# This file is the frozen, reviewed production config for provisioned
+# hardware (or a future Axolotl init-path fix). NEVER run as-is:
+# the launcher MUST overwrite max_steps/output_dir/run_name (§X).
+base_model: Qwen/Qwen3.6-35B-A3B
+revision_of_model: 995ad96eacd98c81ed38be0c5b274b04031597b0
+chat_template: qwen3_5
+trust_remote_code: false
+strict: true
+
+datasets:
+  - path: /kaggle/input/jamii-sft-prod-v1/prod_chat.jsonl  # frozen pre-canary (§X)
+    type: chat_template
+    field_messages: messages
+val_set_size: 0.0  # §S: no mid-run eval; train loss + grad norms only
+output_dir: /tmp/OVERWRITE_ME_prod_out
+dataset_prepared_path: /tmp/OVERWRITE_ME_prepared
+
+# §L: from data_audit.json percentiles (measured 2026-09-20, NOT habit).
+# p50=755/p95=981/p99=1214: the pinned system prompt alone exceeds 512, so
+# 512 would truncate EVERY row. 1024 would silently cut 882 answers (§L
+# forbids). 2048 keeps all but 5 rows (dropped at subset build, listed in
+# PREFLIGHT.md). Shorter context is NOT available for this data.
+sequence_len: 2048
+sample_packing: false  # §I: GDN packing needs FLA; OFF unless 7-gate pass
+pad_to_sequence_len: false
+
+# §E production QLoRA shape.
+load_in_4bit: true
+quantize_moe_experts: true
+adapter: qlora
+lora_r: 8
+lora_alpha: 16
+lora_dropout: 0
+lora_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+lora_mlp_kernel: false
+lora_qkv_kernel: false
+lora_o_kernel: false
+
+# §T conservative one-shot SFT.
+gradient_accumulation_steps: 8  # eff batch 1*2*8 = 16
+micro_batch_size: 1
+max_steps: 20  # PLACEHOLDER — launcher overwrites from canary sec/step (§A)
+num_epochs: 1
+optimizer: adamw_torch  # NOT 8-bit: 1.4M trainables -> 8-bit saves ~8MB but
+  # risks torchao/sm75 breakage; bnb 8-bit is validator-forbidden with FSDP2.
+lr_scheduler: cosine
+learning_rate: 0.0001
+warmup_ratio: 0.04
+weight_decay: 0.0
+max_grad_norm: 1.0
+train_on_inputs: false
+seed: 11
+
+# §D T4-safe attention + dtype. NEVER flash_attention_2 on Turing.
+bf16: false
+fp16: true
+tf32: false
+attn_implementation: sdpa
+
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+
+logging_steps: 1
+save_steps: 25
+save_total_limit: 2  # §R: latest 2 recoverable checkpoints only
+save_first_step: true  # §O: prove save path immediately
+
+# §G FSDP2 (mandated). NOTE: validator FORBIDS cpu_ram_efficient_loading
+# with 4-bit (scatter deadlock); loader parks the FULL quantized model per
+# rank (device_map={"": LOCAL_RANK}) -> 22.0GB/rank. This is the load gate.
+fsdp_config:
+  fsdp_version: 2
+  offload_params: false  # §H order: no offload unless step-memory demands
+  cpu_ram_efficient_loading: false  # forced false by validator with 4-bit
+  auto_wrap_policy: TRANSFORMER_BASED_WRAP
+  transformer_layer_cls_to_wrap: Qwen3_5MoeDecoderLayer
+  state_dict_type: FULL_STATE_DICT
+  sharding_strategy: FULL_SHARD
+  reshard_after_forward: true
+  activation_checkpointing: true
+
+# §J: all OFF until a canary proves >=5-10% win with sane loss.
+# cut_cross_entropy: false (plugin, enable only via canary A/B)
+# liger / kernels: OFF (Turing risk, unproven here)
+# torch_compile: false

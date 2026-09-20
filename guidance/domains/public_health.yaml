@@ -1,0 +1,36 @@
+# Domain 18: infectious-disease / public-health escalation. Original summaries.
+- id: outbreak-escalation
+  domain: public_health
+  version: 1.0.0
+  priority: 1
+  scope: Clustered severe illness suggesting an outbreak (e.g., rice-water
+    diarrhea in several people, clustered hemorrhagic signs).
+  trigger_facts: [outbreak_pattern]
+  trigger_any_of: []
+  required_missing_information: [location, case_count, symptoms,
+    lab_confirmation, onset_timeline]
+  risk_level: urgent
+  required_actions:
+    - Urgent care for the ill plus notifying health authorities; in
+      Nigeria route to the NCDC Connect Centre (24/7, toll-free 6232).
+    - Never substitute a helpline for emergency care of a severely ill person.
+  prohibited_actions:
+    - Diagnosing cholera, Ebola, Lassa, or other outbreak diseases from chat.
+    - Issuing quarantine or movement orders.
+    - Recommending community-wide drug prophylaxis.
+  safe_interim_actions:
+    - Safe water, hand hygiene, and isolation of the ill from food
+      preparation in general terms while authorities respond.
+  uncertainty_notes: >
+    Outbreak confirmation needs lab plus epidemiology; chat routes early
+    signals to humans fast.
+  source:
+    authority: Nigeria Centre for Disease Control and Prevention
+    title: NCDC Connect Centre (24/7 toll-free 6232)
+    canonical_url: https://ncdc.gov.ng
+    publication_date: checked 2026-09-20
+    version: n/a (contact routing)
+    section_page: Connect Centre contact details
+    license: Public public-health information; contact details only
+  review: {machine_verified: true, clinician_reviewed: false,
+    last_reviewed: "2026-09-20"}

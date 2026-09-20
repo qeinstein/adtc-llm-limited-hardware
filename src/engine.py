@@ -112,7 +112,7 @@ def _guard_repetition(text: str, min_chunk_words: int = 6, min_repeats: int = 3)
     truncate to the last clean sentence before it, falling back to a short
     honest safety message if nothing usable is left.
 
-    Found by testing (not a hypothetical): the fine-tuned model reliably loops
+    Found by testing (not a hypothetical): the model reliably loops
     on longer, complex Kiswahili prompts even with a raised repeat_penalty —
     this is a real generation-time failure mode, not a sampling knob to tune.
     Doesn't touch the automated scoring path (that reads raw logits on fixed

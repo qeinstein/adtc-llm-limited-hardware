@@ -100,8 +100,18 @@ def sha12(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
 
 
+def sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(8 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
 def norm(text: str) -> str:
-    return re.sub(r"\s+", " ", (text or "").strip().lower())
+    text = (text or "").strip().lower()
+    text = re.sub(r"[^a-z0-9 ]+", " ", text)  # punctuation-insensitive
+    return re.sub(r"\s+", " ", text).strip()
 
 
 def fetch(url: str, dest: Path) -> Path:
@@ -338,7 +348,14 @@ def adapt_oasst(counts: Counter) -> list[dict]:
         if r.get("lang") != "en" or r.get("deleted") or r.get("synthetic"):
             counts["oasst_filter"] += 1
             continue
-        if r.get("review_result") is not True or (r.get("rank") or 9) != 0:
+        if r.get("review_result") is not True:
+            counts["oasst_unvetted"] += 1
+            continue
+        try:
+            rank_ok = r.get("rank") is not None and int(r.get("rank")) == 0
+        except (ValueError, TypeError):
+            rank_ok = False
+        if not rank_ok:
             counts["oasst_unvetted"] += 1
             continue
         parent = by_id.get(r.get("parent_id") or "")
@@ -361,12 +378,11 @@ def adapt_oasst(counts: Counter) -> list[dict]:
 def adapt_mmlu_quarantine(counts: Counter) -> list[dict]:
     from datasets import load_dataset
     src = SOURCES["mmlu"]
+    with urllib.request.urlopen(
+            "https://huggingface.co/api/datasets/cais/mmlu",
+            timeout=30) as r:
+        src["revision"] = json.load(r).get("sha")
     ds = load_dataset("cais/mmlu", "all", split="test", trust_remote_code=False)
-    try:
-        rev = ds._fingerprint  # informational only
-    except Exception:
-        rev = None
-    src["revision_resolved"] = rev
     out = []
     for r in ds:
         counts["mmlu_rows"] += 1
@@ -611,7 +627,9 @@ def main() -> None:
     (MANI / "build_meta.json").write_text(json.dumps(
         {"utc": datetime.now(timezone.utc).isoformat(), "seed": 7,
          "mixture_weights": weights,
-         "n_full": len(full), "n_pilot": len(pilot)}, indent=1))
+         "n_full": len(full), "n_pilot": len(pilot),
+         "full_sha256": sha256_file(MANI / "full_mixture.jsonl"),
+         "pilot_sha256": sha256_file(MANI / "pilot_mixture.jsonl")}, indent=1))
     ledger = {"generated_utc": datetime.now(timezone.utc).isoformat(),
               "sources": SOURCES, "counts": dict(counts),
               "stratification": stratify(clean)}

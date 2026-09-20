@@ -1,0 +1,8 @@
+{
+  "base_repo": "unsloth/Qwen3.6-35B-A3B-GGUF",
+  "base_revision": "a483e9e6cbd595906af30beda3187c2663a1118c",
+  "file": "Qwen3.6-35B-A3B-UD-IQ2_XXS.gguf",
+  "sha256": "2e8f5f705355c56311432d0a8a5d14a696dbb7e4b197d05c75ba805fc1857bef",
+  "size_bytes": 10756586464,
+  "upstream": "Qwen/Qwen3.6-35B-A3B"
+}

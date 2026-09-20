@@ -1,10 +1,10 @@
 """Retrieval-augmented generation pipeline for the clinical advisor.
 
 Wires the offline BM25 retriever and the query-focused compressor into a single
-prompt-assembly step. RAG is the highest-ROI accuracy lever for a small model:
-it grounds answers in curated WHO/IMCI-style guidance instead of relying on the
-1.7B model's parametric memory. (It does NOT affect the profiler's automated
-lm-eval score, which runs the raw model — RAG is for real answers + judges.)
+prompt-assembly step. RAG grounds answers in curated WHO/IMCI-style guidance
+instead of relying on the sparse MoE's parametric memory. (It does NOT affect
+the profiler's automated lm-eval score, which runs the raw model — RAG is for
+real answers + judges.)
 
 Prompt layout is deliberately ``[stable system+few-shot] -> [RAG context] ->
 [query]`` so the fixed prefix can be KV-cached across queries on CPU.
@@ -124,7 +124,7 @@ class RAGPipeline:
 
         Why (found by real testing, not theory): FEWSHOT embeds two COMPLETE
         worked clinical answers. Given input with no clinical signal — a
-        greeting, a thank-you, a typo — a 0.6B model has nothing to anchor on
+        greeting, a thank-you, a typo — a small model has nothing to anchor on
         and just copies the nearest in-context example verbatim; a bare "hi"
         came back as the full ORS/zinc diarrhoea answer. Dropping the examples
         when there is no retrieved context removes the thing being copied and

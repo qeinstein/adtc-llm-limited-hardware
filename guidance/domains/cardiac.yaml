@@ -1,0 +1,36 @@
+# Domain 13: chest pain / cardiovascular emergencies. Original summaries.
+- id: chest-pain
+  domain: cardiac
+  version: 1.0.0
+  priority: 1
+  scope: Chest pain or pressure, especially with associated symptoms.
+  trigger_facts: [chest_pain]
+  trigger_any_of: []
+  required_missing_information: [character_and_radiation, duration,
+    breathlessness, sweating_or_nausea, collapse_or_faint,
+    risk_factors_and_history]
+  risk_level: urgent
+  required_actions:
+    - Urgent same-day assessment at minimum; call emergency services now
+      for pressure-like/crushing pain, breathlessness, sweating, radiation
+      to arm/neck/jaw, collapse, or known heart disease.
+  prohibited_actions:
+    - False reassurance ("probably gas/muscle") without assessment.
+    - Antacid-only or rest-only plans for concerning features.
+    - Recommending aspirin or other heart medicines by chat.
+  safe_interim_actions:
+    - Rest, avoid exertion, chew nothing/take nothing new unless a
+      clinician advises; arrange transport rather than driving self.
+  uncertainty_notes: >
+    Chest pain has cardiac and non-cardiac causes that chat cannot separate;
+    concerning features get emergency care, the rest urgent review.
+  source:
+    authority: WHO / ICRC / IFEM
+    title: "Basic Emergency Care: approach to the acutely ill and injured"
+    canonical_url: https://www.who.int/publications/i/item/9789241513081
+    publication_date: "2018-10-30"
+    version: "2018"
+    section_page: chest pain emergency approach
+    license: As stated on WHO publication page; original summary only
+  review: {machine_verified: true, clinician_reviewed: false,
+    last_reviewed: "2026-09-20"}

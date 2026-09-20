@@ -168,10 +168,11 @@
     <ol class="steps">
       <li>
         <div>
-          <h3>A small model, chosen with numbers</h3>
-          <p>We benchmarked speed, memory and accuracy across model sizes on a
-          deliberately slowed-down CPU build. A small, efficient model won decisively
-          once the scoring weights were accounted for.</p>
+          <h3>A big model that fits in small RAM</h3>
+          <p>A 35-billion-parameter sparse mixture-of-experts where only ~3B
+          parameters work on any token. Narrow K4/16 routing plus bounded
+          expert staging keeps the working set under 3&nbsp;GB on a CPU-only
+          laptop — the capability stays, the RAM bill does not.</p>
         </div>
       </li>
       <li>
@@ -184,18 +185,19 @@
       </li>
       <li>
         <div>
-          <h3>Trained the way it is tested</h3>
-          <p>Instead of generic fine-tuning, the model was trained to rank the correct
-          answer above the plausible wrong ones — matching the evaluation metric
-          exactly, not merely sounding right.</p>
+          <h3>Adapted without retraining</h3>
+          <p>The weights are not fine-tuned. Instead: a clinical system prompt,
+          18 domains of structured guidance, deterministic safety rules, and
+          output linting — all inspectable, all versioned, none of it baked
+          opaquely into parameters.</p>
         </div>
       </li>
       <li>
         <div>
           <h3>Bilingual, without inventing medicine</h3>
-          <p>Kiswahili training data was expanded by having a larger model elaborate
-          strictly on our own vetted guidelines — translating and rephrasing verified
-          text, never generating new clinical claims.</p>
+          <p>English and Kiswahili end to end, with repetition guards for the
+          failure shapes real testing found. Authority claims (WHO, IMCI, NCDC)
+          must come from retrieved guidance or they are removed.</p>
         </div>
       </li>
     </ol>
@@ -221,10 +223,10 @@
       </div>
       <div class="log-item">
         <span class="tag">Correction</span>
-        <p>Our first instinct — use the largest model that fits in memory — was wrong.
-        Running the scoring math against real measurements showed it would forfeit most
-        of the available score, so we rebuilt around a much smaller model and let a
-        head-to-head sweep pick the compression level too.</p>
+        <p>Our first instinct — route every token to all 8 experts — moved gigabytes
+        per answer and blew the RAM budget. Measuring each expert's contribution
+        showed narrow K4/16 routing keeps the answers while fitting the budget,
+        so the sparse executor stages only what each token actually needs.</p>
       </div>
       <div class="log-item">
         <span class="tag">Bug caught by testing</span>
@@ -237,22 +239,22 @@
         <span class="tag">Safety</span>
         <p>Retrieval returned the two correct guidelines for a pre-eclampsia case, then
         padded the context with a loosely-related third about diabetes — and the model
-        answered about blood sugar. A weak match is worse than no match, because a small
+        answered about blood sugar. A weak match is worse than no match, because the
         model cannot tell which part of its context to ignore. Weak matches are now
         discarded.</p>
       </div>
       <div class="log-item">
         <span class="tag">Root cause</span>
-        <p>The model ranked answers superbly but wrote poorly. The cause was in our own
-        data: it had seen roughly 93,000 ranking examples against 80 examples of writing
-        an answer. It learned exactly what we taught it. Correcting that ratio is what
-        fixed the prose.</p>
+        <p>An early evaluation came back with empty answers — not wrong ones. The model
+        had spent its whole token budget thinking and never reached a reply. Reasoning
+        now gets its own allowance with a protected, guaranteed answer budget, and
+        urgent safety verdicts render before reasoning finishes.</p>
       </div>
     </div>
 
     <div class="figs">
       <div class="fig"><div class="n">2</div><div class="l">Languages — English and Kiswahili</div></div>
-      <div class="fig"><div class="n">527&thinsp;MB</div><div class="l">Peak memory on the reference machine</div></div>
+      <div class="fig"><div class="n">&lt;3&thinsp;GB</div><div class="l">Working-set RSS, bounded arm (dev-measured)</div></div>
       <div class="fig"><div class="n">0</div><div class="l">Network calls after install</div></div>
     </div>
   </div>

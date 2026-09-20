@@ -1,0 +1,36 @@
+# Domain 09: anaphylaxis / severe allergic reaction. Original summaries.
+- id: anaphylaxis
+  domain: anaphylaxis
+  version: 1.0.0
+  priority: 1
+  scope: Airway/breathing/circulation involvement after an exposure.
+  trigger_facts: [anaphylaxis_signs]
+  trigger_any_of: []
+  required_missing_information: [trigger_and_time_since, breathing_and_swallowing,
+    dizziness_or_collapse, known_allergy, autoinjector_available]
+  risk_level: emergency
+  required_actions:
+    - Emergency services immediately; airway and breathing involvement
+      after an exposure is an emergency until proven otherwise.
+    - Note trigger and time; use a prescribed auto-injector only if one
+      was already prescribed for the person.
+  prohibited_actions:
+    - Antihistamine-only plans when airway/breathing/circulation are involved.
+    - Watchful waiting for rapidly evolving symptoms.
+    - Improvising adrenaline dosing or routes.
+  safe_interim_actions:
+    - Lie flat with legs raised unless breathing is easier sitting; do not
+      leave alone; remove trigger if safe (e.g., stinger).
+  uncertainty_notes: >
+    Mild hives alone differ from multi-system involvement; any airway,
+    breathing, or circulation feature upgrades to emergency.
+  source:
+    authority: WHO / ICRC / IFEM
+    title: "Basic Emergency Care: approach to the acutely ill and injured"
+    canonical_url: https://www.who.int/publications/i/item/9789241513081
+    publication_date: "2018-10-30"
+    version: "2018"
+    section_page: airway/breathing emergency approach
+    license: As stated on WHO publication page; original summary only
+  review: {machine_verified: true, clinician_reviewed: false,
+    last_reviewed: "2026-09-20"}

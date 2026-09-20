@@ -37,11 +37,15 @@
   .tools { display: flex; align-items: center; gap: 1.5rem; font-size: 0.85rem; color: var(--muted); }
   .tools a { color: var(--muted); text-decoration: none; }
   .tools a:hover { color: var(--ink); }
-  .tools label { display: flex; align-items: center; gap: 0.4rem; cursor: pointer; user-select: none; }
   .tools button { border: none; background: none; color: var(--muted); cursor: pointer;
                   font: inherit; padding: 0; }
   .tools button:hover { color: var(--ink); }
-  input[type=checkbox] { accent-color: var(--ink); }
+  .modes { display: flex; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+  .modes button { padding: 0.25rem 0.7rem; font-size: 0.78rem; color: var(--muted); }
+  .modes button + button { border-left: 1px solid var(--rule); }
+  .modes button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+  .modes button:hover { color: var(--ink); }
+  .modes button[aria-pressed="true"]:hover { color: #fff; }
 
   #chat { flex: 1; overflow-y: auto; padding: 2.5rem 0; }
   #chat .wrap { display: flex; flex-direction: column; gap: 2rem; }
@@ -60,6 +64,15 @@
   .sources code { font-family: var(--mono); font-size: 0.72rem; background: var(--surface);
                   border-radius: 3px; padding: 0.1rem 0.4rem; margin-right: 0.3rem; }
   .meta { margin-top: 0.5rem; font-family: var(--mono); font-size: 0.7rem; color: var(--muted); }
+  .urgency { display: inline-block; font-family: var(--mono); font-size: 0.68rem;
+             text-transform: uppercase; letter-spacing: 0.08em; border-radius: 3px;
+             padding: 0.15rem 0.5rem; margin-bottom: 0.6rem; }
+  .urgency.emergency { background: #7f1d1d; color: #fef2f2; }
+  .urgency.urgent { background: #92400e; color: #fffbeb; }
+  .urgency.routine { background: var(--surface); color: var(--muted); }
+  .urgency.selfcare { background: var(--surface); color: var(--muted); }
+  .override { background: #7f1d1d; color: #fef2f2; border-radius: 3px;
+              padding: 0.7rem 1rem; margin-bottom: 0.8rem; font-size: 0.85rem; }
 
   .empty { margin: auto 0; padding: 3rem 0; }
   .empty h1 { font-family: var(--serif); font-weight: 400; font-size: 2rem;
@@ -82,11 +95,11 @@
     color: var(--ink); background: var(--bg);
   }
   #input:focus { border-color: var(--ink); }
-  #send {
+  #send, #stop {
     background: var(--ink); color: #fff; border: 1px solid var(--ink); border-radius: 6px;
     padding: 0.7rem 1.3rem; font: inherit; font-size: 0.94rem; cursor: pointer;
   }
-  #send:hover { background: #000; }
+  #send:hover, #stop:hover { background: #000; }
   #send:disabled { background: var(--muted); border-color: var(--muted); cursor: default; }
   .disclaimer { margin-top: 0.85rem; font-size: 0.75rem; color: var(--muted); }
 
@@ -150,7 +163,11 @@
     <a class="brand" href="/"><span class="status" id="statusDot"></span>Jamii&nbsp;Afya</a>
     <div class="tools">
       <a href="/">About</a>
-      <label><input type="checkbox" id="carefulMode"> Careful mode</label>
+      <div class="modes" role="group" aria-label="Reasoning mode">
+        <button data-mode="fast" aria-pressed="false" title="Quick answers, brief reasoning">Fast</button>
+        <button data-mode="medium" aria-pressed="true" title="Balanced reasoning (default)">Medium</button>
+        <button data-mode="high" aria-pressed="false" title="Deepest reasoning, slower">High</button>
+      </div>
       <button id="clearBtn">New chat</button>
     </div>
   </div>
@@ -179,6 +196,7 @@
   <div class="wrap">
     <div id="composer">
       <textarea id="input" rows="1" placeholder="Describe the patient…"></textarea>
+      <button id="stop" style="display:none">Stop</button>
       <button id="send">Send</button>
     </div>
     <div class="disclaimer">Runs entirely offline on this machine. Decision support only —
@@ -190,11 +208,21 @@
 const chatEl = document.getElementById('chat').querySelector('.wrap');
 const inputEl = document.getElementById('input');
 const sendBtn = document.getElementById('send');
-const carefulEl = document.getElementById('carefulMode');
+const stopBtn = document.getElementById('stop');
 const statusDot = document.getElementById('statusDot');
 const clearBtn = document.getElementById('clearBtn');
 let emptyState = document.getElementById('emptyState');
 const emptyHTML = emptyState.outerHTML;
+let currentMode = 'medium';
+let aborter = null;
+
+document.querySelectorAll('.modes button').forEach(b => {
+  b.addEventListener('click', () => {
+    currentMode = b.dataset.mode;
+    document.querySelectorAll('.modes button').forEach(x =>
+      x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+  });
+});
 
 let history = [];  // [{role, content}] — full conversation memory sent with every request
 
@@ -372,11 +400,30 @@ function addStreamingMessage() {
   chatScroll.scrollTop = chatScroll.scrollHeight;
 
   let thinking = '', answer = '', thinkShown = false, ansShown = false;
+  let metaShown = false;
   const copyThink = document.createElement('button');
   copyThink.className = 'copybtn'; copyThink.textContent = 'copy';
   copyThink.addEventListener('click', (ev) => { ev.preventDefault(); copyText(copyThink, thinking); });
   copyAns.addEventListener('click', (ev) => { ev.preventDefault(); copyText(copyAns, answer); });
+  function showMeta(urg) {
+    if (metaShown || !urg) return;
+    metaShown = true;
+    if (urg.urgency && urg.urgency !== 'ROUTINE') {
+      const b = document.createElement('div');
+      b.className = 'urgency ' + urg.urgency.toLowerCase().replace('-', '');
+      b.textContent = urg.urgency === 'SELF-CARE' ? 'self-care' : urg.urgency.toLowerCase();
+      wrap.insertBefore(b, wrap.firstChild);
+    }
+    if (urg.safety_override) {
+      const o = document.createElement('div');
+      o.className = 'override';
+      o.textContent = 'Safety guidance applies to this answer — act on the urgent steps first, then read the full reply.';
+      body.parentNode.insertBefore(o, body);
+    }
+    stickScroll();
+  }
   return {
+    showMeta,
     pushThinking(piece) {
       thinking += piece;
       if (!thinkShown) { det.style.display = ''; thinkShown = true; }
@@ -390,8 +437,12 @@ function addStreamingMessage() {
       body.innerHTML = renderMD(answer);
       stickScroll();
     },
-    finish(sources, meta, empty) {
+    finish(sources, meta, empty, urg) {
       det.classList.add('done');
+      // Meta banner normally already shown by the early meta event;
+      // this is the fallback for early-exit (non-streamed) paths.
+      showMeta(urg && urg.safety_override !== undefined ? urg :
+        (urg ? { urgency: urg.urgency, safety_override: urg.override } : null));
       const st = sum.querySelector('.tstatus');
       const lb = sum.querySelector('.tlabel');
       if (thinkShown) {
@@ -436,10 +487,13 @@ function addStreamingMessage() {
 
 async function send() {
   const message = inputEl.value.trim();
-  if (!message) return;
+  if (!message || aborter) return;
   inputEl.value = '';
   inputEl.style.height = 'auto';
   sendBtn.disabled = true;
+  sendBtn.style.display = 'none';
+  stopBtn.style.display = '';
+  aborter = new AbortController();
 
   addMessage('user', message);
   const stream = addStreamingMessage();
@@ -448,7 +502,8 @@ async function send() {
     const res = await fetch('/api/chat/stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, history, careful_mode: carefulEl.checked }),
+      body: JSON.stringify({ message, history, mode: currentMode }),
+      signal: aborter.signal,
     });
     if (!res.ok || !res.body) {
       stream.fail('Request failed (HTTP ' + res.status + ').');
@@ -470,7 +525,8 @@ async function send() {
           if (!line.startsWith('data:')) continue;
           let ev;
           try { ev = JSON.parse(line.slice(5).trim()); } catch (e) { continue; }
-          if (ev.kind === 'thinking') { sawPieces = true; stream.pushThinking(ev.piece || ''); }
+          if (ev.kind === 'meta') { stream.showMeta(ev); }
+          else if (ev.kind === 'thinking') { sawPieces = true; stream.pushThinking(ev.piece || ''); }
           else if (ev.kind === 'text') { sawPieces = true; stream.pushText(ev.piece || ''); }
           else if (ev.kind === 'done') doneEv = ev;
           else if (ev.kind === 'error') { stream.fail('Error: ' + (ev.error || 'generation failed.')); return; }
@@ -485,7 +541,7 @@ async function send() {
     if (!sawPieces && reply) {
       // Early-exit event (ungrounded question / model-missing preview):
       // plain single message, no thinking panel, no history pollution.
-      stream.finish(doneEv.sources || [], '', reply);
+      stream.finish(doneEv.sources || [], '', reply, doneEv);
       history.push({ role: 'user', content: message });
       return;
     }
@@ -499,18 +555,23 @@ async function send() {
           '(' + (doneEv.guard_failures || []).join(', ') +
           '). Please verify with a clinician.*');
       }
-      stream.finish(doneEv.sources || [], meta, '');
+      stream.finish(doneEv.sources || [], meta, '', doneEv);
       history.push({ role: 'user', content: message });
       history.push({ role: 'assistant', content: reply });
     }
   } catch (e) {
-    stream.fail('Connection error — is the server running?');
+    if (aborter && aborter.signal.aborted) stream.fail('Stopped.');
+    else stream.fail('Connection error — is the server running?');
   } finally {
+    aborter = null;
+    stopBtn.style.display = 'none';
+    sendBtn.style.display = '';
     sendBtn.disabled = false;
     inputEl.focus();
   }
 }
 
+stopBtn.addEventListener('click', () => { if (aborter) aborter.abort(); });
 sendBtn.addEventListener('click', send);
 inputEl.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }

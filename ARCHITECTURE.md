@@ -355,7 +355,92 @@ Authoritative values live in `configs/final_runtime.json`:
 - Long context grows KV memory outside the expert budget (ctx 512
   validated; 2k+ needs re-measurement).
 - K4/16 is approximate (−1.0pp MMLU-200; paper: indistinguishable).
-- Thinking output consumes generated-token budget (80-token runs often
-  never leave the thinking phase); the web UI streams it separately.
+- Thinking output consumes generated-token budget; the v5 eval failure
+  (empty answers) is fixed by per-mode reasoning allowances with a
+  protected, guaranteed final answer (§17). The web UI streams thinking
+  separately, collapsed by default.
+- No clinician review anywhere (weights, 35 guidance cards, 402 data
+  rows); no numeric thresholds in cards; Kiswahili needs native-speaker
+  review; linting is heuristic. See SAFETY.md.
 - Throughput varies with host CPU/disk; Kaggle ≠ Core i5 (see §13).
 - Profiler accuracy-stage integration unresolved (see §13).
+
+## 16. Clinical Safety & Guidance Layer
+
+The model (the untuned Q2_K+K4/16 artifact — final; weight-level
+fine-tuning was prepared but NO-GO on available hardware, see
+TRAINING.md) is the general medical reasoning engine. Around it sits a
+deterministic safety layer that enforces floors the model may not
+undercut:
+
+```
+User
+ ↓
+risk/fact extraction          (runtime/safety/risk.py, facts.py)
+ ↓
+deterministic high-risk rules (runtime/safety/rules.py over guidance/,
+                               18 domains, 35 cards, v1.0.0)
+ ↓
+optional structured-guidance retrieval (≤3 cards + provenance, only when
+  urgent/emergent, dosing-sensitive, pregnancy/pediatric, or authority asked)
+ ↓
+Qwen3.6 (untuned Q2_K+K4/16 — final artifact)
+ ↓
+output safety lint            (output_lint.py: escalation, diagnosis,
+  dose variables, authority attribution, bleach/amputation/citation hard
+  gates; repetition.py: n-gram/trailing-loop/length guards) → regen once,
+  else safe fallback
+ ↓
+UI                            (urgency badge SELF-CARE/ROUTINE/URGENT/
+                               EMERGENCY; override banner never hidden
+                               in reasoning)
+```
+
+Rules control safety, not diagnosis: cards encode danger recognition,
+escalation, missing-information requirements, and unsafe-advice
+prohibitions — never definitive diagnoses or invented doses. All cards
+are original summaries with exact WHO/NCDC/Jamii-policy provenance
+(see guidance/manifest.json); no clinician review yet. Regression suites
+(171 rules-tier cases: judge failures ×10, domains, Kiswahili, safety
+hard gates) run in tests/test_guidance_regressions.py. Details:
+GUIDANCE.md (domains, sources, retrieval, licensing) and SAFETY.md
+(failures, mitigations, limitations, review status).
+
+## 17. Fast / Medium / High Reasoning Modes
+
+One canonical definition (`src/modes.py`); Medium is the default. Modes
+change reasoning effort ONLY — thinking allowance, protected final-answer
+allowance, and a short steering line. System prompt, guidance retrieval,
+safety rules, output lint, and sampling temperature are identical across
+modes (asserted by tests/test_webapp_modes.py).
+
+| mode | thinking | answer (protected) | phase-1 total |
+|---|---|---|---|
+| fast | 128 | 256 | 384 |
+| medium | 512 | 512 | 1024 |
+| high | 1536 | 768 | 2304 |
+
+No shared pool lets reasoning eat the answer (the v5 failure): if phase 1
+ends with thinking but an empty answer, phase 2 feeds the thinking back
+and demands the final answer within the answer allowance — bounded, so
+High cannot run away either. Emergencies never wait for reasoning: the
+deterministic safety verdict streams first as a `meta` event and the UI
+renders the banner immediately.
+
+## 18. Rejected Product Directions & Historical Map
+
+Runtime-level rejects live in §10. Product-level:
+
+| direction | verdict | why |
+|---|---|---|
+| Falcon-H1 1.5B full fine-tune line | SUPERSEDED | complete LoRA/SFT trajectory built and profiled, but clinically weaker than the sparse 35B at comparable laptop RAM |
+| Small dense models (0.6B–4B) | SUPERSEDED | same reason: capability per gigabyte favors sparse MoE |
+| Weight-level Qwen fine-tuning | NO-GO | prepared pipeline; 2×T4 cannot load 35B/rank (TRAINING.md) |
+| Cloud/proprietary APIs | never considered | offline-first requirement |
+
+Superseded Falcon-era files are retained as research records with green
+tests — NOT production paths: `scripts/*falcon*`, `tests/test_falcon*`,
+`configs/falcon-*`, `kaggle/phase04-falcon-*`, `docs/research/falcon*`,
+`eval/falcon_final_48q.json`, `requirements-falcon-production.txt`.
+Production code, configs, metadata, docs, and UI contain zero Falcon
+references.

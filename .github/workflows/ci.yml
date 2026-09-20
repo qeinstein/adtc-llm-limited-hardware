@@ -1,0 +1,133 @@
+name: Jamii Afya CI (offline gates)
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  offline-gates:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install test deps
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-test.txt
+          python -m pip install fastapi pydantic uvicorn
+
+      - name: Full offline test suite (no weights needed)
+        run: python -m pytest tests/ -q
+
+      - name: Metadata + manifest validation
+        run: |
+          make validate
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          m = json.loads(Path("model/manifest.json").read_text())
+          for key in ("hf_repo", "revision", "file", "size_bytes", "sha256",
+                      "base_repo", "quantization", "k1", "k2",
+                      "expected_local_path", "runtime_pin"):
+              assert key in m, f"manifest missing {key}"
+          assert m["k1"] == 4 and m["k2"] == 16
+          assert m["size_bytes"] == 12262341600
+          assert m["sha256"] == "0f3698ae92f91db2eb10a3650bdb6693ff8cfaf7060cbc5f256845c700c7603b"
+          assert m["fine_tuned"] is False
+          print("model/manifest.json: VALID")
+          PY
+
+      - name: Download script checks (static URL, parses, executable)
+        run: |
+          bash -n download_model.sh
+          test -x download_model.sh
+          grep -q 'MODEL_URL="https://huggingface.co/[^"]*\.gguf"' download_model.sh
+          # Gate-2: URL must be a static literal, never constructed dynamically.
+          if grep -n 'MODEL_URL="${MODEL_URL' download_model.sh; then
+            echo "::error::download_model.sh builds its URL dynamically"; exit 1
+          fi
+          if grep -n 'manifest.json' download_model.sh; then
+            echo "::error::download_model.sh must not read the manifest for its URL"; exit 1
+          fi
+
+      - name: Stale-reference audit (production surfaces)
+        run: |
+          set -euo pipefail
+          # Zero Falcon references in code/configs/UI/metadata, except the one
+          # explicitly marked-historical module (which must keep its marker).
+          hits=$(grep -rli "falcon" src/ runtime/ metadata.json download_model.sh \
+            Makefile model/manifest.json src/static/ prompts/ guidance/ \
+            --exclude=fact_answer.py 2>/dev/null || true)
+          if [ -n "$hits" ]; then echo "::error::stale Falcon refs: $hits"; exit 1; fi
+          grep -q "HISTORICAL/EXPERIMENTAL (Falcon line, superseded)" src/fact_answer.py
+          # Docs must never present Falcon as current (historical mentions live
+          # only in rejected/superseded sections; see ARCHITECTURE.md §18).
+          bad=$(grep -rni "falcon" README.md REPORT.md ARCHITECTURE.md \
+            MODEL_CARD.md SAFETY.md GUIDANCE.md EVALUATION.md TRAINING.md \
+            2>/dev/null | grep -i "active\|current\|production\|shipped\|deployed\|serving\|latest" \
+            | grep -vi "not production\|zero falcon\|requirements-falcon-production" || true)
+          if [ -n "$bad" ]; then echo "::error::Falcon framed as current: $bad"; exit 1; fi
+          # No fine-tuning claims about the shipped weights.
+          if grep -rni "fine-tuned model\|finetuned model\|was trained to rank" src/ README.md REPORT.md MODEL_CARD.md 2>/dev/null; then
+            echo "::error::stale fine-tuning claim"; exit 1
+          fi
+          # No absolute dev paths in production code.
+          if grep -rn "/home/\|/kaggle/" src/ runtime/ download_model.sh Makefile 2>/dev/null | grep -v "^Binary"; then
+            echo "::error::absolute path in production files"; exit 1
+          fi
+          echo "stale-reference audit: PASS"
+
+      - name: Secret scan (basic)
+        run: |
+          set -euo pipefail
+          if grep -rEn "hf_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|xox[bap]-|-----BEGIN (RSA |OPENSSH )?PRIVATE KEY-----" \
+              --include="*.py" --include="*.sh" --include="*.json" --include="*.md" --include="*.yml" \
+              . 2>/dev/null | grep -v ".git/"; then
+            echo "::error::possible secret committed"; exit 1
+          fi
+          echo "secret scan: PASS"
+
+      - name: No giant files committed (weights stay out of git)
+        run: |
+          set -euo pipefail
+          big=$(git ls-files | while read -r f; do
+            s=$(stat -c%s "$f" 2>/dev/null || echo 0)
+            if [ "$s" -gt 20000000 ]; then echo "$f ($s)"; fi
+          done)
+          if [ -n "$big" ]; then echo "::error::oversize tracked files: $big"; exit 1; fi
+          if git ls-files | grep -q "\.gguf$"; then
+            echo "::error::GGUF weights must not be committed"; exit 1
+          fi
+          echo "size audit: PASS"
+
+      - name: UI static check (HTML parses, modes + stop wired)
+        run: |
+          python3 - <<'PY'
+          from html.parser import HTMLParser
+          from pathlib import Path
+          text = Path("src/static/chat.html").read_text()
+          HTMLParser().feed(text)  # raises on malformed markup
+          for needle in ('data-mode="fast"', 'data-mode="medium"',
+                         'data-mode="high"', 'id="stop"', 'kind', 'meta'):
+              assert needle in text, needle
+          assert "carefulEl" not in text, "dead careful-mode wiring remains"
+          print("chat.html: PARSES + modes/stop present")
+          PY
+
+      - name: Lint touched production modules
+        run: |
+          python -m pip install -q ruff
+          python -m ruff check src/modes.py src/webapp.py src/config.py src/main.py src/manifest.py tests/test_modes.py tests/test_webapp_modes.py

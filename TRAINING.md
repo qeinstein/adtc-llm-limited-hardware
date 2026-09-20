@@ -14,8 +14,13 @@ exists. This file records the locked method so a provisioned run is mechanical.
 
 ## Method
 
-- BF16 LoRA (PEFT/TRL on Transformers v5, or Unsloth / MS-SWIFT Qwen3.5-MoE
-  path). NOT QLoRA (high quantization deltas on this family).
+> Final word: the one-shot preflight (`training/PREFLIGHT.md`) switched the
+> plan to 4-bit QLoRA/FSDP2 and then returned NO-GO at the load gate
+> (22.0 GB/rank vs 14.56 GB usable). Nothing below was executed.
+> Preserved for a provisioned run.
+
+- Originally BF16 LoRA (PEFT/TRL on Transformers v5, or Unsloth /
+  MS-SWIFT Qwen3.5-MoE path); preflight later specified 4-bit QLoRA.
 - Pilot r=8/alpha=32/dropout=0.05; r=16 only on clear pilot underfit.
 - Completion-only loss (`assistant_only_loss=True`): final responses only,
   never synthetic CoT. Native thinking preserved; post-training tests run
@@ -42,7 +47,7 @@ module (router/head/embeddings/visual/MTP/norms) would receive adapters.
 ## Data
 
 Mixture: `data/manifests/full_mixture.jsonl` (weights afrimed×2, medqa×1,
-medmcqa×1, oasst×0.5); pilot: `data/manifests/pilot_mixture.jsonl` (1500).
+medmcqa×1, oasst×0.5); pilot: `data/manifests/pilot_mixture.jsonl` (1465).
 Built by `training/build_dataset.py` (pinned revisions, quarantine,
 contamination screen). See `data/DATA_CARD.md` + `data/LICENSE_LEDGER.json`.
 
@@ -68,6 +73,45 @@ Kaggle free GPUs (2×T4-16GB = 32 GB; weights alone are 2.25× that).
 - Kaggle note: 6 h GPU quota is available on this account but the hardware
   (≤2×16 GB) cannot hold the weights; TPU (20 h) has no supported
   PEFT/TRL path for this stack.
+- Launch note: at provision time `train.py` must be wrapped for multi-GPU
+  (`torchrun` + FSDP/DeepSpeed sharding); the checked-in driver is the
+  single-process reference and asserts the same module set either way.
+
+## Free-tier QLoRA canary: attempted, FAILED at load (STOP per failure rule)
+
+Axolotl FSDP2 + 4-bit QLoRA on 2×T4-16GB (Kaggle free), r8/α16, q/k/v/o
+only, fp16/sdpa, seq 2048, microbatch 1, offload on. Kernel:
+`kaggle/native-sparse-qlora-canary-v1` (v1–v7, 2026-09-20).
+
+Proven working: env install (~5 min, all pins exact), bitsandbytes NF4 on
+sm75, 72 GB snapshot download, `axolotl preprocess` (1465 rows tokenized,
+chat template + completion-only masking verified), 2-worker launch.
+
+Failure: CUDA OOM during weight loading on BOTH ranks (~46% of tensors,
+14.21 GB in use of 14.56 usable per T4). The FSDP2-QLoRA path materializes
+the full quantized model per rank at init (~19 GB: 35B×0.5B + NF4 overhead),
+before FSDP wrapping/sharding or CPU offload can engage. Gap ≈ 30%.
+
+Why tuning cannot fix it: seq len, rank, microbatch, and grad accumulation
+affect step memory only; load memory is init-path-determined. The one
+relevant knob (`cpu_ram_efficient_loading`) is explicitly forbidden with
+4-bit by Axolotl's validator (deadlocks the scatter). Excluding vision/MTP
+would save ~1.5 GB at most — still above 14.56 GB.
+
+Verdict: free-tier T4 QLoRA of this 35B model is structurally blocked at
+load. No paid-GPU fallback per user directive. The UNTUNED Q2_K+K4/16
+artifact (A) remains the deployment; closeout continues with system
+prompt + safety guard + guidance layer + harness + UI/HF/docs.
+
+## Production preflight: NO-GO (2026-09-20, see training/PREFLIGHT.md)
+
+Full A–Z preflight executed. Load gate RED by exact proof (22.00 GB per
+rank vs 14.56 GB usable, +51%; Axolotl forces per-rank-full load and its
+validator rejects the low-memory flag with FSDP2+4-bit; FSDP1 fallback
+needs ~82 GB host RAM). Production NOT launched — the one shot is
+preserved. Ready for provisioned hardware: `training/kaggle_train.yaml`,
+`training/preflight.py`, `training/environment.lock.txt`,
+`training/data_audit.json` (24,066 deduped rows, seq 2048, mask 100/100).
 
 ## After a winner (gated, §15–17 of the program brief)
 

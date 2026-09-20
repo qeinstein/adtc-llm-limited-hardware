@@ -1,0 +1,14 @@
+{
+ "utc": "2026-09-19T23:09:09.611321+00:00",
+ "seed": 7,
+ "mixture_weights": {
+  "afrimed": 2.0,
+  "medqa": 1.0,
+  "medmcqa": 1.0,
+  "oasst1": 0.5
+ },
+ "n_full": 24931,
+ "n_pilot": 1465,
+ "full_sha256": "56c8a00358c41227696eaefc98df8826a0cb73863bd6e417aa418c325f8a54a8",
+ "pilot_sha256": "f43522b0d31ca820a4e630bedc5781aac78d65be0e502a7e062dd239674b63f8"
+}

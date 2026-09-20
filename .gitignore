@@ -6,6 +6,7 @@
 *.pth
 model/*
 !model/.gitkeep
+!model/manifest.json
 
 # --- Fine-tuning / quantization intermediates ---
 output/
@@ -29,6 +30,7 @@ __pycache__/
 *$py.class
 .pytest_cache/
 .ruff_cache/
+data/.cache/
 
 # --- IDE / OS ---
 .vscode/

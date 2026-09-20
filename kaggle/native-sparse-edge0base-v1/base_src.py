@@ -220,38 +220,49 @@ GGML_TYPE_NAMES = {0: "f32", 1: "f16", 8: "q8_0", 10: "q2_k", 12: "q4_k",
 
 
 def gguf_tensor_table(path):
+    # Proven walker (copied from the green JOIN4b kernel): header offsets
+    # 8/16, full scalar set, string + array (vtype 9) skipping.
     head = open(path, "rb").read(64 << 20)
-    off = 4 + 4 + 8 + 8
-    n_tensors = struct.unpack_from("<Q", head, 12)[0]
-    n_kv = struct.unpack_from("<Q", head, 20)[0]
+    assert head[:4] == b"GGUF"
+    n_tensors, n_kv = struct.unpack_from("<QQ", head, 8)
+    off = 24
+
+    def read_str(o):
+        (n,) = struct.unpack_from("<Q", head, o)
+        return head[o + 8:o + 8 + n].decode(), o + 8 + n
+
+    _SCALAR = {0: 1, 1: 1, 2: 2, 3: 2, 4: 4, 5: 4, 6: 4, 7: 1,
+               10: 8, 11: 8, 12: 8}
+
+    def skip_value(o, typ):
+        if typ in _SCALAR:
+            return o + _SCALAR[typ]
+        if typ == 8:
+            _, o2 = read_str(o)
+            return o2
+        if typ == 9:
+            (at,) = struct.unpack_from("<I", head, o)
+            (n,) = struct.unpack_from("<Q", head, o + 4)
+            o += 12
+            if at == 8:
+                for _ in range(n):
+                    _, o = read_str(o)
+                return o
+            return o + _SCALAR[at] * n
+        raise RuntimeError(f"kv type {typ}")
+
     for _ in range(n_kv):
-        (klen,) = struct.unpack_from("<Q", head, off)
-        off += 8 + klen + 4
-        (vtype,) = struct.unpack_from("<I", head, off - 4)
-        if vtype in (0, 1, 7):
-            off += 1
-        elif vtype in (2, 3):
-            off += 2
-        elif vtype in (4, 5, 6):
-            off += 4
-        elif vtype == 8:
-            (slen,) = struct.unpack_from("<Q", head, off)
-            off += 8 + slen
-        elif vtype in (10, 11, 12):
-            off += 8
-        else:
-            raise RuntimeError("kv walk")
+        _, off = read_str(off)
+        (typ,) = struct.unpack_from("<I", head, off)
+        off = skip_value(off + 4, typ)
     out = []
     for _ in range(n_tensors):
-        (nlen,) = struct.unpack_from("<Q", head, off)
-        off += 8
-        name = head[off:off + nlen].decode()
-        off += nlen
+        name, off = read_str(off)
         (nd,) = struct.unpack_from("<I", head, off)
         off += 4 + 8 * nd
-        (ttype,) = struct.unpack_from("<I", head, off)
+        (typ,) = struct.unpack_from("<I", head, off)
         off += 4 + 8
-        out.append((name, GGML_TYPE_NAMES.get(ttype, f"t{ttype}")))
+        out.append((name, GGML_TYPE_NAMES.get(typ, f"T{typ}")))
     return out
 
 
@@ -338,26 +349,49 @@ class Server:
                 "usage": d.get("usage", {})}
 
 
-LETTERS = ["A", "B", "C", "D"]
+LETTERS = ["A", "B", "C", "D", "E"]
 CANDS = {f" {L}": L for L in LETTERS} | {L: L for L in LETTERS}
 
 
 def score_mcq(srv, question, options, timeout=600):
     """Argmax-letter via next-token probs; generate-fallback if absent."""
-    prompt = (f"Question: {question}\nA. {options[0]}\nB. {options[1]}\n"
-              f"C. {options[2]}\nD. {options[3]}\nAnswer with only the letter.\nAnswer:")
-    d = srv.complete(prompt, n_predict=1, n_probs=120, temp=0.0)
+    n = len(options)
+    assert 2 <= n <= len(LETTERS), f"mcq needs 2..5 options, got {n}"
+    letters = "".join(f"{LETTERS[i]}. {options[i]}\n" for i in range(n))
+    prompt = (f"Question: {question}\n{letters}"
+              f"Answer with only the letter.\nAnswer:")
+    d = srv.complete(prompt, n_predict=1, n_probs=150, temp=0.0)
     probs = {}
     for entry in d.get("completion_probabilities", [])[:1]:
         for p in entry.get("probs", []):
             tok = p.get("tok_str", "")
             if tok in CANDS and CANDS[tok] not in probs:
-                probs[CANDS[tok]] = p.get("prob", 0.0)
+                if LETTERS.index(CANDS[tok]) < n:
+                    probs[CANDS[tok]] = p.get("prob", 0.0)
     if probs:
         return max(probs, key=probs.get), "probs"
     g = srv.complete(prompt, n_predict=8, temp=0.0)["content"]
-    m = re.search(r"\b([A-D])\b", g)
+    m = re.search(rf"\b([A-{LETTERS[n - 1]}])\b", g)
     return (m.group(1) if m else "?"), "generate"
+
+
+def afrimed_options_gold(row):
+    """AfriMed v2 mcq: answer_options is a JSON dict option1..option5,
+    correct_answer is 'optionN'. Returns (ordered options, gold letter)."""
+    raw = row["answer_options"]
+    try:
+        d = json.loads(raw)
+    except Exception:
+        import ast
+        d = ast.literal_eval(raw)
+    if not isinstance(d, dict):
+        raise ValueError(f"options not a dict: {raw[:80]!r}")
+    keys = sorted(d, key=lambda k: int("".join(c for c in k if c.isdigit())))
+    opts = [str(d[k]) for k in keys]
+    m = re.fullmatch(r"option(\d+)", (row["correct_answer"] or "").strip())
+    if not m:
+        raise ValueError(f"bad gold: {row['correct_answer']!r}")
+    return opts, LETTERS[int(m.group(1)) - 1]
 
 
 # Baseline safety/sanity generation bank: QUESTIONS ONLY (no gold answers;
@@ -410,7 +444,11 @@ def main():
     t0 = time.time()
     runtime = setup_runtime()
     build()
-    model = WORK / B_FILE
+    for p in (WORK, SCRATCH):
+        u = shutil.disk_usage(p)
+        print(f"disk {p}: free={u.free / 1e9:.1f}GB total={u.total / 1e9:.1f}GB",
+              flush=True)
+    model = SCRATCH / B_FILE  # WORK cannot hold 10.7+12.2GB; telemetry only
     if not model.exists():
         fetch_file(B_URL, model, B_SIZE, B_SHA)
     ds = SCRATCH / "mmlu-test.bin"
@@ -423,7 +461,7 @@ def main():
     mmlu = {}
     mmlu["native_k8"] = run_mmlu(model, ds, "mmlu_native")
     mmlu["k416_iq2"] = run_mmlu(model, ds, "mmlu_k416", K1, K2)
-    q2k = WORK / Q2K_NAME
+    q2k = SCRATCH / Q2K_NAME  # re-derivable; byte-checked vs JOIN4b sha
     results["transcode"] = transcode_q2k(model, q2k)
     mmlu["frozen_q2k_k416"] = run_mmlu(q2k, ds, "mmlu_frozen", K1, K2)
     results["mmlu"] = mmlu
@@ -436,7 +474,15 @@ def main():
         rows = [r for r in csv.DictReader(open(afri_csv, newline="",
                                                encoding="utf-8"))
                 if r["split"] == "test" and r["question_type"] == "mcq"
-                and r["correct_answer"]]
+                and re.fullmatch(r"option\d+", (r["correct_answer"] or "").strip())]
+        n_multi = sum(1 for r in csv.DictReader(open(afri_csv, newline="",
+                                                     encoding="utf-8"))
+                      if r["split"] == "test" and r["question_type"] == "mcq"
+                      and r["correct_answer"]
+                      and not re.fullmatch(r"option\d+",
+                                           (r["correct_answer"] or "").strip()))
+        print(f"afrimed: excluded {n_multi} multi-answer rows (single-answer "
+              f"argmax task only)", flush=True)
         import random
         rng = random.Random(AFRI_SEED)
         by_spec: dict[str, list] = {}
@@ -450,34 +496,40 @@ def main():
         sample = sample[:AFRI_SAMPLE]
         print(f"afrimed: {len(rows)} test-mcq -> sample {len(sample)} "
               f"({len(by_spec)} specialties)", flush=True)
-        hits, scored, by_spec_hit, fallback_n = 0, [], {}, 0
+        hits, scored, by_spec_hit, fallback_n, skipped = 0, [], {}, 0, 0
         for i, r in enumerate(sample):
             try:
-                import ast
-                opts = ast.literal_eval(r["answer_options"])
-            except Exception:
-                continue
-            if len(opts) != 4:
+                opts, gold = afrimed_options_gold(r)
+            except Exception as e:
+                skipped += 1
+                if skipped <= 3:
+                    print(f"  SKIP {r.get('sample_id')}: {e}", flush=True)
                 continue
             pred, how = score_mcq(srv, r["question_clean"] or r["question"], opts)
             if how == "generate":
                 fallback_n += 1
-            ok = pred == r["correct_answer"].strip().upper()[:1]
+            ok = pred == gold
             hits += ok
             spec = r.get("specialty") or "Unknown"
             h, n = by_spec_hit.get(spec, (0, 0))
             by_spec_hit[spec] = (h + ok, n + 1)
             scored.append({"sample_id": r["sample_id"], "pred": pred,
-                           "gold": r["correct_answer"], "ok": bool(ok),
-                           "how": how})
+                           "gold": gold, "ok": bool(ok), "how": how})
             if (i + 1) % 100 == 0:
                 print(f"  afrimed {i + 1}/{len(sample)} acc={hits/(i + 1):.3f}",
                       flush=True)
         (OUT / "afrimed_scored.jsonl").write_text(
             "".join(json.dumps(x) + "\n" for x in scored))
+        if not scored:
+            raise RuntimeError(
+                f"afrimed: 0/{len(sample)} scored ({skipped} skipped) — "
+                "harness bug, not a result")
         results["afrimed_test_mcq"] = {
-            "n_pool": len(rows), "n_sample": len(sample), "seed": AFRI_SEED,
-            "accuracy": hits / max(1, len(sample)), "n_fallback_generate": fallback_n,
+            "n_pool": len(rows), "n_multi_answer_excluded": n_multi,
+            "n_sample": len(sample),
+            "n_scored": len(scored), "n_skipped": skipped, "seed": AFRI_SEED,
+            "n_options": 5,
+            "accuracy": hits / len(scored), "n_fallback_generate": fallback_n,
             "by_specialty": {k: {"acc": h / n, "n": n}
                              for k, (h, n) in sorted(by_spec_hit.items())}}
         print(f"afrimed acc: {results['afrimed_test_mcq']['accuracy']:.3f}",

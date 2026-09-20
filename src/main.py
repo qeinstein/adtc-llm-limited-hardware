@@ -71,15 +71,62 @@ def _answer(engine, rag: RAGPipeline, query: str, args) -> None:
         print()
 
 
+class _SparseCLI:
+    """Minimal generate/stream adapter over the managed sparse server."""
+
+    def __init__(self):
+        import os
+
+        from src.config import get_runtime_config
+        from src.sparse import SparseServer, free_port
+
+        rt = get_runtime_config()
+        port = int(os.environ.get("ADTC_SPARSE_PORT", "0")) or free_port()
+        self._srv = SparseServer(
+            resolve_model_path(),
+            arm=os.environ.get("ADTC_SPARSE_ARM", "bounded_3gb"),
+            port=port, n_ctx=rt.n_ctx,
+            threads=min(rt.n_threads, os.cpu_count() or rt.n_threads),
+            poll=int(os.environ.get("ADTC_POLL", "0")))
+        print("[cli] starting sparse backend (first load takes a minute)...")
+        self._srv.start()
+
+    def generate(self, prompt, system_prompt=None, max_tokens=512):
+        import time
+
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
+        start = time.time()
+        out = self._srv.chat(messages, max_tokens=max_tokens)
+        el = max(time.time() - start, 1e-3)
+        return {"text": out["text"], "telemetry": {
+            "elapsed_sec": round(el, 3), "throughput_tps": 0,
+            "completion_tokens": 0, "peak_rss_mb": self._srv.rss_mb()}}
+
+    def stream(self, prompt, system_prompt=None, max_tokens=512):
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
+        for kind, piece in self._srv.stream_chat(messages,
+                                                 max_tokens=max_tokens):
+            if kind == "text":
+                yield piece
+
+
 def _load_engine():
     """Build the engine if weights exist, else return None (RAG-preview mode)."""
     if not resolve_model_path().exists():
         return None
     try:
+        if "Q2K-experts" in resolve_model_path().name:
+            return _SparseCLI()
         from src.engine import MedicalLLMEngine
 
         return MedicalLLMEngine()
-    except Exception as e:  # missing llama-cpp-python, etc.
+    except Exception as e:  # noqa: BLE001 — any backend failure degrades to preview
         print(f"[warn] Could not initialise engine ({e}); using RAG-preview mode.")
         return None
 
@@ -96,7 +143,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--no-stream", action="store_true", help="Print full answer at once")
     parser.add_argument("--top-n", type=int, default=3, help="Docs to retrieve (default 3)")
     parser.add_argument("--max-tokens", type=int, default=512)
+    parser.add_argument("--mode", type=str, default="medium",
+                        help="Reasoning mode: fast | medium | high (default medium)")
     args = parser.parse_args(argv)
+    from src.modes import normalize_mode, phase1_max_tokens
+    try:
+        args.mode = normalize_mode(args.mode)
+    except ValueError as exc:
+        parser.error(str(exc))
+    if args.max_tokens == 512:
+        args.max_tokens = phase1_max_tokens(args.mode)
 
     meta = load_metadata()
     rag = RAGPipeline()

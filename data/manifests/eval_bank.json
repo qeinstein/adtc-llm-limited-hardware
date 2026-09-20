@@ -1,0 +1,11 @@
+{
+ "quarantine_file": "data/processed/quarantine_eval_prompts.jsonl",
+ "n_quarantine": 32551,
+ "by_src": {
+  "afrimed": 5903,
+  "medqa": 1273,
+  "medmcqa": 10333,
+  "pubmedqa": 1000,
+  "mmlu": 14042
+ }
+}

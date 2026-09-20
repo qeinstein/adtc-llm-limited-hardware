@@ -1,0 +1,99 @@
+# Domain 03: pregnancy antenatal danger signs. Original summaries; see manifest.
+- id: preg-reduced-movement
+  domain: pregnancy
+  version: 1.0.0
+  priority: 1
+  scope: Reduced or absent fetal movement, especially third trimester.
+  trigger_facts: [pregnant, reduced_fetal_movement]
+  trigger_any_of: []
+  required_missing_information: [gestational_age, when_change_noticed,
+    bleeding, fluid_leakage, abdominal_pain, prior_complications]
+  risk_level: urgent
+  required_actions:
+    - Same-day urgent assessment with fetal monitoring; do not wait days.
+    - Ask about bleeding, fluid leakage, pain, and recent illness.
+  prohibited_actions:
+    - Ruling out problems with home heart-rate numbers or thresholds.
+    - False reassurance ("baby is just sleeping").
+    - Advising to wait for the next routine visit.
+  safe_interim_actions:
+    - Lie on the side in a quiet place and note any further movement while
+      arranging urgent review; go in regardless of what is felt.
+  uncertainty_notes: >
+    Only in-person monitoring (and ultrasound where indicated) can assess
+    fetal wellbeing; chat cannot.
+  source:
+    authority: WHO
+    title: WHO recommendations on antenatal care for a positive pregnancy experience
+    canonical_url: https://www.who.int/news/item/07-11-2016-new-guidelines-on-antenatal-care-for-a-positive-pregnancy-experience/
+    publication_date: "2016-11-07"
+    version: 2016 (ISBN 9789241549912)
+    section_page: fetal-movement awareness and prompt reporting of concerns
+    license: As stated on WHO publication page; original summary only
+  review: {machine_verified: true, clinician_reviewed: false,
+    last_reviewed: "2026-09-20"}
+
+- id: preg-bleeding
+  domain: pregnancy
+  version: 1.0.0
+  priority: 1
+  scope: Vaginal bleeding during pregnancy.
+  trigger_facts: [pregnant, bleeding_vaginal_preg]
+  trigger_any_of: []
+  required_missing_information: [gestational_age, amount_and_clots, pain,
+    dizziness_or_faint, prior_bleeding_or_complications]
+  risk_level: emergency
+  required_actions:
+    - Emergency assessment now; heavier bleeding, pain, dizziness, or
+      faintness means do not delay at all.
+  prohibited_actions:
+    - Speculating a cause (abruption, previa, miscarriage) as fact.
+    - Home management or waiting to see if it stops.
+  safe_interim_actions:
+    - Rest, avoid vaginal exams/intercourse, track pad count and time,
+      arrange immediate transport.
+  uncertainty_notes: >
+    Bleeding has many causes with very different management; all need
+    in-person assessment.
+  source:
+    authority: WHO
+    title: WHO recommendations on antenatal care for a positive pregnancy experience
+    canonical_url: https://www.who.int/news/item/07-11-2016-new-guidelines-on-antenatal-care-for-a-positive-pregnancy-experience/
+    publication_date: "2016-11-07"
+    version: 2016 (ISBN 9789241549912)
+    section_page: danger-sign recognition and prompt care-seeking
+    license: As stated on WHO publication page; original summary only
+  review: {machine_verified: true, clinician_reviewed: false,
+    last_reviewed: "2026-09-20"}
+
+- id: preg-headache-danger
+  domain: pregnancy
+  version: 1.0.0
+  priority: 1
+  scope: Severe headache, visual symptoms, seizures, or marked swelling in pregnancy.
+  trigger_facts: [pregnant]
+  trigger_any_of: [headache_severe_preg, visual_symptoms_preg, swelling_face,
+    convulsions]
+  required_missing_information: [gestational_age, blood_pressure_if_known,
+    swelling_location, urine_changes, prior_hypertension]
+  risk_level: emergency
+  required_actions:
+    - Emergency assessment now (possible preeclampsia/eclampsia spectrum).
+  prohibited_actions:
+    - Attributing symptoms to stress, migraine, or tiredness without assessment.
+    - Recommending blood-pressure medicines or doses.
+  safe_interim_actions:
+    - Rest on the side, avoid driving, arrange immediate transport with someone.
+  uncertainty_notes: >
+    Blood pressure and urine testing in person are required; symptoms alone
+    cannot confirm or exclude preeclampsia.
+  source:
+    authority: WHO
+    title: WHO recommendations on antenatal care for a positive pregnancy experience
+    canonical_url: https://www.who.int/news/item/07-11-2016-new-guidelines-on-antenatal-care-for-a-positive-pregnancy-experience/
+    publication_date: "2016-11-07"
+    version: 2016 (ISBN 9789241549912)
+    section_page: danger-sign recognition and prompt care-seeking
+    license: As stated on WHO publication page; original summary only
+  review: {machine_verified: true, clinician_reviewed: false,
+    last_reviewed: "2026-09-20"}
