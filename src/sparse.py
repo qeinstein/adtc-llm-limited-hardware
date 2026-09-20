@@ -68,7 +68,7 @@ CLI_BIN = _binary_path("llama-cli")
 BENCH_BIN = _binary_path("llama-bench")
 
 DEFAULT_PORT = int(os.environ.get("ADTC_SPARSE_PORT", "8421"))
-DEFAULT_REASONING_BUDGET = 512
+DEFAULT_REASONING_BUDGET = 1024
 
 
 def load_freeze() -> dict:
@@ -172,6 +172,46 @@ def split_thinking(text: str) -> tuple[str, str]:
     thinking = text[start + len("<think>"):end].strip()
     answer = (text[:start] + text[end + len("</think>"):]).strip()
     return thinking, answer
+
+
+class _StreamingThinkingParser:
+    """Split legacy inline ``<think>`` output without losing chunk boundaries."""
+
+    def __init__(self) -> None:
+        self.mode = "text"
+        self.pending = ""
+
+    @staticmethod
+    def _suffix_length(value: str, marker: str) -> int:
+        # Keep a possible partial marker until the next network chunk arrives.
+        for size in range(min(len(value), len(marker) - 1), 0, -1):
+            if value.endswith(marker[:size]):
+                return size
+        return 0
+
+    def feed(self, piece: str) -> Iterator[tuple[str, str]]:
+        self.pending += piece
+        marker = "<think>" if self.mode == "text" else "</think>"
+        while self.pending:
+            at = self.pending.find(marker)
+            if at >= 0:
+                if at:
+                    yield self.mode, self.pending[:at]
+                self.pending = self.pending[at + len(marker):]
+                self.mode = "thinking" if self.mode == "text" else "text"
+                marker = "<think>" if self.mode == "text" else "</think>"
+                continue
+            keep = self._suffix_length(self.pending, marker)
+            emit = len(self.pending) - keep
+            if emit:
+                yield self.mode, self.pending[:emit]
+                self.pending = self.pending[emit:]
+            break
+
+    def finish(self) -> Iterator[tuple[str, str]]:
+        if self.pending:
+            yield self.mode, self.pending
+            self.pending = ""
 
 
 def _post_json(url: str, payload: dict, timeout: float) -> dict:
@@ -402,15 +442,25 @@ class SparseServer:
         max_tokens = gen.max_tokens if max_tokens is None else max_tokens
         temperature = gen.temperature if temperature is None else temperature
         top_p = gen.top_p if top_p is None else top_p
+        parser = _StreamingThinkingParser()
+        structured_reasoning = False
         for ev in _post_sse(self.base_url + "/v1/chat/completions",
                             self._payload(messages, max_tokens, temperature,
                                           top_p, True),
                             timeout=self.timeout_s):
             delta = (ev.get("choices") or [{}])[0].get("delta", {})
             if delta.get("reasoning_content"):
+                if not structured_reasoning:
+                    yield from parser.finish()
+                    structured_reasoning = True
                 yield ("thinking", delta["reasoning_content"])
             if delta.get("content"):
-                yield ("text", delta["content"])
+                if structured_reasoning:
+                    yield ("text", delta["content"])
+                else:
+                    yield from parser.feed(delta["content"])
+        if not structured_reasoning:
+            yield from parser.finish()
 
 
 def free_port() -> int:

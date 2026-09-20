@@ -170,7 +170,13 @@ class MedicalLLMEngine:
         peak = max(peak, _rss_mb())
 
         choices = resp.get("choices", [])
-        text = choices[0]["message"]["content"] if choices else ""
+        message = choices[0].get("message", {}) if choices else {}
+        thinking = message.get("reasoning_content", "") or ""
+        text = message.get("content", "") or ""
+        if not thinking and "<think>" in text:
+            from src.sparse import split_thinking
+
+            thinking, text = split_thinking(text)
         usage = resp.get("usage", {})
         completion_tokens = int(usage.get("completion_tokens", 0))
         telemetry = Telemetry(
@@ -180,7 +186,44 @@ class MedicalLLMEngine:
             throughput_tps=completion_tokens / elapsed,
             peak_rss_mb=peak,
         )
-        return {"text": text.strip(), "telemetry": telemetry.as_dict()}
+        return {"thinking": thinking.strip(), "text": text.strip(),
+                "telemetry": telemetry.as_dict()}
+
+    def stream_chat_events(
+        self,
+        messages: list[dict[str, str]],
+        generation: Optional[GenerationConfig] = None,
+        **overrides: Any,
+    ) -> Iterator[tuple[str, str]]:
+        """Yield structured thinking/text events from the fallback backend."""
+        from src.sparse import _StreamingThinkingParser
+
+        gen = generation or get_generation_config()
+        parser = _StreamingThinkingParser()
+        structured_reasoning = False
+        for chunk in self.llm.create_chat_completion(
+            messages=messages,
+            max_tokens=overrides.get("max_tokens", gen.max_tokens),
+            temperature=overrides.get("temperature", gen.temperature),
+            top_p=overrides.get("top_p", gen.top_p),
+            top_k=overrides.get("top_k", gen.top_k),
+            repeat_penalty=overrides.get("repeat_penalty", gen.repeat_penalty),
+            stop=list(overrides.get("stop", gen.stop)),
+            stream=True,
+        ):
+            delta = chunk.get("choices", [{}])[0].get("delta", {})
+            if delta.get("reasoning_content"):
+                if not structured_reasoning:
+                    yield from parser.finish()
+                    structured_reasoning = True
+                yield "thinking", delta["reasoning_content"]
+            if delta.get("content"):
+                if structured_reasoning:
+                    yield "text", delta["content"]
+                else:
+                    yield from parser.feed(delta["content"])
+        if not structured_reasoning:
+            yield from parser.finish()
 
     def stream(
         self,
@@ -232,7 +275,13 @@ class MedicalLLMEngine:
         peak = max(peak, _rss_mb())
 
         choices = resp.get("choices", [])
-        text = choices[0]["message"]["content"] if choices else ""
+        message = choices[0].get("message", {}) if choices else {}
+        thinking = message.get("reasoning_content", "") or ""
+        text = message.get("content", "") or ""
+        if not thinking and "<think>" in text:
+            from src.sparse import split_thinking
+
+            thinking, text = split_thinking(text)
         usage = resp.get("usage", {})
         completion_tokens = int(usage.get("completion_tokens", 0))
         telemetry = Telemetry(
@@ -242,7 +291,8 @@ class MedicalLLMEngine:
             throughput_tps=completion_tokens / elapsed,
             peak_rss_mb=peak,
         )
-        return {"text": text.strip(), "telemetry": telemetry.as_dict()}
+        return {"thinking": thinking.strip(), "text": text.strip(),
+                "telemetry": telemetry.as_dict()}
 
     def stream_chat(
         self,
@@ -250,18 +300,8 @@ class MedicalLLMEngine:
         generation: Optional[GenerationConfig] = None,
         **overrides: Any,
     ) -> Iterator[str]:
-        gen = generation or get_generation_config()
-        for chunk in self.llm.create_chat_completion(
-            messages=messages,
-            max_tokens=overrides.get("max_tokens", gen.max_tokens),
-            temperature=overrides.get("temperature", gen.temperature),
-            top_p=overrides.get("top_p", gen.top_p),
-            top_k=overrides.get("top_k", gen.top_k),
-            repeat_penalty=overrides.get("repeat_penalty", gen.repeat_penalty),
-            stop=list(overrides.get("stop", gen.stop)),
-            stream=True,
+        for kind, piece in self.stream_chat_events(
+            messages, generation=generation, **overrides
         ):
-            delta = chunk.get("choices", [{}])[0].get("delta", {})
-            piece = delta.get("content")
-            if piece:
+            if kind == "text":
                 yield piece

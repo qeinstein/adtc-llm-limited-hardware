@@ -14,6 +14,7 @@ from __future__ import annotations
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Literal
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
@@ -86,12 +87,15 @@ def _get_sparse():
 
 
 class ChatTurn(BaseModel):
-    role: str
+    # Only the two conversation roles are client-controlled.  In particular,
+    # never allow a browser/API caller to insert a second system message after
+    # the trusted system prompt.
+    role: Literal["user", "assistant"]
     content: str
 
 
 class ChatRequest(BaseModel):
-    message: str
+    message: str = Field(min_length=1)
     history: list[ChatTurn] = Field(default_factory=list)
 
 
@@ -148,8 +152,17 @@ def _prepare(req: ChatRequest):
             model_ready=False,
         )
 
-    messages = [{"role": "system", "content": _rag.system_prompt_for(result)}]
-    messages += [{"role": t.role, "content": t.content} for t in req.history]
+    system_prompt = _rag.system_prompt_for(result)
+    from src.config import get_runtime_config
+
+    gen = _generation_config()
+    messages = [{"role": "system", "content": system_prompt}]
+    messages += _bounded_history(
+        req.history,
+        n_ctx=get_runtime_config().n_ctx,
+        reserved_chars=len(system_prompt) + len(result.user_content),
+        max_completion_tokens=gen.max_tokens,
+    )
     messages.append({"role": "user", "content": result.user_content})
     return (messages, sources), None
 
@@ -170,6 +183,71 @@ def _generation_config():
     from src.config import get_generation_config
 
     return get_generation_config()
+
+
+def _bounded_history(
+    history: list[ChatTurn],
+    *,
+    n_ctx: int = 4096,
+    reserved_chars: int = 0,
+    max_completion_tokens: int = 2048,
+) -> list[dict[str, str]]:
+    """Keep the newest complete conversation within the serving context.
+
+    The model context includes the system prompt, optional RAG block, current
+    question, and generated answer. Sending unbounded browser history can make
+    the runtime truncate the beginning of the prompt—the least visible but most
+    important part. We bound history by characters as a portable approximation
+    that works for the sparse server and the llama-cpp fallback without a
+    tokenizer dependency.
+    """
+    import os
+
+    def configured(name: str, default: int) -> int:
+        try:
+            value = int(os.environ.get(name, str(default)))
+        except ValueError:
+            value = default
+        return max(1, value)
+
+    configured_limit = configured("ADTC_HISTORY_CHARS", 10000)
+    # There is no tokenizer dependency in the web layer. Four characters per
+    # token is a conservative cross-language approximation; the reserved
+    # allowance includes the trusted prompt, current user/RAG block, and the
+    # requested completion budget. Explicit ADTC_HISTORY_CHARS can only lower
+    # this safe limit, never raise it past the context window.
+    reserved_tokens = (max(0, reserved_chars) + 3) // 4
+    history_tokens = max(
+        0,
+        int(n_ctx) - max(0, int(max_completion_tokens)) - reserved_tokens,
+    )
+    limit = min(configured_limit, history_tokens * 4)
+    if limit <= 32:
+        return []
+    turn_limit = max(1000, min(limit, configured("ADTC_HISTORY_TURN_CHARS", 5000)))
+    selected: list[dict[str, str]] = []
+    used = 0
+    for turn in reversed(history):
+        content = turn.content.strip()
+        if not content:
+            continue
+        if len(content) > turn_limit:
+            content = content[:turn_limit] + "\n[Earlier part of this turn omitted.]"
+        cost = len(content) + 32
+        if selected and used + cost > limit:
+            break
+        if not selected and cost > limit:
+            content = content[:max(1, limit - 32)]
+            cost = len(content) + 32
+        selected.append({"role": turn.role, "content": content})
+        used += cost
+
+    selected.reverse()
+    # A clipped window must not begin with an assistant answer detached from
+    # the user turn that caused it.
+    while selected and selected[0]["role"] == "assistant":
+        selected.pop(0)
+    return selected
 
 
 @app.post("/api/chat", response_model=ChatResponse)
@@ -246,9 +324,15 @@ def chat_stream(req: ChatRequest):
                 peak = server.rss_mb()
             else:
                 engine = _get_engine()
-                for piece in engine.stream_chat(messages, generation=gen):
-                    text_parts.append(piece)
-                    yield f"data: {json.dumps({'kind': 'text', 'piece': piece})}\n\n"
+                events = getattr(engine, "stream_chat_events", None)
+                if events is None:
+                    for piece in engine.stream_chat(messages, generation=gen):
+                        text_parts.append(piece)
+                        yield f"data: {json.dumps({'kind': 'text', 'piece': piece})}\n\n"
+                else:
+                    for kind, piece in events(messages, generation=gen):
+                        (thinking_parts if kind == "thinking" else text_parts).append(piece)
+                        yield f"data: {json.dumps({'kind': kind, 'piece': piece})}\n\n"
         except Exception as exc:  # noqa: BLE001 - stream must report failures
             yield f"data: {json.dumps({'kind': 'error', 'error': str(exc)[:500]})}\n\n"
             return

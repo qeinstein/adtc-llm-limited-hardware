@@ -29,3 +29,6 @@ def test_backend_loads_versioned_prompt():
     assert "detailed answer" in C.SYSTEM_PROMPT
     assert "non-health questions" in C.SYSTEM_PROMPT
     assert "straightforward non-health questions" in C.SYSTEM_PROMPT
+    assert "generic invitation to ask about other conditions" in C.SYSTEM_PROMPT
+    assert "Prefer readable paragraphs" in C.SYSTEM_PROMPT
+    assert "acute trauma" in C.SYSTEM_PROMPT

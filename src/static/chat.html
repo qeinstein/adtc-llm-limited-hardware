@@ -255,7 +255,7 @@ function addMessage(role, text, extra) {
   if (extra && extra.sources && extra.sources.length) {
     const src = document.createElement('div');
     src.className = 'sources';
-    src.innerHTML = 'Grounded in ' + extra.sources.map(s => `<code>${s}</code>`).join('');
+    src.innerHTML = 'Grounded in ' + extra.sources.map(s => `<code>${esc(String(s))}</code>`).join('');
     wrap.appendChild(src);
   }
   if (extra && extra.meta) {
@@ -279,6 +279,7 @@ async function checkHealth() {
 checkHealth();
 
 function esc(s) {
+  s = String(s);
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;')
           .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
@@ -287,11 +288,21 @@ function esc(s) {
 // inline + fenced code, unordered/ordered lists, tables, paragraphs.
 // Input is HTML-escaped first, so raw model text can never inject markup.
 function renderMD(src) {
-  const lines = esc(src).split('\n');
-  let html = '', inCode = false, inUL = false, inOL = false;
+  const lines = esc(String(src).replace(/\r\n?/g, '\n')).split('\n');
+  let html = '', inCode = false, listType = null, olNext = 1;
   const closeLists = () => {
-    if (inUL) { html += '</ul>'; inUL = false; }
-    if (inOL) { html += '</ol>'; inOL = false; }
+    if (listType === 'ul') html += '</ul>';
+    if (listType === 'ol') html += '</ol>';
+    listType = null;
+  };
+  const isUL = (line) => /^\s*[-*+]\s+/.test(line);
+  const isOL = (line) => /^\s*\d+[.)]\s+/.test(line);
+  const isTable = (at) => /^\s*\|.*\|\s*$/.test(lines[at]) &&
+    at + 1 < lines.length && /^\s*\|[\s:|\-]+\|\s*$/.test(lines[at + 1]);
+  const isBlockStart = (at) => {
+    const line = lines[at] || '';
+    return /^\s*```/.test(line) || /^(#{1,3})\s+/.test(line) ||
+      isUL(line) || isOL(line) || isTable(at);
   };
   const inline = (t) => t
     .replace(/`([^`\n]+)`/g, '<code>$1</code>')
@@ -325,19 +336,42 @@ function renderMD(src) {
       closeLists();
       const lvl = m[1].length;
       html += `<h${lvl}>${inline(m[2])}</h${lvl}>`;
-    } else if ((m = line.match(/^\s*[-*]\s+(.*)$/))) {
-      if (inOL) { html += '</ol>'; inOL = false; }
-      if (!inUL) { html += '<ul>'; inUL = true; }
+    } else if ((m = line.match(/^\s*[-*+]\s+(.*)$/))) {
+      if (listType === 'ol') closeLists();
+      if (!listType) { html += '<ul>'; listType = 'ul'; }
       html += `<li>${inline(m[1])}</li>`;
     } else if ((m = line.match(/^\s*\d+[.)]\s+(.*)$/))) {
-      if (inUL) { html += '</ul>'; inUL = false; }
-      if (!inOL) { html += '<ol>'; inOL = true; }
-      html += `<li>${inline(m[1])}</li>`;
+      if (listType === 'ul') closeLists();
+      const marker = Number(line.match(/^\s*(\d+)[.)]\s+/)[1]);
+      if (!listType) {
+        const start = Number.isFinite(marker) && marker > 0 ? marker : 1;
+        html += start === 1 ? '<ol>' : `<ol start="${start}">`;
+        listType = 'ol'; olNext = start;
+      }
+      // Preserve meaningful gaps (1, 3, 4) while treating repeated `1.`
+      // markers as normal Markdown numbering (1, 2, 3).
+      const value = marker !== olNext && marker !== 1 ? ` value="${marker}"` : '';
+      html += `<li${value}>${inline(m[1])}</li>`;
+      olNext = value ? marker + 1 : olNext + 1;
     } else if (/^\s*$/.test(line)) {
-      closeLists();
+      // Markdown permits blank lines between items. Keep the same list open so
+      // the browser does not restart an ordered list at 1.
+      const next = lines[i + 1] || '';
+      const sameList = (listType === 'ul' && isUL(next)) ||
+        (listType === 'ol' && isOL(next));
+      if (!sameList) closeLists();
     } else {
       closeLists();
-      html += `<p>${inline(line)}</p>`;
+      // Consecutive ordinary lines are one paragraph. Rendering each source
+      // line as its own <p> made model wrapping look like accidental spacing.
+      const paragraph = [line.trim()];
+      i++;
+      while (i < lines.length && !/^\s*$/.test(lines[i]) && !isBlockStart(i)) {
+        paragraph.push(lines[i].trim());
+        i++;
+      }
+      html += `<p>${inline(paragraph.join(' '))}</p>`;
+      continue;
     }
     i++;
   }
@@ -440,7 +474,7 @@ function addStreamingMessage() {
       if (sources && sources.length) {
         const src = document.createElement('div');
         src.className = 'sources';
-        src.innerHTML = 'Grounded in ' + sources.map(s => `<code>${esc(s)}</code>`).join('');
+        src.innerHTML = 'Grounded in ' + sources.map(s => `<code>${esc(String(s))}</code>`).join('');
         wrap.appendChild(src);
       }
       if (meta) {
@@ -487,30 +521,48 @@ async function send() {
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let buf = '', reply = '', streamedText = '', doneEv = null, sawPieces = false;
+    let streamError = '';
+    const consumeFrame = (frame) => {
+      for (const ln of frame.split('\n')) {
+        const line = ln.trim();
+        if (!line.startsWith('data:')) continue;
+        let ev;
+        try { ev = JSON.parse(line.slice(5).trim()); } catch (e) { continue; }
+        if (ev.kind === 'thinking') { sawPieces = true; stream.pushThinking(ev.piece || ''); }
+        else if (ev.kind === 'text') {
+          sawPieces = true;
+          streamedText += ev.piece || '';
+          stream.pushText(ev.piece || '');
+        }
+        else if (ev.kind === 'done') doneEv = ev;
+        else if (ev.kind === 'error') {
+          streamError = 'Error: ' + (ev.error || 'generation failed.');
+          return false;
+        }
+      }
+      return true;
+    };
     for (;;) {
       const { value, done } = await reader.read();
       if (done) break;
       buf += decoder.decode(value, { stream: true });
       let idx;
-      while ((idx = buf.indexOf('\n\n')) >= 0) {
+      while (true) {
+        const lf = buf.indexOf('\n\n');
+        const crlf = buf.indexOf('\r\n\r\n');
+        if (lf < 0 && crlf < 0) break;
+        const useCRLF = crlf >= 0 && (lf < 0 || crlf < lf);
+        idx = useCRLF ? crlf : lf;
         const frame = buf.slice(0, idx);
-        buf = buf.slice(idx + 2);
-        for (const ln of frame.split('\n')) {
-          const line = ln.trim();
-          if (!line.startsWith('data:')) continue;
-          let ev;
-          try { ev = JSON.parse(line.slice(5).trim()); } catch (e) { continue; }
-          if (ev.kind === 'thinking') { sawPieces = true; stream.pushThinking(ev.piece || ''); }
-          else if (ev.kind === 'text') {
-            sawPieces = true;
-            streamedText += ev.piece || '';
-            stream.pushText(ev.piece || '');
-          }
-          else if (ev.kind === 'done') doneEv = ev;
-          else if (ev.kind === 'error') { stream.fail('Error: ' + (ev.error || 'generation failed.')); return; }
-        }
+        buf = buf.slice(idx + (useCRLF ? 4 : 2));
+        if (!consumeFrame(frame)) { stream.fail(streamError); return; }
       }
     }
+    // A compliant server terminates each SSE event with a blank line, but a
+    // proxy or abrupt close can leave the final event in the buffer. Consume
+    // it instead of turning a complete answer into "stream ended".
+    buf += decoder.decode();
+    if (buf.trim() && !consumeFrame(buf)) { stream.fail(streamError); return; }
     if (!doneEv) {
       stream.fail('Stream ended unexpectedly.');
       return;

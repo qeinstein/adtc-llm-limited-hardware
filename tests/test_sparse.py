@@ -25,13 +25,25 @@ def test_split_thinking_absent():
     assert (t, a) == ("", "plain answer")
 
 
+def test_streaming_legacy_thinking_markers_are_split_across_chunks():
+    parser = sparse._StreamingThinkingParser()
+    events = []
+    for chunk in ("before <thi", "nk>reason", "ing</think", "> after"):
+        events.extend(parser.feed(chunk))
+    events.extend(parser.finish())
+    merged = {}
+    for kind, piece in events:
+        merged[kind] = merged.get(kind, "") + piece
+    assert merged == {"text": "before  after", "thinking": "reasoning"}
+
+
 def test_server_cmd_frozen_flags():
     argv = sparse.server_cmd("/m/model.gguf", port=8421, n_ctx=2048,
                             threads=4, poll=0)
     assert argv[0].endswith("llama-server")
     for flag, val in (("-m", "/m/model.gguf"), ("--port", "8421"),
                       ("-t", "4"), ("--poll", "0"), ("-c", "2048"),
-                      ("-ngl", "0"), ("--reasoning-budget", "512")):
+                      ("-ngl", "0"), ("--reasoning-budget", "1024")):
         assert flag in argv and argv[argv.index(flag) + 1] == val
 
 
