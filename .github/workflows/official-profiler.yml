@@ -4,6 +4,12 @@ name: Official ADTC profiler (Q2K submission)
 # frozen Q2K artifact + patched runtime. The profiler's number is the
 # authoritative submission measurement; dev numbers live separately.
 # Trigger manually for the release PR/commit; MUST pass before merge.
+#
+# The bounded sparse runtime is env-gated: this workflow MUST export the
+# frozen bounded_3gb production env (via $GITHUB_ENV) before invoking
+# adtc-profiler, so the profiler's internal llama-bench child inherits it.
+# Without the env, the run silently profiles the RESIDENT path (~15 GB).
+# A hard preflight gate fails fast if the bounded marker is absent.
 
 on:
   workflow_dispatch:
@@ -102,6 +108,68 @@ jobs:
           test "$actual" = "$expected"
           printf '{"filename":"%s","bytes":%s,"sha256":"%s"}\n' "$FINAL_MODEL_NAME" "$(stat -c%s "model/$FINAL_MODEL_NAME")" "$actual" | tee artifacts/sha256-manifest.json
 
+      - name: Export frozen bounded_3gb production env + pins
+        run: |
+          set -euo pipefail
+          PINS_FILE="$(python3 - <<'PY'
+          import os
+          import sys
+          from src.sparse import build_env, export_pins
+          pins = export_pins("3.0")  # asserts 80 pins from cache_config_k4.json
+          assert pins.is_absolute(), pins
+          env = build_env("bounded_3gb", str(pins))
+          # Production-point assertions; single source is configs/final_runtime.json.
+          assert env["GGML_MOE_K1"] == "4", env
+          assert env["GGML_MOE_K2"] == "16", env
+          assert env["GGML_PHASE6_BOUNDED_CACHE"] == "1", env
+          assert env["GGML_PHASE6_SLOTS"] == "755", env
+          assert env["GGML_PHASE6_ASYNC"] == "1", env
+          with open(os.environ["GITHUB_ENV"], "a") as fh:
+              for k, v in env.items():
+                  fh.write(f"{k}={v}\n")
+          print("exported:", " ".join(f"{k}={v}" for k, v in env.items()),
+                file=sys.stderr)
+          print(str(pins))  # stdout: path for the shell below
+          PY
+          )"
+          test "$(wc -l < "$PINS_FILE")" = "80"
+
+      - name: Preflight bounded-runtime gate (fail fast, no 20-min burn)
+        run: |
+          set -euo pipefail
+          test "${GGML_MOE_K1:?missing GGML_MOE_K1}" = "4"
+          test "${GGML_MOE_K2:?missing GGML_MOE_K2}" = "16"
+          test "${GGML_PHASE6_BOUNDED_CACHE:?missing GGML_PHASE6_BOUNDED_CACHE}" = "1"
+          test "${GGML_PHASE6_SLOTS:?missing GGML_PHASE6_SLOTS}" = "755"
+          test "${GGML_PHASE6_ASYNC:?missing GGML_PHASE6_ASYNC}" = "1"
+          test -n "${GGML_PHASE6_PINS:?missing GGML_PHASE6_PINS}"
+          case "$GGML_PHASE6_PINS" in /*) ;; *) echo "PINS not absolute: $GGML_PHASE6_PINS"; exit 1;; esac
+          test -f "$GGML_PHASE6_PINS"
+          test "$(wc -l < "$GGML_PHASE6_PINS")" = "80"
+          actual="$(sha256sum "model/$FINAL_MODEL_NAME" | awk '{print $1}')"
+          expected="$(python3 -c "import json; print(json.load(open('model/manifest.json'))['sha256'])")"
+          test "$actual" = "$expected"
+          echo "env + pins(80) + model hash: OK"
+          # Tiny smoke on the SAME binary the profiler will exec; the bounded
+          # runtime prints its report line (with slots/pins/requests) at exit.
+          # (K1/K2 are consumed from env by the graph patch, which echoes
+          # nothing, so env presence is the K1=4/K2=16 check.)
+          BIN="$GITHUB_WORKSPACE/runtime/llama.cpp/build-native/bin/llama-bench"
+          timeout 600 "$BIN" -m "model/$FINAL_MODEL_NAME" -p 8 -n 4 -t 2 -ngl 0 \
+            > artifacts/preflight-smoke.json 2> artifacts/preflight-smoke.stderr.log
+          echo "--- smoke stderr tail ---"
+          tail -5 artifacts/preflight-smoke.stderr.log
+          grep -q "PHASE6_BOUNDED_CACHE" artifacts/preflight-smoke.stderr.log
+          grep -q "slots=755" artifacts/preflight-smoke.stderr.log
+          grep -q "pins=80" artifacts/preflight-smoke.stderr.log
+          grep -Eq " requests=[1-9][0-9]*" artifacts/preflight-smoke.stderr.log
+          if grep -q "PHASE6_BOUNDED_CACHE_ERROR" artifacts/preflight-smoke.stderr.log; then
+            echo "PREFLIGHT FAIL: bounded-cache error marker present"; exit 1
+          fi
+          echo "PREFLIGHT: bounded_3gb runtime CONFIRMED"
+
+      # Inherits the frozen bounded_3gb env from $GITHUB_ENV (export step
+      # above); the profiler launches llama-bench as a child, which inherits it.
       - name: Run full official ADTC participant profiler (unmodified)
         run: |
           set -o pipefail

@@ -77,6 +77,16 @@ set. Demonstrated development RSS: **2301.2 MiB**.
 artifact/runtime before merge. This section will carry its exact TPS/RSS;
 until then, no profiler number is claimed.
 
+The profiler must inherit the frozen bounded_3gb production env
+(`GGML_MOE_K1=4`, `GGML_MOE_K2=16`, `GGML_PHASE6_BOUNDED_CACHE=1`,
+`GGML_PHASE6_SLOTS=755`, `GGML_PHASE6_ASYNC=1`,
+`GGML_PHASE6_PINS=<absolute 3.0 pins file>` — all sourced from
+`configs/final_runtime.json` via `src/sparse.py`, never hand-written) or it
+silently profiles the resident path. Run 35508349962 did exactly that
+(14.97 GB peak); the workflow now exports the env and preflights the
+`PHASE6_BOUNDED_CACHE slots=755 pins=80` marker on a tiny smoke run before
+the expensive profiler invocation.
+
 **Development measurements** (Kaggle 4-vCPU, pinned runtime; NOT the audit):
 - Resident arm: ~5.2 tok/s at ~10.5 GiB RSS.
 - Bounded arm: ~2.9 tok/s at **2301.2 MiB** RSS (the <3 GB deployment point).
