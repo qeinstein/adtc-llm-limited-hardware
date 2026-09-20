@@ -86,10 +86,16 @@ def build_env(arm: str, pins_path: str | None = None,
         raise KeyError(f"unknown bounded arm {arm!r}")
     if pins_path is None:
         raise ValueError("bounded arm requires pins_path (see export_pins)")
+    # LLAMA_ARG_LAZY_MODE=on is REQUIRED, not optional: at the frozen pin,
+    # lazy mode `auto` only lazy-marks tensors over 4 GiB, and our Q2_K
+    # expert tensors are ~84 MB each — without explicit `on`, the loader
+    # never fires the bounded-cache registration hook and init aborts
+    # ("incomplete routed tensor registration"). Upstream common-arg env.
     env.update({"GGML_PHASE6_BOUNDED_CACHE": "1",
                 "GGML_PHASE6_SLOTS": str(arms[arm]["slots"]),
                 "GGML_PHASE6_ASYNC": "1",
-                "GGML_PHASE6_PINS": pins_path})
+                "GGML_PHASE6_PINS": pins_path,
+                "LLAMA_ARG_LAZY_MODE": "on"})
     if profile:
         env["GGML_PHASE6_PROFILE"] = "1"
     return env

@@ -124,6 +124,7 @@ jobs:
           assert env["GGML_PHASE6_BOUNDED_CACHE"] == "1", env
           assert env["GGML_PHASE6_SLOTS"] == "755", env
           assert env["GGML_PHASE6_ASYNC"] == "1", env
+          assert env["LLAMA_ARG_LAZY_MODE"] == "on", env
           with open(os.environ["GITHUB_ENV"], "a") as fh:
               for k, v in env.items():
                   fh.write(f"{k}={v}\n")
@@ -142,6 +143,7 @@ jobs:
           test "${GGML_PHASE6_BOUNDED_CACHE:?missing GGML_PHASE6_BOUNDED_CACHE}" = "1"
           test "${GGML_PHASE6_SLOTS:?missing GGML_PHASE6_SLOTS}" = "755"
           test "${GGML_PHASE6_ASYNC:?missing GGML_PHASE6_ASYNC}" = "1"
+          test "${LLAMA_ARG_LAZY_MODE:?missing LLAMA_ARG_LAZY_MODE}" = "on"
           test -n "${GGML_PHASE6_PINS:?missing GGML_PHASE6_PINS}"
           case "$GGML_PHASE6_PINS" in /*) ;; *) echo "PINS not absolute: $GGML_PHASE6_PINS"; exit 1;; esac
           test -f "$GGML_PHASE6_PINS"
@@ -154,6 +156,8 @@ jobs:
           # runtime prints its report line (with slots/pins/requests) at exit.
           # (K1/K2 are consumed from env by the graph patch, which echoes
           # nothing, so env presence is the K1=4/K2=16 check.)
+          command -v llama-bench
+          test "$(command -v llama-bench)" = "$GITHUB_WORKSPACE/runtime/llama.cpp/build-native/bin/llama-bench"
           BIN="$GITHUB_WORKSPACE/runtime/llama.cpp/build-native/bin/llama-bench"
           timeout 600 "$BIN" -m "model/$FINAL_MODEL_NAME" -p 8 -n 4 -t 2 -ngl 0 \
             > artifacts/preflight-smoke.json 2> artifacts/preflight-smoke.stderr.log

@@ -23,6 +23,18 @@ fi
 echo "[profiler] Ensuring model is present..."
 bash "$ROOT/download_model.sh"
 
+# The frozen bounded runtime is env-gated (same contract as CI): export it so
+# a patched llama-bench on PATH profiles the bounded arm. Stock binaries
+# ignore unknown env vars, so audit-parity runs are unaffected.
+eval "$(cd "$ROOT" && python3 - <<'PY'
+from src.sparse import build_env, export_pins
+pins = export_pins("3.0")
+for k, v in build_env("bounded_3gb", str(pins)).items():
+    print(f"export {k}='{v}'")
+PY
+)"
+echo "[profiler] bounded env: GGML_MOE_K1=$GGML_MOE_K1 GGML_MOE_K2=$GGML_MOE_K2 SLOTS=$GGML_PHASE6_SLOTS LAZY=$LLAMA_ARG_LAZY_MODE"
+
 echo "[profiler] Running participant-mode profile (Gate 1)..."
 adtc-profiler run --submission "$ROOT" --mode participant \
     --output "$ROOT/submission.json" --skip-accuracy

@@ -50,6 +50,7 @@ def test_build_env_bounded_needs_pins():
     assert env["GGML_PHASE6_ASYNC"] == "1"
     assert env["GGML_PHASE6_PINS"] == "/p/pins_3.0.txt"
     assert env["GGML_PHASE6_PROFILE"] == "1"
+    assert env["LLAMA_ARG_LAZY_MODE"] == "on"
 
 
 def test_build_env_unknown_arm():
