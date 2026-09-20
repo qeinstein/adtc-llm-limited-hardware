@@ -1,41 +1,88 @@
-# Jamii Afya — Qwen3.6-35B-A3B Q2K-experts GGUF
+---
+license: apache-2.0
+base_model: Qwen/Qwen3.6-35B-A3B
+tags:
+  - gguf
+  - moe
+  - medical
+  - swahili
+  - africa
+  - cpu
+  - edge-ai
+  - llama.cpp
+  - quantized
+---
 
-Jamii Afya is an offline English/Kiswahili clinical decision-support
-assistant for community health workers. It is decision support, not a
-diagnosis or a replacement for a qualified clinician.
+# Jamii Afya — Qwen3.6-35B-A3B Sparse CPU GGUF
 
-## Active artifact
+**Jamii Afya** is a CPU-first deployment of **Qwen3.6-35B-A3B** built for the
+Africa Deep Tech Challenge 2026.
 
-`Qwen3.6-35B-A3B-UD-Q2K-experts.gguf` — 12,262,341,600 bytes
-SHA256: `0f3698ae92f91db2eb10a3650bdb6693ff8cfaf7060cbc5f256845c700c7603b`
-HF: `Fluxx08/jamii-afya-qwen36-35b-q2k`
+The goal is unusual:
 
-- Base: `unsloth/Qwen3.6-35B-A3B-GGUF` (`Qwen3.6-35B-A3B-UD-IQ2_XXS.gguf`
-  @ `a483e9e6`, SHA256 `2e8f5f70…7bef`), from `Qwen/Qwen3.6-35B-A3B`.
-- Transform: `llama-quantize --allow-requantize` @ llama.cpp `3057bb6`:
-  the 120 routed-expert tensors requantized to Q2_K, all other tensors
-  keep base types. Byte-verified, layout-verified (120/120 Q2_K experts).
-- Runtime: llama.cpp / GGUF, CPU-only, K4/16 sparse execution + bounded
-  expert staging (<3 GB working set). Fully offline after download.
-- **Fine-tuning: NONE.** No LoRA/QLoRA/full weight updates. Adaptation is
-  system prompt + guidance retrieval + safety rules + output lint + runtime.
+> Run a capable 35B-class sparse MoE model on an ordinary CPU laptop with
+> very limited RAM, while preserving enough quality for useful frontline
+> health information and triage assistance.
 
-## Safety architecture (not in the weights)
+Instead of shrinking the system to a small dense model, Jamii Afya keeps the
+large sparse model and changes **how its routed experts are represented,
+loaded, and executed**.
 
-Deterministic fact/risk extraction, urgency routing with instant emergency
-banners, 18-domain structured guidance, authority grounding (WHO/IMCI/NCDC
-claims must come from retrieved cards), output lint with one regen else a
-safe fallback, Fast/Medium/High reasoning modes with a guaranteed answer.
+The deployment stack combines:
 
-## Limitations
+- **Qwen3.6-35B-A3B**
+- routed-expert-only **Q2_K** quantization
+- **K4/16** sparse expert execution
+- bounded expert staging from storage
+- CPU-only `llama.cpp` inference
+- an offline health-assistance layer for English and Kiswahili
 
-- Not fine-tuned, not clinically validated; no clinician has reviewed the
-  weights, cards, or data rows.
-- Kiswahili coverage is heuristic-tested, not native-speaker reviewed.
-- Linting is heuristic; the model can be wrong. For urgent symptoms,
-  poisoning, severe breathing problems, pregnancy danger signs, heavy
-  bleeding, altered consciousness, or other emergencies, seek immediate
-  qualified medical care.
+No weight-level fine-tuning was performed on this release.
+
+---
+
+## Model artifact
+
+| Field | Value |
+|---|---|
+| File | `Qwen3.6-35B-A3B-UD-Q2K-experts.gguf` |
+| Size | `12,262,341,600` bytes |
+| SHA256 | `0f3698ae92f91db2eb10a3650bdb6693ff8cfaf7060cbc5f256845c700c7603b` |
+| Base architecture | Qwen3.6-35B-A3B |
+| Runtime | custom `llama.cpp` sparse execution path |
+| Routed expert execution | K4 |
+| Router normalization mass | K16 |
+| Routed expert quantization | Q2_K |
+| Intended hardware | CPU-only commodity laptop |
+
+---
+
+## What is different about this GGUF?
+
+A normal deployment would attempt to keep far more of the model resident in
+memory.
+
+Jamii Afya instead treats the routed expert bank as a **storage-backed sparse
+resource**.
+
+At inference time:
+
+```text
+token
+  ↓
+native router
+  ↓
+top-16 router scores
+  ↓
+execute top-4 routed experts
+  ↓
+required expert already staged?
+  ├── yes → execute
+  └── no  → load into bounded expert slot → execute
+  ↓
+combine using K16 normalization mass
+  ↓
+next layer
 
 ## Reproduce
 
