@@ -101,6 +101,28 @@ def test_ungrounded_questions_still_reach_the_model(faked, monkeypatch):
     assert server.chat_calls[0][0][-1] == {"role": "user", "content": "hello"}
 
 
+def test_follow_up_history_reaches_the_model(faked, monkeypatch):
+    monkeypatch.setattr(webapp, "_rag", FakeRAG(grounded=False))
+    server = FakeSparse()
+    monkeypatch.setattr(webapp, "_get_sparse", lambda: server)
+
+    response = webapp.chat(webapp.ChatRequest(
+        message="What about tomorrow?",
+        history=[
+            {"role": "user", "content": "Will it rain today?"},
+            {"role": "assistant", "content": "I cannot check live weather."},
+        ],
+    ))
+
+    assert response.reply == "model answer"
+    messages = server.chat_calls[0][0]
+    assert messages[1:] == [
+        {"role": "user", "content": "Will it rain today?"},
+        {"role": "assistant", "content": "I cannot check live weather."},
+        {"role": "user", "content": "What about tomorrow?"},
+    ]
+
+
 def test_stream_has_no_deterministic_meta_event(faked, monkeypatch):
     monkeypatch.setattr(webapp, "_rag", FakeRAG())
     server = FakeSparse()

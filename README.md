@@ -39,6 +39,11 @@ The Windows build requires Git, CMake, and a C/C++ toolchain visible to CMake
 all three platforms; set `ADTC_SPARSE_ARM=resident` only when the machine has
 enough memory for the full model.
 
+The shipped sparse runtime limits only internal thinking to 512 tokens by
+default, leaving the rest of the generation budget for the answer. Set
+`ADTC_REASONING_BUDGET=-1` for unrestricted thinking, or choose another
+non-negative token budget; `ADTC_MAX_TOKENS` still controls the total completion.
+
 Other entry points:
 
 ```bash

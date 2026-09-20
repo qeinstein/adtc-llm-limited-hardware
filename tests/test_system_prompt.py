@@ -27,3 +27,5 @@ def test_backend_loads_versioned_prompt():
     assert "MEDICATIONS" in C.SYSTEM_PROMPT
     assert "explicitly asked" in C.SYSTEM_PROMPT
     assert "detailed answer" in C.SYSTEM_PROMPT
+    assert "non-health questions" in C.SYSTEM_PROMPT
+    assert "straightforward non-health questions" in C.SYSTEM_PROMPT

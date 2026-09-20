@@ -19,11 +19,13 @@
     --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   }
   * { box-sizing: border-box; }
+  html, body { height: 100%; }
   html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
   body {
     margin: 0; background: var(--bg); color: var(--ink);
     font-family: var(--sans); font-size: 16px; line-height: 1.6;
-    height: 100vh; display: flex; flex-direction: column;
+    height: 100vh; height: 100dvh; min-height: 100vh;
+    display: flex; flex-direction: column; overflow: hidden;
   }
   .wrap { max-width: 44rem; margin: 0 auto; width: 100%; padding: 0 2rem; }
 
@@ -41,7 +43,11 @@
                   font: inherit; padding: 0; }
   .tools button:hover { color: var(--ink); }
 
-  #chat { flex: 1; overflow-y: auto; padding: 2.5rem 0; }
+  #chat {
+    flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden;
+    overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch;
+    scrollbar-gutter: stable; padding: 2.5rem 0;
+  }
   #chat .wrap { display: flex; flex-direction: column; gap: 2rem; }
 
   .msg { display: flex; flex-direction: column; max-width: 100%; }
@@ -156,10 +162,11 @@
 <div id="chat">
   <div class="wrap">
     <div class="empty" id="emptyState">
-      <h1>Ask a clinical question.</h1>
-      <p>In English or Kiswahili. Jamii Afya sends your question to the model
-      with relevant offline reference material when available. It supports
-      clinical judgement — it does not replace it.</p>
+      <h1>Ask a question.</h1>
+      <p>In English or Kiswahili. Jamii Afya answers general questions and
+      health questions, adding relevant offline reference material when
+      available. For health decisions, it supports clinical judgement — it
+      does not replace it.</p>
       <div class="examples">
         <button data-q="Mtoto wa miaka miwili ana homa kali na anapumua haraka. Nifanye nini?">
           <span>SW</span>Mtoto wa miaka miwili ana homa kali na anapumua haraka.</button>
@@ -175,7 +182,7 @@
 <footer>
   <div class="wrap">
     <div id="composer">
-      <textarea id="input" rows="1" placeholder="Describe the patient…"></textarea>
+      <textarea id="input" rows="1" placeholder="Ask anything…"></textarea>
       <button id="stop" style="display:none">Stop</button>
       <button id="send">Send</button>
     </div>
@@ -389,7 +396,11 @@ function addStreamingMessage() {
       body.innerHTML = renderMD(answer);
       stickScroll();
     },
-    finish(sources, meta, empty) {
+    finish(sources, meta, empty, finalReply) {
+      // Some server/runtime combinations put the complete answer in the
+      // final event without emitting separate text chunks. Do not leave the
+      // answer body blank just because the streamed buffer is empty.
+      answer = answer || finalReply || '';
       det.classList.add('done');
       const st = sum.querySelector('.tstatus');
       const lb = sum.querySelector('.tlabel');
@@ -453,7 +464,7 @@ async function send() {
     }
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
-    let buf = '', reply = '', doneEv = null, sawPieces = false;
+    let buf = '', reply = '', streamedText = '', doneEv = null, sawPieces = false;
     for (;;) {
       const { value, done } = await reader.read();
       if (done) break;
@@ -468,7 +479,11 @@ async function send() {
           let ev;
           try { ev = JSON.parse(line.slice(5).trim()); } catch (e) { continue; }
           if (ev.kind === 'thinking') { sawPieces = true; stream.pushThinking(ev.piece || ''); }
-          else if (ev.kind === 'text') { sawPieces = true; stream.pushText(ev.piece || ''); }
+          else if (ev.kind === 'text') {
+            sawPieces = true;
+            streamedText += ev.piece || '';
+            stream.pushText(ev.piece || '');
+          }
           else if (ev.kind === 'done') doneEv = ev;
           else if (ev.kind === 'error') { stream.fail('Error: ' + (ev.error || 'generation failed.')); return; }
         }
@@ -478,12 +493,16 @@ async function send() {
       stream.fail('Stream ended unexpectedly.');
       return;
     }
-    reply = doneEv.reply || '';
+    // Prefer the final event, but retain streamed text if an older/runtime
+    // response omits the assembled reply. This keeps follow-up history intact.
+    reply = doneEv.reply || streamedText;
     if (!sawPieces && reply) {
-      // Early-exit event (ungrounded question / model-missing preview):
-      // plain single message, no thinking panel, no history pollution.
-      stream.finish(doneEv.sources || [], '', reply);
+      // Early-exit event (model-missing preview): plain single message.
+      stream.finish(doneEv.sources || [], '', '', reply);
       history.push({ role: 'user', content: message });
+      if (doneEv.model_ready !== false) {
+        history.push({ role: 'assistant', content: reply });
+      }
       return;
     }
     {
@@ -491,9 +510,14 @@ async function send() {
       const meta = (t.throughput_tps ? `${t.throughput_tps} tok/s · ` : '') +
         `${t.elapsed_sec || 0}s` +
         (t.peak_rss_mb ? ` · ${t.peak_rss_mb} MB` : '');
-      stream.finish(doneEv.sources || [], meta, '');
+      stream.finish(
+        doneEv.sources || [],
+        meta,
+        reply ? '' : 'The model ended without a final answer. Please try again.',
+        reply
+      );
       history.push({ role: 'user', content: message });
-      history.push({ role: 'assistant', content: reply });
+      if (reply) history.push({ role: 'assistant', content: reply });
     }
   } catch (e) {
     if (aborter && aborter.signal.aborted) stream.fail('Stopped.');

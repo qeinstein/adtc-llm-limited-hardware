@@ -68,6 +68,7 @@ CLI_BIN = _binary_path("llama-cli")
 BENCH_BIN = _binary_path("llama-bench")
 
 DEFAULT_PORT = int(os.environ.get("ADTC_SPARSE_PORT", "8421"))
+DEFAULT_REASONING_BUDGET = 512
 
 
 def load_freeze() -> dict:
@@ -145,11 +146,15 @@ def build_env(arm: str, pins_path: str | None = None,
 
 def server_cmd(model_path: str | Path, *, port: int = DEFAULT_PORT,
                n_ctx: int = 2048, threads: int = 4, poll: int = 0,
-               host: str = "127.0.0.1") -> list[str]:
+               host: str = "127.0.0.1",
+               reasoning_budget: int = DEFAULT_REASONING_BUDGET) -> list[str]:
     """llama-server argv for the frozen config (pure, testable)."""
+    if reasoning_budget < -1:
+        raise ValueError("reasoning_budget must be -1 or greater")
     return [str(_binary_path("llama-server")), "-m", str(model_path), "--host", host,
             "--port", str(port), "-t", str(threads), "--poll", str(poll),
-            "-c", str(n_ctx), "-ngl", "0"]
+            "-c", str(n_ctx), "-ngl", "0", "--reasoning-budget",
+            str(reasoning_budget)]
 
 
 def split_thinking(text: str) -> tuple[str, str]:
@@ -220,13 +225,22 @@ class SparseServer:
                  arm: str = "bounded_3gb",
                  port: int = DEFAULT_PORT,
                  n_ctx: int = 2048, threads: int = 4, poll: int = 0,
+                 reasoning_budget: int | None = None,
                  timeout_s: float = 600.0) -> None:
+        from src.config import get_runtime_config
+
         self.model_path = str(model_path)
         self.arm = arm
         self.port = port
         self.n_ctx = n_ctx
         self.threads = threads
         self.poll = poll
+        self.reasoning_budget = (
+            get_runtime_config().reasoning_budget
+            if reasoning_budget is None else reasoning_budget
+        )
+        if self.reasoning_budget < -1:
+            raise ValueError("reasoning_budget must be -1 or greater")
         self.timeout_s = timeout_s
         self.proc: subprocess.Popen | None = None
         self._log_file = None
@@ -268,7 +282,8 @@ class SparseServer:
                 popen_kwargs["start_new_session"] = True
             self.proc = subprocess.Popen(
                 server_cmd(self.model_path, port=self.port, n_ctx=self.n_ctx,
-                           threads=self.threads, poll=self.poll),
+                           threads=self.threads, poll=self.poll,
+                           reasoning_budget=self.reasoning_budget),
                 **popen_kwargs)
             self.wait_ready(wait_s)
         except Exception:

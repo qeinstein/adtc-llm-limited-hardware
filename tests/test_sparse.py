@@ -31,8 +31,15 @@ def test_server_cmd_frozen_flags():
     assert argv[0].endswith("llama-server")
     for flag, val in (("-m", "/m/model.gguf"), ("--port", "8421"),
                       ("-t", "4"), ("--poll", "0"), ("-c", "2048"),
-                      ("-ngl", "0")):
+                      ("-ngl", "0"), ("--reasoning-budget", "512")):
         assert flag in argv and argv[argv.index(flag) + 1] == val
+
+
+def test_server_cmd_reasoning_budget_is_configurable():
+    argv = sparse.server_cmd("/m/model.gguf", reasoning_budget=0)
+    assert argv[argv.index("--reasoning-budget") + 1] == "0"
+    with pytest.raises(ValueError):
+        sparse.server_cmd("/m/model.gguf", reasoning_budget=-2)
 
 
 def test_build_env_resident():

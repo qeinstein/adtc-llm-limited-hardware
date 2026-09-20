@@ -356,8 +356,10 @@ Authoritative values live in `configs/final_runtime.json`:
   validated; 2k+ needs re-measurement).
 - K4/16 is approximate (−1.0pp MMLU-200; paper: indistinguishable).
 - Thinking output is streamed separately by the sparse backend and displayed
-  in the UI. There is no application-side reasoning budget or second answer
-  request.
+  in the UI. The pinned runtime caps only the internal thinking block by
+  default (512 tokens), then continues with the visible answer; set
+  `ADTC_REASONING_BUDGET=-1` for unrestricted thinking. There is no second
+  answer request.
 - No clinician review anywhere in the model or reference corpus; clinical
   answers remain decision support and require qualified review.
 - Throughput varies with host CPU/disk; Kaggle ≠ Core i5 (see §13).

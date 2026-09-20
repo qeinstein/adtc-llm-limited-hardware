@@ -78,6 +78,7 @@ def _get_sparse():
             n_ctx=rt.n_ctx,
             threads=min(rt.n_threads, os.cpu_count() or rt.n_threads),
             poll=int(os.environ.get("ADTC_POLL", "0")),
+            reasoning_budget=rt.reasoning_budget,
         )
         server.start()
         _sparse = server

@@ -109,6 +109,12 @@ class RuntimeConfig:
     type_k: str = field(default_factory=lambda: _env_str("ADTC_TYPE_K", "q8_0"))
     type_v: str = field(default_factory=lambda: _env_str("ADTC_TYPE_V", "q8_0"))
     flash_attn: bool = True
+    # Cap only the model's internal <think> block. The pinned runtime closes
+    # that block when the budget is reached and continues with the final answer,
+    # so max_tokens remains available for visible output. -1 is unrestricted.
+    reasoning_budget: int = field(
+        default_factory=lambda: max(-1, _env_int("ADTC_REASONING_BUDGET", 512))
+    )
     # Optional speculative decoding draft model (path); empty disables it.
     draft_model_path: str = field(default_factory=lambda: _env_str("ADTC_DRAFT_MODEL", ""))
 
@@ -142,12 +148,13 @@ def _load_system_prompt() -> str:
     except (OSError, ValueError):
         pass
     return (
-        "You are Jamii Afya, an offline health assistant. Explain your reasoning "
-        "clearly and never invent protocols, diagnoses, medicine doses, or thresholds.")
+        "You are Jamii Afya, an offline general-purpose assistant with strong "
+        "health-information expertise. Answer non-health questions directly too, "
+        "and never invent protocols, diagnoses, medicine doses, or thresholds.")
 
 
 SYSTEM_PROMPT = _load_system_prompt()
-SYSTEM_PROMPT_VERSION = "prompts/system.json v1.0.0"
+SYSTEM_PROMPT_VERSION = "prompts/system.json v2.1.0"
 
 
 def get_runtime_config() -> RuntimeConfig:
