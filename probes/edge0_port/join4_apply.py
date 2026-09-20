@@ -11,6 +11,40 @@ from pathlib import Path
 EDGE0 = Path(__file__).resolve().parent
 J4 = (EDGE0 / "join4_phase6.h").read_text()
 
+# Bench compat: llama-bench's custom parser never reads LLAMA_ARG_LAZY_MODE
+# (its only getenv is HF_TOKEN), so the profiler's bench child stays AUTO and
+# the bounded executor cannot register sub-4GiB experts. Proven by experiment
+# run 35513180212 (explicit --lazy-mode on passed preflight: slots=755,
+# pins=80, requests=33120). This patch honors the variable exactly like the
+# normal CLI/server common_arg contract: CLI wins when given, absent/invalid
+# keeps the AUTO default. Never force anything globally.
+BENCH_LAZY_ENV_ANCHOR = (
+    "    if (params.lazy_mode.empty()) {\n"
+    "        params.lazy_mode = cmd_params_defaults.lazy_mode;\n"
+    "    }\n"
+)
+BENCH_LAZY_ENV_PATCH = (
+    "    if (params.lazy_mode.empty()) {\n"
+    "        // edge0: honor LLAMA_ARG_LAZY_MODE (normal CLI/server contract)\n"
+    "        // for bench's custom parser. CLI wins when given (non-empty);\n"
+    "        // absent or invalid env keeps the AUTO default.\n"
+    "        const char * edge0_lazy = getenv(\"LLAMA_ARG_LAZY_MODE\");\n"
+    "        if (edge0_lazy != nullptr && (strcmp(edge0_lazy, \"on\") == 0 ||\n"
+    "                strcmp(edge0_lazy, \"auto\") == 0 ||\n"
+    "                strcmp(edge0_lazy, \"off\") == 0)) {\n"
+    "            llama_lazy_mode edge0_mode = LLAMA_LAZY_MODE_AUTO;\n"
+    "            if (strcmp(edge0_lazy, \"on\") == 0) {\n"
+    "                edge0_mode = LLAMA_LAZY_MODE_ON;\n"
+    "            } else if (strcmp(edge0_lazy, \"off\") == 0) {\n"
+    "                edge0_mode = LLAMA_LAZY_MODE_OFF;\n"
+    "            }\n"
+    "            params.lazy_mode.push_back(edge0_mode);\n"
+    "        } else {\n"
+    "            params.lazy_mode = cmd_params_defaults.lazy_mode;\n"
+    "        }\n"
+    "    }\n"
+)
+
 
 def replace_once(path, old, new):
     text = path.read_text()
@@ -155,6 +189,8 @@ def main():
     replace_once(cli,
                  "[ Prompt: %.1f t/s | Generation: %.1f t/s ]",
                  "[ Prompt: %.6f t/s | Generation: %.6f t/s ]")
+    bench = llama / "tools/llama-bench/llama-bench.cpp"
+    replace_once(bench, BENCH_LAZY_ENV_ANCHOR, BENCH_LAZY_ENV_PATCH)
     print("ALL ANCHORS OK")
 
 

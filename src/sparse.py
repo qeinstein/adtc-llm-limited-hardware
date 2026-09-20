@@ -86,11 +86,11 @@ def build_env(arm: str, pins_path: str | None = None,
         raise KeyError(f"unknown bounded arm {arm!r}")
     if pins_path is None:
         raise ValueError("bounded arm requires pins_path (see export_pins)")
-    # LLAMA_ARG_LAZY_MODE=on is REQUIRED, not optional: at the frozen pin,
-    # lazy mode `auto` only lazy-marks tensors over 4 GiB, and our Q2_K
-    # expert tensors are ~84 MB each — without explicit `on`, the loader
-    # never fires the bounded-cache registration hook and init aborts
-    # ("incomplete routed tensor registration"). Upstream common-arg env.
+    # LLAMA_ARG_LAZY_MODE=on is REQUIRED, not optional: lazy mode `auto`
+    # only lazy-marks tensors over 4 GiB while our Q2_K expert tensors are
+    # ~84 MB, so the bounded executor needs explicit `on`. Server/CLI honor
+    # it via common_arg; llama-bench's custom parser needs our compat patch
+    # (join4_apply.py BENCH_LAZY_ENV_ANCHOR) to honor it too.
     env.update({"GGML_PHASE6_BOUNDED_CACHE": "1",
                 "GGML_PHASE6_SLOTS": str(arms[arm]["slots"]),
                 "GGML_PHASE6_ASYNC": "1",

@@ -86,11 +86,15 @@ silently profiles the resident path. Run 35508349962 did exactly that
 (14.97 GB peak); the workflow now exports the env and preflights the
 `PHASE6_BOUNDED_CACHE slots=755 pins=80` marker on a tiny smoke run before
 the expensive profiler invocation. The set also includes
-`LLAMA_ARG_LAZY_MODE=on`: at the frozen pin, lazy mode `auto` only
-lazy-marks tensors over 4 GiB while the Q2_K expert tensors are ~84 MB, so
-without explicit `on` the loader never fires the bounded-cache registration
-hook and init aborts ("incomplete routed tensor registration", run
-35510620355 preflight).
+`LLAMA_ARG_LAZY_MODE=on`: lazy mode `auto` only lazy-marks tensors over
+4 GiB while the Q2_K expert tensors are ~84 MB, so the bounded executor
+needs explicit `on`. The pin's loader honors it correctly (`llama.cpp`
+copies `params.lazy_mode`); the aborts in runs 35510620355/35511829082 were
+llama-bench's custom parser, which never reads that env var — proven by
+experiment run 35513180212, where explicit `--lazy-mode on` passed
+preflight (slots=755, pins=80, requests=33120). The patch set therefore
+includes a narrow bench compat patch honoring the variable (CLI still wins;
+absent/invalid keeps AUTO).
 
 **Development measurements** (Kaggle 4-vCPU, pinned runtime; NOT the audit):
 - Resident arm: ~5.2 tok/s at ~10.5 GiB RSS.

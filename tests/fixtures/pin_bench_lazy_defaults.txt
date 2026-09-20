@@ -1,0 +1,11 @@
+// Frozen-pin excerpt: tools/llama-bench/llama-bench.cpp @ 3057bb66c86c46d5781e50e85462a760ba7d1feb, lines 1139-1147.
+// If the pin moves, refresh this excerpt and the BENCH_LAZY_ENV_ANCHOR.
+    if (params.load_mode.empty()) {
+        params.load_mode = cmd_params_defaults.load_mode;
+    }
+    if (params.lazy_mode.empty()) {
+        params.lazy_mode = cmd_params_defaults.lazy_mode;
+    }
+    if (params.main_gpu.empty()) {
+        params.main_gpu = cmd_params_defaults.main_gpu;
+    }
