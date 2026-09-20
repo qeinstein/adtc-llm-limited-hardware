@@ -40,12 +40,6 @@
   .tools button { border: none; background: none; color: var(--muted); cursor: pointer;
                   font: inherit; padding: 0; }
   .tools button:hover { color: var(--ink); }
-  .modes { display: flex; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
-  .modes button { padding: 0.25rem 0.7rem; font-size: 0.78rem; color: var(--muted); }
-  .modes button + button { border-left: 1px solid var(--rule); }
-  .modes button[aria-pressed="true"] { background: var(--ink); color: #fff; }
-  .modes button:hover { color: var(--ink); }
-  .modes button[aria-pressed="true"]:hover { color: #fff; }
 
   #chat { flex: 1; overflow-y: auto; padding: 2.5rem 0; }
   #chat .wrap { display: flex; flex-direction: column; gap: 2rem; }
@@ -64,15 +58,6 @@
   .sources code { font-family: var(--mono); font-size: 0.72rem; background: var(--surface);
                   border-radius: 3px; padding: 0.1rem 0.4rem; margin-right: 0.3rem; }
   .meta { margin-top: 0.5rem; font-family: var(--mono); font-size: 0.7rem; color: var(--muted); }
-  .urgency { display: inline-block; font-family: var(--mono); font-size: 0.68rem;
-             text-transform: uppercase; letter-spacing: 0.08em; border-radius: 3px;
-             padding: 0.15rem 0.5rem; margin-bottom: 0.6rem; }
-  .urgency.emergency { background: #7f1d1d; color: #fef2f2; }
-  .urgency.urgent { background: #92400e; color: #fffbeb; }
-  .urgency.routine { background: var(--surface); color: var(--muted); }
-  .urgency.selfcare { background: var(--surface); color: var(--muted); }
-  .override { background: #7f1d1d; color: #fef2f2; border-radius: 3px;
-              padding: 0.7rem 1rem; margin-bottom: 0.8rem; font-size: 0.85rem; }
 
   .empty { margin: auto 0; padding: 3rem 0; }
   .empty h1 { font-family: var(--serif); font-weight: 400; font-size: 2rem;
@@ -163,11 +148,6 @@
     <a class="brand" href="/"><span class="status" id="statusDot"></span>Jamii&nbsp;Afya</a>
     <div class="tools">
       <a href="/">About</a>
-      <div class="modes" role="group" aria-label="Reasoning mode">
-        <button data-mode="fast" aria-pressed="false" title="Quick answers, brief reasoning">Fast</button>
-        <button data-mode="medium" aria-pressed="true" title="Balanced reasoning (default)">Medium</button>
-        <button data-mode="high" aria-pressed="false" title="Deepest reasoning, slower">High</button>
-      </div>
       <button id="clearBtn">New chat</button>
     </div>
   </div>
@@ -177,10 +157,9 @@
   <div class="wrap">
     <div class="empty" id="emptyState">
       <h1>Ask a clinical question.</h1>
-      <p>In English or Kiswahili. Jamii Afya checks clinical danger signs with
-      deterministic safety rules before generation and selectively adds offline
-      guidance for higher-risk cases. It supports clinical judgement — it does
-      not replace it.</p>
+      <p>In English or Kiswahili. Jamii Afya sends your question to the model
+      with relevant offline reference material when available. It supports
+      clinical judgement — it does not replace it.</p>
       <div class="examples">
         <button data-q="Mtoto wa miaka miwili ana homa kali na anapumua haraka. Nifanye nini?">
           <span>SW</span>Mtoto wa miaka miwili ana homa kali na anapumua haraka.</button>
@@ -214,16 +193,7 @@ const statusDot = document.getElementById('statusDot');
 const clearBtn = document.getElementById('clearBtn');
 let emptyState = document.getElementById('emptyState');
 const emptyHTML = emptyState.outerHTML;
-let currentMode = 'medium';
 let aborter = null;
-
-document.querySelectorAll('.modes button').forEach(b => {
-  b.addEventListener('click', () => {
-    currentMode = b.dataset.mode;
-    document.querySelectorAll('.modes button').forEach(x =>
-      x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
-  });
-});
 
 let history = [];  // [{role, content}] — full conversation memory sent with every request
 
@@ -401,30 +371,11 @@ function addStreamingMessage() {
   chatScroll.scrollTop = chatScroll.scrollHeight;
 
   let thinking = '', answer = '', thinkShown = false, ansShown = false;
-  let metaShown = false;
   const copyThink = document.createElement('button');
   copyThink.className = 'copybtn'; copyThink.textContent = 'copy';
   copyThink.addEventListener('click', (ev) => { ev.preventDefault(); copyText(copyThink, thinking); });
   copyAns.addEventListener('click', (ev) => { ev.preventDefault(); copyText(copyAns, answer); });
-  function showMeta(urg) {
-    if (metaShown || !urg) return;
-    metaShown = true;
-    if (urg.urgency && urg.urgency !== 'ROUTINE') {
-      const b = document.createElement('div');
-      b.className = 'urgency ' + urg.urgency.toLowerCase().replace('-', '');
-      b.textContent = urg.urgency === 'SELF-CARE' ? 'self-care' : urg.urgency.toLowerCase();
-      wrap.insertBefore(b, wrap.firstChild);
-    }
-    if (urg.safety_override) {
-      const o = document.createElement('div');
-      o.className = 'override';
-      o.textContent = 'Safety guidance applies to this answer — act on the urgent steps first, then read the full reply.';
-      body.parentNode.insertBefore(o, body);
-    }
-    stickScroll();
-  }
   return {
-    showMeta,
     pushThinking(piece) {
       thinking += piece;
       if (!thinkShown) { det.style.display = ''; thinkShown = true; }
@@ -438,12 +389,8 @@ function addStreamingMessage() {
       body.innerHTML = renderMD(answer);
       stickScroll();
     },
-    finish(sources, meta, empty, urg) {
+    finish(sources, meta, empty) {
       det.classList.add('done');
-      // Meta banner normally already shown by the early meta event;
-      // this is the fallback for early-exit (non-streamed) paths.
-      showMeta(urg && urg.safety_override !== undefined ? urg :
-        (urg ? { urgency: urg.urgency, safety_override: urg.override } : null));
       const st = sum.querySelector('.tstatus');
       const lb = sum.querySelector('.tlabel');
       if (thinkShown) {
@@ -455,12 +402,6 @@ function addStreamingMessage() {
         body.innerHTML = '';
         anshead.style.display = '';
         if (!empty) body.innerHTML = renderMD(answer);
-      }
-      if ((!answer || !answer.trim()) && thinking.trim()) {
-        // Reasoning-only output: surface the thinking, say so plainly.
-        det.open = true;
-        body.innerHTML = '<p><em>No final answer was produced for this turn — ' +
-          'the model-emitted reasoning above is all that came back.</em></p>';
       }
       if (empty) body.textContent = empty;
       if (sources && sources.length) {
@@ -503,7 +444,7 @@ async function send() {
     const res = await fetch('/api/chat/stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, history, mode: currentMode }),
+      body: JSON.stringify({ message, history }),
       signal: aborter.signal,
     });
     if (!res.ok || !res.body) {
@@ -526,8 +467,7 @@ async function send() {
           if (!line.startsWith('data:')) continue;
           let ev;
           try { ev = JSON.parse(line.slice(5).trim()); } catch (e) { continue; }
-          if (ev.kind === 'meta') { stream.showMeta(ev); }
-          else if (ev.kind === 'thinking') { sawPieces = true; stream.pushThinking(ev.piece || ''); }
+          if (ev.kind === 'thinking') { sawPieces = true; stream.pushThinking(ev.piece || ''); }
           else if (ev.kind === 'text') { sawPieces = true; stream.pushText(ev.piece || ''); }
           else if (ev.kind === 'done') doneEv = ev;
           else if (ev.kind === 'error') { stream.fail('Error: ' + (ev.error || 'generation failed.')); return; }
@@ -542,7 +482,7 @@ async function send() {
     if (!sawPieces && reply) {
       // Early-exit event (ungrounded question / model-missing preview):
       // plain single message, no thinking panel, no history pollution.
-      stream.finish(doneEv.sources || [], '', reply, doneEv);
+      stream.finish(doneEv.sources || [], '', reply);
       history.push({ role: 'user', content: message });
       return;
     }
@@ -551,12 +491,7 @@ async function send() {
       const meta = (t.throughput_tps ? `${t.throughput_tps} tok/s · ` : '') +
         `${t.elapsed_sec || 0}s` +
         (t.peak_rss_mb ? ` · ${t.peak_rss_mb} MB` : '');
-      if (doneEv.guard_ok === false) {
-        stream.pushText('\n\n*Note: this answer tripped an automated safety check ' +
-          '(' + (doneEv.guard_failures || []).join(', ') +
-          '). Please verify with a clinician.*');
-      }
-      stream.finish(doneEv.sources || [], meta, '', doneEv);
+      stream.finish(doneEv.sources || [], meta, '');
       history.push({ role: 'user', content: message });
       history.push({ role: 'assistant', content: reply });
     }

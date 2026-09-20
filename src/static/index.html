@@ -132,8 +132,8 @@
     <p class="lede">
       Jamii Afya runs entirely on a commodity 8&nbsp;GB laptop — no GPU, no cloud API,
       and no internet required after setup. It supports English and Kiswahili, applies
-      deterministic safety rules before generation, and selectively adds offline
-      clinical guidance for higher-risk cases.
+      sends a system prompt to the model and adds relevant offline clinical
+      references when they are useful.
     </p>
     <div class="actions">
       <a class="btn btn-primary" href="/chat">Try the advisor</a>
@@ -180,29 +180,26 @@
       </li>
       <li>
         <div>
-          <h3>Safety before generation</h3>
-          <p>Clinical facts are extracted from the question first, and
-          deterministic rules establish urgency before the model generates
-          anything. The rules can override the model — never the other
-          way round.</p>
+          <h3>A clear system prompt</h3>
+          <p>The model receives one detailed system prompt: explain the
+          medical reasoning, be honest about uncertainty, and discuss
+          medication only when the user explicitly asks about it.</p>
         </div>
       </li>
       <li>
         <div>
-          <h3>Guidance when it matters</h3>
-          <p>Structured clinical guidance is selectively injected for urgent
-          and emergency cases, and for sensitive contexts such as pregnancy,
-          pediatrics and medication questions — instead of padding every
-          prompt with guidance the case does not need.</p>
+          <h3>References when they help</h3>
+          <p>Offline clinical references are retrieved only when the question
+          has a strong match. Relevant context is placed alongside the
+          question; otherwise the model receives the question directly.</p>
         </div>
       </li>
       <li>
         <div>
           <h3>No weight-level fine-tuning</h3>
-          <p>The weights are untouched. Adaptation comes from the medical
-          system prompt, 35 structured guidance cards across 18 domains,
-          deterministic rules, output linting, regeneration and a safe
-          fallback — all inspectable, all versioned.</p>
+          <p>The weights are untouched. The application assembles the system
+          prompt, optional reference context, conversation history and the
+          user's question, then returns the model's response unchanged.</p>
         </div>
       </li>
     </ol>
@@ -244,11 +241,10 @@
         produced the verified 2.50&nbsp;GB peak / 11&nbsp;tok/s run.</p>
       </div>
       <div class="log-item">
-        <span class="tag">Medical safety became a system, not a prompt.</span>
-        <p>Historical failures around pediatric triage, pregnancy, bleach
-        ingestion, authority claims and Kiswahili repetition led to
-        deterministic rules, selective guidance, output linting and fallback —
-        instead of trusting one prompt to get everything right.</p>
+        <span class="tag">The model should own the answer.</span>
+        <p>We removed the intermediate classification, labels, response
+        rewriting and fixed fallbacks. The current path is intentionally
+        inspectable: system prompt, optional RAG context, then model output.</p>
       </div>
     </div>
 

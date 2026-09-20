@@ -2,7 +2,7 @@
 
 **Domain:** Healthcare & Medical · **Languages:** English + Kiswahili · **Runtime:** llama.cpp / GGUF, CPU-only, 100% offline
 
-*Jamii Afya* ("community health") is an offline clinical **decision-support** assistant for community health workers and nurses in rural African clinics. It runs a 35B-parameter sparse mixture-of-experts in under 3 GB of working RAM on a commodity 8 GB laptop — no GPU, no internet — answers in the language of the question, grounds answers in curated WHO/IMCI guidance, and always surfaces **danger signs and when to refer**. It is decision support — not a diagnosis, and not a replacement for a clinician.
+*Jamii Afya* ("community health") is an offline clinical **decision-support** assistant for community health workers and nurses in rural African clinics. It runs a 35B-parameter sparse mixture-of-experts in under 3 GB of working RAM on a commodity 8 GB laptop — no GPU, no internet — answers in the language of the question, and can add relevant local reference material through offline RAG. It is decision support — not a diagnosis, and not a replacement for a clinician.
 
 > Built for the **Africa Deep Tech Challenge 2026 — The Laptop LLM Challenge.**
 
@@ -55,33 +55,25 @@ A sparse MoE only runs a few experts per token — so a 35B model can answer on
 a laptop if the runtime stages exactly the experts each token needs:
 
 ```
-Query (EN/SW)
+Question (EN/SW)
    │
    ▼
-fact/risk extraction ──▶ deterministic safety rules ──▶ structured guidance
-(runtime/safety)         (urgency, overrides)            (18 clinical domains)
-                                                           │
-   ┌───────────────────────────────────────────────────────┘
-   ▼
-Qwen3.6-35B-A3B + real router + K4/16 + Q2_K routed experts + bounded staging
-(pinned llama.cpp + edge0 patch set; Fast/Medium/High reasoning modes)
-   │
-   ▼
-output safety lint ──▶ streamed answer (thinking shown separately, collapsed)
+system prompt ──▶ optional offline RAG context ──▶ model output
+                                                       │
+                                                       ▼
+                                           streamed answer + model thinking
 ```
 
 - **Model:** `Qwen3.6-35B-A3B-UD-Q2K-experts.gguf` (12.26 GB on disk,
   <3 GB working RSS) — routed experts requantized to Q2_K, everything else
   keeps base types. **Not fine-tuned.** See [MODEL_CARD.md](MODEL_CARD.md).
-- **Safety:** deterministic rules fire before generation (emergency banners
-  render instantly, never after reasoning); authority claims (WHO/IMCI/NCDC)
-  must come from retrieved guidance; outputs are linted with one regen, else a
-  safe fallback. See [SAFETY.md](SAFETY.md).
-- **Guidance:** 18 clinical domains as structured cards (required/prohibited/
-  ask-if-missing). See [GUIDANCE.md](GUIDANCE.md).
-- **Reasoning modes:** Fast / Medium (default) / High change thinking effort
-  only — safety behavior is identical. Reasoning gets its own allowance with a
-  protected, guaranteed final answer.
+- **Response path:** the application supplies one detailed system prompt,
+  attaches relevant offline RAG context when available, and returns the model
+  response without classification, labels, rewriting, regeneration, or a
+  fixed fallback.
+- **Medication behavior:** the system prompt tells the model not to volunteer
+  medication names, doses, or prescriptions unless the user explicitly asks
+  about medication or treatment.
 - **Official result:** ADTC profiler PASS — **2502 MB peak RSS**,
   **11.0 tok/s** (CI hardware), arc_easy 0.72, CPU-only bounded_3gb arm.
   Run 35514252643, main @ `c454f1a`. See [REPORT.md](REPORT.md).
@@ -102,13 +94,11 @@ novelty & prior art: [NOVELTY.md](NOVELTY.md)
 ├── REPORT.md                # technical report (Gate-2)
 ├── provenance/              # truthful provenance package (no fake training logs)
 ├── src/                     # RAG (stdlib) · sparse backend · web UI · CLI
-│   ├── modes.py             # Fast/Medium/High canonical definitions
 │   ├── sparse.py            # managed llama-server (frozen K4/16 runtime)
 │   ├── webapp.py            # FastAPI backend + SSE streaming
 │   └── static/              # offline single-page UI (no CDN)
-├── runtime/safety/          # deterministic safety layer (facts/rules/lint)
-├── guidance/                # 18-domain structured guidance cards + engine
-├── evals/                   # regression suites (judge/domains/kiswahili/safety)
+├── data/medical_guidelines.json # optional offline RAG corpus
+├── evals/                   # model/evaluation fixtures
 ├── training/                # prepared (unrun) post-training pipeline + NO-GO preflight
 ├── probes/edge0_port/       # frozen llama.cpp patch set (K4/16 + bounded executor)
 ├── tests/                   # offline tests (no weights needed)

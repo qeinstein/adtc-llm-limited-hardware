@@ -13,9 +13,8 @@ obligations are tracked in documentation without claiming legal review.
 
 ## Logging
 
-- Web/app logs: telemetry (latency, tokens, RSS, guard rule ids) only.
-- Guard audit events contain risk level + rule ids, never prompt/response
-  text (`runtime/safety/risk.py::log_event`).
+- Web/app logs contain operational telemetry only (latency, tokens, and RSS).
+- Prompt and response text are not written to application logs.
 - No prompt/response logging in CI artifacts. Secrets (tokens, keys) are
   never printed; env-only (`HF_TOKEN`, `KAGGLE_*`).
 - Retention: operational logs 30 days; anything containing health content

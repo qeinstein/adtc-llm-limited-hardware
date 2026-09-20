@@ -22,23 +22,20 @@
 
 ## System tests
 
-- `pytest tests/`: 369 passed (guidance 171 rules-tier cases, safety hard
-  gates, modes, webapp wiring, harness, historical, JOIN4 anchors — all
-  model-independent)
+- `pytest tests/`: 157 passed (RAG, webapp wiring, runtime, historical, and
+  JOIN4 anchors — all model-independent)
 - CI `offline-gates`: PASS (tests, metadata/manifest validation, download
   script checks, stale/secret/size audits, UI static check, lint)
 - `make validate`: metadata.json VALID (strict schema incl.
   `base_model_commit_sha`)
 
-## Guidance / safety / modes
+## Application response path
 
-- 18 domains / 35 cards (`guidance/manifest.json` v1.0.0), machine-verified,
-  0 clinician-reviewed (honestly stated everywhere)
-- Safety: deterministic rules + urgency routing + instant emergency banners +
-  authority grounding + output lint (regen once, else safe fallback)
-- Fast/Medium/High: canonical `src/modes.py`, Medium default, bounded High
-  (2304), protected answers with phase-2 guarantee; safety identical across
-  modes (tested)
+- system prompt with detailed medical explanations and explicit medication
+  request behavior
+- optional offline RAG context when the corpus matches the question
+- direct model output with model-emitted thinking; no application-side labels,
+  linting, regeneration, or fixed response path
 
 ## `make model` / `make webui`
 

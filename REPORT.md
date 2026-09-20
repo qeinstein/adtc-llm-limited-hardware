@@ -56,7 +56,7 @@ set. Demonstrated development RSS: **2301.2 MiB**.
 - Weight-level fine-tuning (LoRA/QLoRA): fully prepared (data, configs,
   preflight) but NO-GO on available 2×T4 hardware (22.0 GB/rank load vs
   14.56 GB usable — proven, see TRAINING.md). Shipped weights are untuned;
-  adaptation is prompt/guidance/safety/runtime instead.
+  adaptation is the system prompt, optional RAG, and runtime instead.
 
 ## CONSTRAINTS
 
@@ -130,10 +130,8 @@ default is the low-memory validated production configuration
   - K4/16 sparse execution adaptation
   - routed-expert-only Q2_K transformation
   - bounded sparse runtime (<3 GB working set)
-  - 18-domain structured clinical guidance retrieval
-  - deterministic medical safety rules + urgency routing
-  - output safety linting with regen-or-fallback
-  - Fast / Medium / High reasoning modes (effort only; safety identical)
+  - optional offline RAG context from the medical reference corpus
+  - direct model generation with model-emitted thinking
 
 The prepared-but-unrun training pipeline, data audit, and NO-GO preflight
 are retained under `training/` for reproducibility — they are NOT a
@@ -153,19 +151,16 @@ and capture scaffolding are ready and ONLY the capture run is outstanding.
   capture prompt, not metadata tp_002 — tp_002 is the pregnancy case).
 
 Capture: `python3 scripts/capture_before_after.py --prompts evals/gate2_before_after/prompts.json --base-model <base.gguf> --sys-model model/<q2k.gguf> --out evals/gate2_before_after/`
-compares raw-base replies vs full-system replies (system prompt + guidance +
-safety + lint). Expected deltas: danger-sign surfacing, referral behavior,
-bleach-response refusal shape, authority grounding. **Owner: final capture on
+compares raw-base replies vs the system prompt + optional RAG + model path.
+Expected deltas: explanation quality, reference use, and medication behavior.
+**Owner: final capture on
 the release laptop; results appended here before the video.**
 
 ## USEFULNESS (anti-gaming)
 
 Low RAM is the enabler, not the purpose. The system keeps a genuinely useful
-35B-A3B clinician's assistant: medical system prompt, 18-domain guidance,
-safety rules, Kiswahili handling, Fast/Medium/High modes, and a regression
-harness covering historical clinical failures (pediatric triage, respiratory
-danger signs, ORS/dehydration, obstetric danger, caustic ingestion, trauma,
-medication safety, false-authority attribution). Nothing was dumbed down to
+35B-A3B clinician's assistant: medical system prompt, optional offline RAG,
+Kiswahili handling, and direct model generation. Nothing was dumbed down to
 win throughput; the bounded arm is bit-exact vs resident.
 
 ## ORIGINALITY / ATTRIBUTION

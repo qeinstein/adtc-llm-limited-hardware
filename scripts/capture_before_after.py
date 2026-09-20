@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """Gate-2 before/after capture: raw base model vs full Jamii system.
 
-Runs identical prompts through (a) the UNMODIFIED base model (vanilla
-llama-server, no system prompt, no guidance, no safety) and (b) the full
-submitted system (FastAPI /api/chat: system prompt + guidance + safety +
-lint), saving paired JSON for REPORT.md.
+Runs identical prompts through (a) the unmodified base model (vanilla
+llama-server, no system prompt) and (b) the submitted system (FastAPI
+/api/chat: system prompt + optional RAG + model), saving paired JSON.
 
 Needs weights + builds; runs on the release laptop (NOT in CI):
 
@@ -81,16 +80,13 @@ def main() -> int:
             print(f"[capture] {pid} system...", flush=True)
             s = post_json(args.webui + "/api/chat",
                           {"message": prompt, "history": [],
-                           "mode": "medium"})
+                           })
             (outdir / f"{pid}.json").write_text(json.dumps({
                 "prompt_id": pid, "prompt": prompt,
                 "base": {"thinking": bmsg.get("reasoning_content", "") or "",
                          "text": bmsg.get("content", "") or ""},
                 "system": {"reply": s["reply"],
                            "thinking": s.get("thinking", ""),
-                           "urgency": s.get("urgency"),
-                           "safety_override": s.get("safety_override"),
-                           "guidance_cards": s.get("guidance_cards"),
                            "sources": s.get("sources")},
             }, indent=1, ensure_ascii=False))
             print(f"[capture] wrote {pid}.json", flush=True)

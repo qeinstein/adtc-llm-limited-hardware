@@ -105,6 +105,5 @@ exceeds 10%.
 
 The 3-stage table (A/B/C × every track) remains PENDING: stage A is
 partial (MMLU only); B/C-tuned require training compute (NO-GO, see
-TRAINING.md). Fast/Medium/High reasoning modes are SYSTEM behavior, not
-model accuracy — covered by tests/test_modes.py + tests/test_webapp_modes.py
-(budgets, regen guarantee, safety-identical) rather than by model evals.
+TRAINING.md). The application uses the model's normal generation configuration;
+there are no separate response modes or answer budgets to evaluate.

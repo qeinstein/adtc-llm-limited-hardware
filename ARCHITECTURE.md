@@ -355,77 +355,36 @@ Authoritative values live in `configs/final_runtime.json`:
 - Long context grows KV memory outside the expert budget (ctx 512
   validated; 2k+ needs re-measurement).
 - K4/16 is approximate (−1.0pp MMLU-200; paper: indistinguishable).
-- Thinking output consumes generated-token budget; the v5 eval failure
-  (empty answers) is fixed by per-mode reasoning allowances with a
-  protected, guaranteed final answer (§17). The web UI streams thinking
-  separately, collapsed by default.
-- No clinician review anywhere (weights, 35 guidance cards, 402 data
-  rows); no numeric thresholds in cards; Kiswahili needs native-speaker
-  review; linting is heuristic. See SAFETY.md.
+- Thinking output is streamed separately by the sparse backend and displayed
+  in the UI. There is no application-side reasoning budget or second answer
+  request.
+- No clinician review anywhere in the model or reference corpus; clinical
+  answers remain decision support and require qualified review.
 - Throughput varies with host CPU/disk; Kaggle ≠ Core i5 (see §13).
 - Profiler accuracy-stage integration unresolved (see §13).
 
-## 16. Clinical Safety & Guidance Layer
+## 16. Application response path
 
-The model (the untuned Q2_K+K4/16 artifact — final; weight-level
-fine-tuning was prepared but NO-GO on available hardware, see
-TRAINING.md) is the general medical reasoning engine. Around it sits a
-deterministic safety layer that enforces floors the model may not
-undercut:
+The interactive application deliberately has no classification or response
+policy layer between the user and the model:
 
 ```
-User
- ↓
-risk/fact extraction          (runtime/safety/risk.py, facts.py)
- ↓
-deterministic high-risk rules (runtime/safety/rules.py over guidance/,
-                               18 domains, 35 cards, v1.0.0)
- ↓
-optional structured-guidance retrieval (≤3 cards + provenance, only when
-  urgent/emergent, dosing-sensitive, pregnancy/pediatric, or authority asked)
- ↓
-Qwen3.6 (untuned Q2_K+K4/16 — final artifact)
- ↓
-output safety lint            (output_lint.py: escalation, diagnosis,
-  dose variables, authority attribution, bleach/amputation/citation hard
-  gates; repetition.py: n-gram/trailing-loop/length guards) → regen once,
-  else safe fallback
- ↓
-UI                            (urgency badge SELF-CARE/ROUTINE/URGENT/
-                               EMERGENCY; override banner never hidden
-                               in reasoning)
+user question + conversation history
+        ↓
+versioned system prompt
+        ↓
+BM25 retrieval and compression when the offline corpus has a strong match
+        ↓
+pinned Qwen3.6 runtime
+        ↓
+model response and model-emitted thinking streamed to the UI
 ```
 
-Rules control safety, not diagnosis: cards encode danger recognition,
-escalation, missing-information requirements, and unsafe-advice
-prohibitions — never definitive diagnoses or invented doses. All cards
-are original summaries with exact WHO/NCDC/Jamii-policy provenance
-(see guidance/manifest.json); no clinician review yet. Regression suites
-(171 rules-tier cases: judge failures ×10, domains, Kiswahili, safety
-hard gates) run in tests/test_guidance_regressions.py. Details:
-GUIDANCE.md (domains, sources, retrieval, licensing) and SAFETY.md
-(failures, mitigations, limitations, review status).
-
-## 17. Fast / Medium / High Reasoning Modes
-
-One canonical definition (`src/modes.py`); Medium is the default. Modes
-change reasoning effort ONLY — thinking allowance, protected final-answer
-allowance, and a short steering line. System prompt, guidance retrieval,
-safety rules, output lint, and sampling temperature are identical across
-modes (asserted by tests/test_webapp_modes.py).
-
-| mode | thinking | answer (protected) | phase-1 total |
-|---|---|---|---|
-| fast | 128 | 256 | 384 |
-| medium | 512 | 512 | 1024 |
-| high | 1536 | 768 | 2304 |
-
-No shared pool lets reasoning eat the answer (the v5 failure): if phase 1
-ends with thinking but an empty answer, phase 2 feeds the thinking back
-and demands the final answer within the answer allowance — bounded, so
-High cannot run away either. Emergencies never wait for reasoning: the
-deterministic safety verdict streams first as a `meta` event and the UI
-renders the banner immediately.
+The system prompt asks for detailed explanations, calibrated uncertainty, and
+medication information only when explicitly requested. The application does
+not attach urgency labels, inject structured cards, lint or rewrite output,
+regenerate an answer, or substitute a fixed fallback. The UI shows the model
+response, optional RAG sources, and runtime telemetry.
 
 ## 18. Rejected Product Directions & Historical Map
 

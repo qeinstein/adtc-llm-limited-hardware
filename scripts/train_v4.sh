@@ -82,8 +82,7 @@ step "4/4 generation A/B (clinical + the basics that were broken)"
 PYTHONPATH=. "$PY" scripts/stress_test_qualitative.py --model "$NEW" > "$ROOT/output/gen_v4.txt" 2>/dev/null
 PYTHONPATH=. "$PY" scripts/basics_check.py --model "$NEW"     > "$ROOT/output/basics_v4.txt" 2>/dev/null
 PYTHONPATH=. "$PY" scripts/basics_check.py --model "$SHIPPED" > "$ROOT/output/basics_old.txt" 2>/dev/null
-PYTHONPATH=. "$PY" -u scripts/judge_battery.py --model "$NEW" > "$ROOT/output/battery_v4.txt" 2>/dev/null
-echo "wrote gen_v4.txt, basics_v4.txt, basics_old.txt, battery_v4.txt"
+echo "wrote gen_v4.txt, basics_v4.txt, basics_old.txt"
 
 {
   echo "# v4 result — $(date)"
