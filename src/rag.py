@@ -16,7 +16,6 @@ from src.compressor import compress_documents
 from src.config import GUIDELINES_PATH, SYSTEM_PROMPT
 from src.retriever import BM25Retriever, content_tokens
 
-
 _RAG_MARKERS = (
     "[BEGIN RETRIEVED REFERENCE]",
     "[END RETRIEVED REFERENCE]",
