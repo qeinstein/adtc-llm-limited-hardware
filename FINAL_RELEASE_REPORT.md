@@ -8,20 +8,23 @@
 - Base: `unsloth/Qwen3.6-35B-A3B-GGUF` @ `a483e9e6` (verified SHA before transcode)
 - Transform: pinned `llama-quantize --allow-requantize`, 120 routed-expert
   tensors → Q2_K, rest keep base types; byte-identity asserted in-kernel
-- Runtime: llama.cpp @ `3057bb6` + edge0 patch set; K1=4/K2=16, real router,
-  bounded_3gb (755 slots + 80 pins); serving ctx 4096; CPU-only, offline
+- Runtime: llama.cpp @ `3057bb6` + edge0 patch set (incl. bench
+  LLAMA_ARG_LAZY_MODE compat); K1=4/K2=16, real router, bounded_3gb
+  (755 slots + 80 pins); serving ctx 4096; CPU-only, offline
 - Fine-tuning: NONE (prepared pipeline NO-GO — see TRAINING.md)
 
 ## Git
 
 - Repo: `qeinstein/adtc-llm-limited-hardware`
 - PR: #19 (`release/jamii-afya-q2k` → `main`)
-- Merged main SHA: TBD (after merge)
+- Merge of #19: `dc201741c8f960216c7a3398e243e16d503e72c5`; profiled main:
+  `c454f1a6342b5426c943c2096029c26f993e694d`
 
 ## System tests
 
-- `pytest tests/`: 367 passed (guidance 171 rules-tier cases, safety hard
-  gates, modes, webapp wiring, harness, historical — all model-independent)
+- `pytest tests/`: 369 passed (guidance 171 rules-tier cases, safety hard
+  gates, modes, webapp wiring, harness, historical, JOIN4 anchors — all
+  model-independent)
 - CI `offline-gates`: PASS (tests, metadata/manifest validation, download
   script checks, stale/secret/size audits, UI static check, lint)
 - `make validate`: metadata.json VALID (strict schema incl.
@@ -48,8 +51,10 @@
 
 - Workflow: `.github/workflows/official-profiler.yml` (manual dispatch),
   profiler pin `12be4f384c18d554d99cef380979132273578c59` (latest main)
-- Run: TBD (dispatched against the release branch; artifacts preserved)
-- Result: TBD — copied verbatim when green; blocks merge until then
+- Run: 35514252643 on main @ `c454f1a` (artifacts preserved 90 days)
+- Result: peak_rss 2502.49 MB, steady 2436.26 MB; 11.0 tok/s generation,
+  TTFT 26394.46 ms; arc_easy 0.72; EPYC 7763 4-core / 15.6 GB CPU-only;
+  model SHA verified in-run; no throttling — GREEN, gate (<7 GB) passed
 
 ## Development RSS (separate from official)
 

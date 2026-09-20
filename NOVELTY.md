@@ -6,8 +6,8 @@ language. Bottom line: **every ingredient we use has prior art**; what
 appears distinctive — to the best of our knowledge — is the **validated
 composition at the demonstrated operating point**: real-router K4/16
 execution of Qwen3.6-35B-A3B with routed-experts-only Q2_K weights under
-an explicit bounded expert-slot executor, running CPU-only on a
-commodity laptop at ~2.3 GB peak RSS with bit-exact outputs.
+an explicit bounded expert-slot executor, running CPU-only at
+2502.5 MB official peak RSS (2301.2 MB dev point) with bit-exact outputs.
 
 ## 1. What is claimed
 
@@ -15,7 +15,7 @@ commodity laptop at ~2.3 GB peak RSS with bit-exact outputs.
    combination: Qwen3.6-35B-A3B + real (unmodified) routing + K4/16
    narrowed execution + routed-experts-only Q2_K transcode + explicit
    bounded expert-slot staging with `pread` + CPU-only commodity-laptop
-   execution at ~2301.2 MB demonstrated development peak RSS.
+   execution at 2502.5 MB official peak RSS (2301.2 MB dev point).
 2. **Bounded-slot executor inside llama.cpp with deterministic memory
    accounting.** Fixed 755-slot staging pool + 80 globally-pinned hot
    experts, background async fill, and an RSS design that is a *budget*,
@@ -52,7 +52,7 @@ please file it as one.
 | SwapMoE (arXiv:2308.15030) | tunable-memory-budget MoE serving | GPU serving | the *budget knob* idea | server/GPU serving frame; no narrowed routing or CPU-only laptop point |
 | FlashMoE (arXiv:2601.17063; danveloper/flash-moe + forks) | SSD expert streaming + ML cache replacement (+51% hits vs LRU) | Apple Silicon, 24–48 GB RAM | SSD expert streaming on Qwen MoE | Metal/GPU compute; 10–20× our RAM; learned policy vs fixed slots; no K4/16 or experts-only Q2_K composition |
 | HotPin (lozzkappa/hotpin-llm) | llama.cpp patches; mlock top-K experts; 120B lossless at 3.84 tok/s / 19 GB, CPU+NVMe | consumer CPU, 19 GB | llama.cpp-based, lossless, pinning | pinning-only over OS paging vs our explicit bounded executor; 8× our RSS; no routing narrowing |
-| TokenQL (eiomra/tokenql) | bounded-memory SSD-backed Qwen runtime; whole expert slots, frequency-gated | low-RAM Qwen | bounded slots for Qwen MoE | independent implementation; ours adds K4/16 + experts-only Q2_K + 2.3 GB validated point (detail-limited comparison — see §6) |
+| TokenQL (eiomra/tokenql) | bounded-memory SSD-backed Qwen runtime; whole expert slots, frequency-gated | low-RAM Qwen | bounded slots for Qwen MoE | independent implementation; ours adds K4/16 + experts-only Q2_K + 2.44 GB officially-profiled point (detail-limited comparison — see §6) |
 | llama.cpp upstream MoE offload (`-ot`, `--n-cpu-moe`; ik_llama.cpp `exps=CPU`+mmap; issue #20757 two-tier cache proposal) | tensor→device placement; OS-paged CPU experts | hybrid CPU/GPU | expert placement inside our own runtime | coarse placement + emergent paging; no bounded executor, no routing narrowing; our base quants build on ik/Unsloth work |
 | KTransformers | experts on CPU, attention on GPU | GPU + big CPU RAM | hybrid MoE execution | requires a GPU |
 | vLLM expert cache (`--moe-expert-cache-size`, LFRU) | GPU cache over CPU-pinned experts | server GPUs | hot-expert caching | datacenter frame; no CPU-only envelope |
@@ -78,9 +78,12 @@ The development operating point above (2301.2 MiB @ ~2.9 tok/s, Kaggle
 4-vCPU) is NOT the audit number. The authoritative measurement is the
 official ADTC profiler run:
 
-- Status: PENDING (workflow `.github/workflows/official-profiler.yml`,
-  dispatched against the release branch; artifacts preserved).
-- Result: TBD — copied verbatim here when green.
+- Status: PASS (workflow `.github/workflows/official-profiler.yml`, run
+  35514252643 on main @ `c454f1a`; artifacts preserved).
+- Result (verbatim): peak_rss 2502.49 MB, steady 2436.26 MB; 11.0 tok/s
+  generation (pp512/tg128, 2 threads), TTFT 26394.46 ms; arc_easy 50-sample
+  0.72 acc_norm; AMD EPYC 7763 4-core / 15.6 GB / Ubuntu 22.04 CPU-only;
+  model 12262341600 bytes @ `0f3698ae…c7603b`; no throttling.
 
 Do not replace the official number with the development RSS, or vice
 versa; they answer different questions (audit hardware vs dev hardware).

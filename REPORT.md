@@ -72,10 +72,17 @@ set. Demonstrated development RSS: **2301.2 MiB**.
 
 ## BENCHMARKS (reproducible only)
 
-**Official ADTC profiler:** PENDING — runs in CI
-(`.github/workflows/official-profiler.yml`) against the frozen
-artifact/runtime before merge. This section will carry its exact TPS/RSS;
-until then, no profiler number is claimed.
+**Official ADTC profiler:** PASS — run 35514252643 (CI workflow
+`.github/workflows/official-profiler.yml`, main @ `c454f1a`, profiler pin
+`12be4f3`, AMD EPYC 7763 4-core / 15.6 GB RAM / Ubuntu 22.04, CPU-only):
+- Memory: **2502.49 MB peak RSS**, 2436.26 MB steady-state
+  (bounded_3gb arm — preflight on the same run confirmed slots=755,
+  pins=80, requests=33120).
+- Throughput: **11.0 tok/s** generation (pp512/tg128, 2 threads);
+  first-token latency 26394.46 ms.
+- Accuracy: arc_easy, 50 samples, **0.72 acc_norm**.
+- Model: 12,262,341,600 bytes, SHA256 `0f3698ae…c7603b` (verified in-run).
+- Thermal: no throttling (peak core temp unread on this runner).
 
 The profiler must inherit the frozen bounded_3gb production env
 (`GGML_MOE_K1=4`, `GGML_MOE_K2=16`, `GGML_PHASE6_BOUNDED_CACHE=1`,
