@@ -71,6 +71,21 @@ DEFAULT_PORT = int(os.environ.get("ADTC_SPARSE_PORT", "8421"))
 DEFAULT_REASONING_BUDGET = 1024
 
 
+def _native_reasoning_budget_message(message: str | None) -> str | None:
+    """Return a budget cue that actually exits Qwen's thinking channel.
+
+    llama-server does not append a closing marker to a non-empty custom
+    ``--reasoning-budget-message``. This backend is pinned to Qwen3.6, whose
+    native template uses ``</think>``; normalize custom values so an operator
+    cannot accidentally recreate the no-final-answer failure with a short cue.
+    """
+    if not message:
+        return message
+    if "</think>" in message:
+        return message
+    return message.rstrip() + "\n</think>\n\n"
+
+
 def load_freeze() -> dict:
     with open(FREEZE_PATH, encoding="utf-8") as f:
         return json.load(f)
@@ -156,8 +171,9 @@ def server_cmd(model_path: str | Path, *, port: int = DEFAULT_PORT,
             "--host", host, "--port", str(port), "-t", str(threads),
             "--poll", str(poll), "-c", str(n_ctx), "-ngl", "0",
             "--reasoning-budget", str(reasoning_budget)]
-    if reasoning_budget_message:
-        argv.extend(["--reasoning-budget-message", reasoning_budget_message])
+    normalized_message = _native_reasoning_budget_message(reasoning_budget_message)
+    if normalized_message:
+        argv.extend(["--reasoning-budget-message", normalized_message])
     return argv
 
 

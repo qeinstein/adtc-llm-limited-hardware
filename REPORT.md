@@ -83,9 +83,13 @@ set. Demonstrated development RSS: **2301.2 MiB**.
 
 ## BENCHMARKS (reproducible only)
 
-**Official ADTC profiler:** PASS — run 35514252643 (CI workflow
-`.github/workflows/official-profiler.yml`, main @ `c454f1a`, profiler pin
-`12be4f3`, AMD EPYC 7763 4-core / 15.6 GB RAM / Ubuntu 22.04, CPU-only):
+**ADTC profiler evidence snapshot:** PASS on run 35514252643 (CI workflow
+`.github/workflows/official-profiler.yml`, profiler pin `12be4f3`), recorded
+against main @ `c454f1a` on an AMD EPYC 7763 4-core / 15.6 GB RAM / Ubuntu
+22.04 CPU-only runner. The current release submission is
+`7d8ea9c008eac906e6a583d4981a79412092881e`; the snapshot values below are
+carried forward for release documentation and require a fresh full profiler
+run on that commit before they can be called a current Gate-2 audit result:
 - Memory: **2502.49 MB peak RSS**, 2436.26 MB steady-state
   (bounded_3gb arm — preflight on the same run confirmed slots=755,
   pins=80, requests=33120).
@@ -134,10 +138,12 @@ default is the low-memory validated production configuration
   `Qwen3.6-35B-A3B-UD-IQ2_XXS.gguf` @ `a483e9e6`, SHA256 `2e8f5f70…7bef`).
 - Final artifact SHA256: `0f3698ae…c7603b` (12,262,341,600 bytes).
 - Runtime: llama.cpp @ `3057bb6` + `probes/edge0_port` patch set.
-- Final Git commit SHA: merge `dc20174`, profiled `c454f1a` (see FINAL_RELEASE_REPORT.md).
+- Current submission Git commit SHA: `7d8ea9c008eac906e6a583d4981a79412092881e`.
+  Benchmark evidence source commit: `c454f1a6342b5426c943c2096029c26f993e694d`
+  (see FINAL_RELEASE_REPORT.md).
 - **Weight-level fine-tuning: NONE.** The shipping weights were NOT
   LoRA/QLoRA/full-fine-tuned. Adaptation performed instead:
-  - medical system prompting (versioned, `prompts/system.json v1.0.0`)
+  - medical system prompting (versioned, `prompts/system.json v2.4.0`)
   - K4/16 sparse execution adaptation
   - routed-expert-only Q2_K transformation
   - bounded sparse runtime (<3 GB working set)

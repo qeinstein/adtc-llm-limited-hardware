@@ -115,13 +115,14 @@ class RuntimeConfig:
     reasoning_budget: int = field(
         default_factory=lambda: max(-1, _env_int("ADTC_REASONING_BUDGET", 1024))
     )
-    # A short transition cue helps the sampler move from a capped thinking
-    # block into the model's normal answer channel instead of ending after a
-    # reasoning trace.
+    # llama-server tokenizes this message exactly as supplied; it does not
+    # append the model's closing marker when a custom message is present.
+    # Keep Qwen's native transition in the default so a capped thinking block
+    # becomes a final answer instead of consuming the whole completion.
     reasoning_budget_message: str = field(
         default_factory=lambda: _env_str(
             "ADTC_REASONING_BUDGET_MESSAGE",
-            "Finish thinking and provide the final answer now.",
+            "Finish thinking and provide the final answer now.\n</think>\n\n",
         )
     )
     # Optional speculative decoding draft model (path); empty disables it.
@@ -163,7 +164,7 @@ def _load_system_prompt() -> str:
 
 
 SYSTEM_PROMPT = _load_system_prompt()
-SYSTEM_PROMPT_VERSION = "prompts/system.json v2.3.0"
+SYSTEM_PROMPT_VERSION = "prompts/system.json v2.4.0"
 
 
 def get_runtime_config() -> RuntimeConfig:

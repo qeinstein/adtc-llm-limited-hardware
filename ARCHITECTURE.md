@@ -357,7 +357,7 @@ Authoritative values live in `configs/final_runtime.json`:
 - K4/16 is approximate (−1.0pp MMLU-200; paper: indistinguishable).
 - Thinking output is streamed separately by the sparse backend and displayed
   in the UI. The pinned runtime caps only the internal thinking block by
-  default (512 tokens), then continues with the visible answer; set
+  default (1024 tokens), then continues with the visible answer; set
   `ADTC_REASONING_BUDGET=-1` for unrestricted thinking. There is no second
   answer request.
 - No clinician review anywhere in the model or reference corpus; clinical

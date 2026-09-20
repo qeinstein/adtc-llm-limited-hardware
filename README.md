@@ -6,6 +6,12 @@
 
 > Built for the **Africa Deep Tech Challenge 2026 — The Laptop LLM Challenge.**
 
+> **Read [ARCHITECTURE.md](ARCHITECTURE.md) before running or evaluating this
+> repository.** The README is the quickstart; the architecture document is the
+> detailed source of truth for K4/16 routing, selective quantization, bounded
+> expert staging, benchmark methodology, platform assumptions, limitations, and
+> the actual response path.
+
 ---
 
 ## Run it
@@ -82,10 +88,12 @@ system prompt ──▶ optional offline RAG context ──▶ model output
 - **Medication behavior:** the system prompt tells the model not to volunteer
   medication names, doses, or prescriptions unless the user explicitly asks
   about medication or treatment.
-- **Official result:** ADTC profiler PASS — **2502 MB peak RSS**,
-  **16.0 tok/s headline** (16.46 and 15.5 tok/s observed, rounded), arc_easy
-  0.72, CPU-only bounded_3gb arm.
-  Run 35514252643, main @ `c454f1a`. See [REPORT.md](REPORT.md).
+- **ADTC profiler measurement:** **2502 MB peak RSS**, **16.0 tok/s headline**
+  (16.46 and 15.5 tok/s observed, rounded), arc_easy 0.72, CPU-only
+  bounded_3gb arm. The checked-in release snapshot is aligned to commit
+  `7d8ea9c`; the last full profiler evidence was run 35514252643 at
+  `c454f1a` and must be rerun on the release commit before final Gate 2
+  submission. See [REPORT.md](REPORT.md).
 
 Full architecture: [ARCHITECTURE.md](ARCHITECTURE.md) · report: [REPORT.md](REPORT.md) ·
 evaluation: [EVALUATION.md](EVALUATION.md) · training preflight (NO-GO record): [TRAINING.md](TRAINING.md) ·

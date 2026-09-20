@@ -79,7 +79,7 @@ The development operating point above (2301.2 MiB @ ~2.9 tok/s, Kaggle
 official ADTC profiler run:
 
 - Status: PASS (workflow `.github/workflows/official-profiler.yml`, run
-  35514252643 on main @ `c454f1a`; artifacts preserved).
+  35514252643 on the evidence source commit @ `c454f1a`; artifacts preserved).
 - Result: peak_rss 2502.49 MB, steady 2436.26 MB; 16.0 tok/s headline
   generation (16.46 and 15.5 tok/s observed, rounded; pp512/tg128, 2 threads),
   TTFT 26394.46 ms; arc_easy 50-sample

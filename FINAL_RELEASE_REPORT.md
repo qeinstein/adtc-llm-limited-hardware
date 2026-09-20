@@ -30,13 +30,14 @@ engineering rather than domain-specific weight training.
 ## Git
 
 - Repo: `qeinstein/adtc-llm-limited-hardware`
-- PR: #19 (`release/jamii-afya-q2k` → `main`)
-- Merge of #19: `dc201741c8f960216c7a3398e243e16d503e72c5`; profiled main:
-  `c454f1a6342b5426c943c2096029c26f993e694d`
+- Current release submission: `7d8ea9c008eac906e6a583d4981a79412092881e`
+- Last profiler evidence source: `c454f1a6342b5426c943c2096029c26f993e694d`
+  (the benchmark snapshot must be rerun after this release commit before
+  final Gate 2 submission).
 
 ## System tests
 
-- `pytest tests/`: 157 passed (RAG, webapp wiring, runtime, historical, and
+- `pytest tests/`: 174 passed (RAG, webapp wiring, runtime, historical, and
   JOIN4 anchors — all model-independent)
 - CI `offline-gates`: PASS (tests, metadata/manifest validation, download
   script checks, stale/secret/size audits, UI static check, lint)
@@ -58,11 +59,13 @@ engineering rather than domain-specific weight training.
 - `make webui`: venv → deps → model verify → runtime build → backend+frontend
   → readiness wait → URL → cleanup on exit; single command
 
-## Official profiler
+## ADTC profiler evidence
 
 - Workflow: `.github/workflows/official-profiler.yml` (manual dispatch),
   profiler pin `12be4f384c18d554d99cef380979132273578c59` (latest main)
-- Run: 35514252643 on main @ `c454f1a` (artifacts preserved 90 days)
+- Run: 35514252643 on main @ `c454f1a` (artifacts preserved 90 days; this is
+  the evidence source for the checked-in snapshot, not a fresh run of the
+  current release commit)
 - Result: peak_rss 2502.49 MB, steady 2436.26 MB; 16.0 tok/s headline
   generation (16.46 and 15.5 tok/s observed, rounded), TTFT 26394.46 ms;
   arc_easy 0.72 (stock-K8 accuracy path); EPYC 7763

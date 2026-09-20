@@ -139,7 +139,23 @@ def test_server_cmd_can_prompt_the_model_to_finish_after_budget():
         "/m/model.gguf", reasoning_budget=1024,
         reasoning_budget_message="Answer now.",
     )
-    assert argv[argv.index("--reasoning-budget-message") + 1] == "Answer now."
+    assert argv[argv.index("--reasoning-budget-message") + 1] == \
+        "Answer now.\n</think>\n\n"
+
+
+def test_server_cmd_preserves_an_explicit_native_close_marker():
+    argv = sparse.server_cmd(
+        "/m/model.gguf", reasoning_budget=1024,
+        reasoning_budget_message="Answer now.\n</think>\n\n",
+    )
+    assert argv[argv.index("--reasoning-budget-message") + 1] == \
+        "Answer now.\n</think>\n\n"
+
+
+def test_default_reasoning_budget_message_closes_qwen_thinking_block():
+    from src.config import RuntimeConfig
+
+    assert "</think>" in RuntimeConfig().reasoning_budget_message
 
 
 def test_build_env_resident():
