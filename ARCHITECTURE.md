@@ -355,11 +355,12 @@ Authoritative values live in `configs/final_runtime.json`:
 - Long context grows KV memory outside the expert budget (ctx 512
   validated; 2k+ needs re-measurement).
 - K4/16 is approximate (−1.0pp MMLU-200; paper: indistinguishable).
-- Thinking output is streamed separately by the sparse backend and displayed
-  in the UI. The pinned runtime caps only the internal thinking block by
-  default (1024 tokens), then continues with the visible answer; set
-  `ADTC_REASONING_BUDGET=-1` for unrestricted thinking. There is no second
-  answer request.
+- The model may reason internally, but reasoning output is discarded at the
+  backend boundary and never displayed or returned by the web API. The UI shows
+  only a quiet activity state while the final answer is generated. The pinned
+  runtime caps the internal block by default (1024 tokens); set
+  `ADTC_REASONING_BUDGET=-1` for unrestricted internal reasoning. There is no
+  second answer request.
 - No clinician review anywhere in the model or reference corpus; clinical
   answers remain decision support and require qualified review.
 - Throughput varies with host CPU/disk; Kaggle ≠ Core i5 (see §13).
@@ -379,11 +380,11 @@ BM25 retrieval and compression when the offline corpus has a strong match
         ↓
 pinned Qwen3.6 runtime
         ↓
-model response and model-emitted thinking streamed to the UI
+final model response streamed to the UI
 ```
 
-The system prompt asks for detailed explanations, calibrated uncertainty, and
-medication information only when explicitly requested. The application does
+The short system prompt asks for clear explanations, calibrated uncertainty,
+and medication information only when explicitly requested. The application does
 not attach urgency labels, inject structured cards, lint or rewrite output,
 regenerate an answer, or substitute a fixed fallback. The UI shows the model
 response, optional RAG sources, and runtime telemetry.

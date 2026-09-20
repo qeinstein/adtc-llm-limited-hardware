@@ -45,11 +45,10 @@ The Windows build requires Git, CMake, and a C/C++ toolchain visible to CMake
 all three platforms; set `ADTC_SPARSE_ARM=resident` only when the machine has
 enough memory for the full model.
 
-The shipped sparse runtime limits internal thinking to 1024 tokens by default,
-then explicitly tells the model to finish in the normal answer channel. Set
-`ADTC_REASONING_BUDGET=-1` for unrestricted thinking, or choose another
-non-negative token budget; `ADTC_MAX_TOKENS` still controls the total completion.
-The transition cue can be changed with `ADTC_REASONING_BUDGET_MESSAGE`.
+The shipped sparse runtime can reason internally, but reasoning is never sent to
+the browser or shown as a step-by-step trace. It transitions to the final answer
+channel after the internal budget; set `ADTC_REASONING_BUDGET=-1` for unrestricted
+internal reasoning. `ADTC_MAX_TOKENS` still controls the total completion.
 
 Other entry points:
 
@@ -73,7 +72,7 @@ Question (EN/SW)
 system prompt ──▶ optional offline RAG context ──▶ model output
                                                        │
                                                        ▼
-                                           streamed answer + model thinking
+                                      quiet thinking state + final answer
 ```
 
 - **Model:** `Qwen3.6-35B-A3B-UD-Q2K-experts.gguf` (12.26 GB on disk,
@@ -81,10 +80,10 @@ system prompt ──▶ optional offline RAG context ──▶ model output
   keeps base types. **No weight-level fine-tuning was performed; the shipped
   weights are the base model with runtime quantization only.** See
   [MODEL_CARD.md](MODEL_CARD.md).
-- **Response path:** the application supplies one detailed system prompt,
+- **Response path:** the application supplies one short system prompt,
   attaches relevant offline RAG context when available, and returns the model
-  response without classification, labels, rewriting, regeneration, or a
-  fixed fallback.
+  response without classification, labels, rewriting, regeneration, fixed
+  fallback, or exposed reasoning steps.
 - **Medication behavior:** the system prompt tells the model not to volunteer
   medication names, doses, or prescriptions unless the user explicitly asks
   about medication or treatment.

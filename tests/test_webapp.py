@@ -93,7 +93,8 @@ def test_chat_sends_only_system_rag_and_history_to_model(faked, monkeypatch):
     response = webapp.chat(webapp.ChatRequest(message=QUESTION))
 
     assert response.reply == "model answer"
-    assert response.thinking == "model reasoning"
+    payload = response.model_dump() if hasattr(response, "model_dump") else response.dict()
+    assert "thinking" not in payload
     messages, options = server.chat_calls[0]
     assert messages[0] == {"role": "system", "content": "SYSTEM PROMPT"}
     assert messages[-1]["role"] == "user"
@@ -184,8 +185,9 @@ def test_stream_has_no_deterministic_meta_event(faked, monkeypatch):
 
     frames = _drain(webapp.chat_stream(webapp.ChatRequest(message=QUESTION)))
 
-    assert [frame["kind"] for frame in frames] == ["thinking", "text", "done"]
+    assert [frame["kind"] for frame in frames] == ["text", "done"]
     assert frames[-1]["reply"] == "model answer"
+    assert "thinking" not in frames[-1]
     assert "urgency" not in frames[-1]
     assert "guard_ok" not in frames[-1]
 

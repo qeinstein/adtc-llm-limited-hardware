@@ -26,10 +26,9 @@ def test_backend_loads_versioned_prompt():
     assert C.SYSTEM_PROMPT == doc["text"]
     assert "MEDICATIONS" in C.SYSTEM_PROMPT
     assert "explicitly asked" in C.SYSTEM_PROMPT
-    assert "detailed answer" in C.SYSTEM_PROMPT
     assert "non-health questions" in C.SYSTEM_PROMPT
-    assert "straightforward non-health questions" in C.SYSTEM_PROMPT
-    assert "generic invitation to ask about other conditions" in C.SYSTEM_PROMPT
-    assert "Prefer readable paragraphs" in C.SYSTEM_PROMPT
+    assert "Prefer readable paragraphs" in " ".join(C.SYSTEM_PROMPT.split())
     assert "acute trauma" in C.SYSTEM_PROMPT
-    assert "normal user-facing final answer" in C.SYSTEM_PROMPT
+    assert "system prompt" not in C.SYSTEM_PROMPT.lower()
+    assert "reasoning" not in C.SYSTEM_PROMPT.lower()
+    assert "thinking" not in C.SYSTEM_PROMPT.lower()

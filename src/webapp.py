@@ -104,7 +104,6 @@ class ChatResponse(BaseModel):
     sources: list[str] = Field(default_factory=list)
     telemetry: dict = Field(default_factory=dict)
     model_ready: bool
-    thinking: str = ""
 
 
 @app.get("/")
@@ -273,7 +272,6 @@ def chat(req: ChatRequest) -> ChatResponse:
         elapsed = time.time() - start
         return ChatResponse(
             reply=out.get("text", ""),
-            thinking=out.get("thinking", ""),
             sources=sources,
             telemetry=_telemetry(elapsed, server.rss_mb(), out.get("usage")),
             model_ready=True,
@@ -291,7 +289,12 @@ def chat(req: ChatRequest) -> ChatResponse:
 
 @app.post("/api/chat/stream")
 def chat_stream(req: ChatRequest):
-    """Stream model-emitted thinking/text and finish with the raw response."""
+    """Stream only the final model answer and finish with usage metadata.
+
+    The runtime may reason internally, but its reasoning channel never crosses
+    this API boundary. The browser receives a quiet activity indicator and the
+    model's final answer only.
+    """
     import json
 
     prepared, early = _prepare(req)
@@ -309,7 +312,6 @@ def chat_stream(req: ChatRequest):
 
     def _gen():
         start = time.time()
-        thinking_parts: list[str] = []
         text_parts: list[str] = []
         peak = 0.0
         usage: dict = {}
@@ -331,8 +333,10 @@ def chat_stream(req: ChatRequest):
                     if kind == "finish":
                         finish_reason = str(piece)
                         continue
-                    (thinking_parts if kind == "thinking" else text_parts).append(piece)
-                    yield f"data: {json.dumps({'kind': kind, 'piece': piece})}\n\n"
+                    if kind != "text":
+                        continue
+                    text_parts.append(piece)
+                    yield f"data: {json.dumps({'kind': 'text', 'piece': piece})}\n\n"
                 peak = server.rss_mb()
             else:
                 engine = _get_engine()
@@ -350,17 +354,18 @@ def chat_stream(req: ChatRequest):
                         if kind == "finish":
                             finish_reason = str(piece)
                             continue
-                        (thinking_parts if kind == "thinking" else text_parts).append(piece)
-                        yield f"data: {json.dumps({'kind': kind, 'piece': piece})}\n\n"
+                        if kind != "text":
+                            continue
+                        text_parts.append(piece)
+                        yield f"data: {json.dumps({'kind': 'text', 'piece': piece})}\n\n"
         except Exception as exc:  # noqa: BLE001 - stream must report failures
             yield f"data: {json.dumps({'kind': 'error', 'error': str(exc)[:500]})}\n\n"
             return
 
         reply = "".join(text_parts)
-        thinking = "".join(thinking_parts)
         telemetry = _telemetry(time.time() - start, peak, usage)
         done = {
-            "kind": "done", "reply": reply, "thinking": thinking,
+            "kind": "done", "reply": reply,
             "finish_reason": finish_reason, "sources": sources,
             "telemetry": telemetry,
         }

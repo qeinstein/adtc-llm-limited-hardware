@@ -83,7 +83,7 @@ def test_sparse_stream_exposes_usage_and_timings(monkeypatch):
     }) in events
 
 
-def test_sparse_stream_keeps_structured_thinking_and_answer_separate(monkeypatch):
+def test_sparse_stream_discards_structured_reasoning(monkeypatch):
     monkeypatch.setattr(
         sparse,
         "_post_sse",
@@ -96,7 +96,6 @@ def test_sparse_stream_keeps_structured_thinking_and_answer_separate(monkeypatch
     server.base_url = "http://127.0.0.1:1"
     server.timeout_s = 1.0
     assert list(server.stream_chat_events([{"role": "user", "content": "hi"}])) == [
-        ("thinking", "careful"),
         ("text", "answer"),
     ]
 

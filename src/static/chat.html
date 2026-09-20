@@ -101,47 +101,11 @@
   .typing i:nth-child(3) { animation-delay: 0.4s; }
   @keyframes blink { 0%, 80%, 100% { opacity: 0.2; } 40% { opacity: 1; } }
 
-  /* Thinking panel: model-emitted reasoning text ( NOT hidden chain-of-thought ).
-     Collapsed + subdued by default; streams live; expands on click. */
-  details.thinking { margin-bottom: 0.55rem; border: 1px solid var(--rule-soft);
-                     border-radius: 6px; background: var(--surface); }
-  details.thinking summary { cursor: pointer; list-style: none; display: flex;
-    align-items: center; gap: 0.45rem; padding: 0.42rem 0.7rem;
-    font-size: 0.76rem; color: var(--muted); user-select: none; }
-  details.thinking summary::-webkit-details-marker { display: none; }
-  details.thinking summary .caret { font-family: var(--mono); font-size: 0.72rem;
-    transition: transform 0.15s; }
-  details.thinking[open] summary .caret { transform: rotate(90deg); }
-  details.thinking summary .tstatus { font-family: var(--mono); font-size: 0.63rem;
-    text-transform: uppercase; letter-spacing: 0.06em; }
-  details.thinking summary .pulse { width: 6px; height: 6px; border-radius: 50%;
+  .thinking-status { display: inline-flex; align-items: center; gap: 0.45rem;
+    color: var(--muted); font-size: 0.78rem; min-height: 1.5rem; }
+  .thinking-status .pulse { width: 6px; height: 6px; border-radius: 50%;
     background: var(--muted); animation: blink 1.2s infinite ease-in-out; }
-  details.thinking.done summary .pulse { animation: none; background: var(--rule); }
-  details.thinking .tbody {
-    padding: 0 0.7rem 0.5rem; color: var(--muted); font-size: 0.75rem;
-    line-height: 1.35; word-wrap: break-word; max-height: 16rem; overflow-y: auto;
-  }
-  details.thinking .tbody h1, details.thinking .tbody h2,
-  details.thinking .tbody h3 { font-family: var(--serif); font-weight: 400;
-    line-height: 1.2; margin: 0.5rem 0 0.2rem; }
-  details.thinking .tbody h1 { font-size: 1rem; }
-  details.thinking .tbody h2 { font-size: 0.92rem; }
-  details.thinking .tbody h3 { font-size: 0.86rem; }
-  details.thinking .tbody p { margin: 0.22rem 0; }
-  details.thinking .tbody ul, details.thinking .tbody ol {
-    margin: 0.22rem 0; padding-left: 1.15rem;
-  }
-  details.thinking .tbody li { margin: 0.04rem 0; }
-  details.thinking .tbody code { font-family: var(--mono); font-size: 0.78em;
-    background: var(--bg); border-radius: 3px; padding: 0.05rem 0.25rem; }
-  details.thinking .tbody pre { margin: 0.35rem 0; padding: 0.45rem 0.6rem;
-    overflow-x: auto; line-height: 1.3; background: var(--bg); border-radius: 4px; }
-  details.thinking .tbody pre code { background: none; padding: 0; }
-  details.thinking .tbody table { border-collapse: collapse; margin: 0.3rem 0;
-    font-size: 0.72rem; }
-  details.thinking .tbody th, details.thinking .tbody td {
-    border: 1px solid var(--rule); padding: 0.18rem 0.35rem; text-align: left;
-  }
+  .thinking-status.done .pulse { animation: none; background: var(--rule); }
   .copybtn { border: 1px solid var(--rule); background: var(--bg); color: var(--muted);
     border-radius: 4px; font-size: 0.68rem; font-family: var(--mono);
     padding: 0.1rem 0.45rem; cursor: pointer; margin-left: auto; }
@@ -401,7 +365,7 @@ function stickScroll() {
   if (nearBottom()) chatScroll.scrollTop = chatScroll.scrollHeight;
 }
 
-// Streaming assistant message: thinking <details> + markdown answer body.
+// Streaming assistant message: quiet activity state + markdown answer body.
 function addStreamingMessage() {
   if (emptyState) { emptyState.remove(); emptyState = null; }
   const wrap = document.createElement('div');
@@ -410,20 +374,10 @@ function addStreamingMessage() {
   label.className = 'role'; label.textContent = 'Jamii Afya';
   wrap.appendChild(label);
 
-  const det = document.createElement('details');
-  // Show the state immediately, even before the first reasoning delta. This
-  // makes the model's work visible instead of making a slow first token look
-  // like a frozen interface.
-  det.className = 'thinking';
-  const sum = document.createElement('summary');
-  sum.innerHTML = '<span class="caret">▸</span><span class="pulse"></span>' +
-    '<span class="tlabel">Thinking…</span>' +
-    '<span class="tstatus">click to view</span>';
-  const tbody = document.createElement('div');
-  tbody.className = 'tbody';
-  tbody.innerHTML = '<p>The model is working. Any reasoning it emits will appear here.</p>';
-  det.appendChild(sum); det.appendChild(tbody);
-  wrap.appendChild(det);
+  const status = document.createElement('div');
+  status.className = 'thinking-status';
+  status.innerHTML = '<span class="pulse"></span><span>Thinking…</span>';
+  wrap.appendChild(status);
 
   const anshead = document.createElement('div');
   anshead.className = 'anshead'; anshead.style.display = 'none';
@@ -432,27 +386,18 @@ function addStreamingMessage() {
   anshead.appendChild(copyAns);
   const body = document.createElement('div');
   body.className = 'body';
-  body.innerHTML = '<span class="typing"><i></i><i></i><i></i></span>';
+  body.innerHTML = '';
   wrap.appendChild(anshead); wrap.appendChild(body);
   chatEl.appendChild(wrap);
   chatScroll.scrollTop = chatScroll.scrollHeight;
 
-  let thinking = '', answer = '', thinkShown = false, ansShown = false;
-  const copyThink = document.createElement('button');
-  copyThink.className = 'copybtn'; copyThink.textContent = 'copy';
-  copyThink.addEventListener('click', (ev) => { ev.preventDefault(); copyText(copyThink, thinking); });
+  let answer = '', ansShown = false;
   copyAns.addEventListener('click', (ev) => { ev.preventDefault(); copyText(copyAns, answer); });
   return {
-    pushThinking(piece) {
-      thinking += piece;
-      if (!thinkShown) { thinkShown = true; }
-      tbody.innerHTML = renderMD(thinking);
-      tbody.scrollTop = tbody.scrollHeight;
-      stickScroll();
-    },
     pushText(piece) {
       answer += piece;
       answer = answer.replace(/^<\/think>\s*/i, '');
+      status.remove();
       if (!ansShown) { body.innerHTML = ''; anshead.style.display = ''; ansShown = true; }
       body.innerHTML = renderMD(answer);
       stickScroll();
@@ -464,18 +409,7 @@ function addStreamingMessage() {
       // Keep the assembled reply when a runtime only sends it in `done`:
       // answer = answer || finalReply || '';
       answer = (answer || finalReply || '').replace(/^<\/think>\s*/i, '');
-      det.classList.add('done');
-      const st = sum.querySelector('.tstatus');
-      const lb = sum.querySelector('.tlabel');
-      if (thinkShown) {
-        lb.textContent = 'Reasoning complete';
-        st.textContent = 'click to view';
-        sum.appendChild(copyThink);
-      } else {
-        lb.textContent = 'Model response complete';
-        st.textContent = 'no separate reasoning output';
-        tbody.innerHTML = '<p>No separate reasoning trace was returned for this response.</p>';
-      }
+      status.remove();
       if (!ansShown) {
         body.innerHTML = '';
         anshead.style.display = '';
@@ -496,9 +430,7 @@ function addStreamingMessage() {
       stickScroll();
     },
     fail(msg) {
-      det.classList.add('done');
-      sum.querySelector('.tlabel').textContent = 'Generation interrupted';
-      sum.querySelector('.tstatus').textContent = 'click to view partial output';
+      status.remove();
       if (!ansShown) body.innerHTML = '';
       body.innerHTML += `<p><em>${esc(msg)} (partial output above, if any).</em></p>`;
       stickScroll();
@@ -532,7 +464,7 @@ async function send() {
     }
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
-    let buf = '', reply = '', streamedText = '', doneEv = null, sawPieces = false;
+    let buf = '', reply = '', streamedText = '', doneEv = null, sawText = false;
     let streamError = '';
     const consumeFrame = (frame) => {
       for (const ln of frame.split('\n')) {
@@ -540,9 +472,8 @@ async function send() {
         if (!line.startsWith('data:')) continue;
         let ev;
         try { ev = JSON.parse(line.slice(5).trim()); } catch (e) { continue; }
-        if (ev.kind === 'thinking') { sawPieces = true; stream.pushThinking(ev.piece || ''); }
-        else if (ev.kind === 'text') {
-          sawPieces = true;
+        if (ev.kind === 'text') {
+          sawText = true;
           streamedText += ev.piece || '';
           stream.pushText(ev.piece || '');
         }
@@ -582,11 +513,7 @@ async function send() {
     // Prefer the final event, but retain streamed text if an older/runtime
     // response omits the assembled reply. This keeps follow-up history intact.
     reply = (doneEv.reply || streamedText || '').replace(/^<\/think>\s*/i, '');
-    if (doneEv.thinking && !sawPieces) {
-      sawPieces = true;
-      stream.pushThinking(doneEv.thinking);
-    }
-    if (!sawPieces && reply) {
+    if (!sawText && reply) {
       // Early-exit event (model-missing preview): plain single message.
       stream.finish(doneEv.sources || [], '', '', reply);
       history.push({ role: 'user', content: message });

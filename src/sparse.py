@@ -7,12 +7,13 @@ HTTP API instead of in-process inference.
 
 Stdlib only (subprocess + urllib): no new dependencies.
 
-Thinking comes back structurally: streamed SSE deltas carry
+The runtime may emit a separate internal reasoning channel. The backend uses
+the native markers only to recover the final answer and discards reasoning
+before it reaches the web API. Streamed SSE deltas carry
 ``choices[0].delta.reasoning_content`` vs ``choices[0].delta.content``
-(server-chat.cpp on the pin), and non-streamed replies carry
-``message.reasoning_content`` + ``message.content``. When the server
-returns merged text instead, :func:`split_thinking` falls back to the
-model's ``<think>`` markers.
+(server-chat.cpp on the pin), and non-streamed replies carry both fields.
+When the server returns merged text instead, :func:`split_thinking` falls back
+to the model's ``<think>`` markers.
 """
 
 from __future__ import annotations
@@ -468,7 +469,7 @@ class SparseServer:
     def chat(self, messages: list[dict], *, max_tokens: int | None = None,
              temperature: float | None = None, top_p: float | None = None,
              ) -> dict:
-        """Non-streaming chat. Returns {thinking, text, usage}."""
+        """Non-streaming chat. Returns only the final text and usage."""
         from src.config import get_generation_config
 
         gen = get_generation_config()
@@ -480,21 +481,20 @@ class SparseServer:
                                         top_p, False),
                           timeout=self.timeout_s)
         msg = (data.get("choices") or [{}])[0].get("message", {})
-        thinking = msg.get("reasoning_content", "") or ""
+        hidden_reasoning = msg.get("reasoning_content", "") or ""
         text = msg.get("content", "") or ""
-        if not thinking and ("<think>" in text or text.lstrip().startswith("</think>")):
-            thinking, text = split_thinking(text)
+        if not hidden_reasoning and ("<think>" in text or text.lstrip().startswith("</think>")):
+            _hidden_reasoning, text = split_thinking(text)
         usage = dict(data.get("usage") or {})
         if data.get("timings"):
             usage["timings"] = data["timings"]
-        return {"thinking": thinking.strip(), "text": text.strip(),
-                "usage": usage}
+        return {"text": text.strip(), "usage": usage}
 
     def stream_chat_events(
         self, messages: list[dict], *, max_tokens: int | None = None,
         temperature: float | None = None, top_p: float | None = None,
     ) -> Iterator[tuple[str, str | dict[str, Any]]]:
-        """Yield channels, finish reason, and the server's final usage event."""
+        """Yield final text, finish reason, and usage; discard reasoning."""
         from src.config import get_generation_config
 
         gen = get_generation_config()
@@ -520,26 +520,31 @@ class SparseServer:
             delta = choice.get("delta", {})
             if delta.get("reasoning_content"):
                 if not structured_reasoning:
-                    yield from parser.finish()
+                    for kind, piece in parser.finish():
+                        if kind == "text":
+                            yield (kind, piece)
                     structured_reasoning = True
-                yield ("thinking", delta["reasoning_content"])
             if delta.get("content"):
                 if structured_reasoning:
                     yield ("text", delta["content"])
                 else:
-                    yield from parser.feed(delta["content"])
+                    for kind, piece in parser.feed(delta["content"]):
+                        if kind == "text":
+                            yield (kind, piece)
         if not structured_reasoning:
-            yield from parser.finish()
+            for kind, piece in parser.finish():
+                if kind == "text":
+                    yield (kind, piece)
 
     def stream_chat(self, messages: list[dict], *, max_tokens: int | None = None,
                     temperature: float | None = None, top_p: float | None = None,
                     ) -> Iterator[tuple[str, str]]:
-        """Yield ("thinking"|"text", piece) SSE events in arrival order."""
+        """Yield only final-text SSE events in arrival order."""
         for kind, piece in self.stream_chat_events(
             messages, max_tokens=max_tokens, temperature=temperature,
             top_p=top_p,
         ):
-            if kind in ("thinking", "text"):
+            if kind == "text":
                 yield kind, str(piece)
 
 

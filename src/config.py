@@ -122,7 +122,7 @@ class RuntimeConfig:
     reasoning_budget_message: str = field(
         default_factory=lambda: _env_str(
             "ADTC_REASONING_BUDGET_MESSAGE",
-            "Finish thinking and provide the final answer now.\n</think>\n\n",
+            "Provide the final answer now.\n</think>\n\n",
         )
     )
     # Optional speculative decoding draft model (path); empty disables it.
@@ -164,7 +164,7 @@ def _load_system_prompt() -> str:
 
 
 SYSTEM_PROMPT = _load_system_prompt()
-SYSTEM_PROMPT_VERSION = "prompts/system.json v2.4.0"
+SYSTEM_PROMPT_VERSION = "prompts/system.json v3.0.0"
 
 
 def get_runtime_config() -> RuntimeConfig:

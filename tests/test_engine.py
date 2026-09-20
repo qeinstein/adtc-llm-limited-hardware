@@ -27,15 +27,15 @@ def _engine():
     return engine
 
 
-def test_fallback_chat_preserves_structured_reasoning():
+def test_fallback_chat_does_not_return_structured_reasoning():
     out = _engine().chat([{"role": "user", "content": "hello"}])
-    assert out["thinking"] == "careful"
     assert out["text"] == "answer"
+    assert "thinking" not in out
 
 
-def test_fallback_stream_exposes_legacy_thinking_as_events():
+def test_fallback_stream_discards_legacy_thinking_events():
     events = list(_engine().stream_chat_events([
         {"role": "user", "content": "hello"},
     ]))
-    assert "".join(piece for kind, piece in events if kind == "thinking") == "careful"
+    assert all(kind != "thinking" for kind, _ in events)
     assert "".join(piece for kind, piece in events if kind == "text") == "answer"

@@ -46,11 +46,11 @@ engineering rather than domain-specific weight training.
 
 ## Application response path
 
-- system prompt with detailed medical explanations and explicit medication
+- short system prompt with clear medical explanations and explicit medication
   request behavior
 - optional offline RAG context when the corpus matches the question
-- direct model output with model-emitted thinking; no application-side labels,
-  linting, regeneration, or fixed response path
+- direct model output; internal reasoning is not exposed, and there are no
+  application-side labels, linting, regeneration, or fixed response path
 
 ## `make model` / `make webui`
 

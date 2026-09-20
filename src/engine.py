@@ -171,12 +171,12 @@ class MedicalLLMEngine:
 
         choices = resp.get("choices", [])
         message = choices[0].get("message", {}) if choices else {}
-        thinking = message.get("reasoning_content", "") or ""
+        hidden_reasoning = message.get("reasoning_content", "") or ""
         text = message.get("content", "") or ""
-        if not thinking and ("<think>" in text or text.lstrip().startswith("</think>")):
+        if not hidden_reasoning and ("<think>" in text or text.lstrip().startswith("</think>")):
             from src.sparse import split_thinking
 
-            thinking, text = split_thinking(text)
+            _hidden_reasoning, text = split_thinking(text)
         usage = resp.get("usage", {})
         completion_tokens = int(usage.get("completion_tokens", 0))
         telemetry = Telemetry(
@@ -186,8 +186,7 @@ class MedicalLLMEngine:
             throughput_tps=completion_tokens / elapsed,
             peak_rss_mb=peak,
         )
-        return {"thinking": thinking.strip(), "text": text.strip(),
-                "telemetry": telemetry.as_dict()}
+        return {"text": text.strip(), "telemetry": telemetry.as_dict()}
 
     def stream_chat_events(
         self,
@@ -195,7 +194,7 @@ class MedicalLLMEngine:
         generation: Optional[GenerationConfig] = None,
         **overrides: Any,
     ) -> Iterator[tuple[str, str | dict[str, Any]]]:
-        """Yield structured output events and final usage from the fallback."""
+        """Yield final output events and usage; discard reasoning."""
         from src.sparse import _StreamingThinkingParser
 
         gen = generation or get_generation_config()
@@ -233,16 +232,21 @@ class MedicalLLMEngine:
             delta = choice.get("delta", {})
             if delta.get("reasoning_content"):
                 if not structured_reasoning:
-                    yield from parser.finish()
+                    for kind, piece in parser.finish():
+                        if kind == "text":
+                            yield kind, piece
                     structured_reasoning = True
-                yield "thinking", delta["reasoning_content"]
             if delta.get("content"):
                 if structured_reasoning:
                     yield "text", delta["content"]
                 else:
-                    yield from parser.feed(delta["content"])
+                    for kind, piece in parser.feed(delta["content"]):
+                        if kind == "text":
+                            yield kind, piece
         if not structured_reasoning:
-            yield from parser.finish()
+            for kind, piece in parser.finish():
+                if kind == "text":
+                    yield kind, piece
 
     def stream(
         self,
@@ -295,12 +299,12 @@ class MedicalLLMEngine:
 
         choices = resp.get("choices", [])
         message = choices[0].get("message", {}) if choices else {}
-        thinking = message.get("reasoning_content", "") or ""
+        hidden_reasoning = message.get("reasoning_content", "") or ""
         text = message.get("content", "") or ""
-        if not thinking and ("<think>" in text or text.lstrip().startswith("</think>")):
+        if not hidden_reasoning and ("<think>" in text or text.lstrip().startswith("</think>")):
             from src.sparse import split_thinking
 
-            thinking, text = split_thinking(text)
+            _hidden_reasoning, text = split_thinking(text)
         usage = resp.get("usage", {})
         completion_tokens = int(usage.get("completion_tokens", 0))
         telemetry = Telemetry(
@@ -310,8 +314,7 @@ class MedicalLLMEngine:
             throughput_tps=completion_tokens / elapsed,
             peak_rss_mb=peak,
         )
-        return {"thinking": thinking.strip(), "text": text.strip(),
-                "telemetry": telemetry.as_dict()}
+        return {"text": text.strip(), "telemetry": telemetry.as_dict()}
 
     def stream_chat(
         self,
