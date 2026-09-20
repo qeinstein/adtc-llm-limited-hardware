@@ -355,10 +355,16 @@ class SparseServer:
                 "temperature": temperature, "top_p": top_p,
                 "stream": stream, "cache_prompt": True}
 
-    def chat(self, messages: list[dict], *, max_tokens: int = 512,
-             temperature: float = 0.3, top_p: float = 0.9,
+    def chat(self, messages: list[dict], *, max_tokens: int | None = None,
+             temperature: float | None = None, top_p: float | None = None,
              ) -> dict:
         """Non-streaming chat. Returns {thinking, text, usage}."""
+        from src.config import get_generation_config
+
+        gen = get_generation_config()
+        max_tokens = gen.max_tokens if max_tokens is None else max_tokens
+        temperature = gen.temperature if temperature is None else temperature
+        top_p = gen.top_p if top_p is None else top_p
         data = _post_json(self.base_url + "/v1/chat/completions",
                           self._payload(messages, max_tokens, temperature,
                                         top_p, False),
@@ -371,10 +377,16 @@ class SparseServer:
         return {"thinking": thinking.strip(), "text": text.strip(),
                 "usage": data.get("usage", {})}
 
-    def stream_chat(self, messages: list[dict], *, max_tokens: int = 512,
-                    temperature: float = 0.3, top_p: float = 0.9,
+    def stream_chat(self, messages: list[dict], *, max_tokens: int | None = None,
+                    temperature: float | None = None, top_p: float | None = None,
                     ) -> Iterator[tuple[str, str]]:
         """Yield ("thinking"|"text", piece) SSE events in arrival order."""
+        from src.config import get_generation_config
+
+        gen = get_generation_config()
+        max_tokens = gen.max_tokens if max_tokens is None else max_tokens
+        temperature = gen.temperature if temperature is None else temperature
+        top_p = gen.top_p if top_p is None else top_p
         for ev in _post_sse(self.base_url + "/v1/chat/completions",
                             self._payload(messages, max_tokens, temperature,
                                           top_p, True),

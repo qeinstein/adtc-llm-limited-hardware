@@ -24,4 +24,6 @@ def test_backend_loads_versioned_prompt():
 
     doc = json.loads((ROOT / "prompts" / "system.json").read_text())
     assert C.SYSTEM_PROMPT == doc["text"]
-    assert "TRIAGE" in C.SYSTEM_PROMPT and "MEDICATIONS" in C.SYSTEM_PROMPT
+    assert "MEDICATIONS" in C.SYSTEM_PROMPT
+    assert "explicitly asked" in C.SYSTEM_PROMPT
+    assert "detailed answer" in C.SYSTEM_PROMPT

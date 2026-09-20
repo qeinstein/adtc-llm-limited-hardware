@@ -4,7 +4,7 @@ Usage:
     PYTHONPATH=. python -m src.main                 # interactive chat
     PYTHONPATH=. python -m src.main --query "..."   # one-shot
     PYTHONPATH=. python -m src.main --demo          # run the metadata test prompts
-    PYTHONPATH=. python -m src.main --no-rag        # disable retrieval; return safe referral
+    PYTHONPATH=. python -m src.main --no-rag        # answer without retrieved context
 
 Runs end-to-end WITH model weights. Without weights it degrades to a
 "RAG preview" that shows the retrieved+compressed clinical context, so the
@@ -17,7 +17,7 @@ import argparse
 import sys
 
 from src.config import load_metadata, resolve_model_path
-from src.rag import RAGPipeline, ungrounded_response
+from src.rag import RAGPipeline
 
 
 def _print_header(domain: str, model_ready: bool) -> None:
@@ -25,7 +25,7 @@ def _print_header(domain: str, model_ready: bool) -> None:
     print("  Jamii Afya — Offline Clinical Advisor (ADTC 2026, healthcare_medical)")
     print("=" * 70)
     print(f"  Domain: {domain} | Languages: English + Kiswahili")
-    print(f"  Model:  {'ready' if model_ready else 'NOT downloaded (RAG-preview mode)'}")
+    print(f"  Model:  {'ready' if model_ready else 'NOT downloaded (RAG preview only)'}")
     print("  Note:   Clinical decision support — not a substitute for a clinician.")
     print("=" * 70)
 
@@ -37,24 +37,17 @@ def _answer(engine, rag: RAGPipeline, query: str, args) -> None:
         print(f"\n[RAG] Retrieved: {srcs}  ({len(result.context.split())} context words)")
 
     if engine is None:
-        if not result.is_grounded:
-            print("\n--- Advisory ---")
-            print(ungrounded_response(query))
-        else:
-            print("\n[RAG preview — model not downloaded]")
-            print("Retrieved clinical context that would ground the answer:\n")
+        print("\n[Model not downloaded — no model output is available]")
+        if result.context:
+            print("Retrieved clinical context that would be supplied to the model:\n")
             print(result.context)
         return
 
-    if not result.is_grounded:
-        print("\n--- Advisory ---")
-        print(ungrounded_response(query))
-        return
-
     print("\n--- Advisory ---")
+    system_prompt = rag.system_prompt_for(result)
     if args.no_stream:
         out = engine.generate(
-            result.user_content, system_prompt=rag.system_prompt, max_tokens=args.max_tokens
+            result.user_content, system_prompt=system_prompt, max_tokens=args.max_tokens
         )
         print(out["text"])
         t = out["telemetry"]
@@ -65,7 +58,7 @@ def _answer(engine, rag: RAGPipeline, query: str, args) -> None:
         )
     else:
         for piece in engine.stream(
-            result.user_content, system_prompt=rag.system_prompt, max_tokens=args.max_tokens
+            result.user_content, system_prompt=system_prompt, max_tokens=args.max_tokens
         ):
             print(piece, end="", flush=True)
         print()
@@ -91,7 +84,7 @@ class _SparseCLI:
         print("[cli] starting sparse backend (first load takes a minute)...")
         self._srv.start()
 
-    def generate(self, prompt, system_prompt=None, max_tokens=512):
+    def generate(self, prompt, system_prompt=None, max_tokens=2048):
         import time
 
         messages = []
@@ -105,7 +98,7 @@ class _SparseCLI:
             "elapsed_sec": round(el, 3), "throughput_tps": 0,
             "completion_tokens": 0, "peak_rss_mb": self._srv.rss_mb()}}
 
-    def stream(self, prompt, system_prompt=None, max_tokens=512):
+    def stream(self, prompt, system_prompt=None, max_tokens=2048):
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
@@ -138,21 +131,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--no-rag",
         action="store_true",
-        help="Disable retrieval (returns safe referral; never generates ungrounded advice)",
+        help="Disable retrieval and send the original question to the model",
     )
     parser.add_argument("--no-stream", action="store_true", help="Print full answer at once")
     parser.add_argument("--top-n", type=int, default=3, help="Docs to retrieve (default 3)")
-    parser.add_argument("--max-tokens", type=int, default=512)
-    parser.add_argument("--mode", type=str, default="medium",
-                        help="Reasoning mode: fast | medium | high (default medium)")
+    from src.config import get_generation_config
+
+    parser.add_argument("--max-tokens", type=int,
+                        default=get_generation_config().max_tokens)
     args = parser.parse_args(argv)
-    from src.modes import normalize_mode, phase1_max_tokens
-    try:
-        args.mode = normalize_mode(args.mode)
-    except ValueError as exc:
-        parser.error(str(exc))
-    if args.max_tokens == 512:
-        args.max_tokens = phase1_max_tokens(args.mode)
 
     meta = load_metadata()
     rag = RAGPipeline()

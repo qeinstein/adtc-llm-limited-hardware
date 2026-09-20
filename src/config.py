@@ -92,11 +92,9 @@ class RuntimeConfig:
     running ``llama-bench`` on the raw GGUF — not by this engine. See REPORT.md.
     """
 
-    # Context window: 4096 fits the ~1400-token prompt plus the High-mode
-    # completion budget (2304) with margin. KV cost is small (GQA Q8_0:
-    # ~40KB/token, ~164MB at 4096) and GDN state is context-constant, so
-    # this stays inside the bounded-RSS arms. (The frozen profiler/bench
-    # config uses its own flags; this drives serving only.)
+    # The serving context is independent of the model's response style. KV cost
+    # is small (GQA Q8_0: ~40KB/token, ~164MB at 4096) and GDN state is
+    # context-constant, so this stays inside the bounded-RSS arms.
     n_ctx: int = field(default_factory=lambda: _env_int("ADTC_N_CTX", 4096))
     # Target eval machine is 4 vCPU; default to a safe value and clamp at runtime.
     n_threads: int = field(default_factory=lambda: _env_int("ADTC_N_THREADS", 4))
@@ -117,34 +115,19 @@ class RuntimeConfig:
 
 @dataclass(frozen=True)
 class GenerationConfig:
-    """Sampling defaults tuned for factual, low-variance clinical answers."""
+    """One unconstrained generation configuration for the model."""
 
-    max_tokens: int = 512
-    # ADTC_TEMPERATURE override: real testing showed the same clinical prompt
-    # sometimes returns the correct answer and sometimes hallucinates an unindicated
-    # drug (e.g. an antihistamine for pre-eclampsia) purely from sampling variance
-    # at temperature 0.3. Lower values (e.g. 0.1, or 0.0 for greedy) reduce that
-    # variance -- they don't remove the wrong association from the model, but they
-    # make the model's most-likely (and here, more often correct) output win
-    # consistently instead of a roll of the dice each time.
-    temperature: float = field(default_factory=lambda: _env_float("ADTC_TEMPERATURE", 0.3))
-    top_p: float = 0.9
-    top_k: int = 40
-    repeat_penalty: float = 1.1
-    # Keep output bounded at the chat-turn and common prompt boundaries. The
-    # shipped Qwen3.6 sparse artifact answers in the same compact style.
-    stop: tuple[str, ...] = (
-        "\nQ:", "\nA:", "\nS:", "\nJ:",
-        "\nQuestion:", "\nAnswer:", "\nSwali:", "\nJibu:",
-        "\nExample", "\nMfano",
-        "\n##", "\n---",
-        "<|im_end|>", "<|endoftext|>",
-    )
+    max_tokens: int = field(default_factory=lambda: _env_int("ADTC_MAX_TOKENS", 2048))
+    temperature: float = field(default_factory=lambda: _env_float("ADTC_TEMPERATURE", 0.7))
+    top_p: float = field(default_factory=lambda: _env_float("ADTC_TOP_P", 0.95))
+    top_k: int = field(default_factory=lambda: _env_int("ADTC_TOP_K", 40))
+    repeat_penalty: float = field(default_factory=lambda: _env_float("ADTC_REPEAT_PENALTY", 1.0))
+    stop: tuple[str, ...] = ()
 
 
 # Versioned production prompt (single source: prompts/system.json). The RAG
-# layer appends grounding/exemplars on top. Falls back to the legacy compact
-# string only if the prompts tree is missing (robust direct imports).
+# layer may add retrieved context to the user message. Falls back to a compact
+# string only if the prompts tree is missing.
 def _load_system_prompt() -> str:
     try:
         import json as _json
@@ -159,9 +142,8 @@ def _load_system_prompt() -> str:
     except (OSError, ValueError):
         pass
     return (
-        "You are Jamii Afya, an offline health assistant. Be concise and "
-        "disposition-first for clinical questions; never invent protocols, "
-        "diagnoses, medicine doses, or thresholds.")
+        "You are Jamii Afya, an offline health assistant. Explain your reasoning "
+        "clearly and never invent protocols, diagnoses, medicine doses, or thresholds.")
 
 
 SYSTEM_PROMPT = _load_system_prompt()

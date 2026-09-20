@@ -1,6 +1,6 @@
 """Tests for the RAG assembly pipeline (no model weights required)."""
 
-from src.rag import RAGPipeline, SAFE_UNGROUNDED_EN, SAFE_UNGROUNDED_SW, ungrounded_response
+from src.rag import RAGPipeline
 from src.retriever import BM25Retriever
 
 DOCS = [
@@ -39,11 +39,6 @@ def test_weak_partial_match_is_not_treated_as_grounding():
     assert res.context == ""
 
 
-def test_ungrounded_response_is_fixed_and_bilingual():
-    assert ungrounded_response("unrelated astrophysics query") == SAFE_UNGROUNDED_EN
-    assert ungrounded_response("Mtoto ana tatizo lisilojulikana") == SAFE_UNGROUNDED_SW
-
-
 def test_no_rag_path_top_n_zero():
     rag = _pipeline()
     res = rag.build("malaria", top_n=0)
@@ -51,12 +46,9 @@ def test_no_rag_path_top_n_zero():
     assert res.user_content == "malaria"
 
 
-def test_system_prompt_contains_safety_and_fewshot():
+def test_system_prompt_is_the_only_instruction_layer():
     rag = _pipeline()
     sp = rag.system_prompt
-    assert "decision support" in sp.lower()
-    assert "danger" in sp.lower()
-    assert "Kiswahili" in sp  # bilingual few-shot present
-
-    rag_no_fs = RAGPipeline(retriever=BM25Retriever().fit(DOCS), use_fewshot=False)
-    assert "Example (English)" not in rag_no_fs.system_prompt
+    assert "MEDICATIONS" in sp
+    assert "explicitly asked" in sp
+    assert rag.system_prompt_for(_pipeline().build("hello")) == sp

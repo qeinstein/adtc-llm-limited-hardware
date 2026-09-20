@@ -1,13 +1,9 @@
-"""Retrieval-augmented generation pipeline for the clinical advisor.
+"""Optional offline retrieval for the clinical advisor.
 
-Wires the offline BM25 retriever and the query-focused compressor into a single
-prompt-assembly step. RAG grounds answers in curated WHO/IMCI-style guidance
-instead of relying on the sparse MoE's parametric memory. (It does NOT affect
-the profiler's automated lm-eval score, which runs the raw model — RAG is for
-real answers + judges.)
-
-Prompt layout is deliberately ``[stable system+few-shot] -> [RAG context] ->
-[query]`` so the fixed prefix can be KV-cached across queries on CPU.
+The pipeline either adds relevant reference context to the user's message or
+passes the original question through unchanged. It never writes an answer,
+classifies risk, or supplies a fallback response; generation belongs entirely
+to the model.
 """
 
 from __future__ import annotations
@@ -19,51 +15,6 @@ from typing import Any, Optional
 from src.compressor import compress_documents
 from src.config import GUIDELINES_PATH, SYSTEM_PROMPT
 from src.retriever import BM25Retriever, content_tokens
-
-# Two short bilingual exemplars. Few-shot markedly lifts small-model quality and
-# pins the expected answer shape (assessment -> action -> danger signs -> refer).
-FEWSHOT = (
-    "\n\nExample (English):\n"
-    "Q: A child has watery diarrhoea and is very thirsty. What do I do?\n"
-    "A: Assess dehydration (sunken eyes, slow skin pinch, restlessness). Start ORS "
-    "after each loose stool and give zinc 20 mg daily for 10-14 days; continue "
-    "feeding/breastfeeding. DANGER SIGNS (unable to drink, blood in stool, "
-    "lethargy) -> refer urgently. This is decision support; confirm with a clinician.\n"
-    "\nMfano (Kiswahili):\n"
-    "S: Mtoto ana homa na anapumua haraka. Nifanye nini?\n"
-    "J: Hesabu mipumuo kwa dakika moja (kupumua haraka ni ishara ya nimonia kwa "
-    "watoto). Anza matibabu kwa mujibu wa mwongozo wa IMCI na hakikisha maji ya "
-    "kutosha. ISHARA ZA HATARI (kushindwa kunyonya, degedege, kifua kinachozama) "
-    "-> peleka haraka kituo cha rufaa. Huu ni ushauri wa kusaidia, si mbadala wa daktari."
-)
-
-SAFE_UNGROUNDED_EN = (
-    "I don't have verified guidance for this specific question in the offline "
-    "clinical corpus. Please consult a clinician or follow the national treatment "
-    "guideline, especially if there are danger signs."
-)
-SAFE_UNGROUNDED_SW = (
-    "Sina mwongozo uliohakikiwa kwa swali hili katika maktaba ya kliniki ya nje ya "
-    "mtandao. Tafadhali wasiliana na daktari au fuata mwongozo wa kitaifa wa "
-    "matibabu, hasa ikiwa kuna ishara za hatari."
-)
-
-
-def query_language(query: str) -> str:
-    """Choose the language for a fixed, non-clinical safety response."""
-    sw_markers = {
-        "mtoto", "mgonjwa", "mjamzito", "homa", "kikohozi", "maumivu",
-        "nifanye", "tafadhali", "dalili", "ishara", "hatari", "dawa",
-    }
-    terms = set(query.lower().replace("?", " ").replace(",", " ").split())
-    return "sw" if terms & sw_markers else "en"
-
-
-def ungrounded_response(query: str) -> str:
-    """Return a safe response when the reviewed corpus has no relevant match."""
-    return SAFE_UNGROUNDED_SW if query_language(query) == "sw" else SAFE_UNGROUNDED_EN
-
-
 
 @dataclass
 class RAGResult:
@@ -105,7 +56,6 @@ class RAGPipeline:
         self,
         retriever: Optional[BM25Retriever] = None,
         guidelines_path: Path | str = GUIDELINES_PATH,
-        use_fewshot: bool = True,
     ):
         if retriever is not None:
             self.retriever = retriever
@@ -113,25 +63,14 @@ class RAGPipeline:
             self.retriever = BM25Retriever.from_json(guidelines_path)
         else:
             self.retriever = BM25Retriever()
-        self.use_fewshot = use_fewshot
 
     @property
     def system_prompt(self) -> str:
-        return SYSTEM_PROMPT + (FEWSHOT if self.use_fewshot else "")
+        return SYSTEM_PROMPT
 
     def system_prompt_for(self, result: "RAGResult") -> str:
-        """Same system prompt, minus the few-shot exemplars when nothing was retrieved.
-
-        Why (found by real testing, not theory): FEWSHOT embeds two COMPLETE
-        worked clinical answers. Given input with no clinical signal — a
-        greeting, a thank-you, a typo — a small model has nothing to anchor on
-        and just copies the nearest in-context example verbatim; a bare "hi"
-        came back as the full ORS/zinc diarrhoea answer. Dropping the examples
-        when there is no retrieved context removes the thing being copied and
-        lets the model answer normally, rather than us enumerating greetings to
-        intercept (no word list survives two languages plus typos).
-        """
-        return self.system_prompt if result.is_grounded else SYSTEM_PROMPT
+        """Return the unchanged system prompt for every request."""
+        return self.system_prompt
 
     def build(
         self, query: str, top_n: int = 3, max_context_words: int = 220

@@ -24,7 +24,6 @@ in tests and when no model weights are present.
 from __future__ import annotations
 
 import os
-import re
 import time
 from dataclasses import dataclass
 from typing import Any, Iterator, Optional
@@ -76,87 +75,6 @@ def _rss_mb() -> float:
         return psutil.Process(os.getpid()).memory_info().rss / (1024 * 1024)
     except Exception:
         return 0.0
-
-
-SAFETY_FALLBACK = (
-    "I'm not confident I can give a complete, reliable answer to this one — "
-    "please consult a clinician or refer to the nearest health facility, "
-    "especially if there are any danger signs. / Sina uhakika wa kutosha kujibu "
-    "swali hili kikamilifu — tafadhali wasiliana na daktari au kituo cha afya "
-    "kilicho karibu, hasa ikiwa kuna ishara za hatari."
-)
-
-
-def _trim_foreign_script(text: str) -> str:
-    """Cut the answer at the first CJK character.
-
-    Jamii Afya answers only in English or Kiswahili — both Latin script. Any CJK
-    output is outside the deployment language scope, so truncating there is
-    safe and unambiguous — no language detection or heuristics needed.
-    """
-    for i, ch in enumerate(text):
-        o = ord(ch)
-        if (
-            0x4E00 <= o <= 0x9FFF      # CJK Unified Ideographs
-            or 0x3040 <= o <= 0x30FF   # Hiragana + Katakana
-            or 0xAC00 <= o <= 0xD7AF   # Hangul
-            or 0x3000 <= o <= 0x303F   # CJK punctuation
-            or 0xFF00 <= o <= 0xFFEF   # Fullwidth forms
-        ):
-            return text[:i].rstrip()
-    return text
-
-
-def _guard_repetition(text: str, min_chunk_words: int = 6, min_repeats: int = 3) -> str:
-    """Detect degenerate generation (a word-chunk repeating back-to-back) and
-    truncate to the last clean sentence before it, falling back to a short
-    honest safety message if nothing usable is left.
-
-    Found by testing (not a hypothetical): the model reliably loops
-    on longer, complex Kiswahili prompts even with a raised repeat_penalty —
-    this is a real generation-time failure mode, not a sampling knob to tune.
-    Doesn't touch the automated scoring path (that reads raw logits on fixed
-    MCQ continuations, never free generation) — this only protects the
-    interactive chat product from shipping garbled/looping output.
-    """
-    # Sentence-level pass FIRST. The word-chunk scan below only looks at blocks up
-    # to ~26 words, which real testing showed is too narrow: the model looped a
-    # ~50-word hallucinated citation four times and slipped straight through. Whole
-    # repeated sentences are both the common shape of this failure and much cheaper
-    # to spot than widening the word scan.
-    sentences = re.split(r"(?<=[.!?])\s+", text)
-    seen: dict[str, int] = {}
-    for idx, sent in enumerate(sentences):
-        key = sent.strip().lower()
-        if len(key.split()) < 5:
-            continue  # short fragments legitimately recur ("Refer urgently.")
-        seen[key] = seen.get(key, 0) + 1
-        if seen[key] >= 2:
-            clean = " ".join(sentences[:idx]).strip()
-            return clean if len(clean) >= 20 else SAFETY_FALLBACK
-
-    words = text.split()
-    for chunk_len in range(min_chunk_words, min_chunk_words + 20):
-        for start in range(0, max(len(words) - chunk_len * min_repeats, 0)):
-            chunk = words[start:start + chunk_len]
-            if not chunk:
-                continue
-            repeats = 1
-            pos = start + chunk_len
-            while words[pos:pos + chunk_len] == chunk:
-                repeats += 1
-                pos += chunk_len
-                if repeats >= min_repeats:
-                    break
-            if repeats >= min_repeats:
-                clean = " ".join(words[:start]).strip()
-                # Keep only up to the last full sentence to avoid a mid-clause cutoff,
-                # unless it already ends cleanly on its own (no trailing partial clause).
-                if clean and clean[-1] not in ".!?":
-                    cut = max(clean.rfind(sep) for sep in (".", "!", "?"))
-                    clean = clean[:cut + 1] if cut != -1 else ""
-                return clean if len(clean) >= 20 else SAFETY_FALLBACK
-    return text
 
 
 class MedicalLLMEngine:
@@ -262,7 +180,7 @@ class MedicalLLMEngine:
             throughput_tps=completion_tokens / elapsed,
             peak_rss_mb=peak,
         )
-        return {"text": _guard_repetition(_trim_foreign_script(text.strip())), "telemetry": telemetry.as_dict()}
+        return {"text": text.strip(), "telemetry": telemetry.as_dict()}
 
     def stream(
         self,
@@ -324,7 +242,7 @@ class MedicalLLMEngine:
             throughput_tps=completion_tokens / elapsed,
             peak_rss_mb=peak,
         )
-        return {"text": _guard_repetition(_trim_foreign_script(text.strip())), "telemetry": telemetry.as_dict()}
+        return {"text": text.strip(), "telemetry": telemetry.as_dict()}
 
     def stream_chat(
         self,
