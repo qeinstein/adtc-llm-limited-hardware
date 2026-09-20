@@ -1,0 +1,20 @@
+{
+  "artifact": "Qwen3.6-35B-A3B-UD-Q2K-experts.gguf",
+  "base_commit": "a483e9e6cbd595906af30beda3187c2663a1118c",
+  "base_file": "Qwen3.6-35B-A3B-UD-IQ2_XXS.gguf",
+  "base_repo": "unsloth/Qwen3.6-35B-A3B-GGUF",
+  "base_sha256": "2e8f5f705355c56311432d0a8a5d14a696dbb7e4b197d05c75ba805fc1857bef",
+  "expected_local_path": "model/Qwen3.6-35B-A3B-UD-Q2K-experts.gguf",
+  "file": "Qwen3.6-35B-A3B-UD-Q2K-experts.gguf",
+  "fine_tuned": false,
+  "hf_repo": "Fluxx08/jamii-afya-qwen36-35b-q2k",
+  "k1": 4,
+  "k2": 16,
+  "quantization": "routed-experts-only Q2_K (120 tensors); all other tensors keep base types",
+  "revision": "main",
+  "revision_sha": "e938cd2af04dd5f30731922bc4780ef2f264f032",
+  "runtime_pin": "llama.cpp @ 3057bb66c86c46d5781e50e85462a760ba7d1feb + probes/edge0_port patch set",
+  "sha256": "0f3698ae92f91db2eb10a3650bdb6693ff8cfaf7060cbc5f256845c700c7603b",
+  "size_bytes": 12262341600,
+  "url": "https://huggingface.co/Fluxx08/jamii-afya-qwen36-35b-q2k/resolve/main/Qwen3.6-35B-A3B-UD-Q2K-experts.gguf"
+}

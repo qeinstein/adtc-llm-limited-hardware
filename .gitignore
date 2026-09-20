@@ -6,6 +6,7 @@
 *.pth
 model/*
 !model/.gitkeep
+!model/manifest.json
 
 # --- Fine-tuning / quantization intermediates ---
 output/
@@ -29,6 +30,7 @@ __pycache__/
 *$py.class
 .pytest_cache/
 .ruff_cache/
+data/.cache/
 
 # --- IDE / OS ---
 .vscode/
@@ -37,3 +39,12 @@ __pycache__/
 
 # NOTE: data/*.json (RAG corpus, eval sets, LoRA dataset) IS tracked on purpose — do not ignore it.
 llama.cpp/
+
+# --- JOIN K4 traces: route ids (KB) ARE tracked (sweep inputs); raw npz (275MB) is not ---
+traces/tracek4/*.npz
+traces/tracek4q2k/*.npz
+
+# --- Probe binary assets: too large for git; local-only, never commit ---
+# Code, docs, reports and JSON results under probes/ ARE tracked.
+probes/**/*.npy
+probes/**/*.npz

@@ -65,6 +65,8 @@ webui:
 	@./venv/bin/python -m pip install -q --upgrade pip
 	@./venv/bin/python -m pip install -q -r requirements.txt
 	@bash download_model.sh
+	@echo "Ensuring the pinned sparse runtime is built (first run only, ~10-20 min)..."
+	@./venv/bin/python -c "from src.sparse import ensure_built; ensure_built()"
 	@echo ""
 	@echo "=================================================================="
 	@echo " Jamii Afya is starting..."

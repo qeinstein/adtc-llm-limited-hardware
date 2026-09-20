@@ -1,0 +1,90 @@
+diff --git a/ggml/src/ggml-cpu/ggml-cpu.c b/ggml/src/ggml-cpu/ggml-cpu.c
+index 87a329f26..07310a3d0 100644
+--- a/ggml/src/ggml-cpu/ggml-cpu.c
++++ b/ggml/src/ggml-cpu/ggml-cpu.c
+@@ -571,6 +571,75 @@ struct ggml_state {
+     struct ggml_numa_nodes numa;
+ };
+ 
++
++static void phase5_route_trace(const struct ggml_compute_params * params,
++                               const struct ggml_tensor * tensor) {
++    if (params->ith != 0 || tensor->op != GGML_OP_MUL_MAT_ID) return;
++    const char * path = getenv("GGML_ROUTE_CORPUS_TRACE");
++    if (path == NULL || path[0] == '\0') return;
++    const struct ggml_tensor * weights = tensor->src[0];
++    const struct ggml_tensor * ids = tensor->src[2];
++    if (weights == NULL || ids == NULL || ids->type != GGML_TYPE_I32 ||
++            !ggml_is_contiguous(ids) || strstr(weights->name, "ffn_down_exps") == NULL) return;
++    static FILE * fp = NULL;
++    static uint64_t event_id = 0;
++    if (fp == NULL) {
++        fp = fopen(path, "a");
++        if (fp == NULL) return;
++        setvbuf(fp, NULL, _IOLBF, 0);
++    }
++    struct timespec ts;
++    clock_gettime(CLOCK_MONOTONIC, &ts);
++    const int64_t n = ggml_nelements(ids);
++    const int32_t * values = (const int32_t *) ids->data;
++    fprintf(fp, "{\"event\":%" PRIu64 ",\"mono_ns\":%" PRIu64
++        ",\"weight\":\"%s\",\"weight_nbytes\":%zu,\"shape\":[%" PRId64 ",%" PRId64 ",%" PRId64 ",%" PRId64 "] ,\"ids\":[",
++        event_id++, (uint64_t)ts.tv_sec * (uint64_t)1000000000 + (uint64_t)ts.tv_nsec,
++        weights->name, ggml_nbytes(weights), ids->ne[0], ids->ne[1], ids->ne[2], ids->ne[3]);
++    for (int64_t i = 0; i < n; ++i) fprintf(fp, "%s%d", i ? "," : "", values[i]);
++    fprintf(fp, "]}\n");
++}
++
++static void hdump_trace(const struct ggml_compute_params * params,
++                        const struct ggml_tensor * tensor) {
++    if (params->ith != 0 || tensor->op != GGML_OP_MUL_MAT) return;
++    const char * pre = getenv("GGML_HDUMP_PREFIX");
++    if (pre == NULL || pre[0] == '\0') return;
++    const struct ggml_tensor * weights = tensor->src[0];
++    const struct ggml_tensor * act = tensor->src[1];
++    if (weights == NULL || act == NULL || act->type != GGML_TYPE_F32) return;
++    if (strstr(weights->name, "blk.20.ffn_gate_inp") == NULL) return;
++    static FILE * fb = NULL;
++    static FILE * fi = NULL;
++    static uint64_t event_id = 0;
++    if (fb == NULL) {
++        char pb[1024];
++        char pi[1024];
++        snprintf(pb, sizeof(pb), "%s.bin", pre);
++        snprintf(pi, sizeof(pi), "%s.idx", pre);
++        fb = fopen(pb, "ab");
++        fi = fopen(pi, "a");
++        if (fb == NULL || fi == NULL) return;
++        setvbuf(fi, NULL, _IOLBF, 0);
++    }
++    const int64_t ne0 = act->ne[0];
++    if (ne0 != 2048) {
++        fprintf(fi, "{\"event\":%llu,\"error\":\"ne0=%lld\"}\n",
++            (unsigned long long)event_id++, (long long)ne0);
++        return;
++    }
++    const int64_t nrow = ggml_nelements(act) / ne0;
++    for (int64_t r = 0; r < nrow; ++r) {
++        const void * row = (const char *) act->data + r*act->nb[1];
++        if (fwrite(row, sizeof(float), (size_t) ne0, fb) != (size_t) ne0) return;
++    }
++    fflush(fb);
++    fprintf(fi, "{\"event\":%llu,\"n_rows\":%lld,\"ne\":[%lld,%lld,%lld,%lld]}\n",
++        (unsigned long long)event_id++, (long long)nrow,
++        (long long)act->ne[0], (long long)act->ne[1],
++        (long long)act->ne[2], (long long)act->ne[3]);
++}
++
+ static struct ggml_state g_state = {0};
+ 
+ void ggml_barrier(struct ggml_threadpool * tp) {
+@@ -1740,6 +1809,9 @@ static void ggml_compute_forward(struct ggml_compute_params * params, struct ggm
+         return;
+     }
+ 
++    phase5_route_trace(params, tensor);
++    hdump_trace(params, tensor);
++
+     // extra_buffer op?
+     if (ggml_cpu_extra_compute_forward(params, tensor)) {
+         return;

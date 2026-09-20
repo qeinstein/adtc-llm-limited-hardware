@@ -1,0 +1,11 @@
+{
+  "bounded_arm": "bounded_3gb (755 staging slots + 80 pinL2 hot-expert pins)",
+  "frozen_config": "configs/final_runtime.json",
+  "k1": 4,
+  "k2": 16,
+  "llama_cpp_pin": "3057bb66c86c46d5781e50e85462a760ba7d1feb",
+  "patch_set": "probes/edge0_port (join4_apply.py: K4/16 graph patch, TENSOR_READ_LAZY loader, JOIN4 bounded executor, Qwen flags)",
+  "router": "real (untouched); top-16 mass read off, top-4 executed",
+  "serving_context": 4096,
+  "weight_level_fine_tuning": "NONE"
+}

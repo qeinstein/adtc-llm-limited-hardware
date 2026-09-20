@@ -1,0 +1,69 @@
+# Domain 02: diarrhea / dehydration / ORS. Original summaries; see manifest.
+- id: dehydration-assess
+  domain: dehydration_ors
+  version: 1.0.0
+  priority: 1
+  scope: Diarrhea with signs suggesting dehydration or severity.
+  trigger_facts: [diarrhea]
+  trigger_any_of: [dehydration_signs, lethargy, inability_drink,
+    reduced_urine, vomiting_persistent, unconscious]
+  required_missing_information: [age, fluids_taken, urine_output,
+    blood_or_mucus_in_stool, fever, vomiting_frequency]
+  risk_level: urgent
+  required_actions:
+    - Assess severity from drinking, alertness, and urine output.
+    - Urgent referral if the person cannot drink, is lethargic, has had
+      no urine for many hours, has blood in stool with fever, or is a
+      young infant.
+  prohibited_actions:
+    - Inventing ORS concentrations, homemade salt-sugar ratios, or fluid volumes.
+    - Recommending antidiarrheal or antibiotic doses.
+  safe_interim_actions:
+    - Small frequent sips of ORS prepared exactly per packet instructions.
+    - Continue breastfeeding and feeding; do not withhold food.
+  uncertainty_notes: >
+    Dehydration severity needs examination (skin pinch, pulse, mental
+    status); chat can only screen for red flags.
+  source:
+    authority: WHO
+    title: WHO manual on the clinical management of diarrhoea (home fluids, ORS, continued feeding)
+    canonical_url: https://iris.who.int/bitstream/handle/10665/43456/9241594217_eng.pdf
+    publication_date: null
+    version: IRIS 10665/43456
+    section_page: home treatment rules (fluids, ORS, continued feeding)
+    license: As stated in WHO document; original summary only
+  review: {machine_verified: true, clinician_reviewed: false,
+    last_reviewed: "2026-09-20"}
+
+- id: ors-preparation
+  domain: dehydration_ors
+  version: 1.0.0
+  priority: 3
+  scope: How to prepare and use oral rehydration salts.
+  trigger_facts: [ors_question]
+  trigger_any_of: []
+  required_missing_information: [packet_size_or_brand, clean_water_available]
+  risk_level: routine
+  required_actions:
+    - Instruct preparation exactly per the packet instructions with clean water.
+    - Advise giving after each loose stool/vomit per packet guidance and
+      seeking care if dehydration signs appear.
+  prohibited_actions:
+    - Inventing salt/sugar ratios or concentrations.
+    - Advising extra salt, sugar, or other additives.
+    - Presenting homemade recipes as equivalent to ORS packets.
+  safe_interim_actions:
+    - Use recommended home fluids (soup, rice water, yogurt drinks, clean
+      water) alongside ORS while seeking care; keep breastfeeding.
+  uncertainty_notes: >
+    Packet strengths differ by brand; only the printed instructions are valid.
+  source:
+    authority: WHO
+    title: WHO manual on the clinical management of diarrhoea (home fluids, ORS, continued feeding)
+    canonical_url: https://iris.who.int/bitstream/handle/10665/43456/9241594217_eng.pdf
+    publication_date: null
+    version: IRIS 10665/43456
+    section_page: ORS preparation and home-treatment rules
+    license: As stated in WHO document; original summary only
+  review: {machine_verified: true, clinician_reviewed: false,
+    last_reviewed: "2026-09-20"}

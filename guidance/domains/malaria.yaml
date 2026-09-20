@@ -1,0 +1,69 @@
+# Domain 11: malaria. Original summaries.
+- id: malaria-severe
+  domain: malaria
+  version: 1.0.0
+  priority: 1
+  scope: Suspected malaria with severity features.
+  trigger_facts: [malaria_risk]
+  trigger_any_of: [altered_consciousness, convulsions, inability_drink,
+    vomiting_persistent, jaundice, reduced_urine, bleeding_severe,
+    breathing_difficulty, lethargy]
+  required_missing_information: [test_done_and_result, exposure_and_travel,
+    pregnancy, age, prior_episodes]
+  risk_level: emergency
+  required_actions:
+    - Emergency assessment with testing now; severity features with
+      malaria risk cannot wait for routine review.
+  prohibited_actions:
+    - Presuming uncomplicated malaria from symptoms alone.
+    - Starting or naming antimalarial drugs or doses.
+  safe_interim_actions:
+    - Keep safe and hydrated if swallowing; note test status and symptom
+      timeline for clinicians.
+  uncertainty_notes: >
+    Severity and even the diagnosis need testing plus examination; many
+    severe febrile illnesses mimic malaria.
+  source:
+    authority: WHO Global Malaria Programme
+    title: WHO guidelines for malaria
+    canonical_url: https://www.who.int/publications/i/item/guidelines-for-malaria
+    publication_date: living guideline; version checked 2026-09-20
+    version: living
+    section_page: severe malaria recognition and prompt diagnosis/treatment principles
+    license: As stated on WHO guideline platform; original summary only
+  review: {machine_verified: true, clinician_reviewed: false,
+    last_reviewed: "2026-09-20"}
+
+- id: malaria-suspected
+  domain: malaria
+  version: 1.0.0
+  priority: 2
+  scope: Fever with malaria exposure and no severity features yet.
+  trigger_facts: [malaria_risk, fever]
+  trigger_any_of: []
+  required_missing_information: [test_done_and_result, symptom_duration,
+    severity_screen, pregnancy, age]
+  risk_level: urgent
+  required_actions:
+    - Prompt testing (rapid test or microscopy) plus clinician review;
+      pregnancy and young children need lower thresholds.
+  prohibited_actions:
+    - Recommending specific antimalarial drugs, doses, or presumptive
+      treatment courses.
+    - Declaring malaria confirmed or excluded without testing.
+  safe_interim_actions:
+    - Fluids, rest, fever control per package label; prevent further bites;
+      return immediately for any severity feature.
+  uncertainty_notes: >
+    Test-based management is the standard; symptoms alone neither confirm
+    nor exclude malaria.
+  source:
+    authority: WHO Global Malaria Programme
+    title: WHO guidelines for malaria
+    canonical_url: https://www.who.int/publications/i/item/guidelines-for-malaria
+    publication_date: living guideline; version checked 2026-09-20
+    version: living
+    section_page: prompt parasitological diagnosis principles
+    license: As stated on WHO guideline platform; original summary only
+  review: {machine_verified: true, clinician_reviewed: false,
+    last_reviewed: "2026-09-20"}

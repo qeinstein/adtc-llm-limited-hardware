@@ -1,0 +1,71 @@
+# Domain 06: severe bleeding / trauma / open fractures. Original summaries.
+- id: severe-bleeding
+  domain: trauma
+  version: 1.0.0
+  priority: 1
+  scope: Severe external bleeding from any cause.
+  trigger_facts: [bleeding_severe]
+  trigger_any_of: []
+  required_missing_information: [location, cause, amount_and_duration,
+    consciousness, age]
+  risk_level: emergency
+  required_actions:
+    - Call emergency services now; severe bleeding is time-critical.
+    - Firm direct pressure on the wound; keep the person still and warm;
+      watch for shock (pale, cold, sweaty, confused, faint).
+  prohibited_actions:
+    - Removing embedded objects.
+    - Packing deep wounds with random materials.
+    - Any surgical procedure, wound exploration, or amputation discussion.
+    - Removing the first dressing to "check" (add on top instead).
+  safe_interim_actions:
+    - Direct pressure with the cleanest cloth available; maintain pressure
+      during transfer; note time bleeding started.
+  uncertainty_notes: >
+    Internal bleeding cannot be assessed by chat; mechanism and shock signs
+    drive urgency, not visible blood alone.
+  source:
+    authority: WHO / ICRC / IFEM
+    title: "Basic Emergency Care: approach to the acutely ill and injured"
+    canonical_url: https://www.who.int/publications/i/item/9789241513081
+    publication_date: "2018-10-30"
+    version: "2018"
+    section_page: bleeding control and shock (circulation)
+    license: As stated on WHO publication page; original summary only
+  review: {machine_verified: true, clinician_reviewed: false,
+    last_reviewed: "2026-09-20"}
+
+- id: open-fracture
+  domain: trauma
+  version: 1.0.0
+  priority: 1
+  scope: Suspected open (compound) fracture or mangled extremity.
+  trigger_facts: [open_fracture]
+  trigger_any_of: []
+  required_missing_information: [location, bleeding_amount,
+    pulse_or_feeling_beyond_injury, time_of_injury, contamination]
+  risk_level: emergency
+  required_actions:
+    - Emergency transfer now; cover with a clean dressing, immobilize as
+      found, control bleeding with direct pressure around the wound.
+  prohibited_actions:
+    - Straightening, reducing, or probing the limb or wound.
+    - Any field surgery, debridement, or amputation guidance (refuse
+      procedural amputation firmly and redirect to emergency care).
+    - Recommending antibiotics, tetanus shots, or painkiller doses.
+  safe_interim_actions:
+    - Immobilize in the found position with padding/splints; keep warm;
+      do not give food/drink in case surgery is needed.
+  uncertainty_notes: >
+    Limb viability and contamination need surgical assessment; chat sets the
+    floor at safe first aid plus immediate referral.
+  source:
+    authority: WHO / ICRC / IFEM
+    title: "Basic Emergency Care: approach to the acutely ill and injured"
+    canonical_url: https://www.who.int/publications/i/item/9789241513081
+    publication_date: "2018-10-30"
+    version: "2018"
+    section_page: trauma/injury emergency approach
+    license: As stated on WHO publication page; original summary only
+  review: {machine_verified: true, clinician_reviewed: false,
+    last_reviewed: "2026-09-20"}

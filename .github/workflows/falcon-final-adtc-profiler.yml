@@ -1,14 +1,9 @@
 name: Falcon final submission validation and ADTC profiler
 
 on:
+  # Historical Falcon-line workflow: manual dispatch only. It validates the
+  # superseded Falcon metadata and must NOT run on the Qwen release.
   workflow_dispatch:
-  push:
-    paths:
-      - "metadata.json"
-      - "download_model.sh"
-      - "eval/falcon_final_48q.json"
-      - "scripts/evaluate_falcon_final_48q.py"
-      - ".github/workflows/falcon-final-adtc-profiler.yml"
 
 permissions:
   contents: read

@@ -28,13 +28,14 @@
     }
   ],
   "model": {
-    "name": "JamiiAfya-Falcon-H1-1.5B-Deep-Instruct",
+    "name": "JamiiAfya-Qwen36-35B-A3B-Q2K",
     "runtime": "llama.cpp",
-    "quantization": "GGUF Q4_K_M",
-    "parameters_estimate": "1.5B",
-    "packaging": "binary_bundle"
+    "quantization": "GGUF (routed experts Q2_K; K4/16 sparse execution)",
+    "parameters_estimate": "35B-A3B",
+    "packaging": "binary_bundle",
+    "base_model_commit_sha": "a483e9e6cbd595906af30beda3187c2663a1118c"
   },
   "_runtime": {
-    "model_path": "model/Falcon-H1-1.5B-Deep-JamiiAfya-Q4_K_M.gguf"
+    "model_path": "model/Qwen3.6-35B-A3B-UD-Q2K-experts.gguf"
   }
 }

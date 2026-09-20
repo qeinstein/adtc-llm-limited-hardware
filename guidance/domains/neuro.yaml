@@ -1,0 +1,100 @@
+# Domain 12: neurological emergencies. Original summaries.
+- id: stroke-signs
+  domain: neuro
+  version: 1.0.0
+  priority: 1
+  scope: Sudden face droop, arm weakness, or speech disturbance.
+  trigger_facts: [stroke_signs]
+  trigger_any_of: []
+  required_missing_information: [onset_time, consciousness, prior_stroke,
+    current_medicines, age]
+  risk_level: emergency
+  required_actions:
+    - Emergency services now; note the exact time symptoms started.
+    - Nothing by mouth if swallowing may be affected; do not drive self.
+  prohibited_actions:
+    - Recommending aspirin or any clot medicine before hemorrhage is excluded.
+    - Waiting to see if symptoms improve.
+    - False reassurance that it "looks like" anything benign.
+  safe_interim_actions:
+    - Keep lying on the side if drowsy, note deficits and timing for
+      clinicians, keep nil by mouth if unsure about swallowing.
+  uncertainty_notes: >
+    Stroke mimics exist, but time-critical treatment decisions need urgent
+    brain imaging; chat cannot distinguish.
+  source:
+    authority: WHO / ICRC / IFEM
+    title: "Basic Emergency Care: approach to the acutely ill and injured"
+    canonical_url: https://www.who.int/publications/i/item/9789241513081
+    publication_date: "2018-10-30"
+    version: "2018"
+    section_page: altered mental status / neurologic emergency approach
+    license: As stated on WHO publication page; original summary only
+  review: {machine_verified: true, clinician_reviewed: false,
+    last_reviewed: "2026-09-20"}
+
+- id: seizure-active
+  domain: neuro
+  version: 1.0.0
+  priority: 1
+  scope: Ongoing convulsion/seizure.
+  trigger_facts: [seizure_active]
+  trigger_any_of: []
+  required_missing_information: [duration_so_far, first_ever, pregnancy,
+    fever, injury, breathing_after]
+  risk_level: emergency
+  required_actions:
+    - Protect from injury, time the seizure, call emergency services if it
+      lasts beyond a few minutes, repeats without recovery, causes injury,
+      occurs in pregnancy, or breathing does not normalize after.
+  prohibited_actions:
+    - Putting anything in the mouth.
+    - Restraining or giving food, water, or medicines during the seizure.
+  safe_interim_actions:
+    - Clear hazards, cushion head, recovery position once jerking stops,
+      stay until fully recovered.
+  uncertainty_notes: >
+    Single brief seizures in known epilepsy differ from prolonged or
+    first-ever events; duration and context decide urgency.
+  source:
+    authority: WHO / ICRC / IFEM
+    title: "Basic Emergency Care: approach to the acutely ill and injured"
+    canonical_url: https://www.who.int/publications/i/item/9789241513081
+    publication_date: "2018-10-30"
+    version: "2018"
+    section_page: seizure emergency approach
+    license: As stated on WHO publication page; original summary only
+  review: {machine_verified: true, clinician_reviewed: false,
+    last_reviewed: "2026-09-20"}
+
+- id: seizure-aftermath
+  domain: neuro
+  version: 1.0.0
+  priority: 2
+  scope: Recent brief seizure that has now stopped with recovery.
+  trigger_facts: [convulsions]
+  trigger_any_of: []
+  required_missing_information: [duration, first_ever, full_recovery,
+    pregnancy, fever, injury, known_epilepsy]
+  risk_level: urgent
+  required_actions:
+    - Urgent medical review, especially if first-ever, in pregnancy, with
+      fever or injury, or without full recovery.
+  prohibited_actions:
+    - Starting, stopping, or adjusting anti-seizure medicines.
+    - Declaring a cause (epilepsy, faint, fever fit) from chat.
+  safe_interim_actions:
+    - Rest with observation, avoid driving/heights/water until reviewed,
+      note exactly what happened for the clinician.
+  uncertainty_notes: >
+    Many events mimic seizures; first-ever events need workup, not labels.
+  source:
+    authority: WHO / ICRC / IFEM
+    title: "Basic Emergency Care: approach to the acutely ill and injured"
+    canonical_url: https://www.who.int/publications/i/item/9789241513081
+    publication_date: "2018-10-30"
+    version: "2018"
+    section_page: seizure emergency approach
+    license: As stated on WHO publication page; original summary only
+  review: {machine_verified: true, clinician_reviewed: false,
+    last_reviewed: "2026-09-20"}

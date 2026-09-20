@@ -1,0 +1,55 @@
+{
+ "n_examples": 24931,
+ "n_tokens_total": 19369862,
+ "n_tokens_assistant": 2102979,
+ "len_total": {
+  "p50": 755,
+  "p75": 825,
+  "p90": 910,
+  "p95": 981,
+  "p99": 1214
+ },
+ "len_total_max": 2205,
+ "len_assistant": {
+  "p50": 38,
+  "p75": 115,
+  "p90": 218,
+  "p95": 313,
+  "p99": 574
+ },
+ "len_assistant_max": 1542,
+ "overlong": {
+  ">512": 24931,
+  ">1024": 882,
+  ">2048": 5
+ },
+ "validation_fails": 0,
+ "exact_dups": 865,
+ "norm_dups": 865,
+ "warns": {
+  "phi_pattern": 38,
+  "placeholder": 6
+ },
+ "contamination_exact": 0,
+ "contamination_near": 0,
+ "mask_audit_clean": 100,
+ "src": {
+  "medqa": 9992,
+  "medmcqa": 11967,
+  "oasst1": 1242,
+  "afrimed": 1730
+ },
+ "kind": {
+  "short-answer": 9992,
+  "mcq-conv": 11967,
+  "replay": 1242,
+  "saq": 1730
+ },
+ "kiswahili_heuristic_rows": 516,
+ "tokenizer": "Qwen/Qwen3.6-35B-A3B@995ad96e",
+ "template": "axolotl qwen3_5",
+ "mask_audit_note": "100/100 clean under corrected check (assistant turn ends [im_end, newline]); 0/24931 rows missing im_end termination. Initial 0/100 was a checker bug (required last-token==EOS).",
+ "dedup_note": "865 exact-dup groups, all afrimed x2 upsampling pairs (1730 rows = 865x2). Production subset MUST drop second copies -> 24066 unique rows (one-pass preference). Not source-data corruption.",
+ "phi_placeholder_note": "38 phi_pattern + 6 placeholder warns ALL false positives on manual exhibit review: binary jokes, lab ranges, textbook citations, karyotype XXX. No SSN/phone/PHI. PASS.",
+ "sequence_len_decision": "2048 (p50=755 makes 512 impossible; 1024 would cut 882 answers; drop 5 rows >2048)"
+}

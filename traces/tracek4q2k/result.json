@@ -1,0 +1,111 @@
+{
+  "schema": "native-sparse-edge0tracek4q2k/v1",
+  "status": "ok",
+  "runtime": {
+    "llama_commit": "3057bb66c86c46d5781e50e85462a760ba7d1feb",
+    "built_head": "3057bb66c86c46d5781e50e85462a760ba7d1feb",
+    "k1": 4,
+    "k2": 16,
+    "runtime_patch_sha256": "3cdfe0a825e7e2dbb65005693e7aa8d5b3af5c2bca364f7f1301254e56dcf05f"
+  },
+  "model": {
+    "base": "3.6",
+    "file": "Qwen3.6-35B-A3B-UD-IQ2_XXS.gguf",
+    "size_bytes": 10756586464,
+    "sha256": "2e8f5f705355c56311432d0a8a5d14a696dbb7e4b197d05c75ba805fc1857bef",
+    "repo_commit": "a483e9e6cbd595906af30beda3187c2663a1118c",
+    "q2k_file": "Qwen3.6-35B-A3B-UD-Q2K-experts.gguf",
+    "transcode": {
+      "size_bytes": 12262341600,
+      "elapsed_sec": 1533.781136751175,
+      "q2k_experts": 120
+    }
+  },
+  "hardware": {
+    "platform": "Linux-6.12.90+-x86_64-with-glibc2.35",
+    "cpu_count": 4
+  },
+  "decode": {
+    "k1": 4,
+    "k2": 16,
+    "tokens_requested_per_prompt": 80,
+    "pids": [
+      1,
+      4,
+      7,
+      10,
+      13,
+      15,
+      18,
+      21
+    ],
+    "trace_tokens": 656
+  },
+  "prompt_results": [
+    {
+      "prompt_id": 1,
+      "category": "medical",
+      "trace_evals": 82,
+      "hidden_rms": 0.9995167255401611,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 0.9993670886075949
+    },
+    {
+      "prompt_id": 4,
+      "category": "medical",
+      "trace_evals": 82,
+      "hidden_rms": 1.007391333580017,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 1.0
+    },
+    {
+      "prompt_id": 7,
+      "category": "general",
+      "trace_evals": 82,
+      "hidden_rms": 0.9807032942771912,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 0.9996835443037975
+    },
+    {
+      "prompt_id": 10,
+      "category": "general",
+      "trace_evals": 82,
+      "hidden_rms": 0.9888176321983337,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 1.0
+    },
+    {
+      "prompt_id": 13,
+      "category": "swahili",
+      "trace_evals": 82,
+      "hidden_rms": 0.9839784502983093,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 1.0
+    },
+    {
+      "prompt_id": 15,
+      "category": "swahili",
+      "trace_evals": 82,
+      "hidden_rms": 0.9799153804779053,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 0.9993670886075949
+    },
+    {
+      "prompt_id": 18,
+      "category": "instruction",
+      "trace_evals": 82,
+      "hidden_rms": 0.9812183380126953,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 0.9996835443037975
+    },
+    {
+      "prompt_id": 21,
+      "category": "short",
+      "trace_evals": 82,
+      "hidden_rms": 0.9644538164138794,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 0.9996835443037975
+    }
+  ],
+  "wall_sec": 2282.074847459793
+}

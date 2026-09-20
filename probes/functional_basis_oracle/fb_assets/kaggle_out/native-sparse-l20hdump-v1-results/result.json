@@ -1,0 +1,254 @@
+{
+  "schema": "native-sparse-l20hdump/v1",
+  "status": "ok",
+  "runtime": {
+    "llama_commit": "3057bb66c86c46d5781e50e85462a760ba7d1feb",
+    "runtime_patch_sha256": "8ad1edb22125052372bf5acc7fe8c6266bba159c1980e08e7d39942cee09603c"
+  },
+  "model": {
+    "file": "Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf",
+    "size_bytes": 10656955008,
+    "sha256": "2a809de317cfd49ac9130b95619ee6ac039a855e467015b3e996eb61af84718b",
+    "repo_commit": "bc014a17be43adabd7066b7a86075ff935c6a4e2"
+  },
+  "hardware": {
+    "platform": "Linux-6.12.90+-x86_64-with-glibc2.35",
+    "python": "3.12.13",
+    "cpu_count": 4,
+    "threads": 4
+  },
+  "decode": {
+    "tokens_requested_per_prompt": 64,
+    "prompts": 32,
+    "dump_rows": 5866,
+    "layer": 20,
+    "hidden": 2048
+  },
+  "prompt_results": [
+    {
+      "prompt_id": 0,
+      "category": "clinical",
+      "returncode": 0,
+      "dump_rows": 184,
+      "bin_sha256": "77ff8353a76c353270e68e3bb672edd6e28612c3b0563d23e2712bdc4092dc5f"
+    },
+    {
+      "prompt_id": 1,
+      "category": "clinical",
+      "returncode": 0,
+      "dump_rows": 180,
+      "bin_sha256": "a8761b0351744d5410ab26d9372f30c53cdd55bf8771cf29529998b558aae94c"
+    },
+    {
+      "prompt_id": 2,
+      "category": "clinical",
+      "returncode": 0,
+      "dump_rows": 172,
+      "bin_sha256": "f4ab59c05aa9e5288804f5f2c0071508d372f2f8fbd1902f77f4ba44a1aeb2a7"
+    },
+    {
+      "prompt_id": 3,
+      "category": "clinical",
+      "returncode": 0,
+      "dump_rows": 176,
+      "bin_sha256": "f8bbe1f042daed519b4acdae94717871b6115850182c2eb7cc24099e48fc0c13"
+    },
+    {
+      "prompt_id": 4,
+      "category": "clinical",
+      "returncode": 0,
+      "dump_rows": 184,
+      "bin_sha256": "3a2eb245ba5e80386d271464510d551f10cf871716c62fb614eb0c9e823fed8f"
+    },
+    {
+      "prompt_id": 5,
+      "category": "clinical",
+      "returncode": 0,
+      "dump_rows": 178,
+      "bin_sha256": "3d3a103138106080a70bcd9d28fabc3708d507ac288285282c7a66793aadffe9"
+    },
+    {
+      "prompt_id": 6,
+      "category": "mcqa",
+      "returncode": 0,
+      "dump_rows": 188,
+      "bin_sha256": "9311680d185236b8a8a7bce7a1faee607d79b9f0a64979f27bdf70b2e3e1c7fe"
+    },
+    {
+      "prompt_id": 7,
+      "category": "mcqa",
+      "returncode": 0,
+      "dump_rows": 208,
+      "bin_sha256": "0a0e46fb2ed9195602d43aa93cbffb5f9114849cc8ec98f63c6c9543b86bc5dc"
+    },
+    {
+      "prompt_id": 8,
+      "category": "mcqa",
+      "returncode": 0,
+      "dump_rows": 204,
+      "bin_sha256": "66eb008b177f0b745543082556017466c6ee1a09bfd593fa1db81d96df4eec37"
+    },
+    {
+      "prompt_id": 9,
+      "category": "mcqa",
+      "returncode": 0,
+      "dump_rows": 180,
+      "bin_sha256": "a027d21136df8d6f09dbe3cbdd33f5ccc7e883d2c382620dcf8ef8f211a50447"
+    },
+    {
+      "prompt_id": 10,
+      "category": "reasoning",
+      "returncode": 0,
+      "dump_rows": 192,
+      "bin_sha256": "c287f13d0fe23938d02e84297aef1b181794d2378bd414b5b89948dcbfbd720f"
+    },
+    {
+      "prompt_id": 11,
+      "category": "reasoning",
+      "returncode": 0,
+      "dump_rows": 182,
+      "bin_sha256": "d0e60463fe500b218c63b9e83d523e4b07673392ca0dd75f20a3db6676cf8e1b"
+    },
+    {
+      "prompt_id": 12,
+      "category": "reasoning",
+      "returncode": 0,
+      "dump_rows": 188,
+      "bin_sha256": "4b05c6609c53e8a326506c3e73248b79cc1328c140292bf2cf8011ac37e7a7dd"
+    },
+    {
+      "prompt_id": 13,
+      "category": "reasoning",
+      "returncode": 0,
+      "dump_rows": 190,
+      "bin_sha256": "7f9eb8a172762aa921bf86686bd5be308e177a47932b5c7008eb58b8838929c0"
+    },
+    {
+      "prompt_id": 14,
+      "category": "reasoning",
+      "returncode": 0,
+      "dump_rows": 176,
+      "bin_sha256": "83cfc0640e8bf2d33cc060b178a9a71a29c8dc3a78498e44a6181c89293a9c59"
+    },
+    {
+      "prompt_id": 15,
+      "category": "general",
+      "returncode": 0,
+      "dump_rows": 172,
+      "bin_sha256": "8aec4bca6349f7febf02c5093391b2f6c416289822b517fb580cafcb54dc5648"
+    },
+    {
+      "prompt_id": 16,
+      "category": "general",
+      "returncode": 0,
+      "dump_rows": 178,
+      "bin_sha256": "389a71ea890c072c959d671491e859c405013af8d96933a36802357048b8e91c"
+    },
+    {
+      "prompt_id": 17,
+      "category": "general",
+      "returncode": 0,
+      "dump_rows": 174,
+      "bin_sha256": "16e636d3c07f0b2b1dc729d49f1c0a14f7785b2f98556a0d60c9723938d1fa5a"
+    },
+    {
+      "prompt_id": 18,
+      "category": "general",
+      "returncode": 0,
+      "dump_rows": 174,
+      "bin_sha256": "fa66e15ee31967f5af840a14462c03586abdf136ce89a1b6e01a09b235f31269"
+    },
+    {
+      "prompt_id": 19,
+      "category": "general",
+      "returncode": 0,
+      "dump_rows": 180,
+      "bin_sha256": "720cda86469ce7abb51bd66a11b77eb5706832fb409d0f7f958f524654d19909"
+    },
+    {
+      "prompt_id": 20,
+      "category": "general",
+      "returncode": 0,
+      "dump_rows": 174,
+      "bin_sha256": "1e504fa8fe44d73ae3aade84e7c4bf25101309843247b39afb37860a6010317b"
+    },
+    {
+      "prompt_id": 21,
+      "category": "swahili",
+      "returncode": 0,
+      "dump_rows": 216,
+      "bin_sha256": "ee7cfde395133e172e4c702bd01d5a4ffe11ae25e762509c9fc0aff9a0f7ff27"
+    },
+    {
+      "prompt_id": 22,
+      "category": "swahili",
+      "returncode": 0,
+      "dump_rows": 194,
+      "bin_sha256": "2e268184f7291c1db9de3f80a7995d3374871a074022598e2490180e68b0a7f5"
+    },
+    {
+      "prompt_id": 23,
+      "category": "swahili",
+      "returncode": 0,
+      "dump_rows": 190,
+      "bin_sha256": "09c0333b61836fc764dd9e2273e9a5ca3afe23a6be079f4c9e646e4a91b17781"
+    },
+    {
+      "prompt_id": 24,
+      "category": "swahili",
+      "returncode": 0,
+      "dump_rows": 198,
+      "bin_sha256": "32e6cc1ccf236d9e92eb5fdd8847bb281762869feec4873c028e3fb539f1be87"
+    },
+    {
+      "prompt_id": 25,
+      "category": "swahili",
+      "returncode": 0,
+      "dump_rows": 210,
+      "bin_sha256": "eea59686cf6e594c0711efe8e59c5542996c958ec7a6572c7868494eaa52d1a8"
+    },
+    {
+      "prompt_id": 26,
+      "category": "instruction",
+      "returncode": 0,
+      "dump_rows": 180,
+      "bin_sha256": "57f810c789993dc536dc9192352de3aa5d0d117392bc842b99bc2869c6dc6b43"
+    },
+    {
+      "prompt_id": 27,
+      "category": "instruction",
+      "returncode": 0,
+      "dump_rows": 180,
+      "bin_sha256": "b77ecfc6e45f71d8f575f49f861c2971aa60ae508f16e02cb2e051107ad279fd"
+    },
+    {
+      "prompt_id": 28,
+      "category": "instruction",
+      "returncode": 0,
+      "dump_rows": 174,
+      "bin_sha256": "d5a75233a3417b0d05686520a0d56d5654d4cec798012f48b2ce13f1f1fca314"
+    },
+    {
+      "prompt_id": 29,
+      "category": "instruction",
+      "returncode": 0,
+      "dump_rows": 174,
+      "bin_sha256": "cf208bf8df32d09695040015e552af9947f1fdac4eb5a36fa3f0d21558a07c51"
+    },
+    {
+      "prompt_id": 30,
+      "category": "short",
+      "returncode": 0,
+      "dump_rows": 154,
+      "bin_sha256": "bbe8572b4177ccf22cc3ba6b76bbcf66b2674e7c904a3f24ff61a9f1e3f83035"
+    },
+    {
+      "prompt_id": 31,
+      "category": "short",
+      "returncode": 0,
+      "dump_rows": 162,
+      "bin_sha256": "c111e416bdf713221264c32fac0d42101d5d16eb6d43d57d88d87135283e6951"
+    }
+  ],
+  "wall_sec": 936.4647591114044
+}

@@ -1,0 +1,40 @@
+diff --git a/kaggle/native-sparse-staged-q2k-v1/staged_q2k_v1.py b/kaggle/native-sparse-staged-q2k-v1/staged_q2k_v1.py
+index 8a9b907..a551d03 100644
+--- a/kaggle/native-sparse-staged-q2k-v1/staged_q2k_v1.py
++++ b/kaggle/native-sparse-staged-q2k-v1/staged_q2k_v1.py
+@@ -57,8 +57,15 @@ N_THREADS = max(1, min(4, os.cpu_count() or 1))
+ N_GEN = 64
+ N_REPS = 3
+ PROMPT = "Give one concise reason oral rehydration solution helps a child with watery diarrhoea."
+-# Match the v3 2 GB cache capacity; isolate async read scheduling.
+-CACHE_BYTES = 2_000_000_000
++# S2 baseline: default the staged window to 48 slots/layer (midpoint of the
++# hw_agent3 KEEP range 28-64). The executor derives slot_count =
++# CACHE_BYTES/slot_bytes at runtime from the real model, so IQ2 bundles
++# (876544 B measured) land exactly on 48/layer and +17.75% Q2K slices on
++# ~41/layer -- both in-range. Smaller reservation also helps the <3 GiB goal.
++STAGING_SLOTS_PER_LAYER_DEFAULT = 48
++STAGING_LAYERS = 40
++STAGING_SLOT_BYTES_IQ2 = 876544  # measured L00 bundle: gate+up+down real bytes
++CACHE_BYTES = (STAGING_SLOTS_PER_LAYER_DEFAULT * STAGING_LAYERS * STAGING_SLOT_BYTES_IQ2)
+ 
+ OUT.mkdir(parents=True, exist_ok=True)
+ SCRATCH.mkdir(parents=True, exist_ok=True)
+@@ -485,12 +492,11 @@ static int phase6_reserve_slot(int layer, int expert) {
+                 phase6_zc_evict_range(old_layer, old_expert);
+             }
+         }
+-#if defined(__linux__)
+-        if (!phase6_zc_enabled()) {
+-            madvise(phase6_storage + (size_t) slot * phase6_slot_bytes,
+-                    phase6_slot_bytes, MADV_DONTNEED);
+-        }
+-#endif
++        /* S2 baseline (noDN): NO madvise(DONTNEED) on staged evict. The refill
++         * pread overwrites the slot pages in place (~15x cheaper per miss,
++         * exact-output; see probes/hw_agent3_memory/REPORT.md). The zero-copy
++         * arm's file-range eviction (phase6_zc_evict_range above) is KEEP:
++         * it bounds file-backed RSS, a different mechanism. */
+     }
+     phase6_slots[slot] = (struct phase6_slot) {
+         layer, expert, ++phase6_age, 1,

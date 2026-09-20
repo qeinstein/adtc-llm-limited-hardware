@@ -1,0 +1,37 @@
+# Pinned production environment — QLoRA run (Axolotl FSDP2, 2xT4).
+# No floating "latest": the preflight installs EXACTLY these, then asserts
+# `pip freeze` matches and NEVER upgrades afterwards (§C, §X).
+#
+# Provenance: stage1 of kaggle/native-sparse-qlora-canary-v1 (v7, 2026-09-20)
+# reached model load with these pins on Kaggle 2xT4 (sm75, CUDA 12.x image).
+# The full `pip freeze` is captured on-GPU by training/preflight.py stage1
+# into environment.freeze.txt; any drift vs this file FAILS the preflight.
+
+# --- primary pins (asserted exact in preflight) ---
+axolotl @ git+https://github.com/axolotl-ai-cloud/axolotl.git@82109efa69a147853253186e4c314cddac66ab59
+# 82109ef = main HEAD @ 2026-09-19. Contains ALL Qwen3.5 fixes:
+#   - block_type (not layer_type) in monkeypatch/models/qwen3_5/modeling.py
+#   - MRoPE-aware get_cu_seqlens with 3D [axes,B,T] handling + reshape
+#   (last qwen3_5 touch: c381957, 2026-09-04 < 82109ef, 2026-09-19)
+transformers==5.17.0
+peft==0.21.0
+trl==1.13.0
+bitsandbytes==0.50.2
+datasets==4.8.4
+torch==2.11.x (2.11.0 <= v <= 2.14.99 asserted; exact version captured to
+  environment.freeze.txt on-GPU at preflight time — Kaggle image resolves it)
+
+# --- Kaggle-image repairs (proven in canary, keep verbatim) ---
+# boto3==<installed botocore version>  (axolotl downgrades botocore; re-pin boto3 to match)
+# torchvision rebuilt from sdist/wheel for the installed torch; torchaudio REMOVED (unused)
+
+# --- explicitly NOT installed (§D, §I, §J) ---
+# flash-attn / FA2 forks (Turing-incompatible; sdpa is locked)
+# flash-linear-attention (only for sample_packing, which is OFF)
+# liger / kernels / triton extras (OFF until canary A/B proves; none proven)
+# torch_compile toolchains (default FALSE)
+
+# --- base model (§B) ---
+# Qwen/Qwen3.6-35B-A3B @ 995ad96eacd98c81ed38be0c5b274b04031597b0
+# arch Qwen3_5MoeForConditionalGeneration / qwen3_5_moe, 40L/256E/8topk/H2048/MI512
+# 1045 tensors, 71,903,645,408 bytes BF16 (model.safetensors.index.json)

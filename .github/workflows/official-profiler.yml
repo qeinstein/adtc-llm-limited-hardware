@@ -78,8 +78,9 @@ jobs:
       - name: Build frozen sparse runtime (patched llama-bench on PATH)
         run: |
           bash scripts/build_runtime.sh
+          test -x "$GITHUB_WORKSPACE/runtime/llama.cpp/build-native/bin/llama-bench"
+          test -x "$GITHUB_WORKSPACE/runtime/llama.cpp/build-native/bin/llama-server"
           echo "$GITHUB_WORKSPACE/runtime/llama.cpp/build-native/bin" >> "$GITHUB_PATH"
-          command -v llama-bench
 
       - name: Install the pinned official ADTC profiler
         run: |

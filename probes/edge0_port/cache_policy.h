@@ -62,7 +62,10 @@ static inline int edge0_cache_pinned(edge0_cache_t * c, int key) {
 
 static int edge0_ht_find(edge0_cache_t * c, int32_t key) {
     uint32_t h = edge0_hash(key) & (uint32_t) c->ht_mask;
-    while (c->ht_key[h] != -1) {
+    // Bounded scan: live <= cap < hts, but tombs can saturate small
+    // tables, and an unbroken live/tomb cycle would spin forever.
+    for (int i = 0; i <= c->ht_mask; i++) {
+        if (c->ht_key[h] == -1) return -1;
         if (c->ht_key[h] == key) return c->ht_val[h];
         h = (h + 1) & (uint32_t) c->ht_mask;
     }
@@ -72,19 +75,26 @@ static int edge0_ht_find(edge0_cache_t * c, int32_t key) {
 static void edge0_ht_insert(edge0_cache_t * c, int32_t key, int32_t val) {
     uint32_t h = edge0_hash(key) & (uint32_t) c->ht_mask;
     int32_t tomb = -1;
-    while (c->ht_key[h] != -1) {
+    for (int i = 0; i <= c->ht_mask; i++) {
+        if (c->ht_key[h] == -1) break;
         if (c->ht_key[h] == key) { c->ht_val[h] = val; return; }
         if (c->ht_key[h] == -2 && tomb < 0) tomb = (int32_t) h;
         h = (h + 1) & (uint32_t) c->ht_mask;
     }
-    if (tomb >= 0) h = (uint32_t) tomb;
+    if (c->ht_key[h] != -1) {
+        if (tomb < 0) return;  // unreachable (live <= cap < hts); no hang
+        h = (uint32_t) tomb;
+    } else if (tomb >= 0) {
+        h = (uint32_t) tomb;
+    }
     c->ht_key[h] = key;
     c->ht_val[h] = val;
 }
 
 static void edge0_ht_remove(edge0_cache_t * c, int32_t key) {
     uint32_t h = edge0_hash(key) & (uint32_t) c->ht_mask;
-    while (c->ht_key[h] != -1) {
+    for (int i = 0; i <= c->ht_mask; i++) {
+        if (c->ht_key[h] == -1) return;
         if (c->ht_key[h] == key) { c->ht_key[h] = -2; return; }
         h = (h + 1) & (uint32_t) c->ht_mask;
     }
@@ -100,6 +110,64 @@ static void edge0_lru_touch(edge0_cache_t * c, int32_t idx) {
     c->nextv[idx] = c->head;
     if (c->head >= 0) c->prevv[c->head] = idx;
     c->head = idx;
+}
+
+// Atomic K-event request (JOIN-2 runtime semantics): all n hits/misses are
+// determined from the SAME pre-event cache state; current-event keys are
+// protected from eviction while the event's misses are admitted.
+// Order: (1) score all n (no mutation); (2) touch hits in request order;
+// (3) admit misses in request order to head, victim = tail walking upward
+// past any current-event key (degenerate cap<=n: plain tail). Pins never
+// enter the dynamic list. Returns #hits in this event.
+static int edge0_cache_event(edge0_cache_t * c, const int * keys, int n) {
+    int hits = 0;
+    for (int i = 0; i < n; i++) {
+        c->reqs++;
+        int k = keys[i];
+        if (edge0_cache_pinned(c, k)) { c->hits++; hits++; continue; }
+        if (c->cap > 0 && edge0_ht_find(c, k) >= 0) {
+            c->hits++;
+            hits++;
+        }
+    }
+    if (c->cap <= 0) return hits;
+    for (int i = 0; i < n; i++) {  // touch pre-event hits
+        int k = keys[i];
+        if (edge0_cache_pinned(c, k)) continue;
+        int idx = edge0_ht_find(c, k);
+        if (idx >= 0) edge0_lru_touch(c, idx);
+    }
+    for (int i = 0; i < n; i++) {  // admit misses
+        int k = keys[i];
+        if (edge0_cache_pinned(c, k)) continue;
+        if (edge0_ht_find(c, k) >= 0) continue;  // was a hit (or admitted)
+        int idx;
+        if (c->size < c->cap) {
+            idx = c->size++;
+        } else {
+            idx = c->tail;  // walk past protected current-event keys
+            while (idx >= 0) {
+                int kk = c->node_key[idx], prot = 0;
+                for (int j = 0; j < n; j++)
+                    if (keys[j] == kk) { prot = 1; break; }
+                if (!prot) break;
+                idx = c->prevv[idx];
+            }
+            if (idx < 0) idx = c->tail;  // degenerate: cap <= n
+            edge0_ht_remove(c, c->node_key[idx]);
+            int32_t p = c->prevv[idx], q = c->nextv[idx];
+            if (p >= 0) c->nextv[p] = q; else c->head = q;
+            if (q >= 0) c->prevv[q] = p; else c->tail = p;
+        }
+        c->node_key[idx] = k;
+        edge0_ht_insert(c, k, idx);
+        c->prevv[idx] = -1;
+        c->nextv[idx] = c->head;
+        if (c->head >= 0) c->prevv[c->head] = idx;
+        c->head = idx;
+        if (c->tail < 0) c->tail = idx;
+    }
+    return hits;
 }
 
 // Returns 1 on hit, 0 on miss (miss also admits the bundle).

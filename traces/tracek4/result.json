@@ -1,0 +1,216 @@
+{
+  "schema": "native-sparse-edge0tracek4/v1",
+  "status": "ok",
+  "runtime": {
+    "llama_commit": "3057bb66c86c46d5781e50e85462a760ba7d1feb",
+    "built_head": "3057bb66c86c46d5781e50e85462a760ba7d1feb",
+    "k1": 4,
+    "k2": 16,
+    "runtime_patch_sha256": "3cdfe0a825e7e2dbb65005693e7aa8d5b3af5c2bca364f7f1301254e56dcf05f"
+  },
+  "model": {
+    "base": "3.6",
+    "file": "Qwen3.6-35B-A3B-UD-IQ2_XXS.gguf",
+    "size_bytes": 10756586464,
+    "sha256": "2e8f5f705355c56311432d0a8a5d14a696dbb7e4b197d05c75ba805fc1857bef",
+    "repo_commit": "a483e9e6cbd595906af30beda3187c2663a1118c"
+  },
+  "hardware": {
+    "platform": "Linux-6.12.90+-x86_64-with-glibc2.35",
+    "cpu_count": 4
+  },
+  "decode": {
+    "k1": 4,
+    "k2": 16,
+    "tokens_requested_per_prompt": 80,
+    "prompts": 23,
+    "trace_tokens": 1886
+  },
+  "prompt_results": [
+    {
+      "prompt_id": 0,
+      "category": "medical",
+      "trace_evals": 82,
+      "hidden_rms": 1.002239465713501,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 0.9996835443037975
+    },
+    {
+      "prompt_id": 1,
+      "category": "medical",
+      "trace_evals": 82,
+      "hidden_rms": 1.0104650259017944,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 0.9987341772151899
+    },
+    {
+      "prompt_id": 2,
+      "category": "medical",
+      "trace_evals": 82,
+      "hidden_rms": 1.0099849700927734,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 0.9993670886075949
+    },
+    {
+      "prompt_id": 3,
+      "category": "medical",
+      "trace_evals": 82,
+      "hidden_rms": 1.0099514722824097,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 0.9993670886075949
+    },
+    {
+      "prompt_id": 4,
+      "category": "medical",
+      "trace_evals": 82,
+      "hidden_rms": 1.023983120918274,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 0.9990506329113924
+    },
+    {
+      "prompt_id": 5,
+      "category": "medical",
+      "trace_evals": 82,
+      "hidden_rms": 1.0187664031982422,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 0.9996835443037975
+    },
+    {
+      "prompt_id": 6,
+      "category": "general",
+      "trace_evals": 82,
+      "hidden_rms": 1.0002363920211792,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 0.9996835443037975
+    },
+    {
+      "prompt_id": 7,
+      "category": "general",
+      "trace_evals": 82,
+      "hidden_rms": 0.9861317276954651,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 1.0
+    },
+    {
+      "prompt_id": 8,
+      "category": "general",
+      "trace_evals": 82,
+      "hidden_rms": 0.9815719723701477,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 0.9996835443037975
+    },
+    {
+      "prompt_id": 9,
+      "category": "general",
+      "trace_evals": 82,
+      "hidden_rms": 0.9961026310920715,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 1.0
+    },
+    {
+      "prompt_id": 10,
+      "category": "general",
+      "trace_evals": 82,
+      "hidden_rms": 0.9976767897605896,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 0.9993670886075949
+    },
+    {
+      "prompt_id": 11,
+      "category": "general",
+      "trace_evals": 82,
+      "hidden_rms": 0.9916333556175232,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 0.9996835443037975
+    },
+    {
+      "prompt_id": 12,
+      "category": "swahili",
+      "trace_evals": 82,
+      "hidden_rms": 1.0179561376571655,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 1.0
+    },
+    {
+      "prompt_id": 13,
+      "category": "swahili",
+      "trace_evals": 82,
+      "hidden_rms": 0.9918360114097595,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 0.9993670886075949
+    },
+    {
+      "prompt_id": 14,
+      "category": "swahili",
+      "trace_evals": 82,
+      "hidden_rms": 0.976482093334198,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 0.9993670886075949
+    },
+    {
+      "prompt_id": 15,
+      "category": "swahili",
+      "trace_evals": 82,
+      "hidden_rms": 0.9900964498519897,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 0.9993670886075949
+    },
+    {
+      "prompt_id": 16,
+      "category": "swahili",
+      "trace_evals": 82,
+      "hidden_rms": 0.9933795928955078,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 1.0
+    },
+    {
+      "prompt_id": 17,
+      "category": "instruction",
+      "trace_evals": 82,
+      "hidden_rms": 0.9931862950325012,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 0.9987341772151899
+    },
+    {
+      "prompt_id": 18,
+      "category": "instruction",
+      "trace_evals": 82,
+      "hidden_rms": 0.987762987613678,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 0.9987341772151899
+    },
+    {
+      "prompt_id": 19,
+      "category": "instruction",
+      "trace_evals": 82,
+      "hidden_rms": 0.9845808744430542,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 0.9996835443037975
+    },
+    {
+      "prompt_id": 20,
+      "category": "instruction",
+      "trace_evals": 82,
+      "hidden_rms": 0.9921621680259705,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 0.9993670886075949
+    },
+    {
+      "prompt_id": 21,
+      "category": "short",
+      "trace_evals": 82,
+      "hidden_rms": 0.9950403571128845,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 0.9993670886075949
+    },
+    {
+      "prompt_id": 22,
+      "category": "short",
+      "trace_evals": 82,
+      "hidden_rms": 0.9837482571601868,
+      "ids_coverage": 0.9634146341463414,
+      "topk_parity": 0.9996835443037975
+    }
+  ],
+  "wall_sec": 1616.9871060848236
+}

@@ -1,0 +1,40 @@
+
+
+Loading model... |-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\ 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b1-3057bb66c
+model      : /tmp/native-sparse-l20hdump/Qwen3.5-35B-A3B-UD-IQ2_XXS.gguf
+ftype      : IQ2_XXS - 2.0625 bpw
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> Andika mpango mfupi wa usafi wa mikono kwa shule ya kijijini.
+
+[Start thinking]
+
+Here's a thinking process that leads to the suggested handwashing plan:
+
+1.  **Analyze the Request:**
+    *   **Topic:** Handwashing Plan (Mpango wa Usafi wa Mikono).
+    *   **Target Setting:** Rural School (Shule ya Kijijini).
+
+[ Prompt: 11.4 t/s | Generation: 7.4 t/s ]
+
+
+Exiting...

@@ -36,10 +36,10 @@ from pathlib import Path
 WORK = Path("/kaggle/working")
 SCRATCH = Path("/tmp/kaggle_scratch")
 OUT = WORK / "native-sparse-edge0phase35-v1-results"
-for d in (SCRATCH, OUT):
-    d.mkdir(parents=True, exist_ok=True)
+# NOTE: no mkdir at import (keeps `import edge0phase35_v1` side-effect-free
+# for tests); setup_runtime() creates SCRATCH+OUT before anything needs them.
 
-LLAMA_COMMIT = "3057bb6cf3e9bfc8f2572a2a4c9b7d8a5e6f9e5c"
+LLAMA_COMMIT = "3057bb66c86c46d5781e50e85462a760ba7d1feb"
 LLAMA = SCRATCH / "llama.cpp"
 BUILD = SCRATCH / "build"
 PERPLEXITY = BUILD / "bin" / "llama-perplexity"
@@ -182,6 +182,8 @@ static void edge0_moe_out_hook(struct ggml_tensor * node) {
 
 
 def setup_runtime():
+    for d in (SCRATCH, OUT):
+        d.mkdir(parents=True, exist_ok=True)
     if not (LLAMA / ".git").exists():
         run(["git", "clone", "https://github.com/ggml-org/llama.cpp.git",
              str(LLAMA)])
@@ -292,14 +294,19 @@ def gguf_tensor_table(path):
     import struct as _st
     head = open(path, "rb").read(64 << 20)
     assert head[:4] == b"GGUF"
-    n_kv, n_tensors = _st.unpack_from("<QQ", head, 8)
+    n_tensors, n_kv = _st.unpack_from("<QQ", head, 8)  # spec order
     off = 24
 
     def read_str(o):
         (n,) = _st.unpack_from("<Q", head, o)
         return head[o + 8:o + 8 + n].decode(), o + 8 + n
 
+    _SCALAR = {0: 1, 1: 1, 2: 2, 3: 2, 4: 4, 5: 4, 6: 4, 7: 1,
+                 10: 8, 11: 8, 12: 8}  # fixed-width GGUF metadata scalars
+
     def skip_value(o, typ):
+        if typ in _SCALAR:
+            return o + _SCALAR[typ]
         if typ in (8,):
             s, o2 = read_str(o)
             return o2

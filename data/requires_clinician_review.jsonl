@@ -1,0 +1,402 @@
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "60791401-6380-4c7e-bd14-c89e6e35a56e", "dose_spans": ["10 mg", "10.5 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "dfeadae0-d582-4a6e-84fe-a45376bf58b3", "dose_spans": ["200 ml", "1000 ml", "1000 ml", "900 ml", "800 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "a8679550-7a1c-4174-bb3c-4f892113a7c4", "dose_spans": ["15 mg", "6 mg", "8 mg", "12 mg", "14 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "571ba05b-a19f-4292-9471-de1b94ae739f", "dose_spans": ["126mg", "200mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "62243836-87a2-4a94-bf1d-64d3892b2458", "dose_spans": ["1 mg", "300 mg", "300 mg", "100 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "7be7ce41-9c7c-48cc-82ad-0a36f2a53af7", "dose_spans": ["0.5 mg", "1.0 mg", "2.0 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "3c1798a1-9017-4ea5-b9b1-71fc5b6ffc12", "dose_spans": ["11 mg", "11 mg", "5.5 mg", "10.5 mg", "150 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "a785bece-f7fd-45aa-ab13-76d44843a16e", "dose_spans": ["5 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "5b91eb8b-2fe8-44e4-9938-7af9822bdbde", "dose_spans": ["20 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "3e0f00db-98b7-4e62-bb09-81cd96431d26", "dose_spans": ["1.4 mg", "4 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "948dfda7-06c7-42df-b96c-e69f3afd8d74", "dose_spans": ["2150 mg", "2150 mg", "2200mg", "2150 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "b3b59727-1b73-481f-b15c-a2459dcb4c54", "dose_spans": ["1.5 mg", "1.5 mg", "1 mg", "1.5 mg", "6 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "b61c7961-3100-4f19-95a4-3c81104f84a0", "dose_spans": ["150 mcg", "150 mcg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "ba18a5b2-0102-4bfc-99c5-79e618e78315", "dose_spans": ["1500g", "1500g", "2500g", "20mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "276ae1d3-2bd6-4324-a0aa-1d8fcb9c76b9", "dose_spans": ["5 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "24f9a70d-51c5-4d01-9026-392d65d2e4f1", "dose_spans": ["20 units"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "844c9461-06bd-4a36-a846-7088a8b49b60", "dose_spans": ["60 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "7da1fda6-6168-40c0-b649-1b1242f96671", "dose_spans": ["50 mg", "100 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "af99bcf9-5799-4cad-ad60-f27074c68ce9", "dose_spans": ["30 mg", "200 mg", "200 mg", "100 ml", "2 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "08b230d7-bb26-4025-8b18-099ce3cfe9fb", "dose_spans": ["300 mg", "30 mg", "80 mg", "200 mg", "300 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "06b2dc5c-f116-4fab-af5d-d1a871ead700", "dose_spans": ["120mg", "44mg", "100mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "aebb339c-b6db-4b01-9330-630d760c6b6d", "dose_spans": ["10 mg", "10 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "b9955786-03b7-4744-9802-ebd68985003a", "dose_spans": ["5.9 g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "78e9e758-8ea1-402c-b8d7-619155a5dfe8", "dose_spans": ["0.2mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "32456e9d-11f2-46c0-b489-03bef5d67c24", "dose_spans": ["300 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "b030f822-ba34-43cc-98c2-f250975541c7", "dose_spans": ["2mg", "3mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "86c1c2ec-a23f-459e-80d8-f49237295665", "dose_spans": ["2 mg", "3mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "3b9b2ebf-a1a7-40ef-b99e-1956d328fe71", "dose_spans": ["120 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "4156c3b4-71a9-4ec1-b449-85df8df770f6", "dose_spans": ["25 mg", "50 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "443331ab-59c3-432a-9ad0-ab60b3e763e1", "dose_spans": ["1 mg", "80 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "fa3d3fb9-34f5-44ea-b53b-469d213ba174", "dose_spans": ["300 mg", "80 mg", "200 mg", "40 mg", "200 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "6ed56d4c-f7c9-4339-9974-b57111f48e81", "dose_spans": ["5g", "5 g", "5g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "3110720b-1810-48da-be7d-c43563216eea", "dose_spans": ["20 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "cc6a188a-f95a-45f8-ada6-0194b15d11c2", "dose_spans": ["900 ml", "4 ml", "100ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "2c7ec90c-53a4-4241-83fd-5ef6b0c51baa", "dose_spans": ["4.5 mg", "0.5 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "c20b47fb-a819-40d0-840f-7572cee3b12f", "dose_spans": ["20ml", "100ml", "16ml", "100ml", "300 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "eb3c2655-40d5-48c2-a4bd-3970abe8227a", "dose_spans": ["1000 mg", "1000 mg", "15 g", "1000 mg", "1000 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "ddea6372-f5da-4be8-9a15-d595a9be113c", "dose_spans": ["125 mg", "8 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "9651bc7f-4fbb-4cf6-9cdb-2eaa4e6ff798", "dose_spans": ["1 g", "0.5 g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "8d7482e4-4e96-427c-9bb6-d87a819e3e97", "dose_spans": ["5mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "0ace93d0-3049-41cd-902e-0dde2f39adda", "dose_spans": ["100 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "8248c10c-a614-4f96-b5fa-af57464814af", "dose_spans": ["20 mcg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "de6626c6-58dd-4672-abed-0b4384c9e8b7", "dose_spans": ["4 g", "4000 mg", "50 mcg", "50000 mcg", "50 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "41a2c30c-0f85-433e-966c-d3b24afebe4e", "dose_spans": ["4 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "8fa90ddc-90fa-4d26-ad9f-97b49c021f58", "dose_spans": ["0.1 mg", "2 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "73a8f11a-8610-40b5-a372-273661f149f0", "dose_spans": ["100 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "89be6532-b24c-4a6b-82e9-348897bb6826", "dose_spans": ["40mg", "40 mg", "5g", "100 ml", "6 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "bb6dab88-73a5-445b-9ccc-ed534ace1d81", "dose_spans": ["600 mcg", "600 mcg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "8a2f1626-4b71-436f-b6db-d711a2965eb7", "dose_spans": ["20 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "e898857b-8d6d-4ccd-8c9a-bc101653d355", "dose_spans": ["240 ml", "500 ml", "240 mL", "320 mL", "500 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "b38b7a2b-a6de-441b-92c6-505945a68a44", "dose_spans": ["1 mg", "1 mg", "1 mg", "0.5 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "d74338c4-80e9-4798-8c47-198c7b72da09", "dose_spans": ["300 mg", "300mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "8e08ffad-6d0c-432b-b533-32f01d87a5c3", "dose_spans": ["20 ml", "20 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "e4e389db-2643-4135-a3b4-18a0670055c0", "dose_spans": ["30 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "91369519-08b1-4e8e-8138-5a78511cb886", "dose_spans": ["10 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "8b55a44a-c54a-4981-ab31-ffcd3735ca3f", "dose_spans": ["1000 ml", "1000 ml", "1250 ml", "1600 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "25166a41-5d02-420f-b8e5-b23c84dc2f8d", "dose_spans": ["5 g", "3 g", "0.7 g", "3 g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "f9a2c103-6752-4a0b-9915-e840f6057b16", "dose_spans": ["15 mg", "0.1 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "19b5b61f-85e4-49e8-879b-9bef8f2216af", "dose_spans": ["2 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "a02bef71-db63-4ea9-abb2-35d25fd3694a", "dose_spans": ["28mg", "210mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "ff0ea38d-a6b2-4bac-b849-3161528b1804", "dose_spans": ["200 ml", "200g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "ec22a4cf-99c1-4029-98d6-ab7ec701d27c", "dose_spans": ["0.04 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "3dd49b1f-f2b5-4244-8fa4-502a125627c1", "dose_spans": ["7G"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "209dce82-7ca8-43be-8630-d451dfa2dd12", "dose_spans": ["16 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "19b22019-2602-47cf-97b0-5fa39dedd1af", "dose_spans": ["140 mg", "300 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "738e40b2-377e-4ef1-aac9-74a8eddcd7b8", "dose_spans": ["600 mg", "3 tablets", "2 tablets", "200 mg", "600 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "edf9e8ef-c3c7-453e-a04d-04a43c81bee8", "dose_spans": ["2.4 mg", "2.4 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "11e3ff73-86a5-4191-be82-02a5682ab307", "dose_spans": ["100 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "ba3c399d-9f73-4bf0-a0a0-6f7507b7a3e2", "dose_spans": ["100 mL", "100 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "dbb05716-488b-41ad-aee8-a7f487b1a60c", "dose_spans": ["0.9mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "171513dc-b81a-4250-a5d2-dfbaa0b720cb", "dose_spans": ["55 mL", "100 g", "20 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "ba22f848-0e6e-4f7e-ad47-e5c230cef4e3", "dose_spans": ["30mcg", "50 mcg", "200 mcg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "90741c72-bee9-4fd8-9956-3e01efddc2e9", "dose_spans": ["4 g", "3 g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "e3a234c0-87f4-4a86-88ea-28d5f3be5291", "dose_spans": ["2 mcg", "0.01 mcg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "2e290407-36df-4351-aaf9-62b28c5cff32", "dose_spans": ["200 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "ab585561-0b84-47b4-a2bf-7b546a3ffaef", "dose_spans": ["20 ml", "20 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "9c421d14-3c22-4f6f-92b2-7b021dfa9923", "dose_spans": ["20 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "acde5f2f-3381-4f3b-badc-93860808a9c1", "dose_spans": ["0.5 mg", "0.5 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "24603c3a-5c4a-41ad-877e-935aee072545", "dose_spans": ["40 mg", "40 mg", "4 mg", "350 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "1250a0d7-d557-4716-8a76-4b8cf4242fd9", "dose_spans": ["200 mg", "50mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "d96becf9-c08a-424c-a699-59cb39ee51a9", "dose_spans": ["800 ml", "800 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "c67902d8-02ac-42fe-881a-806ed605b22d", "dose_spans": ["200 mg", "80 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "4d208459-fcab-41dc-a5b7-d984359ac2b9", "dose_spans": ["20mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "1085eb55-6581-435c-8f63-060e8d7d65b1", "dose_spans": ["55 ml", "54 mL", "100 g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "64752e10-cb36-4881-8bcf-7d0d666d9639", "dose_spans": ["20 mg", "20 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "1553292e-739f-464c-8b39-4b8b4b4e48b7", "dose_spans": ["10 G", "1 G"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "97f80b81-3fda-42ea-9036-d27d2cf4b931", "dose_spans": ["1 mg", "7 mg", "1000 mg", "4 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "b254bca9-9fb9-422b-88c2-c6881faf2a6b", "dose_spans": ["100 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "c83c4d85-d55d-4ee4-9806-a8abaa42d222", "dose_spans": ["600mg", "400mg", "100 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "56a13627-8079-42bd-8b35-83bf1db7ba86", "dose_spans": ["1000 ml", "1000 ml", "1250 ml", "1600 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "ee689638-915d-413d-8afb-529629a6a15d", "dose_spans": ["14 units", "14 units"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "d75330a5-4756-42a6-8cb5-d5596f26598f", "dose_spans": ["100 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "f9dde4da-f254-41e8-a996-fc63ee4d0d70", "dose_spans": ["6 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "ca90b7c6-a821-4417-a734-8ac01745aff1", "dose_spans": ["25 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "561f6314-6a70-44a7-9b05-4b60f7201797", "dose_spans": ["0.4 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "78287b9c-d2ff-40bd-aa9f-afa70e8d805d", "dose_spans": ["0.4 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "9ad9bf88-fb32-403b-9b5b-d441b22020ed", "dose_spans": ["100 mg", "320 mg", "750 mg", "2 g", "2 g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "d4d14ed3-705b-4db5-be45-b3f0d6d06666", "dose_spans": ["13 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "a8c38dc5-e507-48f2-85b1-5aa9a8974f9a", "dose_spans": ["500mg", "100mg", "500mg", "875mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "8f54659d-5271-4a64-b35b-edb3ad6e2dbb", "dose_spans": ["1mg", "60mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "8a4439af-b759-4d07-b0ca-60f48028ac15", "dose_spans": ["2 units"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "9582df09-5eec-4049-8b16-70498b9937ca", "dose_spans": ["375 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "8c6aac4d-e5d8-48ba-8a9d-9b3e5dc06904", "dose_spans": ["20 mcg", "50 mcg", "35 µg", "2 mg", "35 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "e2c562c4-e82b-487a-9d25-e60ddebe6c9b", "dose_spans": ["175 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "635289dc-6032-4253-bbc1-9e6379236e60", "dose_spans": ["600mg", "300 mg", "50 mg", "600mg", "100 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "b8c97e76-9fa0-4059-a3af-a728aa70e5a4", "dose_spans": ["4 g", "3.34mg", "17mg", "21 mg", "35 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "840f27e2-82d1-414c-92db-eff63a396c74", "dose_spans": ["0.4mg", "0.7mg", "4mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "ae5c56f1-6b11-4525-a0fc-f69581186b1d", "dose_spans": ["0.30ml", "0.25ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "66dabb84-40bd-436d-8a81-4ba38fec1237", "dose_spans": ["0.1ml", "0.1ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "7999537e-8cc3-42bb-b296-779819ed6e04", "dose_spans": ["150mL", "500 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "69425c28-79d5-4ed6-a0b3-2a2d777da9c9", "dose_spans": ["15 mg", "15 mg", "15 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "7ada0a34-80ce-4f83-b501-431595ce63c7", "dose_spans": ["35 ml", "80 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "f9b1e68a-1b13-47a8-82e9-db0d9216beae", "dose_spans": ["150 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "736c4393-2b23-4527-ba3f-3194526cefac", "dose_spans": ["5 mg", "8 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "d99caf57-9a20-413a-8e5f-86a969a09b62", "dose_spans": ["1000mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "9c235e27-25b4-4f1d-8be4-3b152fa6f0c3", "dose_spans": ["1 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "a4b9e71e-ab0f-452a-8750-bc2358b89830", "dose_spans": ["600 mg", "750 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "eb36179e-c189-4fa1-8fc7-59cb52d7b250", "dose_spans": ["120 g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "c8efce29-f950-4ceb-a08e-70e3a543e08c", "dose_spans": ["4000g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "67769bb3-9983-4269-a303-3c6b2a15d121", "dose_spans": ["20 mg", "10 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "f2d68016-6a96-4766-b7cc-0d1762850cbc", "dose_spans": ["500 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "704e340c-bbb2-48bc-86fa-475147be4ec3", "dose_spans": ["500 mg", "100 mg", "500 mg", "100 mg", "500 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "a8fb9917-925e-463a-a987-55c26342635a", "dose_spans": ["40 mg", "100 mg", "200 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "a80dab2d-2045-4256-b723-6c797a71e53a", "dose_spans": ["200 mg", "25mg", "5mg", "4g", "50 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "365ba476-5733-4c0c-8364-aae34d47bcf5", "dose_spans": ["4mg", "2mg", "2mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "162098ba-8963-445b-a3f3-cf2bb66062b5", "dose_spans": ["800 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "d125d7d1-6b6a-4075-82dc-6214729e219f", "dose_spans": ["375 mg", "300 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "db3fd8b3-e182-4c77-b90d-3ace9b507853", "dose_spans": ["2500 mg", "50ml", "50mg", "2500mg", "2500mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "1e851012-7c41-4e02-9b5c-b4f2899075fd", "dose_spans": ["3 g", "3g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "d5c66e4a-c5e5-4fa4-be3c-735db50db660", "dose_spans": ["550 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "883d25ef-9eb3-4fd2-8ca4-b17c37214f3b", "dose_spans": ["10 µg", "10 µg", "60 µg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "6d02066a-46c6-41f6-b795-202d341345a5", "dose_spans": ["3 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "f652bc48-f4ac-417c-9b0b-7b1d1d8a2c04", "dose_spans": ["2.0 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "205c4d23-c21f-489a-9d51-d82ea1623a94", "dose_spans": ["300 mg", "150 mg", "50 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "2031d732-ad06-4f20-b8cb-8c4cbe701e86", "dose_spans": ["500 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "a91ee9c9-a61b-4b5c-865d-2792415bf350", "dose_spans": ["470 g", "750 g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "a3ce0f33-c761-411d-b548-f889e3b9c30e", "dose_spans": ["10 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "f1f27a38-686f-43a4-86bb-b016e7db2659", "dose_spans": ["5mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "d998b524-1fe2-49c1-9b66-c76826d2a675", "dose_spans": ["300 mg", "300 mg", "600 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "106ed67d-880f-451d-bd0b-ed2393028ed4", "dose_spans": ["50 mg", "150 mg", "300 mg", "300 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "475895ad-4025-4bcb-b86e-a45a2f04eb7b", "dose_spans": ["1 mg", "60 mg", "600 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "49a89c4d-d1d4-4739-bc0d-25eae761e81d", "dose_spans": ["0.5 mg", "0.5 mg", "0.5mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "c14b4ee8-7005-41e5-8423-503d6d34d229", "dose_spans": ["10 units"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "ca06d177-cb7e-4b41-be31-1bbb70024a84", "dose_spans": ["5 mcg", "2 mcg", "10mcg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "a9f022e9-a3bf-4d66-bc90-01c538de7125", "dose_spans": ["8 mg", "8 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "088c59ca-b4e8-4739-833f-85d36e57ca0d", "dose_spans": ["0.1 mg", "0.1 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "2e7b632e-6213-4aa4-a602-d8762978d758", "dose_spans": ["0.015 ml", "0.021 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "9dda430b-251e-4761-aaba-8856ab311495", "dose_spans": ["1000 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "7b2f8b85-1c90-4a5e-926d-196820559ebe", "dose_spans": ["150 mL", "100 mL", "30 mL", "70 mL", "150 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "47732007-ee19-41ad-975b-732aa4159c85", "dose_spans": ["50 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "d83a0df3-7fa0-453c-94a4-aaacba475325", "dose_spans": ["400 mg", "200 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "c5e85ee1-dae6-40f2-af5d-b6782bd3128e", "dose_spans": ["200 mg", "3 mg", "7 mg", "2 mg", "6mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "b409cf64-b8e7-49c9-82a1-fadde23ff4da", "dose_spans": ["200 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "927e20d3-87f8-4b2e-89b0-95670c91f4af", "dose_spans": ["0.5 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "611bd245-e86d-4a2c-b23b-bdfda797043d", "dose_spans": ["100 mg", "150mg", "50mg", "20 mg", "70 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "8fe239b4-d7e5-4fed-8362-74a872589cea", "dose_spans": ["5 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "eb3ab30d-b3ec-4b1d-8edf-f4afb083479c", "dose_spans": ["4 mg", "4 mg", "2 mg", "2.7 mg", "1.1 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "ee1003f3-d69a-4845-b18a-9600d8350338", "dose_spans": ["150 mg", "700 mcg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "31d3c98b-cd7d-4b9a-9c9a-92dfe5a6abf9", "dose_spans": ["2 g", "0.5 g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "8377266f-e8f6-409f-ab22-e8e7cf4bb1d8", "dose_spans": ["3500 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "322b2eb7-6af2-41a5-9722-b5171f1b2a85", "dose_spans": ["3 mg", "100 g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "8a869b61-eda7-40e3-a202-2be5ce42423f", "dose_spans": ["3 Drops"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "d309d1a8-a5b6-43a2-9d39-1478296a3b2d", "dose_spans": ["200ml", "100 ml", "200 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "010e2532-0762-4307-9836-c23c2af3a637", "dose_spans": ["1500 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "d66e2511-abe3-4353-aa23-4c8a3ae28232", "dose_spans": ["2 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "bdc65e2e-4964-4b41-beba-ae0e2f68643a", "dose_spans": ["2 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "53dd5167-008e-4abb-8a05-5a3efea431d8", "dose_spans": ["100 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "e14c7212-a74f-4a68-8eb6-dfd1571bf71b", "dose_spans": ["100 mg", "100 mg", "100 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "949503f5-a9fc-49dd-92d8-3adfdc07a423", "dose_spans": ["20.5 g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "674a7791-4fc6-4b3c-90a4-5e4e59575b5f", "dose_spans": ["500 mg", "100 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "0e696a70-3550-450a-a6b2-f14264cecbe1", "dose_spans": ["20 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "d0dff49e-4cd4-4afb-a89d-ba05fa322df5", "dose_spans": ["250 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "c4fda87f-a779-4cba-9ecf-90190790a280", "dose_spans": ["40 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "87c6d7dd-7ce6-47c3-9daf-4e2ad02a1652", "dose_spans": ["5 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "28dc851b-82e3-4137-9499-71763192520d", "dose_spans": ["5 mg", "10mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "f4ec5bfd-e4d2-4729-8da2-269afa13af38", "dose_spans": ["50 mg", "100 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "b9e2c9c6-c3fd-44ad-989f-20cee309a88f", "dose_spans": ["300mg", "30mg", "300 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "45b320ec-479c-42f6-a892-e2df3f247359", "dose_spans": ["0.06 mg", "1.0 mg", "1.0 mg", "5 mg", "1 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "f015bc10-f4fb-4c65-a44c-48724807639d", "dose_spans": ["0.25 ml", "0.25 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "667b4c9e-02c5-4d6d-b0cf-0481ffe56f18", "dose_spans": ["10 units", "50 mL", "25 g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "a58c76fe-4860-41ec-a2bc-6933ee1716f0", "dose_spans": ["0.8 mg", "1.5mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "096504f1-b3ef-43c2-9868-1ea8d76b4242", "dose_spans": ["160 mg", "800 mg", "75 mg", "25 mg", "160 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "82294d28-d8b3-4417-a032-1806f264d329", "dose_spans": ["200 mg", "2 g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "84d8bffc-cc01-4d62-9ac6-bea73af95413", "dose_spans": ["20 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "b56428ee-670b-4741-85af-166ef32a37e4", "dose_spans": ["50mg", "100mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "087f96eb-ee5f-41cc-8e97-69d271e4b1a1", "dose_spans": ["100 mg", "300 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "ef1654b3-4d9f-43bf-a784-3546f4fb54d4", "dose_spans": ["92mg", "180mg", "153mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "e53d622f-a4be-482a-ad49-8fd81e6d2dbd", "dose_spans": ["400 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "05e5898b-913b-4467-b675-eb38361aa44f", "dose_spans": ["52 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "912d9749-0ef8-4663-a934-6d02a96bc0cb", "dose_spans": ["4 ml", "4 ml", "400 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "c76b06f3-d265-4d4a-a299-f25721d1c03a", "dose_spans": ["200 ml", "200 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "68164456-e585-43db-8f61-1574501f8bd3", "dose_spans": ["800 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "3d39a369-f9bf-48f7-86de-a4b69eec3330", "dose_spans": ["20 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "1710eee2-1970-4509-9da5-4b565daf890f", "dose_spans": ["750 mL", "750 mL", "50 mL", "750 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "ec47ac5f-201c-4110-9dae-4016145f55a7", "dose_spans": ["150 mg", "150 mg", "150 mg", "50 mg", "15 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "f2e24e1b-c934-4c9a-ba71-47cd774d66dc", "dose_spans": ["200ml", "2300 mL", "1500 mL", "200 mL", "250mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "90b3c910-4a40-418d-9a63-0977c82528f0", "dose_spans": ["600 mg", "600 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "31393ea0-aa63-4eeb-b8ab-bd5037cb717d", "dose_spans": ["350 mg", "50 mg", "10mg", "80 mg", "100 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "c8a92ca1-318b-40b1-afda-99a672c3404c", "dose_spans": ["20 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "44611ebb-d48e-48e4-bbf8-263c92c117ec", "dose_spans": ["1000 mg", "250 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "fd836d4a-128c-4ea0-8bb9-be2466a3f3b2", "dose_spans": ["200 mL", "2000 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "93108fe5-a60d-4bc6-ad90-8d4a3a01ef4f", "dose_spans": ["140 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "6651e367-4492-47f4-a437-5c18c3ed6f63", "dose_spans": ["50mg", "300 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "48a7684b-2856-4ec2-aab9-928af256b455", "dose_spans": ["30 mg", "40 mg", "0.05 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "8f2b3705-f079-426b-802c-204bf0f62e71", "dose_spans": ["12 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "523ef8c4-fbd7-4c4d-89b2-ebb544088b88", "dose_spans": ["40 mcg", "1 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "43d4c0b5-8909-4eb1-b0e9-cd0b728796ce", "dose_spans": ["20ml", "100 mg", "2 ml", "10 mg", "20 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "2af27555-a585-41f3-bb0a-5dc47a4389eb", "dose_spans": ["1.1 g", "1.1 g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "8e6e605d-e947-4f5e-b2c3-e880e1babc34", "dose_spans": ["800 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "1e03a4fd-8f38-4d02-b45f-668936bf3ef5", "dose_spans": ["0.1 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "19976300-f70c-4a50-bc97-1818f0caabba", "dose_spans": ["0.4 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "c93787f2-a1bb-467e-a1d2-fde1e29b3214", "dose_spans": ["200 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "b96fd49c-01c8-41b7-865f-0482dc00add4", "dose_spans": ["10units"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "485ab9ce-b551-4524-b94e-32a27d3f7c57", "dose_spans": ["1.34 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "efc95178-b8a9-4dd4-92ba-6e305f2231d7", "dose_spans": ["2 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "508f62d6-4ffd-4c27-805e-777e127ae3d7", "dose_spans": ["0.8 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "cbf105e8-97fb-44f8-a2e5-b67f3c9e3a1d", "dose_spans": ["10 mg", "1 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "fed64dd3-f66a-4fa0-babe-eb10a20a63fe", "dose_spans": ["250 mg", "1g", "400mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "d91c70e4-45b8-4b6e-ae1c-bb48436004ba", "dose_spans": ["36 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "a4f0c4dd-3114-4a20-ae84-d95cdad10ea6", "dose_spans": ["100mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "1cc23e59-a9a0-45c0-a8c1-c9ff006ffd3f", "dose_spans": ["2 ml", "2 ml", "40 mg", "45 mg", "16 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "03035b09-f995-48da-817b-2fdaa0080c53", "dose_spans": ["100 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "46b96228-0be9-4ea3-8477-67fe64bd2d13", "dose_spans": ["2.5 g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "8d2e857c-0a25-4b1e-a8aa-c9eda2c4c7a8", "dose_spans": ["5 mL", "20 mL", "0.5 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "9201684d-b4a4-4037-90a3-d83841efa664", "dose_spans": ["800 mg", "50 mg", "1 g", "0.5 g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "82e657d9-2911-4d2e-a004-b0a4c480a741", "dose_spans": ["4 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "4f415cb8-4bdc-4538-950a-d43448fbec82", "dose_spans": ["1 ml", "1 ml", "30 ml", "1.5 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "8cc46a5d-cdce-4fe1-a59f-9a94716dc559", "dose_spans": ["12 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "0a80cf40-c13c-400c-8525-2913f80a933f", "dose_spans": ["2 g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "f4e2e10e-a084-4e29-a798-56a4645d0ff4", "dose_spans": ["15 ml", "30ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "f8392551-94e7-488b-877d-1847bf051732", "dose_spans": ["40 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "12dffb5b-cb5f-465d-858b-79190c6d5a6d", "dose_spans": ["500 ml", "500 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "03862932-7e2c-48cc-96c7-8fd451bc250d", "dose_spans": ["100 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "5464e747-62f1-4e13-8f40-e55d15aac778", "dose_spans": ["1 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "f7f4eae4-4728-449a-9f23-ece90caecbe3", "dose_spans": ["400 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "15f1e3a6-001e-458c-8d36-b4cc65c00b52", "dose_spans": ["5 mg", "150 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "cba757c8-9595-4cda-a1bc-a98e533672af", "dose_spans": ["3 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "bca22e0b-6e5f-4a8a-bac1-4203bf2a3dd5", "dose_spans": ["20 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "12eda98b-b6c7-476c-8f15-391c58d07c66", "dose_spans": ["25 mg", "20 mg", "30 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "9d88ac33-0fa0-4485-9d82-46b80e7e4bf0", "dose_spans": ["0.5 mg", "3 mg", "20 mg", "20 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "14e71da1-81bf-41d0-953f-87ee57b54cb0", "dose_spans": ["3G"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "6513b6c8-723f-4843-b249-b7637180b5ed", "dose_spans": ["10.5mg", "40 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "17441cb9-3708-467f-81ac-01efc67b7683", "dose_spans": ["6 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "f5e097ac-9ef1-4b13-8542-631d75e8cb07", "dose_spans": ["400 mg", "200 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "51f51dc3-a09e-4a3d-9713-cce25ea4f769", "dose_spans": ["2 mg", "10 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "0ce3f651-2b97-435b-b40c-6fed62fcbaff", "dose_spans": ["2.1 g", "2.1 g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "2c79d676-7dac-497a-9e69-039c7965acfe", "dose_spans": ["450 ml", "450 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "cff95e9c-cb2b-4ade-be6d-ac47405409f1", "dose_spans": ["7 tablets"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "ec405251-0c64-4d2b-869d-1b8559151f93", "dose_spans": ["1 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "57b57729-2669-4efd-851a-6ebc7b2addc3", "dose_spans": ["1000 ml", "1000 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "9bfa29bd-b1b3-446a-b3af-c8d0ee91905c", "dose_spans": ["0.2 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "dc779d6e-e3b8-4f43-8a42-9cd9e089b677", "dose_spans": ["10 mg", "10 mg", "10 mg", "10 mg", "700 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "dfc1f212-a232-49b5-9e42-543d08b01111", "dose_spans": ["10 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "b3cffdce-6b4b-47d3-9485-1835f531c42a", "dose_spans": ["250 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "a030a480-9736-4d22-8f6c-5304fa13e196", "dose_spans": ["0.5mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "7572d55d-8a99-44e6-833a-f97e743ded8d", "dose_spans": ["36 mL", "64 mL", "100 mL", "2mL", "2 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "97562fb9-c62b-4bec-99f2-2850e396176a", "dose_spans": ["100 mg", "150 mg", "50 mg", "20 mg", "70 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "e2f9240b-d64c-40b2-ae98-760abad367df", "dose_spans": ["1000g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "f4029334-456c-420f-ae80-72197425a4fe", "dose_spans": ["30g", "60g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "bffe6b79-1bb5-41d6-9b96-bfd79aa76e9f", "dose_spans": ["350 mL", "150 mL", "75 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "27df1fa5-f463-4c92-ac54-d4ac8b03da6d", "dose_spans": ["400 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "3db534c1-d430-45fd-beb5-f4e54682b8c7", "dose_spans": ["150 mg", "2 g", "250 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "70b0d2e7-3d23-4763-81a2-6a68a7fb43e1", "dose_spans": ["13.5 g", "1.5 g", "15 g", "15 g", "1.5 g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "46e4d1fa-6c2e-4618-b365-ddd623488e87", "dose_spans": ["50 mg", "150 mg", "300 mg", "300 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "05eb5647-89e0-46a6-810f-0826e0029eea", "dose_spans": ["600 mg", "600 mg", "600 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "e7429d55-3aa5-4f5e-83d6-faf537754744", "dose_spans": ["1500ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "efb5de11-3557-46f6-ae63-5ef4c0d174ca", "dose_spans": ["5 mcg", "5 mcg", "5 mcg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "dc5f327b-a5aa-4ef0-a573-7c28366cf0ff", "dose_spans": ["500 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "e584ff52-c740-4f74-9aca-a86933d0cdfb", "dose_spans": ["450 ml", "200 ml", "350 ml", "200 ml", "200 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "0eb182a7-8094-471d-a159-0add905e4619", "dose_spans": ["200 mg", "126 mg", "200 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "1334f3db-b7bc-4746-9aea-7e282e081a2a", "dose_spans": ["100ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "dcd7601b-6022-47f4-a791-77027b9657a4", "dose_spans": ["3 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "9dbd4d81-99ae-4131-8921-14c2942c26ab", "dose_spans": ["6 mg", "6 mg", "12 mg", "5 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "a2697d3c-6709-4924-a6a2-3cb896359544", "dose_spans": ["45 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "5d69e905-80fe-4c62-be1f-73f23c84639b", "dose_spans": ["50mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "5ed2261b-5bc2-4ad8-b76c-c6ec5633817d", "dose_spans": ["60 mg", "2 mg", "35mg", "2 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "6dead94c-bbc5-4059-a89d-0d20f1074e3e", "dose_spans": ["20 ml", "20ml", "2mg", "100 mg", "2 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "212edff3-7873-4767-ad2e-2512a24ba8b5", "dose_spans": ["24.3 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "50cb0de0-10bf-4040-adbe-047f0ab6fbad", "dose_spans": ["2 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "43dd4a6a-f376-48f7-8329-b6cba4a352ec", "dose_spans": ["1ml", "0.05 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "00b40fa6-d42a-47c1-96a6-bb9adf5fd23f", "dose_spans": ["4 mL", "4 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "fbb288a3-a2bc-4abf-aacf-d38347947e76", "dose_spans": ["50 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "175b4198-dd25-4625-a7f6-a8d6b97cacf9", "dose_spans": ["5 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "1aff4cf9-3654-45c8-a7b5-f1b447fde09d", "dose_spans": ["30 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "fdd2ddb4-2928-40ee-bb41-fc747e06ac39", "dose_spans": ["200 mg", "300 mg", "300 mg", "2 mg", "200 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "f4b317cd-a4fe-49d0-acc3-1922fcfd789f", "dose_spans": ["10 mg", "10 mg", "10 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "4e434e4e-0592-4760-80f6-4e6a60bee821", "dose_spans": ["25 ml", "300 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "e8208d02-a930-4423-b80d-32045eddd171", "dose_spans": ["0.2ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "9d65ee9b-e380-4fa0-8108-195f071bf656", "dose_spans": ["3000 units"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "65e809f2-86cd-48d4-9f63-5ed398e1ddc5", "dose_spans": ["5 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "740ac55e-32ef-4298-8d31-cf776c270184", "dose_spans": ["15 mg", "10 mg", "20 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "171b90e5-153d-497e-b308-2f645ab552c7", "dose_spans": ["10 mg", "10 mg", "10 mg", "10 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "f1c7720f-09b5-451b-b0e6-a4bc79c56fad", "dose_spans": ["140 mg", "10mg", "70mg", "150mg", "300mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "e2013f7b-4770-4d31-b751-2b5bfd0f3351", "dose_spans": ["220 mg", "220 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "065a9bb7-2ebf-4692-a0f4-ae4b1f651948", "dose_spans": ["0.5 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "dae0ca24-afb7-4763-b600-fa2dad1a379c", "dose_spans": ["0.02 mg", "0.01 mg", "0.005 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "073316d8-6d87-4a48-a9ce-b0dd0631df10", "dose_spans": ["80 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "8b64245e-0a62-4fc6-bda4-b3cdffa4f61c", "dose_spans": ["0.01 mg", "0.01 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "b37e1f58-0149-4dbd-8e0b-2e498aab6780", "dose_spans": ["60 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "54c576d7-cd4c-49c8-b29b-f46b9f35e68a", "dose_spans": ["3 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "8c0d833f-7ea3-4d8c-a730-5537e076f1d9", "dose_spans": ["10 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "711aa833-a2b9-4990-95d7-698f8b90450e", "dose_spans": ["500 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "49c52182-963a-4d35-a498-63ee63b470fa", "dose_spans": ["5 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "e1ba8f77-5ac3-43c9-83fa-1c0c8dc1aacb", "dose_spans": ["2 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "fcbe1cdb-e265-4297-b43f-645404a411b8", "dose_spans": ["5g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "6e6efe79-08b2-4fed-9be3-6d22d0ed2ee6", "dose_spans": ["4 mL", "30 mL", "1.5 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "4bbd2d76-4216-486a-a8e0-f57e786a15d5", "dose_spans": ["1mg", "150mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "a27c05dc-0af9-40d3-b51f-5a9f94ebe610", "dose_spans": ["80 ml", "20 ml", "100 ml", "80 ml", "20 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "f2282cd1-06d1-4b38-b26a-bfe7b47c101e", "dose_spans": ["5.0 g", "2.0 g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "9df8f2a1-eead-4505-ab63-e520b120202b", "dose_spans": ["16G"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "4d74e509-bb09-4ad9-9921-f5c007e8a8e8", "dose_spans": ["25 mg", "200 mg", "100 mg", "100 mg", "50 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "2de9d9b2-1c3e-437d-a3dc-b954b39283d3", "dose_spans": ["1 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "35bac2a4-d0b6-4165-b9e7-6f112953aaab", "dose_spans": ["250 ml", "4.6 mL", "0.17 mL", "250 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "d5c16cc3-ae3f-4fba-863f-a11240620094", "dose_spans": ["4ml", "4ml", "8000ml", "4000ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "813cbd86-8495-435d-af7c-b25e5f947d17", "dose_spans": ["5 g", "4 g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "2e4e1ee8-5d6e-488c-8a6f-7ba50afb6001", "dose_spans": ["1000 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "e4169685-972b-4db0-a402-b9c0a0d16c13", "dose_spans": ["2.5 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "e46d0104-ee25-4ef8-a135-72405f17591f", "dose_spans": ["20 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "c099a134-8544-4aa3-9122-b88f6f47cbf6", "dose_spans": ["12 g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "004f10e9-0519-4cdd-b2b0-a9fe5f42b77a", "dose_spans": ["100 mL", "2 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "33d286e4-db21-4d41-857b-f27b1338a786", "dose_spans": ["1 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "e98a0267-4ab2-41cb-a036-4166c584bd5e", "dose_spans": ["2ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "973c7589-2999-4131-a247-7529588250a7", "dose_spans": ["0.4 mg", "4 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "f299f76d-1c4d-404b-ba4e-03255b90296b", "dose_spans": ["10mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "08f99b8a-aec2-4602-a40e-e19066c7d0ec", "dose_spans": ["200 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "5eef077d-7c5b-40b3-a8d4-b2d5c0fb22ac", "dose_spans": ["10 ml", "20 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "971e0f44-760f-41ce-92f8-ba5d8ad487d6", "dose_spans": ["500 mg", "500 mg", "1 g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "603d496c-f0cd-49c0-b6a7-62a0b27a4488", "dose_spans": ["3.5g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "d6a052d9-924d-48c0-84cf-27507d1b6b8b", "dose_spans": ["0.5 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "1aa16324-d8d0-4ec9-9c21-ebbd6e2843ce", "dose_spans": ["5 mg", "10 mg", "10 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "77d9dc68-4b78-4efe-8f12-650bf240dc62", "dose_spans": ["7mg", "5mg", "7mg", "4.5mg", "300mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "7d275984-9f7c-4f60-9180-53f7cce8dda3", "dose_spans": ["30 mg", "90 ml", "200 mg", "180 mg", "180 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "7060390d-2394-466a-9f1c-62359207f7b6", "dose_spans": ["25 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "98a51798-ef64-4f8d-8573-906b2c11f533", "dose_spans": ["400 units"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "df4d8a44-7376-4352-a04e-f2f0d88c092c", "dose_spans": ["2 mg", "2 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "7963fb9d-51c3-4c67-8525-7612d0061143", "dose_spans": ["5 mg", "3 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "ee8c912f-9819-44a9-a252-8de850213b08", "dose_spans": ["100 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "66995b92-57bd-4985-a236-46976155c261", "dose_spans": ["1500 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "0cb5d7bb-1933-402a-8391-067442712176", "dose_spans": ["1 ml", "1 ml", "2 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "b4fa24dc-1b2f-4b51-9fad-4752aa554f1c", "dose_spans": ["20 mg", "20mg", "300mg", "40mg", "900mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "6e98f990-2a72-448b-b108-650ed481d693", "dose_spans": ["40 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "a392b413-85a1-49f8-8a2b-644b4810b04a", "dose_spans": ["0.8 mg", "10 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "0e958fed-6274-4c0d-9ee1-99d652e6ea4d", "dose_spans": ["1200 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "0b294a2e-9868-47c2-8925-95df864cf95e", "dose_spans": ["64 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "645710bb-879e-42a9-9f48-1a01a69c91b0", "dose_spans": ["125 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "bcab342f-651d-4789-b874-9b4b36dfec8a", "dose_spans": ["1 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "c71c3d84-e3ab-4e8c-98e1-4c729a60ebbb", "dose_spans": ["245 mg", "200 mg", "400 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "e6377bbb-bf34-46c0-a1a5-1355c467782b", "dose_spans": ["75 ml", "75 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "c608ba1e-f15d-48d2-bae1-80841dfdeaa2", "dose_spans": ["0.35mg", "0.2mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "8c78d9a9-82b6-4041-94d1-68baa412853a", "dose_spans": ["126 mg", "126mg", "126 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "00e42802-41f1-40ac-ae50-e31a2c98757f", "dose_spans": ["30 mg", "5.4 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "ddb9fe18-4e25-42dc-9bc8-c7a2003c7258", "dose_spans": ["50 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "a80527b1-4ae1-4229-a93d-10e859b6859e", "dose_spans": ["1 mg", "1 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "198976b9-cac6-4c3d-b116-23672a8c2d83", "dose_spans": ["300 mg", "5g", "2g", "400g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "2b88221c-1d26-4ece-ae48-33fe9fc05fc7", "dose_spans": ["120 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "19a81ab6-6094-4667-bee4-e3fa7a07c9ad", "dose_spans": ["60 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "2a1b8377-a0f5-44fd-bdec-21cefc816134", "dose_spans": ["1ml", "0.5ml", "0.1 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "47e32f13-fdc8-44db-98c8-e5d30853aa0a", "dose_spans": ["2.0 mg", "1 mg", "2.5 mg", "30 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "2157e901-68fa-4b40-b9d7-69db4adf4da7", "dose_spans": ["100 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "91785901-f4b2-4880-9182-aafa69b4f7e1", "dose_spans": ["7 ml", "7 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "e51e71b7-8793-47fd-ae06-050c07bf6f63", "dose_spans": ["200 mg", "5 mg", "8 mg", "220 mg", "2 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "56956109-6396-40b3-9cf5-6896dbcc05a6", "dose_spans": ["50 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "af232a42-1e78-4f00-ab11-8966df52908c", "dose_spans": ["500mg", "1000mg", "500mg", "300mg", "1g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "8754f052-9403-43c3-99ee-c6ac34d8c9fc", "dose_spans": ["50ml", "40 ml", "80 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "9c43981c-f26e-447e-8bed-8d1181221ffd", "dose_spans": ["40 mg", "20 mg", "150 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "32f17ee0-4d5e-4ba2-b4a0-84703c853df3", "dose_spans": ["3.5 g", "40 mg", "2.5 g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "71a33b86-670b-4442-9f64-d87eba3c753a", "dose_spans": ["100 mg", "0.1 mg", "50 mg", "0.2 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "11f38013-993f-4978-affd-daf7abd5a49e", "dose_spans": ["250 ml", "250 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "2d2c6116-6d95-447c-9778-7cd4a5744b3b", "dose_spans": ["800 mcg", "600 mcg", "800 mcg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "ba36da3d-db90-4a5e-9b2d-bbcacb3b1657", "dose_spans": ["100 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "4cae53fc-abbb-4669-8491-c6df7bd3ad67", "dose_spans": ["220 mg", "220mg", "220mg", "140mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "7f00589c-36f5-4977-9381-835b60d600be", "dose_spans": ["90 ml", "130 ml", "50 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "439900d4-47f5-414a-8d81-16327134a451", "dose_spans": ["0.5 mg", "0.5 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "d9350a2c-98e4-4be1-be5c-f24cf6293662", "dose_spans": ["4 ml", "100 ml", "4 ml", "100 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "93057944-7925-4b7c-915f-23723c18df1e", "dose_spans": ["300 mg", "65 mg", "300 mg", "50 mg", "1.0 g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "d52ee724-c0e3-46b9-a702-2fb4e161a874", "dose_spans": ["250 mL", "250 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "6c990641-b4eb-4098-96fe-736815395b94", "dose_spans": ["20 mg", "20 mg", "20 mg", "5 mg", "4mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "7431ec55-e9cd-43a3-9de2-9b694dea3181", "dose_spans": ["6 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "5a137882-4dc6-4b20-8e7f-5e35d36beabe", "dose_spans": ["3000 ml", "3000 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "6e16f369-7335-48ed-bce2-d84dc0921231", "dose_spans": ["300mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "ecc6f4a8-9d72-4c0c-8ace-d3bf5dcb1c4a", "dose_spans": ["600 mg", "50 mg", "3 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "40a4641d-7bfe-4e01-b3f2-15b8a62085b4", "dose_spans": ["400 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "ead7d7aa-60a7-4d01-939b-b457f69cc21c", "dose_spans": ["50 mg", "150 mg", "300 mg", "300 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "d99c0f46-2ea6-471e-bbc6-81927ab83724", "dose_spans": ["100mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "20086dd6-f558-4485-b97e-5795f74304ef", "dose_spans": ["130 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "3d1de352-3482-4f83-ad6e-eade2a2e6ad3", "dose_spans": ["0.5 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "e7936439-3945-491d-82fe-07868e6bec10", "dose_spans": ["15 mg", "6 mg", "8 mg", "12 mg", "14 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "e3d5b2bc-26ea-4720-8498-023fa81966b9", "dose_spans": ["1000 mg", "4 g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "5a4dc59a-3894-4b21-94d7-ae15cd65c29a", "dose_spans": ["1 ml", "4 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "46cb7d5b-4028-42ec-bddd-78e6b68469fe", "dose_spans": ["100mg", "500mcg", "100mg", "500mcg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "0b443ab8-d064-4892-9915-23ac5305e750", "dose_spans": ["400mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "464f2f4b-25a4-466a-acfb-1cd6e9dd0ba7", "dose_spans": ["1 g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "3f6216da-11c0-4d00-82c8-47684324f681", "dose_spans": ["120 mL"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "f8000fa0-b8f6-47d3-9503-f2cd30e935f9", "dose_spans": ["1000 g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "b408fcd1-4023-48e8-b29a-4fe2738d415f", "dose_spans": ["3.0 mg", "3.0 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "f1519940-f49f-4e27-9945-3df1a0459f09", "dose_spans": ["300mg", "100 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "f62667d6-8ace-458f-aa25-6994016b015f", "dose_spans": ["1.0g"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "cf8482db-51c9-44af-a6e2-2578bbe56ee0", "dose_spans": ["10mg", "10 mg", "10 mg", "8 mg", "1.5 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "9a6858bd-a321-4e88-b056-be5f8e97adbc", "dose_spans": ["15 ml", "6 ml", "10 ml", "15 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "88c70826-c088-4afb-840a-e53b9a093282", "dose_spans": ["100 mg", "600 mg", "100 mg", "50 mg", "600 mg"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "151054d2-52d8-4479-b3d1-ec83cad54ce1", "dose_spans": ["1 ml"]}}
+{"reason": "audit-dose-mention", "record": {"src": "medmcqa", "src_id": "bf2bffa5-f09c-48f3-94fd-e18632576997", "dose_spans": ["30 mg", "10 ml", "10 mg", "3 mg", "30 mg"]}}

@@ -37,11 +37,15 @@
   .tools { display: flex; align-items: center; gap: 1.5rem; font-size: 0.85rem; color: var(--muted); }
   .tools a { color: var(--muted); text-decoration: none; }
   .tools a:hover { color: var(--ink); }
-  .tools label { display: flex; align-items: center; gap: 0.4rem; cursor: pointer; user-select: none; }
   .tools button { border: none; background: none; color: var(--muted); cursor: pointer;
                   font: inherit; padding: 0; }
   .tools button:hover { color: var(--ink); }
-  input[type=checkbox] { accent-color: var(--ink); }
+  .modes { display: flex; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+  .modes button { padding: 0.25rem 0.7rem; font-size: 0.78rem; color: var(--muted); }
+  .modes button + button { border-left: 1px solid var(--rule); }
+  .modes button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+  .modes button:hover { color: var(--ink); }
+  .modes button[aria-pressed="true"]:hover { color: #fff; }
 
   #chat { flex: 1; overflow-y: auto; padding: 2.5rem 0; }
   #chat .wrap { display: flex; flex-direction: column; gap: 2rem; }
@@ -60,6 +64,15 @@
   .sources code { font-family: var(--mono); font-size: 0.72rem; background: var(--surface);
                   border-radius: 3px; padding: 0.1rem 0.4rem; margin-right: 0.3rem; }
   .meta { margin-top: 0.5rem; font-family: var(--mono); font-size: 0.7rem; color: var(--muted); }
+  .urgency { display: inline-block; font-family: var(--mono); font-size: 0.68rem;
+             text-transform: uppercase; letter-spacing: 0.08em; border-radius: 3px;
+             padding: 0.15rem 0.5rem; margin-bottom: 0.6rem; }
+  .urgency.emergency { background: #7f1d1d; color: #fef2f2; }
+  .urgency.urgent { background: #92400e; color: #fffbeb; }
+  .urgency.routine { background: var(--surface); color: var(--muted); }
+  .urgency.selfcare { background: var(--surface); color: var(--muted); }
+  .override { background: #7f1d1d; color: #fef2f2; border-radius: 3px;
+              padding: 0.7rem 1rem; margin-bottom: 0.8rem; font-size: 0.85rem; }
 
   .empty { margin: auto 0; padding: 3rem 0; }
   .empty h1 { font-family: var(--serif); font-weight: 400; font-size: 2rem;
@@ -82,11 +95,11 @@
     color: var(--ink); background: var(--bg);
   }
   #input:focus { border-color: var(--ink); }
-  #send {
+  #send, #stop {
     background: var(--ink); color: #fff; border: 1px solid var(--ink); border-radius: 6px;
     padding: 0.7rem 1.3rem; font: inherit; font-size: 0.94rem; cursor: pointer;
   }
-  #send:hover { background: #000; }
+  #send:hover, #stop:hover { background: #000; }
   #send:disabled { background: var(--muted); border-color: var(--muted); cursor: default; }
   .disclaimer { margin-top: 0.85rem; font-size: 0.75rem; color: var(--muted); }
 
@@ -96,6 +109,51 @@
   .typing i:nth-child(2) { animation-delay: 0.2s; }
   .typing i:nth-child(3) { animation-delay: 0.4s; }
   @keyframes blink { 0%, 80%, 100% { opacity: 0.2; } 40% { opacity: 1; } }
+
+  /* Thinking panel: model-emitted reasoning text ( NOT hidden chain-of-thought ).
+     Collapsed + subdued by default; streams live; expands on click. */
+  details.thinking { margin-bottom: 0.75rem; border: 1px solid var(--rule-soft);
+                     border-radius: 6px; background: var(--surface); }
+  details.thinking summary { cursor: pointer; list-style: none; display: flex;
+    align-items: center; gap: 0.5rem; padding: 0.55rem 0.85rem;
+    font-size: 0.8rem; color: var(--muted); user-select: none; }
+  details.thinking summary::-webkit-details-marker { display: none; }
+  details.thinking summary .caret { font-family: var(--mono); font-size: 0.72rem;
+    transition: transform 0.15s; }
+  details.thinking[open] summary .caret { transform: rotate(90deg); }
+  details.thinking summary .tstatus { font-family: var(--mono); font-size: 0.68rem;
+    text-transform: uppercase; letter-spacing: 0.06em; }
+  details.thinking summary .pulse { width: 6px; height: 6px; border-radius: 50%;
+    background: var(--muted); animation: blink 1.2s infinite ease-in-out; }
+  details.thinking.done summary .pulse { animation: none; background: var(--rule); }
+  details.thinking .tbody { padding: 0 0.85rem 0.7rem; font-size: 0.82rem;
+    color: var(--muted); white-space: pre-wrap; word-wrap: break-word;
+    max-height: 16rem; overflow-y: auto; }
+  .copybtn { border: 1px solid var(--rule); background: var(--bg); color: var(--muted);
+    border-radius: 4px; font-size: 0.68rem; font-family: var(--mono);
+    padding: 0.1rem 0.45rem; cursor: pointer; margin-left: auto; }
+  .copybtn:hover { color: var(--ink); border-color: var(--muted); }
+  .msg.assistant .body h1, .msg.assistant .body h2, .msg.assistant .body h3 {
+    font-family: var(--serif); font-weight: 400; margin: 1rem 0 0.4rem; }
+  .msg.assistant .body h1 { font-size: 1.3rem; } .msg.assistant .body h2 { font-size: 1.15rem; }
+  .msg.assistant .body h3 { font-size: 1.02rem; }
+  .msg.assistant .body code { font-family: var(--mono); font-size: 0.82em;
+    background: var(--surface); border-radius: 3px; padding: 0.1rem 0.35rem; }
+  .msg.assistant .body pre { background: var(--surface); border-radius: 6px;
+    padding: 0.8rem 1rem; overflow-x: auto; }
+  .msg.assistant .body pre code { background: none; padding: 0; }
+  .msg.assistant .body ul, .msg.assistant .body ol { padding-left: 1.4rem; margin: 0.5rem 0; }
+  .msg.assistant .body li { margin: 0.2rem 0; }
+  .msg.assistant .body p { margin: 0.5rem 0; }
+  .msg.assistant .body table { border-collapse: collapse; margin: 0.6rem 0; font-size: 0.85rem; }
+  .msg.assistant .body th, .msg.assistant .body td { border: 1px solid var(--rule);
+    padding: 0.3rem 0.6rem; text-align: left; }
+  .anshead { display: flex; align-items: center; gap: 0.6rem; }
+  @media (max-width: 640px) {
+    .wrap { padding: 0 1rem; }
+    #chat { padding: 1.5rem 0; }
+    .tools { gap: 0.9rem; }
+  }
 </style>
 </head>
 <body>
@@ -105,7 +163,11 @@
     <a class="brand" href="/"><span class="status" id="statusDot"></span>Jamii&nbsp;Afya</a>
     <div class="tools">
       <a href="/">About</a>
-      <label><input type="checkbox" id="carefulMode"> Careful mode</label>
+      <div class="modes" role="group" aria-label="Reasoning mode">
+        <button data-mode="fast" aria-pressed="false" title="Quick answers, brief reasoning">Fast</button>
+        <button data-mode="medium" aria-pressed="true" title="Balanced reasoning (default)">Medium</button>
+        <button data-mode="high" aria-pressed="false" title="Deepest reasoning, slower">High</button>
+      </div>
       <button id="clearBtn">New chat</button>
     </div>
   </div>
@@ -134,6 +196,7 @@
   <div class="wrap">
     <div id="composer">
       <textarea id="input" rows="1" placeholder="Describe the patient…"></textarea>
+      <button id="stop" style="display:none">Stop</button>
       <button id="send">Send</button>
     </div>
     <div class="disclaimer">Runs entirely offline on this machine. Decision support only —
@@ -145,11 +208,21 @@
 const chatEl = document.getElementById('chat').querySelector('.wrap');
 const inputEl = document.getElementById('input');
 const sendBtn = document.getElementById('send');
-const carefulEl = document.getElementById('carefulMode');
+const stopBtn = document.getElementById('stop');
 const statusDot = document.getElementById('statusDot');
 const clearBtn = document.getElementById('clearBtn');
 let emptyState = document.getElementById('emptyState');
 const emptyHTML = emptyState.outerHTML;
+let currentMode = 'medium';
+let aborter = null;
+
+document.querySelectorAll('.modes button').forEach(b => {
+  b.addEventListener('click', () => {
+    currentMode = b.dataset.mode;
+    document.querySelectorAll('.modes button').forEach(x =>
+      x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+  });
+});
 
 let history = [];  // [{role, content}] — full conversation memory sent with every request
 
@@ -205,45 +278,300 @@ async function checkHealth() {
 }
 checkHealth();
 
+function esc(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// Minimal offline markdown subset (no CDN): headings, bold, italic,
+// inline + fenced code, unordered/ordered lists, tables, paragraphs.
+// Input is HTML-escaped first, so raw model text can never inject markup.
+function renderMD(src) {
+  const lines = esc(src).split('\n');
+  let html = '', inCode = false, inUL = false, inOL = false;
+  const closeLists = () => {
+    if (inUL) { html += '</ul>'; inUL = false; }
+    if (inOL) { html += '</ol>'; inOL = false; }
+  };
+  const inline = (t) => t
+    .replace(/`([^`\n]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/(^|[\s(])\*([^*\n]+)\*/g, '$1<em>$2</em>');
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (/^\s*```/.test(line)) {
+      closeLists();
+      html += inCode ? '</code></pre>' : '<pre><code>';
+      inCode = !inCode; i++; continue;
+    }
+    if (inCode) { html += line + '\n'; i++; continue; }
+    // Table: header row + |---|---| row, then body rows.
+    if (/^\s*\|.*\|\s*$/.test(line) && i + 1 < lines.length &&
+        /^\s*\|[\s:|\-]+\|\s*$/.test(lines[i + 1])) {
+      closeLists();
+      const cells = (r) => r.trim().replace(/^\||\|$/g, '').split('|');
+      html += '<table><thead><tr>' +
+        cells(line).map(c => `<th>${inline(c.trim())}</th>`).join('') + '</tr></thead><tbody>';
+      i += 2;
+      while (i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) {
+        html += '<tr>' + cells(lines[i]).map(c => `<td>${inline(c.trim())}</td>`).join('') + '</tr>';
+        i++;
+      }
+      html += '</tbody></table>'; continue;
+    }
+    let m;
+    if ((m = line.match(/^(#{1,3})\s+(.*)$/))) {
+      closeLists();
+      const lvl = m[1].length;
+      html += `<h${lvl}>${inline(m[2])}</h${lvl}>`;
+    } else if ((m = line.match(/^\s*[-*]\s+(.*)$/))) {
+      if (inOL) { html += '</ol>'; inOL = false; }
+      if (!inUL) { html += '<ul>'; inUL = true; }
+      html += `<li>${inline(m[1])}</li>`;
+    } else if ((m = line.match(/^\s*\d+[.)]\s+(.*)$/))) {
+      if (inUL) { html += '</ul>'; inUL = false; }
+      if (!inOL) { html += '<ol>'; inOL = true; }
+      html += `<li>${inline(m[1])}</li>`;
+    } else if (/^\s*$/.test(line)) {
+      closeLists();
+    } else {
+      closeLists();
+      html += `<p>${inline(line)}</p>`;
+    }
+    i++;
+  }
+  closeLists();
+  if (inCode) html += '</code></pre>';
+  return html;
+}
+
+function copyText(btn, text) {
+  const done = () => { btn.textContent = 'copied'; setTimeout(() => btn.textContent = 'copy', 1200); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+  } else fallbackCopy(text, done);
+}
+function fallbackCopy(text, done) {
+  const ta = document.createElement('textarea');
+  ta.value = text; document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); done(); } catch (e) { /* clipboard unavailable */ }
+  ta.remove();
+}
+
+const chatScroll = document.getElementById('chat');
+function nearBottom() {
+  return chatScroll.scrollHeight - chatScroll.scrollTop - chatScroll.clientHeight < 120;
+}
+function stickScroll() {
+  if (nearBottom()) chatScroll.scrollTop = chatScroll.scrollHeight;
+}
+
+// Streaming assistant message: thinking <details> + markdown answer body.
+function addStreamingMessage() {
+  if (emptyState) { emptyState.remove(); emptyState = null; }
+  const wrap = document.createElement('div');
+  wrap.className = 'msg assistant';
+  const label = document.createElement('div');
+  label.className = 'role'; label.textContent = 'Jamii Afya';
+  wrap.appendChild(label);
+
+  const det = document.createElement('details');
+  det.className = 'thinking'; det.style.display = 'none';
+  const sum = document.createElement('summary');
+  sum.innerHTML = '<span class="caret">▸</span><span class="pulse"></span>' +
+    '<span class="tlabel">Working through this…</span>' +
+    '<span class="tstatus">view thinking output</span>';
+  const tbody = document.createElement('div');
+  tbody.className = 'tbody';
+  det.appendChild(sum); det.appendChild(tbody);
+  wrap.appendChild(det);
+
+  const anshead = document.createElement('div');
+  anshead.className = 'anshead'; anshead.style.display = 'none';
+  const copyAns = document.createElement('button');
+  copyAns.className = 'copybtn'; copyAns.textContent = 'copy';
+  anshead.appendChild(copyAns);
+  const body = document.createElement('div');
+  body.className = 'body';
+  body.innerHTML = '<span class="typing"><i></i><i></i><i></i></span>';
+  wrap.appendChild(anshead); wrap.appendChild(body);
+  chatEl.appendChild(wrap);
+  chatScroll.scrollTop = chatScroll.scrollHeight;
+
+  let thinking = '', answer = '', thinkShown = false, ansShown = false;
+  let metaShown = false;
+  const copyThink = document.createElement('button');
+  copyThink.className = 'copybtn'; copyThink.textContent = 'copy';
+  copyThink.addEventListener('click', (ev) => { ev.preventDefault(); copyText(copyThink, thinking); });
+  copyAns.addEventListener('click', (ev) => { ev.preventDefault(); copyText(copyAns, answer); });
+  function showMeta(urg) {
+    if (metaShown || !urg) return;
+    metaShown = true;
+    if (urg.urgency && urg.urgency !== 'ROUTINE') {
+      const b = document.createElement('div');
+      b.className = 'urgency ' + urg.urgency.toLowerCase().replace('-', '');
+      b.textContent = urg.urgency === 'SELF-CARE' ? 'self-care' : urg.urgency.toLowerCase();
+      wrap.insertBefore(b, wrap.firstChild);
+    }
+    if (urg.safety_override) {
+      const o = document.createElement('div');
+      o.className = 'override';
+      o.textContent = 'Safety guidance applies to this answer — act on the urgent steps first, then read the full reply.';
+      body.parentNode.insertBefore(o, body);
+    }
+    stickScroll();
+  }
+  return {
+    showMeta,
+    pushThinking(piece) {
+      thinking += piece;
+      if (!thinkShown) { det.style.display = ''; thinkShown = true; }
+      tbody.textContent = thinking;
+      tbody.scrollTop = tbody.scrollHeight;
+      stickScroll();
+    },
+    pushText(piece) {
+      answer += piece;
+      if (!ansShown) { body.innerHTML = ''; anshead.style.display = ''; ansShown = true; }
+      body.innerHTML = renderMD(answer);
+      stickScroll();
+    },
+    finish(sources, meta, empty, urg) {
+      det.classList.add('done');
+      // Meta banner normally already shown by the early meta event;
+      // this is the fallback for early-exit (non-streamed) paths.
+      showMeta(urg && urg.safety_override !== undefined ? urg :
+        (urg ? { urgency: urg.urgency, safety_override: urg.override } : null));
+      const st = sum.querySelector('.tstatus');
+      const lb = sum.querySelector('.tlabel');
+      if (thinkShown) {
+        lb.textContent = 'Reasoning complete';
+        st.textContent = 'view thinking output';
+        sum.appendChild(copyThink);
+      }
+      if (!ansShown) {
+        body.innerHTML = '';
+        anshead.style.display = '';
+        if (!empty) body.innerHTML = renderMD(answer);
+      }
+      if ((!answer || !answer.trim()) && thinking.trim()) {
+        // Reasoning-only output: surface the thinking, say so plainly.
+        det.open = true;
+        body.innerHTML = '<p><em>No final answer was produced for this turn — ' +
+          'the model-emitted reasoning above is all that came back.</em></p>';
+      }
+      if (empty) body.textContent = empty;
+      if (sources && sources.length) {
+        const src = document.createElement('div');
+        src.className = 'sources';
+        src.innerHTML = 'Grounded in ' + sources.map(s => `<code>${esc(s)}</code>`).join('');
+        wrap.appendChild(src);
+      }
+      if (meta) {
+        const m = document.createElement('div');
+        m.className = 'meta'; m.textContent = meta;
+        wrap.appendChild(m);
+      }
+      stickScroll();
+    },
+    fail(msg) {
+      det.classList.add('done');
+      if (thinkShown) sum.querySelector('.tlabel').textContent = 'Reasoning interrupted';
+      if (!ansShown) body.innerHTML = '';
+      body.innerHTML += `<p><em>${esc(msg)} (partial output above, if any).</em></p>`;
+      stickScroll();
+    },
+  };
+}
+
 async function send() {
   const message = inputEl.value.trim();
-  if (!message) return;
+  if (!message || aborter) return;
   inputEl.value = '';
   inputEl.style.height = 'auto';
   sendBtn.disabled = true;
+  sendBtn.style.display = 'none';
+  stopBtn.style.display = '';
+  aborter = new AbortController();
 
   addMessage('user', message);
-  const pending = addMessage('assistant', '', { typing: true });
+  const stream = addStreamingMessage();
 
   try {
-    const res = await fetch('/api/chat', {
+    const res = await fetch('/api/chat/stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, history, careful_mode: carefulEl.checked }),
+      body: JSON.stringify({ message, history, mode: currentMode }),
+      signal: aborter.signal,
     });
-    const data = await res.json();
-    pending.remove();
-
-    if (!res.ok) {
-      addMessage('assistant', 'Error: ' + (data.error || 'something went wrong.'));
+    if (!res.ok || !res.body) {
+      stream.fail('Request failed (HTTP ' + res.status + ').');
       return;
     }
-    const meta = data.model_ready
-      ? `${data.telemetry.throughput_tps} tok/s · ${data.telemetry.elapsed_sec}s`
-      : 'model not downloaded yet — showing retrieved context only';
-    addMessage('assistant', data.reply, { sources: data.sources, meta });
-
-    history.push({ role: 'user', content: message });
-    history.push({ role: 'assistant', content: data.reply });
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '', reply = '', doneEv = null, sawPieces = false;
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      let idx;
+      while ((idx = buf.indexOf('\n\n')) >= 0) {
+        const frame = buf.slice(0, idx);
+        buf = buf.slice(idx + 2);
+        for (const ln of frame.split('\n')) {
+          const line = ln.trim();
+          if (!line.startsWith('data:')) continue;
+          let ev;
+          try { ev = JSON.parse(line.slice(5).trim()); } catch (e) { continue; }
+          if (ev.kind === 'meta') { stream.showMeta(ev); }
+          else if (ev.kind === 'thinking') { sawPieces = true; stream.pushThinking(ev.piece || ''); }
+          else if (ev.kind === 'text') { sawPieces = true; stream.pushText(ev.piece || ''); }
+          else if (ev.kind === 'done') doneEv = ev;
+          else if (ev.kind === 'error') { stream.fail('Error: ' + (ev.error || 'generation failed.')); return; }
+        }
+      }
+    }
+    if (!doneEv) {
+      stream.fail('Stream ended unexpectedly.');
+      return;
+    }
+    reply = doneEv.reply || '';
+    if (!sawPieces && reply) {
+      // Early-exit event (ungrounded question / model-missing preview):
+      // plain single message, no thinking panel, no history pollution.
+      stream.finish(doneEv.sources || [], '', reply, doneEv);
+      history.push({ role: 'user', content: message });
+      return;
+    }
+    {
+      const t = doneEv.telemetry || {};
+      const meta = (t.throughput_tps ? `${t.throughput_tps} tok/s · ` : '') +
+        `${t.elapsed_sec || 0}s` +
+        (t.peak_rss_mb ? ` · ${t.peak_rss_mb} MB` : '');
+      if (doneEv.guard_ok === false) {
+        stream.pushText('\n\n*Note: this answer tripped an automated safety check ' +
+          '(' + (doneEv.guard_failures || []).join(', ') +
+          '). Please verify with a clinician.*');
+      }
+      stream.finish(doneEv.sources || [], meta, '', doneEv);
+      history.push({ role: 'user', content: message });
+      history.push({ role: 'assistant', content: reply });
+    }
   } catch (e) {
-    pending.remove();
-    addMessage('assistant', 'Connection error — is the server running?');
+    if (aborter && aborter.signal.aborted) stream.fail('Stopped.');
+    else stream.fail('Connection error — is the server running?');
   } finally {
+    aborter = null;
+    stopBtn.style.display = 'none';
+    sendBtn.style.display = '';
     sendBtn.disabled = false;
     inputEl.focus();
   }
 }
 
+stopBtn.addEventListener('click', () => { if (aborter) aborter.abort(); });
 sendBtn.addEventListener('click', send);
 inputEl.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }

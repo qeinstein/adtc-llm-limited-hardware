@@ -8,6 +8,7 @@ psutil>=5.9.0             # RSS sampling in the benchmark harness
 fastapi>=0.110.0          # web UI backend (src/webapp.py) — offline, no CDN assets
 uvicorn>=0.29.0           # ASGI server for the web UI
 pydantic>=2.0.0           # request/response models for the web UI
+pyyaml>=6.0.0             # structured guidance cards (runtime/safety/rules.py)
 
 # Dev/test tooling is in requirements-dev.txt.
 # Fine-tuning (GPU) and accuracy (lm-eval) deps are also in requirements-dev.txt.

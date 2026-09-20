@@ -1,0 +1,14 @@
+{
+ "n_quarantine": 32551,
+ "n_screened": 25310,
+ "n_kept": 25309,
+ "exact_hits": 1,
+ "near_hits": 0,
+ "hits": [
+  {
+   "src": "oasst1",
+   "src_id": "e7bffa4b-e366-4e4e-80cc-4d0ef65d305d",
+   "kind": "exact"
+  }
+ ]
+}

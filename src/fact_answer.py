@@ -1,4 +1,7 @@
-"""Experimental zero-training answer engine: the model SELECTS, code RENDERS.
+"""HISTORICAL/EXPERIMENTAL (Falcon line, superseded): zero-training answer
+engine where the model SELECTS and code RENDERS. Not on any serving path;
+retained with its tests for the record. The shipped Qwen system is NOT
+fine-tuned.
 
 Everything tried elsewhere in this project (repetition guards, refusal
 training, retrieval thresholds) made hallucination LESS LIKELY by making the

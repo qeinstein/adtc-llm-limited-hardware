@@ -1,0 +1,14 @@
+{
+ "system_version": "1.0.0",
+ "system_sha256": "ee290a7e8287000d15e5a82a4d1bc26852ff2580cd9580242414417bb338d52a",
+ "files": {
+  "pilot_chat.jsonl": {
+   "rows": 1465,
+   "sha256": "062c1d27a2fff45222c731901b3e4e9aadc63e697c586c1f7222092e54904895"
+  },
+  "full_chat.jsonl": {
+   "rows": 24931,
+   "sha256": "f4cbe437eddbc1dd7abc9c145c644615be4c51d74162fbddb43f3fbcf0237fad"
+  }
+ }
+}

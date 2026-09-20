@@ -1,0 +1,7 @@
+cpuid_0x18: unavailable
+---
+dontneed_path: madvise_us_med=34.72 refill_memcpy_us_med=499.79 sum_us_med=534.51 minflt_per_iter=214.0
+overwrite_path: memcpy_us_med=37.00 minflt_per_iter=0.00
+saving_per_miss_us=497.5 (14.4x)
+cold_overwrite: memcpy_us_med=140.9 (PTE-present, cache/TLB-cold; sink=0)
+pagemap: staged_8slot_present_pages=1712 of 1712 (6.69 MB)

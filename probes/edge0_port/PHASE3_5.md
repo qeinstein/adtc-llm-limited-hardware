@@ -57,3 +57,168 @@ DO NOT select k2 on perplexity. Paper recommends scanning {k1,k,2k}.
 - Paper disabled reasoning via chat template (transformers); our logprob
   MMLU is thinking-independent, so no thinking control needed for the gate.
   Generations (sanity set) WILL think; inspected as-is.
+
+## v1 results (kernel log; NO output files saved — crash before first dump)
+
+All 8 MMLU-200 arms completed; transcode/layer/sanity/speed never ran
+(`RuntimeError: kv type 5` in transcode_q2k's GGUF parser — scalar KV
+types unhandled + n_kv/n_tensors swapped; fixed + regression-tested in
+tests/test_gguf_kv_skip.py; remainder in edge0phase35r_v1.py):
+
+| arm | k1 | k2 | score | sigma | wall |
+|---|---|---|---|---|---|
+| native (unset) | - | - | 42.0 | 3.499 | 2112s |
+| k8exp (patched control) | 8 | 8 | 42.0 | 3.499 | 2136s |
+| naive k4 | 4 | 4 | 38.5 | 3.449 | 1677s |
+| k48 | 4 | 8 | 40.0 | 3.473 | 1743s |
+| k412 | 4 | 12 | 41.5 | 3.493 | 1774s |
+| k416 | 4 | 16 | 41.0 | 3.487 | 1672s |
+| k424 | 4 | 24 | 39.5 | 3.465 | 1717s |
+| k432 | 4 | 32 | 40.0 | 3.473 | 1733s |
+
+Adjudication vs pre-registered rule: k8exp == native EXACTLY (patch
+harness quality-neutral, +1.1% wall overhead). Naive k4 -3.5pp; EVERY
+k2>4 arm recovers to within -2.5..-0.5pp. k416 = -1.0pp with full K4
+speed (1672s, 1.26x) and no collapse => **STRONG KEEP** (within ~1pp).
+k412 nominally best (-0.5pp, ONE question over k416) but all k2 arms
+are mutually within noise (n=200, sigma ~3.5; paired detail lost with
+the crash, no McNemar possible).
+
+k2 LOCK: **16** (paper's choice; 1 question off nominal-best, flat
+within noise across k2 in 8..32; k2 changes only the renormalization
+scalar, NOT the executed top-4 set, so speed/traces/cache are
+k2-independent). k2=12 recorded as statistically equivalent fallback.
+
+Speed: K4 arms 1672-1774s vs native 2112 (1.19-1.26x; k412's +6% vs
+k416 is host noise — k2 cannot change executed work). Matches the
+paper's delta PATTERN (naive deep loss, k2=16 ~neutral) scaled to our
+matched-likelihood harness. Mandatory Recover-LoRA NOT needed for the
+speed sprint.
+
+## r-v1: ENOSPC (dead 40min in; parser fix verified 120/733)
+
+## r-v2: joint gate LANDED, then OOM-killed (ERROR at 8384s)
+
+- transcode q2k: 120/733 -> q2_k OK (~1914s); expert-count check passed.
+- **mmlu_q2k_k416 (Q2K-experts + K4/16, transcoded worst case): 38.5
+  +/- 3.449 (1834s)**. vs native 42.0: -3.5pp; vs k416-on-IQ2 41.0:
+  -2.5pp (5 questions). Unpaired SE of the diff ~4.9pp => WITHIN
+  NOISE of both; consistent with no Q2KxK4 interaction AND with a
+  small real interaction. No Q2K+K8/MMLU-200 arm exists to separate
+  them (Q2K-alone evidence is MMLU-100/K8: 39 vs 37). Deployment
+  config point estimate: 38.5. Sprint impact: acceptable modest cost
+  (post-training recovers); does NOT overturn Q2K KEEP or K4/16
+  STRONG KEEP, which rest on their own gates.
+- After mmlu_q2k (4450s), "Killed" (SIGKILL, no traceback) at 8384s.
+  Output pull (selective --file-pattern; full pull OOMs the 2GB local
+  box on the 13GB file) shows result.json ends at mmlu_q2k_k416 and
+  ZERO layer_*/san_* files => died 66min into the FIRST layer-probe
+  run (layer_p0_k8, hook active, 30 tokens). Hook code reviewed: no
+  deadlock/leak shape (buffered streaming writes, no accumulation);
+  mechanism UNKNOWN. Secondary find: hook-after-barrier RACES the next
+  node on MT (torn-read risk on in-place buffers) => captures must run
+  1-threaded. JSON-verified: mmlu_q2k_k416=38.5; WORK free 8.68GB,
+  SCRATCH 1089GB (capacity vindicated).
+
+## s-v1 (running): attach + timeouts + canary
+
+Attaches r-v2 outputs (q2k file, no re-transcode/re-MMLU); layer SPEED
+probe without hook (4T); CAPTURE canary with hook at 1T (race-free),
+abort-on-first-900s-hang; sanity + speed_q2k. Every subprocess now has
+timeout + progress prints + MemAvailable logging + per-run dumps.
+
+## PIN TYPO (all phase35 runs built master, not the pin)
+
+The three phase35 scripts carried LLAMA_COMMIT=3057bb6c... (typo) vs
+the true 3057bb66c86c46d5781e50e85462a760ba7d1feb ("ui: add cache
+#28802", verified upstream; 51 other kernel files use it). The bogus
+SHA fails fetch ("not our ref", verified) and checkout, both unchecked
+=> v1, r-v1, r-v2, s-v1 all built ggml-org/llama.cpp MASTER (~Sept
+2026). MMLU DELTAS STAND (same binary across arms within each run);
+only the provenance label was wrong. s-v1's hook-free llama-cli death
+(25min silence + SIGKILL, 32GB free at start) is therefore most likely
+a MASTER-ERA regression/interaction, not our patch (inactive on that
+path) or capacity. Hook exonerated as the kill cause (same death
+without it); 1T-capture rule stands (torn-read race is real).
+
+## s-v2 (running): true pin + asserts + heartbeat
+
+Re-pinned (asserts on fetch/checkout/rev-parse, HEAD recorded); 60s
+heartbeat on every cli_run (mem + elapsed; silence becomes data). If
+the speed probe flies on the pin, master regression confirmed and the
+sprint continues on the pin.
+
+## s-v2 FAILED: linear 0.7GB/min leak -> OOM (pin exonerated too)
+
+`built base: 3057bb66...` confirmed, then speed_p0_k8 drained
+MemAvailable 31.9->15.3GB linearly over 24min and OOM-SIGKILLed at
+~1527s (Kaggle: "tried to allocate more memory than is available").
+Our patch is INACTIVE on that path (k1=k2=8, no hook env) and flags
+are valid stock => stock-CLI/flags/file issue. Diff vs PROVEN
+edge0trace invocation (23 clean prompts, same pin/model family): we
+lacked --single-turn, used -c 1024, temp 0.0, no top-p/perf/ngl.
+
+## s-v3 (running): trace-verbatim + DEVNULL stdin + leak canary
+
+Adopts the trace invocation verbatim (single-turn, c512, temp 0.7,
+top-p 0.9, perf, ngl 0) + stdin=DEVNULL (no interactive wait possible)
++ 5-token canary that fails FAST if >3GB drains (flags vs file/patch
+discriminator). Either outcome is decisive within ~40min of launch.
+
+## s-v6 COMPLETE: Phase 3.5 CLOSED OUT
+
+Speed matrix (resident, Kaggle CPU, decode tok/s, 30-tok runs):
+p0: k8=3.3 k4=6.0 k416=6.0; p1: k8=4.7 k4=5.9 k416=5.9.
+Q2K+k416: 7.0 (+17% over IQ2-K4). k4==k416 both prompts (k2 free).
+K4/K8 1.26-1.82x (noisy 30-tok samples; MMLU walls 1.19-1.26x rule).
+MODEL VALIDATED: predicted K4-IQ2 5.85 vs 6.0, K4-Q2K 6.6 vs 7.0,
+K8 4.73 vs 4.7(p1) — all within ~6%.
+
+Sanity (15/15): all coherent structured thinking, zero collapse/
+repetition/garbage. Swahili intact (cholera ID, WHO 50/min threshold
+exactly right). Safety intact: bleach-dose refusal, abortion-
+instruction refusal, DIY-dentistry refusal — same shapes as k8 pairs.
+Caveat: 400-tok budget went to thinking; final answers unobserved
+(thinking quality is the proxy; MMLU-200 covers final-answer quant).
+
+Layer probe: DROPPED (hook silent on dtype filter; confirmatory only;
+MMLU answered quality). Reopen only if explicitly needed.
+
+FINAL: K4/16 STRONG KEEP, k2=16 locked, Q2K+K4/16 joint 38.5 (noise),
+deployment decode 7.0 tok/s resident. Recover-LoRA NOT needed.
+Next: JOIN (fresh K4 traces -> re-sweep -> integrate -> final bench).
+
+## s-v5: all runs clean, hook wrote ZERO records (analyzed, nonfatal in v6)
+
+Canary + 6 speed + 6 capture runs: ALL rc=0 in 13-32s, mem flat
+32GB. Then analyze_layer FileNotFoundError (no .bin) killed the run
+BEFORE sanity+speed (late order — v6's reorder fixes exactly this).
+V5 outputs unrecoverable (Kaggle serves latest version only; v6
+already latest) but REDUNDANT: v6 re-runs the speed matrix identically.
+
+Hook post-mortem (pin source fetched + audited): call site VERIFIED
+live (single node loop, ith==thread-idx, node==current). Naming MUST
+execute (MMLU K-scaling proves our build_moe_ffn patch runs; naming is
+in the same function, env-gated, env was set). Therefore the silent
+drop is the `type!=F32 || !contiguous` filter — moe_out is almost
+certainly NOT F32 on this path (ne[0]=2048/nt-range certain). Recovery
+(if wanted): relax the filter, log actual dtype, fp16->f32 convert;
+~1h micro-kernel. Value is confirmatory only (MMLU answered quality);
+default is SKIP unless layer-error data is explicitly needed.
+
+## s-v3 CANARY PASSED (flags were the killer) + perf-parse bug
+
+`canary_n5: done 13s mem=31.9GB` — trace-verbatim flags + DEVNULL stdin
+run clean (13s incl. load, zero drain). Old invocation (no
+--single-turn, -c 1024, temp 0.0) caused all three kills. Then died on
+OUR assert: pin-era `--perf` line not in stderr tail (rc=0, run fine).
+s-v4: search stdout+stderr for the perf line (findall, take last).
+
+## s-v4: bracket perf format (16s, still our parser)
+
+Pin-era single-turn prints `[ Prompt: 6.1 t/s | Generation: 4.3 t/s ]`
+on stdout, not `eval time = ...`. Canary: 4.3 t/s gen on K8+IQ2
+resident — same ballpark as phase5a's 4.733 (different base/box),
+sane. Also confirms: single-turn chat mode echoes prompt + emits
+thinking preamble within -n budget (kept as-is per thinking decision).
+s-v5 parses the bracket form (eval-time kept as fallback).

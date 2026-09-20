@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
-# ADTC 2026 — Jamii Afya Falcon submission downloader
+# ADTC 2026 — Jamii Afya model downloader (Qwen3.6-35B-A3B Q2K-experts GGUF).
 #
-# The active artifact is the exact Q4_K_M GGUF.  The host must publish the
-# matching .sha256 sidecar (or callers may provide MODEL_SHA256); downloads are
-# never accepted on size alone.
+# The model URL is a STATIC literal per the Gate-2 requirements: a reviewer
+# opens this script and sees exactly what will be downloaded. Downloads are
+# never accepted on size alone — the hosted .sha256 sidecar (or MODEL_SHA256)
+# must verify.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MODEL_DIR="$HERE/model"
-MODEL_FILE="$MODEL_DIR/Falcon-H1-1.5B-Deep-JamiiAfya-Q4_K_M.gguf"
-MODEL_URL="${MODEL_URL:-https://huggingface.co/Fluxx08/jamii-afya-falcon-h1-1.5b/resolve/main/Falcon-H1-1.5B-Deep-JamiiAfya-Q4_K_M.gguf}"
+MODEL_FILE="$MODEL_DIR/Qwen3.6-35B-A3B-UD-Q2K-experts.gguf"
+MODEL_URL="https://huggingface.co/Fluxx08/jamii-afya-qwen36-35b-q2k/resolve/main/Qwen3.6-35B-A3B-UD-Q2K-experts.gguf"
 MODEL_SHA256="${MODEL_SHA256:-}"
-MIN_SIZE="${MIN_SIZE:-500000000}"
+MIN_SIZE=12000000000
 
 file_size() {
     if [ ! -f "$1" ]; then echo 0; return; fi
