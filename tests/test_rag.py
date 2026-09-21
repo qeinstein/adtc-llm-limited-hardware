@@ -1,7 +1,12 @@
 """Tests for the RAG assembly pipeline (no model weights required)."""
 
+import json
+from pathlib import Path
+
 from src.rag import RAGPipeline
 from src.retriever import BM25Retriever
+
+ROOT = Path(__file__).resolve().parent.parent
 
 DOCS = [
     {"id": "med_x", "title": "Malaria", "text": "Confirm malaria with an mRDT before giving ACT. High fever and chills are typical."},
@@ -98,3 +103,18 @@ def test_system_prompt_is_the_only_instruction_layer():
     assert "health-information expertise" in normalized
     assert len(sp.split()) < 50
     assert rag.system_prompt_for(_pipeline().build("hello")) == sp
+
+
+def test_production_rag_corpus_has_no_swahili_glosses():
+    rows = json.loads((ROOT / "data" / "medical_guidelines.json").read_text())
+    corpus = " ".join(
+        f"{row.get('title', '')} {row.get('text', '')}" for row in rows
+    ).lower()
+    swahili_markers = (
+        "dalili za", "homa ya", "rufaa", "kuharisha", "upungufu wa",
+        "maumivu", "kutapika", "degedege", "kifafa", "nimonia",
+        "kikohozi", "kipindupindu", "ujauzito", "kujifungua", "utapiamlo",
+        "chanjo", "kuumwa", "jeraha", "kuungua", "shinikizo la damu",
+        "kisukari", "uzazi wa mpango", "magonjwa ya zinaa", "minyoo",
+    )
+    assert not any(marker in corpus for marker in swahili_markers)
