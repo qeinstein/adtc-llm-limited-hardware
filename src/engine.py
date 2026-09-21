@@ -194,7 +194,7 @@ class MedicalLLMEngine:
         generation: Optional[GenerationConfig] = None,
         **overrides: Any,
     ) -> Iterator[tuple[str, str | dict[str, Any]]]:
-        """Yield final output events and usage; discard reasoning."""
+        """Yield reasoning and final output as separate events, plus usage."""
         from src.sparse import _StreamingThinkingParser
 
         gen = generation or get_generation_config()
@@ -230,16 +230,15 @@ class MedicalLLMEngine:
             if delta.get("reasoning_content"):
                 if not structured_reasoning:
                     for kind, piece in parser.finish():
-                        if kind == "text":
-                            yield kind, piece
+                        yield ("thinking" if kind == "thinking" else kind), piece
                     structured_reasoning = True
+                yield "thinking", delta["reasoning_content"]
             if delta.get("content"):
                 if structured_reasoning:
                     yield "text", delta["content"]
                 else:
                     for kind, piece in parser.feed(delta["content"]):
-                        if kind == "text":
-                            yield kind, piece
+                        yield ("thinking" if kind == "thinking" else kind), piece
             # The terminal chunk may carry both the final content delta and
             # finish_reason="stop". Read content before handling the finish
             # marker so a valid final answer is not dropped.
@@ -247,8 +246,7 @@ class MedicalLLMEngine:
                 yield "finish", str(choice["finish_reason"])
         if not structured_reasoning:
             for kind, piece in parser.finish():
-                if kind == "text":
-                    yield kind, piece
+                yield ("thinking" if kind == "thinking" else kind), piece
 
     def stream(
         self,

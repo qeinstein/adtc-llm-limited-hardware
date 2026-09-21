@@ -109,20 +109,19 @@ class RuntimeConfig:
     type_k: str = field(default_factory=lambda: _env_str("ADTC_TYPE_K", "q8_0"))
     type_v: str = field(default_factory=lambda: _env_str("ADTC_TYPE_V", "q8_0"))
     flash_attn: bool = True
-    # Cap only the model's internal <think> block. The pinned runtime closes
-    # that block when the budget is reached and continues with the final answer,
-    # so max_tokens remains available for visible output. -1 is unrestricted.
+    # Cap the model's internal <think> block inside the total completion budget.
+    # The pinned runtime closes that block when the sub-budget is reached, leaving
+    # the rest of max_tokens for a visible answer. -1 makes thinking unrestricted.
     reasoning_budget: int = field(
         default_factory=lambda: max(-1, _env_int("ADTC_REASONING_BUDGET", 1024))
     )
-    # llama-server tokenizes this message exactly as supplied; it does not
-    # append the model's closing marker when a custom message is present.
-    # Keep Qwen's native transition in the default so a capped thinking block
-    # becomes a final answer instead of consuming the whole completion.
+    # Pinned llama-server injects this message immediately before the
+    # auto-detected end-of-thinking tag. Do not include ``</think>`` here or
+    # the generated sequence contains two closing tags.
     reasoning_budget_message: str = field(
         default_factory=lambda: _env_str(
             "ADTC_REASONING_BUDGET_MESSAGE",
-            "Provide the final answer now.\n</think>\n\n",
+            "Provide the final answer now.",
         )
     )
     # Optional speculative decoding draft model (path); empty disables it.
@@ -131,12 +130,16 @@ class RuntimeConfig:
 
 @dataclass(frozen=True)
 class GenerationConfig:
-    """One unconstrained generation configuration for the model."""
+    """Generation settings for Qwen3.6, including a hard completion cap."""
 
-    max_tokens: int = field(default_factory=lambda: _env_int("ADTC_MAX_TOKENS", 2048))
-    temperature: float = field(default_factory=lambda: _env_float("ADTC_TEMPERATURE", 0.7))
+    max_tokens: int = field(default_factory=lambda: _env_int("ADTC_MAX_TOKENS", 2560))
+    temperature: float = field(default_factory=lambda: _env_float("ADTC_TEMPERATURE", 1.0))
     top_p: float = field(default_factory=lambda: _env_float("ADTC_TOP_P", 0.95))
-    top_k: int = field(default_factory=lambda: _env_int("ADTC_TOP_K", 40))
+    top_k: int = field(default_factory=lambda: _env_int("ADTC_TOP_K", 20))
+    min_p: float = field(default_factory=lambda: _env_float("ADTC_MIN_P", 0.0))
+    presence_penalty: float = field(
+        default_factory=lambda: _env_float("ADTC_PRESENCE_PENALTY", 1.5)
+    )
     repeat_penalty: float = field(default_factory=lambda: _env_float("ADTC_REPEAT_PENALTY", 1.0))
     stop: tuple[str, ...] = ()
 
@@ -158,13 +161,13 @@ def _load_system_prompt() -> str:
     except (OSError, ValueError):
         pass
     return (
-        "You are Jamii Afya, an offline general-purpose assistant with strong "
-        "health-information expertise. Answer non-health questions directly too, "
-        "and never invent protocols, diagnoses, medicine doses, or thresholds.")
+        "You are Jamii Afya, a helpful general-purpose offline assistant with "
+        "strong health-information expertise for African communities and health "
+        "workers. Respond naturally, clearly, and compassionately.")
 
 
 SYSTEM_PROMPT = _load_system_prompt()
-SYSTEM_PROMPT_VERSION = "prompts/system.json v6.0.0"
+SYSTEM_PROMPT_VERSION = "prompts/system.json v7.0.0"
 
 
 def get_runtime_config() -> RuntimeConfig:

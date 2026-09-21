@@ -37,7 +37,7 @@ engineering rather than domain-specific weight training.
 
 ## System tests
 
-- `pytest tests/`: 188 passed (RAG, webapp wiring, runtime, historical, and
+- `pytest tests/`: 194 passed (RAG, webapp wiring, runtime, historical, and
   JOIN4 anchors — all model-independent)
 - CI `offline-gates`: PASS (tests, metadata/manifest validation, download
   script checks, stale/secret/size audits, UI static check, lint)
@@ -46,11 +46,18 @@ engineering rather than domain-specific weight training.
 
 ## Application response path
 
-- short system prompt with clear medical explanations and explicit medication
-  request behavior
+- 24-word positive system prompt containing identity, general scope,
+  health-information specialization, audience, and tone—not a rule checklist
 - optional offline RAG context when the corpus matches the question
-- direct model output; internal reasoning is not exposed, and there are no
-  application-side labels, linting, regeneration, or fixed response path
+- direct model output; reasoning is isolated in a collapsed UI panel and never
+  mixed into copied answers or follow-up history, and there are no
+  application-side labels, linting, content rewriting, or fixed answers
+- native assistant-turn continuation recovers the output channel when
+  llama-server returns reasoning without final-answer content
+- explicit 2,560-token generation cap; the private thinking block is separately
+  capped at 1,024 tokens
+- no weight-level SFT or DPO; targeted, clinician-reviewed multi-turn SFT and
+  preference optimization remain the main alignment follow-up
 
 ## `make model` / `make webui`
 

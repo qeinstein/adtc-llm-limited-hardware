@@ -147,13 +147,13 @@ default is the low-memory validated production configuration
   (historical profiler snapshot; see FINAL_RELEASE_REPORT.md).
 - **Weight-level fine-tuning: NONE.** The shipping weights were NOT
   LoRA/QLoRA/full-fine-tuned. Adaptation performed instead:
-  - medical system prompting (versioned, `prompts/system.json v6.0.0`)
+  - short positive system prompting (versioned, `prompts/system.json v7.0.0`)
   - K4/16 sparse execution adaptation
   - routed-expert-only Q2_K transformation
   - bounded sparse runtime (<3 GB working set)
   - optional offline RAG context from the medical reference corpus
-  - direct model generation with Qwen3.6 reasoning extracted to a private
-    channel and hidden from the UI/API
+  - direct model generation with Qwen3.6 reasoning isolated from final content
+    and shown only inside a collapsed UI panel
 
 Because no weight-level fine-tuning was performed, the base model remains
 adaptable to other domains through a different system prompt, optional local
@@ -202,7 +202,7 @@ The concise observed before/after example is preserved in
 
 Capture: `python3 scripts/capture_before_after.py --prompts evals/gate2_before_after/prompts.json --base-model <base.gguf> --out evals/gate2_before_after/`
 compares raw-base replies vs the system prompt + optional RAG + model path.
-Expected deltas: explanation quality, reference use, and medication behavior.
+Expected deltas: explanation quality, natural response style, and reference use.
 Each generated `tp_*.json` contains the answer before and after the harness.
 **Owner: final capture on the release laptop; results should be attached here
 before the video.**
@@ -210,7 +210,8 @@ before the video.**
 ## USEFULNESS (anti-gaming)
 
 Low RAM is the enabler, not the purpose. The system keeps a genuinely useful
-35B-A3B clinician's assistant: medical system prompt, optional offline RAG,
+35B-A3B assistant with health-information expertise: short positive system
+prompt, optional offline RAG,
 Kiswahili handling, and direct model generation. Nothing was dumbed down to
 win throughput; the bounded arm is bit-exact vs resident.
 

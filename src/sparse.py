@@ -7,9 +7,9 @@ HTTP API instead of in-process inference.
 
 Stdlib only (subprocess + urllib): no new dependencies.
 
-The runtime may emit a separate internal reasoning channel. The backend uses
-the native markers only to recover the final answer and discards reasoning
-before it reaches the web API. Streamed SSE deltas carry
+The runtime may emit a separate reasoning channel. The backend keeps that
+channel separate from the final answer so the UI can place it in a collapsed
+panel without contaminating answer text or conversation history. Streamed SSE deltas carry
 ``choices[0].delta.reasoning_content`` vs ``choices[0].delta.content``
 (server-chat.cpp on the pin), and non-streamed replies carry both fields.
 When the server returns merged text instead, :func:`split_thinking` falls back
@@ -27,8 +27,9 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 FREEZE_PATH = ROOT / "configs" / "final_runtime.json"
@@ -74,18 +75,19 @@ QWEN_CHAT_TEMPLATE_KWARGS = '{"enable_thinking":true}'
 
 
 def _native_reasoning_budget_message(message: str | None) -> str | None:
-    """Return a budget cue that actually exits Qwen's thinking channel.
+    """Return text to inject *before* Qwen's native thinking end tag.
 
-    llama-server does not append a closing marker to a non-empty custom
-    ``--reasoning-budget-message``. This backend is pinned to Qwen3.6, whose
-    native template uses ``</think>``; normalize custom values so an operator
-    cannot accidentally recreate the no-final-answer failure with a short cue.
+    Pinned llama-server appends the template's detected end tag itself. Older
+    Jamii Afya settings also supplied ``</think>``, producing two closing tags;
+    the second could become the only visible ``content`` and then be stripped
+    by the UI as formatting, leaving an apparently empty answer.
     """
     if not message:
         return message
-    if "</think>" in message:
-        return message
-    return message.rstrip() + "\n</think>\n\n"
+    normalized = message.rstrip()
+    while normalized.endswith("</think>"):
+        normalized = normalized[:-len("</think>")].rstrip()
+    return normalized
 
 
 def load_freeze() -> dict:
@@ -311,6 +313,58 @@ def _post_sse(url: str, payload: dict, timeout: float):
                     continue
 
 
+def _decode_chat_stream(url: str, payload: dict, timeout: float):
+    """Normalize llama-server SSE into reasoning, text, usage, and finish events.
+
+    ``deepseek`` format normally separates ``reasoning_content`` and
+    ``content``. The marker parser remains active for compatibility with
+    runtimes that merge the channels, and also removes an orphan closing tag
+    without mistaking it for a user-visible answer.
+    """
+    parser = _StreamingThinkingParser()
+    structured_reasoning = False
+    for ev in _post_sse(url, payload, timeout=timeout):
+        if "usage" in ev or "timings" in ev:
+            usage = dict(ev.get("usage") or {})
+            if ev.get("timings"):
+                usage["timings"] = ev["timings"]
+            yield ("usage", usage)
+            continue
+
+        choice = (ev.get("choices") or [{}])[0]
+        delta = choice.get("delta", {})
+        reasoning = delta.get("reasoning_content") or ""
+        if reasoning:
+            if not structured_reasoning:
+                for parsed_kind, parsed_piece in parser.finish():
+                    yield (
+                        "reasoning" if parsed_kind == "thinking" else parsed_kind,
+                        parsed_piece,
+                    )
+                parser = _StreamingThinkingParser()
+                structured_reasoning = True
+            yield ("reasoning", str(reasoning))
+
+        content = delta.get("content") or ""
+        if content:
+            for parsed_kind, parsed_piece in parser.feed(str(content)):
+                yield (
+                    "reasoning" if parsed_kind == "thinking" else parsed_kind,
+                    parsed_piece,
+                )
+
+        # A terminal event can contain both the final content delta and the
+        # finish reason, so parse the delta first.
+        if choice.get("finish_reason"):
+            yield ("finish", str(choice["finish_reason"]))
+
+    for parsed_kind, parsed_piece in parser.finish():
+        yield (
+            "reasoning" if parsed_kind == "thinking" else parsed_kind,
+            parsed_piece,
+        )
+
+
 class SparseServer:
     """Managed llama-server for the frozen sparse system."""
 
@@ -461,8 +515,15 @@ class SparseServer:
 
     def _payload(self, messages: list[dict], max_tokens: int,
                  temperature: float, top_p: float, stream: bool) -> dict:
+        from src.config import get_generation_config
+
+        generation = get_generation_config()
         payload = {"messages": messages, "max_tokens": max_tokens,
                    "temperature": temperature, "top_p": top_p,
+                   "top_k": generation.top_k,
+                   "min_p": generation.min_p,
+                   "presence_penalty": generation.presence_penalty,
+                   "repeat_penalty": generation.repeat_penalty,
                    "stream": stream, "cache_prompt": True}
         # llama-server only sends usage/timing data for streamed completions
         # when the OpenAI-compatible option is explicitly enabled. Keeping
@@ -471,6 +532,47 @@ class SparseServer:
         if stream:
             payload["stream_options"] = {"include_usage": True}
         return payload
+
+    def _continuation_payload(
+        self, messages: list[dict], hidden_reasoning: str, max_tokens: int,
+        temperature: float, top_p: float, stream: bool,
+    ) -> dict:
+        payload = self._payload(
+            [
+                *messages,
+                {
+                    "role": "assistant",
+                    "reasoning_content": hidden_reasoning,
+                    "content": "",
+                },
+            ],
+            max_tokens, temperature, top_p, stream,
+        )
+        payload.update({
+            "continue_final_message": "content",
+            "chat_template_kwargs": {"enable_thinking": True},
+        })
+        return payload
+
+    def _direct_payload(
+        self, messages: list[dict], max_tokens: int, stream: bool,
+    ) -> dict:
+        payload = self._payload(
+            messages, max_tokens, 0.7, 0.8, stream,
+        )
+        payload["chat_template_kwargs"] = {"enable_thinking": False}
+        return payload
+
+    @staticmethod
+    def _response_channels(data: dict) -> tuple[str, str]:
+        msg = (data.get("choices") or [{}])[0].get("message", {})
+        hidden_reasoning = str(msg.get("reasoning_content", "") or "")
+        text = str(msg.get("content", "") or "")
+        if "<think>" in text or text.lstrip().startswith("</think>"):
+            inline_reasoning, text = split_thinking(text)
+            if not hidden_reasoning:
+                hidden_reasoning = inline_reasoning
+        return hidden_reasoning, text
 
     def chat(self, messages: list[dict], *, max_tokens: int | None = None,
              temperature: float | None = None, top_p: float | None = None,
@@ -482,15 +584,35 @@ class SparseServer:
         max_tokens = gen.max_tokens if max_tokens is None else max_tokens
         temperature = gen.temperature if temperature is None else temperature
         top_p = gen.top_p if top_p is None else top_p
-        data = _post_json(self.base_url + "/v1/chat/completions",
-                          self._payload(messages, max_tokens, temperature,
-                                        top_p, False),
-                          timeout=self.timeout_s)
-        msg = (data.get("choices") or [{}])[0].get("message", {})
-        hidden_reasoning = msg.get("reasoning_content", "") or ""
-        text = msg.get("content", "") or ""
-        if not hidden_reasoning and ("<think>" in text or text.lstrip().startswith("</think>")):
-            _hidden_reasoning, text = split_thinking(text)
+        url = self.base_url + "/v1/chat/completions"
+        data = _post_json(
+            url,
+            self._payload(messages, max_tokens, temperature, top_p, False),
+            timeout=self.timeout_s,
+        )
+        hidden_reasoning, text = self._response_channels(data)
+        if not text.strip() and hidden_reasoning:
+            try:
+                data = _post_json(
+                    url,
+                    self._continuation_payload(
+                        messages, hidden_reasoning, max_tokens,
+                        temperature, top_p, False,
+                    ),
+                    timeout=self.timeout_s,
+                )
+                _continued_reasoning, text = self._response_channels(data)
+            except (OSError, RuntimeError, TimeoutError, TypeError, ValueError):
+                text = ""
+        if not text.strip():
+            data = _post_json(
+                url,
+                self._direct_payload(
+                    messages, max_tokens, False,
+                ),
+                timeout=self.timeout_s,
+            )
+            _direct_reasoning, text = self._response_channels(data)
         usage = dict(data.get("usage") or {})
         if data.get("timings"):
             usage["timings"] = data["timings"]
@@ -500,49 +622,80 @@ class SparseServer:
         self, messages: list[dict], *, max_tokens: int | None = None,
         temperature: float | None = None, top_p: float | None = None,
     ) -> Iterator[tuple[str, str | dict[str, Any]]]:
-        """Yield final text, finish reason, and usage; discard reasoning."""
+        """Yield reasoning and final text as separate channels, plus metadata.
+
+        If a model turn ends after producing only ``reasoning_content``, resume
+        that same assistant turn in its content channel. This uses Qwen3.6's
+        native assistant-prefill format, preserving the model's work without
+        mixing it into the final answer. If a runtime cannot continue a
+        structured assistant turn, make one final request in Qwen's officially
+        supported direct-response mode instead of returning an empty answer.
+        """
         from src.config import get_generation_config
 
         gen = get_generation_config()
         max_tokens = gen.max_tokens if max_tokens is None else max_tokens
         temperature = gen.temperature if temperature is None else temperature
         top_p = gen.top_p if top_p is None else top_p
-        parser = _StreamingThinkingParser()
-        structured_reasoning = False
-        for ev in _post_sse(self.base_url + "/v1/chat/completions",
-                            self._payload(messages, max_tokens, temperature,
-                                          top_p, True),
-                            timeout=self.timeout_s):
-            if "usage" in ev or "timings" in ev:
-                usage = dict(ev.get("usage") or {})
-                if ev.get("timings"):
-                    usage["timings"] = ev["timings"]
-                yield ("usage", usage)
+        url = self.base_url + "/v1/chat/completions"
+        primary = self._payload(messages, max_tokens, temperature, top_p, True)
+        attempts: list[tuple[str, dict]] = [("primary", primary)]
+        finish_reason = ""
+
+        while attempts:
+            attempt, payload = attempts.pop(0)
+            hidden_parts: list[str] = []
+            visible_parts: list[str] = []
+            recovery_failed = False
+            try:
+                for kind, piece in _decode_chat_stream(
+                    url, payload, timeout=self.timeout_s,
+                ):
+                    if kind == "reasoning":
+                        hidden_parts.append(str(piece))
+                        yield ("thinking", piece)
+                    elif kind == "text":
+                        visible_parts.append(str(piece))
+                        yield ("text", piece)
+                    elif kind == "usage":
+                        yield ("usage", piece)
+                    elif kind == "finish":
+                        finish_reason = str(piece)
+            except (OSError, RuntimeError, TimeoutError, TypeError, ValueError):
+                if attempt == "primary":
+                    raise
+                recovery_failed = True
+
+            if "".join(visible_parts).strip():
+                break
+
+            if attempt == "primary" and hidden_parts:
+                # Continue the same assistant message immediately after its
+                # hidden reasoning block. Qwen's template renders this as
+                # <think>...reasoning...</think> followed by the content slot.
+                continuation = self._continuation_payload(
+                    messages, "".join(hidden_parts), max_tokens,
+                    temperature, top_p, True,
+                )
+                attempts.append(("continuation", continuation))
                 continue
-            choice = (ev.get("choices") or [{}])[0]
-            delta = choice.get("delta", {})
-            if delta.get("reasoning_content"):
-                if not structured_reasoning:
-                    for kind, piece in parser.finish():
-                        if kind == "text":
-                            yield (kind, piece)
-                    structured_reasoning = True
-            if delta.get("content"):
-                if structured_reasoning:
-                    yield ("text", delta["content"])
-                else:
-                    for kind, piece in parser.feed(delta["content"]):
-                        if kind == "text":
-                            yield (kind, piece)
-            # Some OpenAI-compatible servers put the last content delta and
-            # finish_reason="stop" in the same SSE event. Consume the delta
-            # before recording the finish reason or the final answer vanishes.
-            if choice.get("finish_reason"):
-                yield ("finish", str(choice["finish_reason"]))
-        if not structured_reasoning:
-            for kind, piece in parser.finish():
-                if kind == "text":
-                    yield (kind, piece)
+
+            if attempt != "direct":
+                # Official Qwen direct-response mode pre-closes the empty
+                # thinking block in the chat template, so generated tokens are
+                # unambiguously returned as content.
+                direct = self._direct_payload(
+                    messages, max_tokens, True,
+                )
+                attempts.append(("direct", direct))
+                continue
+
+            if recovery_failed:
+                raise RuntimeError("model response recovery failed")
+            break
+
+        if finish_reason:
+            yield ("finish", finish_reason)
 
     def stream_chat(self, messages: list[dict], *, max_tokens: int | None = None,
                     temperature: float | None = None, top_p: float | None = None,

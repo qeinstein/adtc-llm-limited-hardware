@@ -106,6 +106,20 @@
   .thinking-status .pulse { width: 6px; height: 6px; border-radius: 50%;
     background: var(--muted); animation: blink 1.2s infinite ease-in-out; }
   .thinking-status.done .pulse { animation: none; background: var(--rule); }
+  .reasoning { display: none; margin: 0.15rem 0 0.65rem; border: 1px solid var(--rule-soft);
+    border-radius: 6px; background: var(--surface); color: var(--ink-soft); }
+  .reasoning.ready { display: block; }
+  .reasoning summary { cursor: pointer; list-style: none; padding: 0.42rem 0.62rem;
+    font-family: var(--mono); font-size: 0.7rem; color: var(--muted); user-select: none; }
+  .reasoning summary::-webkit-details-marker { display: none; }
+  .reasoning summary::before { content: '›'; display: inline-block; margin-right: 0.42rem;
+    transition: transform 120ms ease; }
+  .reasoning[open] summary::before { transform: rotate(90deg); }
+  .reasoning-body { border-top: 1px solid var(--rule-soft); padding: 0.4rem 0.62rem 0.48rem;
+    font-size: 0.76rem; line-height: 1.42; max-height: 16rem; overflow: auto; }
+  .reasoning-body p { margin: 0.25rem 0; }
+  .reasoning-body ul, .reasoning-body ol { margin: 0.3rem 0; padding-left: 1.2rem; }
+  .reasoning-body pre { margin: 0.35rem 0; padding: 0.5rem; overflow-x: auto; }
   .copybtn { border: 1px solid var(--rule); background: var(--bg); color: var(--muted);
     border-radius: 4px; font-size: 0.68rem; font-family: var(--mono);
     padding: 0.1rem 0.45rem; cursor: pointer; margin-left: auto; }
@@ -424,7 +438,7 @@ function stickScroll() {
   if (nearBottom()) chatScroll.scrollTop = chatScroll.scrollHeight;
 }
 
-// Streaming assistant message: quiet activity state + markdown answer body.
+// Streaming assistant message: collapsed reasoning + markdown answer body.
 function addStreamingMessage() {
   if (emptyState) { emptyState.remove(); emptyState = null; }
   const wrap = document.createElement('div');
@@ -438,6 +452,16 @@ function addStreamingMessage() {
   status.innerHTML = '<span class="pulse"></span><span>Thinking…</span>';
   wrap.appendChild(status);
 
+  const reasoningBox = document.createElement('details');
+  reasoningBox.className = 'reasoning';
+  const reasoningSummary = document.createElement('summary');
+  reasoningSummary.textContent = 'Thinking · click to view reasoning';
+  const reasoningBody = document.createElement('div');
+  reasoningBody.className = 'reasoning-body';
+  reasoningBox.appendChild(reasoningSummary);
+  reasoningBox.appendChild(reasoningBody);
+  wrap.appendChild(reasoningBox);
+
   const anshead = document.createElement('div');
   anshead.className = 'anshead'; anshead.style.display = 'none';
   const copyAns = document.createElement('button');
@@ -450,9 +474,15 @@ function addStreamingMessage() {
   chatEl.appendChild(wrap);
   chatScroll.scrollTop = chatScroll.scrollHeight;
 
-  let answer = '', ansShown = false;
+  let thinking = '', answer = '', ansShown = false;
   copyAns.addEventListener('click', (ev) => { ev.preventDefault(); copyText(copyAns, answer); });
   return {
+    pushThinking(piece) {
+      thinking += piece;
+      reasoningBox.classList.add('ready');
+      reasoningBody.innerHTML = renderMD(thinking);
+      stickScroll();
+    },
     pushText(piece) {
       answer += piece;
       answer = answer.replace(/^<\/think>\s*/i, '');
@@ -536,6 +566,7 @@ async function send() {
           streamedText += ev.piece || '';
           stream.pushText(ev.piece || '');
         }
+        else if (ev.kind === 'thinking') stream.pushThinking(ev.piece || '');
         else if (ev.kind === 'done') doneEv = ev;
         else if (ev.kind === 'error') {
           streamError = 'Error: ' + (ev.error || 'generation failed.');
@@ -592,7 +623,7 @@ async function send() {
       const meta = `${tps} · ${elapsed}s${ram}`;
       const noAnswer = reply ? '' : (doneEv.finish_reason === 'length'
         ? 'The model reached the output limit before emitting a final answer. Please try again.'
-        : 'The model returned no visible answer. Please try again.');
+        : 'The response could not be completed. Please try again.');
       stream.finish(
         doneEv.sources || [],
         meta,

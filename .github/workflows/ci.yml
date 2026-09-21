@@ -134,13 +134,14 @@ jobs:
                          'answer = answer || finalReply || \'\'',
                          'body.innerHTML = renderMD(answer)',
                          'thinking-status', 'Thinking…',
+                         'reasoning-body', 'pushThinking',
                          'id="startupNotice"', 'setTimeout(hide, 10000)',
                          'jamiiAfyaStartupNoticeSeen',
                          'dismissStartupNotice'):
               assert needle in text, needle
           for removed in ('data-mode=', 'currentMode', 'safety_override',
                           'guard_failures', 'kind === \'meta\'',
-                          'renderMD(thinking)'):
+                          'renderMD(hiddenThinking)'):
               assert removed not in text, removed
           print("chat.html: PARSES + direct model stream present")
           PY

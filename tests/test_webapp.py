@@ -188,15 +188,17 @@ def test_invalid_history_limits_use_safe_defaults(faked, monkeypatch):
     assert turns == [{"role": "user", "content": "recent question"}]
 
 
-def test_stream_has_no_deterministic_meta_event(faked, monkeypatch):
+def test_stream_keeps_thinking_separate_from_final_answer(faked, monkeypatch):
     monkeypatch.setattr(webapp, "_rag", FakeRAG())
     server = FakeSparse()
     monkeypatch.setattr(webapp, "_get_sparse", lambda: server)
 
     frames = _drain(webapp.chat_stream(webapp.ChatRequest(message=QUESTION)))
 
-    assert [frame["kind"] for frame in frames] == ["text", "done"]
+    assert [frame["kind"] for frame in frames] == ["thinking", "text", "done"]
+    assert frames[0]["piece"] == "model reasoning"
     assert frames[-1]["reply"] == "model answer"
+    assert "model reasoning" not in frames[-1]["reply"]
     assert "thinking" not in frames[-1]
     assert "urgency" not in frames[-1]
     assert "guard_ok" not in frames[-1]

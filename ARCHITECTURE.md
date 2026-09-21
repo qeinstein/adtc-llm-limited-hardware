@@ -356,12 +356,20 @@ Authoritative values live in `configs/final_runtime.json`:
   validated; 2k+ needs re-measurement).
 - K4/16 is approximate (−1.0pp MMLU-200; paper: indistinguishable).
 - The model may reason internally, but the pinned runtime explicitly enables
-  Qwen3.6's native thinking template and extracts the private stream as
-  `reasoning_content` with `--reasoning-format deepseek`. The backend discards
-  that channel and the UI shows only a quiet activity state plus the final
-  answer. The internal block is capped at 1024 tokens by default; set
-  `ADTC_REASONING_BUDGET=-1` for unrestricted internal reasoning. There is no
-  second answer request or application-side answer rewrite.
+  Qwen3.6's native thinking template and extracts the reasoning stream as
+  `reasoning_content` with `--reasoning-format deepseek`. The backend keeps that
+  channel separate and the UI places it in a collapsed click-to-view panel;
+  copied answers and follow-up history contain only final content. The internal
+  block is capped at 1024 tokens by default; set
+  `ADTC_REASONING_BUDGET=-1` for unrestricted internal reasoning. If a turn
+  stops after reasoning without final content, the adapter first continues
+  the same native assistant message in its content slot. If that runtime path
+  cannot complete, it makes one request with Qwen's official direct-response
+  template. This repairs output-channel framing; it does not rewrite or replace
+  the model's answer with application content.
+- No weight-level SFT or DPO was performed. Prompt-only behavior remains less
+  robust than alignment learned from carefully reviewed examples and
+  preferences; that is a future research and validation step.
 - No clinician review anywhere in the model or reference corpus; clinical
   answers remain decision support and require qualified review.
 - Throughput varies with host CPU/disk; Kaggle ≠ Core i5 (see §13).
@@ -384,14 +392,17 @@ pinned Qwen3.6 runtime
 final model response streamed to the UI
 ```
 
-The concise system prompt asks for direct, careful answers, urgent action when
-danger may be immediate, and medication information only when explicitly
-requested. The runtime supplies
+The 24-word positive system prompt supplies only identity, general scope,
+health-information specialization, audience, and tone. It contains no
+emergency, death, medication, output-format, or hidden-reasoning rules. The
+runtime supplies
 the model-native private reasoning configuration; the application does not ask
 the model to print a reasoning protocol. The application does not attach
-urgency labels, inject structured cards, lint or rewrite output, regenerate an
-answer, or substitute a fixed fallback. The UI shows the model response,
-optional RAG sources, and runtime telemetry.
+urgency labels, inject structured cards, lint or rewrite output, or substitute
+a fixed answer. Output-channel recovery may continue the model's own assistant
+turn or invoke its native direct mode when the thinking channel ends without
+content. The UI shows the model response, optional RAG sources, and runtime
+telemetry.
 
 ## 18. Rejected Product Directions & Historical Map
 

@@ -4,9 +4,13 @@ Each request follows one path:
 
     system prompt -> relevant offline RAG context (when available) -> model
 
-The application does not classify the question, attach urgency labels, rewrite
-the model's response, or run a second corrective generation. The model owns
-the answer; the application only assembles the conversation and streams it.
+The application does not classify the question, attach urgency labels, or
+rewrite the model's response. The model owns the answer; the application
+assembles the conversation and streams it. Reasoning and final content remain
+separate channels so the UI can collapse reasoning without putting it in the
+answer or follow-up history. The runtime adapter may continue an assistant turn
+when llama-server returns reasoning but no content; that is output-channel
+recovery, not a deterministic answer or clinical workflow.
 """
 
 from __future__ import annotations
@@ -299,11 +303,11 @@ def chat(req: ChatRequest) -> ChatResponse:
 
 @app.post("/api/chat/stream")
 def chat_stream(req: ChatRequest):
-    """Stream only the final model answer and finish with usage metadata.
+    """Stream separate reasoning/final channels and finish with usage metadata.
 
     The runtime may reason internally through Qwen3.6's native reasoning
-    channel, but that channel never crosses this API boundary. The browser
-    receives a quiet activity indicator and the model's final answer only.
+    channel. The browser renders it in a collapsed panel; only final content is
+    assembled as the reply and retained in conversation history.
     """
     import json
 
@@ -343,6 +347,9 @@ def chat_stream(req: ChatRequest):
                     if kind == "finish":
                         finish_reason = str(piece)
                         continue
+                    if kind == "thinking":
+                        yield f"data: {json.dumps({'kind': 'thinking', 'piece': piece})}\n\n"
+                        continue
                     if kind != "text":
                         continue
                     text_parts.append(piece)
@@ -363,6 +370,9 @@ def chat_stream(req: ChatRequest):
                             continue
                         if kind == "finish":
                             finish_reason = str(piece)
+                            continue
+                        if kind == "thinking":
+                            yield f"data: {json.dumps({'kind': 'thinking', 'piece': piece})}\n\n"
                             continue
                         if kind != "text":
                             continue

@@ -104,9 +104,11 @@ enough memory for the full model.
 
 The shipped sparse runtime uses Qwen3.6's native private reasoning channel. The
 server explicitly enables the model's thinking template and the `deepseek`
-reasoning parser, so reasoning is returned as `reasoning_content`, discarded by
-the backend, and never sent to the browser. `ADTC_REASONING_BUDGET` controls the
-runtime's internal budget; `ADTC_MAX_TOKENS` controls the total completion.
+reasoning parser, so reasoning is returned as `reasoning_content` and remains
+separate from the final answer. The UI places it in a collapsed, click-to-view
+panel; copied answers and follow-up history contain only final content.
+`ADTC_REASONING_BUDGET` controls the reasoning sub-budget;
+`ADTC_MAX_TOKENS` controls the total completion.
 
 Other entry points:
 
@@ -140,13 +142,16 @@ system prompt ──▶ optional offline RAG context ──▶ model output
   [MODEL_CARD.md](MODEL_CARD.md).
 - **Response path:** the application supplies one concise behavioral system prompt,
   attaches relevant offline RAG context when available, and returns the model
-  response without classification, labels, rewriting, regeneration, fixed
-  fallback, or exposed reasoning steps. The pinned server uses Qwen3.6's native
+  response without classification, labels, content rewriting, or fixed answers.
+  Reasoning is available only in a collapsed panel and stays separate from
+  answer text and conversation history. The pinned server uses Qwen3.6's native
   chat-template controls rather than asking the model to simulate a private
-  reasoning protocol in prose.
-- **Medication behavior:** the system prompt tells the model not to volunteer
-  medication names, doses, or prescriptions unless the user explicitly asks
-  about medication or treatment.
+  reasoning protocol in prose. If llama-server ends a turn with hidden
+  reasoning but no content, the adapter continues that same assistant turn in
+  its content channel instead of discarding the answer.
+- **Prompt scope:** the production prompt is 24 words: identity, general scope,
+  health-information specialization, audience, and desired tone. It contains no
+  emergency, death, medication, output-format, or hidden-reasoning checklist.
 - **ADTC profiler measurement:** **2502 MB peak RSS**, **16.0 tok/s headline**
   (16.46 and 15.5 tok/s observed, rounded), arc_easy 0.72, CPU-only
   bounded_3gb arm. The checked-in profiler evidence snapshot was run
@@ -156,6 +161,16 @@ system prompt ──▶ optional offline RAG context ──▶ model output
 Full architecture: [ARCHITECTURE.md](ARCHITECTURE.md) · report: [REPORT.md](REPORT.md) ·
 evaluation: [EVALUATION.md](EVALUATION.md) · training preflight (NO-GO record): [TRAINING.md](TRAINING.md) ·
 novelty & prior art: [NOVELTY.md](NOVELTY.md)
+
+### Alignment limitation and next step
+
+No weight-level SFT or DPO was performed. A short positive prompt is more stable
+for this base model than the former rule-heavy rubric, but prompting is not a
+substitute for alignment. With more compute, time, and clinician-reviewed data,
+the next step is targeted multi-turn SFT followed by preference optimization to
+internalize natural response style, multilingual consistency, clinical tone, and
+medicine behavior. Those weights would then require fresh safety, quality, and
+clinician evaluation before deployment.
 
 ---
 

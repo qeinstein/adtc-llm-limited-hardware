@@ -45,11 +45,11 @@ def test_fallback_chat_does_not_return_structured_reasoning():
     assert "thinking" not in out
 
 
-def test_fallback_stream_discards_legacy_thinking_events():
+def test_fallback_stream_separates_legacy_thinking_from_answer():
     events = list(_engine().stream_chat_events([
         {"role": "user", "content": "hello"},
     ]))
-    assert all(kind != "thinking" for kind, _ in events)
+    assert "".join(piece for kind, piece in events if kind == "thinking") == "careful"
     assert "".join(piece for kind, piece in events if kind == "text") == "answer"
 
 

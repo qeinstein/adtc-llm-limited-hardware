@@ -220,9 +220,9 @@
       <li>
         <div>
           <h3>A short system prompt</h3>
-          <p>The model receives one short system prompt: explain the
-          medical reasoning, be honest about uncertainty, and discuss
-          medication only when the user explicitly asks about it.</p>
+          <p>The model receives a 24-word positive prompt containing only its
+          identity, general scope, health-information specialization, audience,
+          and desired tone. It is not given a long behavioral checklist.</p>
         </div>
       </li>
       <li>
@@ -284,6 +284,13 @@
         <p>We removed the intermediate classification, labels, response
         rewriting and fixed fallbacks. The current path is intentionally
         inspectable: system prompt, optional RAG context, then model output.</p>
+      </div>
+      <div class="log-item">
+        <span class="tag">Prompting is not alignment.</span>
+        <p>No weight-level SFT or DPO was performed. With more compute, time,
+        and clinician-reviewed examples, targeted multi-turn SFT and preference
+        optimization would help internalize natural behavior and multilingual
+        consistency without growing the production prompt.</p>
       </div>
     </div>
 

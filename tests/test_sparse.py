@@ -1,11 +1,10 @@
 """Sparse backend (frozen Qwen3.6 system) unit tests. All offline: no model
 weights, no server process, no network. The managed-server path is covered
 by construction tests (argv/env) plus a live repro on real hardware."""
-import json
-
 import pytest
 
 from src import sparse
+from src.config import GenerationConfig
 
 
 def test_split_thinking_marked():
@@ -56,6 +55,95 @@ def test_stream_payload_requests_usage():
         object(), [], 32, 0.7, 0.95, True
     )
     assert payload["stream_options"] == {"include_usage": True}
+    assert payload["top_k"] == 20
+    assert payload["min_p"] == 0.0
+    assert payload["presence_penalty"] == 1.5
+    assert payload["repeat_penalty"] == 1.0
+
+
+def test_qwen_generation_defaults_and_explicit_output_cap():
+    config = GenerationConfig()
+    assert config.max_tokens == 2560
+    assert config.temperature == 1.0
+    assert config.top_p == 0.95
+    assert config.top_k == 20
+    assert config.min_p == 0.0
+    assert config.presence_penalty == 1.5
+    assert config.repeat_penalty == 1.0
+
+
+def test_direct_recovery_uses_qwen_direct_mode_sampling():
+    server = object.__new__(sparse.SparseServer)
+    payload = server._direct_payload([], 128, False)
+    assert payload["temperature"] == 0.7
+    assert payload["top_p"] == 0.8
+    assert payload["chat_template_kwargs"] == {"enable_thinking": False}
+
+
+def test_non_streaming_reasoning_only_response_continues_as_content(monkeypatch):
+    calls = []
+
+    def fake_post(url, payload, timeout):
+        calls.append(payload)
+        if len(calls) == 1:
+            return {
+                "choices": [{"message": {
+                    "reasoning_content": "private work",
+                    "content": "</think>",
+                }}],
+                "usage": {"completion_tokens": 10},
+            }
+        return {
+            "choices": [{"message": {
+                "reasoning_content": "",
+                "content": "Final answer.",
+            }}],
+            "usage": {"completion_tokens": 3},
+        }
+
+    monkeypatch.setattr(sparse, "_post_json", fake_post)
+    server = object.__new__(sparse.SparseServer)
+    server.base_url = "http://127.0.0.1:1"
+    server.timeout_s = 1.0
+
+    result = server.chat([{"role": "user", "content": "hi"}])
+
+    assert result["text"] == "Final answer."
+    assert len(calls) == 2
+    assert calls[1]["continue_final_message"] == "content"
+    assert calls[1]["messages"][-1]["reasoning_content"] == "private work"
+
+
+def test_non_streaming_empty_continuation_uses_qwen_direct_mode(monkeypatch):
+    calls = []
+
+    def fake_post(url, payload, timeout):
+        calls.append(payload)
+        if len(calls) == 1:
+            return {"choices": [{"message": {
+                "reasoning_content": "private work",
+                "content": "</think>",
+            }}]}
+        if len(calls) == 2:
+            return {"choices": [{"message": {
+                "reasoning_content": "",
+                "content": "",
+            }}]}
+        return {"choices": [{"message": {
+            "reasoning_content": "",
+            "content": "Direct answer.",
+        }}]}
+
+    monkeypatch.setattr(sparse, "_post_json", fake_post)
+    server = object.__new__(sparse.SparseServer)
+    server.base_url = "http://127.0.0.1:1"
+    server.timeout_s = 1.0
+
+    result = server.chat([{"role": "user", "content": "hi"}])
+
+    assert result["text"] == "Direct answer."
+    assert len(calls) == 3
+    assert calls[2]["chat_template_kwargs"] == {"enable_thinking": False}
 
 
 def test_sparse_stream_exposes_usage_and_timings(monkeypatch):
@@ -83,7 +171,7 @@ def test_sparse_stream_exposes_usage_and_timings(monkeypatch):
     }) in events
 
 
-def test_sparse_stream_discards_structured_reasoning(monkeypatch):
+def test_sparse_stream_keeps_reasoning_separate_from_answer(monkeypatch):
     monkeypatch.setattr(
         sparse,
         "_post_sse",
@@ -96,12 +184,13 @@ def test_sparse_stream_discards_structured_reasoning(monkeypatch):
     server.base_url = "http://127.0.0.1:1"
     server.timeout_s = 1.0
     assert list(server.stream_chat_events([{"role": "user", "content": "hi"}])) == [
+        ("thinking", "careful"),
         ("text", "answer"),
     ]
 
 
-def test_sparse_stream_discards_prompt_like_reasoning(monkeypatch):
-    """A leaked-looking reasoning trace must not become the visible answer."""
+def test_sparse_stream_does_not_mix_prompt_like_reasoning_into_answer(monkeypatch):
+    """Reasoning remains a distinct event even when it resembles prompt text."""
     monkeypatch.setattr(
         sparse,
         "_post_sse",
@@ -120,6 +209,7 @@ def test_sparse_stream_discards_prompt_like_reasoning(monkeypatch):
     server.base_url = "http://127.0.0.1:1"
     server.timeout_s = 1.0
     assert list(server.stream_chat_events([{"role": "user", "content": "hi"}])) == [
+        ("thinking", "URGENT SITUATIONS MEDICATIONS hidden internal text"),
         ("text", "Jibu la mwisho kwa Kiswahili."),
     ]
 
@@ -160,6 +250,87 @@ def test_sparse_stream_keeps_terminal_content_with_finish_reason(monkeypatch):
     ]
 
 
+def test_reasoning_only_stream_continues_the_same_assistant_turn(monkeypatch):
+    calls = []
+
+    def fake_sse(url, payload, timeout):
+        calls.append(payload)
+        if len(calls) == 1:
+            return iter([
+                {"choices": [{"delta": {"reasoning_content": "private work"}}]},
+                {"choices": [{
+                    "delta": {"content": "</think>"},
+                    "finish_reason": "stop",
+                }]},
+            ])
+        return iter([
+            {"choices": [{
+                "delta": {"content": "Final answer."},
+                "finish_reason": "stop",
+            }]},
+        ])
+
+    monkeypatch.setattr(sparse, "_post_sse", fake_sse)
+    server = object.__new__(sparse.SparseServer)
+    server.base_url = "http://127.0.0.1:1"
+    server.timeout_s = 1.0
+
+    events = list(server.stream_chat_events([
+        {"role": "system", "content": "system"},
+        {"role": "user", "content": "question"},
+    ]))
+
+    assert events == [
+        ("thinking", "private work"),
+        ("text", "Final answer."),
+        ("finish", "stop"),
+    ]
+    assert len(calls) == 2
+    continuation = calls[1]
+    assert continuation["continue_final_message"] == "content"
+    assert continuation["chat_template_kwargs"] == {"enable_thinking": True}
+    assert continuation["messages"][-1] == {
+        "role": "assistant",
+        "reasoning_content": "private work",
+        "content": "",
+    }
+
+
+def test_empty_continuation_falls_back_to_qwen_direct_mode(monkeypatch):
+    calls = []
+
+    def fake_sse(url, payload, timeout):
+        calls.append(payload)
+        if len(calls) == 1:
+            return iter([
+                {"choices": [{"delta": {"reasoning_content": "private work"}}]},
+                {"choices": [{"delta": {}, "finish_reason": "stop"}]},
+            ])
+        if len(calls) == 2:
+            return iter([{"choices": [{"delta": {}, "finish_reason": "stop"}]}])
+        return iter([
+            {"choices": [{
+                "delta": {"content": "Direct answer."},
+                "finish_reason": "stop",
+            }]},
+        ])
+
+    monkeypatch.setattr(sparse, "_post_sse", fake_sse)
+    server = object.__new__(sparse.SparseServer)
+    server.base_url = "http://127.0.0.1:1"
+    server.timeout_s = 1.0
+
+    events = list(server.stream_chat_events([{"role": "user", "content": "hi"}]))
+
+    assert events == [
+        ("thinking", "private work"),
+        ("text", "Direct answer."),
+        ("finish", "stop"),
+    ]
+    assert len(calls) == 3
+    assert calls[2]["chat_template_kwargs"] == {"enable_thinking": False}
+
+
 def test_server_cmd_frozen_flags():
     argv = sparse.server_cmd("/m/model.gguf", port=8421, n_ctx=2048,
                             threads=4, poll=0)
@@ -185,23 +356,23 @@ def test_server_cmd_can_prompt_the_model_to_finish_after_budget():
         "/m/model.gguf", reasoning_budget=1024,
         reasoning_budget_message="Answer now.",
     )
-    assert argv[argv.index("--reasoning-budget-message") + 1] == \
-        "Answer now.\n</think>\n\n"
+    assert argv[argv.index("--reasoning-budget-message") + 1] == "Answer now."
 
 
-def test_server_cmd_preserves_an_explicit_native_close_marker():
+def test_server_cmd_removes_an_explicit_close_marker_from_budget_message():
     argv = sparse.server_cmd(
         "/m/model.gguf", reasoning_budget=1024,
         reasoning_budget_message="Answer now.\n</think>\n\n",
     )
-    assert argv[argv.index("--reasoning-budget-message") + 1] == \
-        "Answer now.\n</think>\n\n"
+    assert argv[argv.index("--reasoning-budget-message") + 1] == "Answer now."
 
 
-def test_default_reasoning_budget_message_closes_qwen_thinking_block():
+def test_default_reasoning_budget_message_leaves_closing_tag_to_llama_server():
     from src.config import RuntimeConfig
 
-    assert "</think>" in RuntimeConfig().reasoning_budget_message
+    message = RuntimeConfig().reasoning_budget_message
+    assert message == "Provide the final answer now."
+    assert "</think>" not in message
 
 
 def test_build_env_resident():
@@ -280,9 +451,12 @@ def test_webapp_health_and_early_stream():
     assert r.status_code == 200
     body = r.text
     assert '"kind": "done"' in body
+
+
 def test_webapp_shutdown_stops_sparse(monkeypatch):
-    import src.webapp as w
     from fastapi.testclient import TestClient
+
+    import src.webapp as w
 
     stopped = []
 
