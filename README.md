@@ -201,6 +201,9 @@ Historical tracks (superseded Falcon line, early experiments) remain under
 `kaggle/phase04-falcon-*`, and `docs/research/` — retained with green tests as
 research records, not production paths.
 
+## Final Note
+Most of our limitations regarding post training and finetuning is limited by compute, given enough compute and support, SFT/DPO will be performed on the abse model for alignment, and fine-tuning for domain specific use cases, so we can ship to real suers at scale.
+
 ---
 
 *Medical content is derived from public WHO/IMCI/national-guideline material and is for clinical decision support only — not a substitute for a qualified clinician.*
