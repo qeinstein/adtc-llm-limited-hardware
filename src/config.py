@@ -164,7 +164,7 @@ def _load_system_prompt() -> str:
 
 
 SYSTEM_PROMPT = _load_system_prompt()
-SYSTEM_PROMPT_VERSION = "prompts/system.json v4.0.0"
+SYSTEM_PROMPT_VERSION = "prompts/system.json v5.0.0"
 
 
 def get_runtime_config() -> RuntimeConfig:

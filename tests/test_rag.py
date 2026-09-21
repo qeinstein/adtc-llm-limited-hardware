@@ -66,6 +66,6 @@ def test_system_prompt_is_the_only_instruction_layer():
     rag = _pipeline()
     sp = rag.system_prompt
     normalized = " ".join(sp.lower().split())
-    assert "medication" in normalized
+    assert "medicine" in normalized
     assert "explicitly asks" in normalized
     assert rag.system_prompt_for(_pipeline().build("hello")) == sp

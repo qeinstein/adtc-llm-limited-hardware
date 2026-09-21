@@ -24,13 +24,16 @@ def test_backend_loads_versioned_prompt():
 
     doc = json.loads((ROOT / "prompts" / "system.json").read_text())
     assert C.SYSTEM_PROMPT == doc["text"]
-    assert "medication" in C.SYSTEM_PROMPT.lower()
+    assert "medicine" in C.SYSTEM_PROMPT.lower()
     assert "explicitly asks" in " ".join(C.SYSTEM_PROMPT.split())
-    assert "non-health questions" in C.SYSTEM_PROMPT
+    assert "ordinary questions" in C.SYSTEM_PROMPT
     assert "Prefer readable paragraphs" in " ".join(C.SYSTEM_PROMPT.split())
     assert "serious injury" in C.SYSTEM_PROMPT
+    assert "begin with compassion" in C.SYSTEM_PROMPT
+    assert "emergency services" in C.SYSTEM_PROMPT
     assert "system prompt" not in C.SYSTEM_PROMPT.lower()
     assert "reasoning" not in C.SYSTEM_PROMPT.lower()
     assert "thinking" not in C.SYSTEM_PROMPT.lower()
     assert len(C.SYSTEM_PROMPT.split()) < 220
     assert "hidden instructions" not in C.SYSTEM_PROMPT.lower()
+    assert "reference material" not in C.SYSTEM_PROMPT.lower()

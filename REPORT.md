@@ -142,7 +142,7 @@ default is the low-memory validated production configuration
   (historical profiler snapshot; see FINAL_RELEASE_REPORT.md).
 - **Weight-level fine-tuning: NONE.** The shipping weights were NOT
   LoRA/QLoRA/full-fine-tuned. Adaptation performed instead:
-  - medical system prompting (versioned, `prompts/system.json v4.0.0`)
+  - medical system prompting (versioned, `prompts/system.json v5.0.0`)
   - K4/16 sparse execution adaptation
   - routed-expert-only Q2_K transformation
   - bounded sparse runtime (<3 GB working set)
