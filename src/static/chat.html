@@ -102,7 +102,10 @@
   @keyframes blink { 0%, 80%, 100% { opacity: 0.2; } 40% { opacity: 1; } }
 
   .thinking-status { display: inline-flex; align-items: center; gap: 0.45rem;
-    color: var(--muted); font-size: 0.78rem; min-height: 1.5rem; }
+    width: fit-content; max-width: 100%; padding: 0.28rem 0.58rem;
+    border: 1px solid var(--rule-soft); border-radius: 999px;
+    background: var(--surface); color: var(--muted); font-size: 0.76rem;
+    min-height: 1.5rem; }
   .thinking-status .pulse { width: 6px; height: 6px; border-radius: 50%;
     background: var(--muted); animation: blink 1.2s infinite ease-in-out; }
   .thinking-status.done .pulse { animation: none; background: var(--rule); }
@@ -438,6 +441,18 @@ function stickScroll() {
   if (nearBottom()) chatScroll.scrollTop = chatScroll.scrollHeight;
 }
 
+// Keep the live status compact and readable without adding another model call.
+// The full reasoning remains behind the existing click-to-view panel.
+function compactThinkingStatus(raw) {
+  const clean = String(raw || '').replace(/[\n\r]+/g, ' ')
+    .replace(/[`*_#]/g, '').replace(/\s+/g, ' ').trim();
+  if (!clean) return 'Analyzing your question…';
+  const sentence = clean.split(/(?<=[.!?])\s+/)[0].trim();
+  if (sentence.length < 12) return 'Considering the relevant details…';
+  const clipped = sentence.length > 76 ? sentence.slice(0, 73).trimEnd() + '…' : sentence;
+  return clipped;
+}
+
 // Streaming assistant message: collapsed reasoning + markdown answer body.
 function addStreamingMessage() {
   if (emptyState) { emptyState.remove(); emptyState = null; }
@@ -449,7 +464,8 @@ function addStreamingMessage() {
 
   const status = document.createElement('div');
   status.className = 'thinking-status';
-  status.innerHTML = '<span class="pulse"></span><span>Thinking…</span>';
+  status.innerHTML = '<span class="pulse"></span><span class="status-copy">Analyzing your question…</span>';
+  const statusCopy = status.querySelector('.status-copy');
   wrap.appendChild(status);
 
   const reasoningBox = document.createElement('details');
@@ -479,6 +495,7 @@ function addStreamingMessage() {
   return {
     pushThinking(piece) {
       thinking += piece;
+      statusCopy.textContent = compactThinkingStatus(thinking);
       reasoningBox.classList.add('ready');
       reasoningBody.innerHTML = renderMD(thinking);
       stickScroll();

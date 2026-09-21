@@ -133,7 +133,7 @@ jobs:
                          'streamedText', 'finalReply',
                          'answer = answer || finalReply || \'\'',
                          'body.innerHTML = renderMD(answer)',
-                         'thinking-status', 'Thinking…',
+                         'thinking-status', 'Analyzing your question…',
                          'reasoning-body', 'pushThinking',
                          'id="startupNotice"', 'setTimeout(hide, 10000)',
                          'jamiiAfyaStartupNoticeSeen',
