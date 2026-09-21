@@ -57,9 +57,9 @@
   <h1>We did not shrink the model. We shrank its working set.</h1>
   <p class="lede">Jamii Afya separates where model parameters live from how much memory must be resident for the next token. The full sparse model stays on disk; the runtime stages only the bounded expert working set it needs.</p>
   <div class="flow" aria-label="Jamii Afya response path">
-    <div class="node"><strong>Conversation + user question</strong><span>English, Kiswahili, or another supported prompt</span></div>
+    <div class="node"><strong>Conversation + user question</strong><span>Latest message plus bounded conversation history</span></div>
     <div class="arrow">↓</div>
-    <div class="node"><strong>24-word system prompt</strong><span>Identity, scope, audience, and tone</span></div>
+    <div class="node"><strong>31-word system prompt</strong><span>Identity, scope, tone, and response-language matching</span></div>
     <div class="arrow">↓</div>
     <div class="node"><strong>Optional offline RAG</strong><span>Relevant local reference context only when retrieval helps</span></div>
     <div class="arrow">↓</div>

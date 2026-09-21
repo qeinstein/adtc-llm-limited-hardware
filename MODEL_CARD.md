@@ -5,7 +5,6 @@ tags:
   - gguf
   - moe
   - medical
-  - swahili
   - africa
   - cpu
   - edge-ai
@@ -35,7 +34,7 @@ The deployment stack combines:
 - **K4/16** sparse expert execution
 - bounded expert staging from storage
 - CPU-only `llama.cpp` inference
-- an offline health-assistance layer for English and Kiswahili
+- an offline English health-assistance reference layer
 
 No weight-level fine-tuning was performed on this release.
 

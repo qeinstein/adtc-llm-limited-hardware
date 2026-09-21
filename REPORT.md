@@ -4,7 +4,7 @@
 **Artifact:** `Qwen3.6-35B-A3B-UD-Q2K-experts.gguf` (12,262,341,600 bytes)
 **HF:** `Fluxx08/jamii-afya-qwen36-35b-q2k`
 **Runtime:** llama.cpp / GGUF, CPU-only, fully offline after download
-**Languages:** English and Kiswahili
+**Evaluated language:** English
 
 ## PROBLEM — Jamii Afya's African-health use case
 
@@ -17,15 +17,14 @@ the device already in the room: an 8 GB RAM, 4-vCPU, CPU-only laptop.
 A health worker needs trustworthy guidance in the language the patient
 speaks — not a chatbot guessing, and not something that stops working when
 the signal drops. Jamii Afya is that offline clinical decision-support
-advisor: bilingual triage and treatment guidance, danger signs always
-surfaced, referral behavior always safe.
+advisor: clinical decision support available without a network connection.
 
 ## AFRICAN USE CASE BONUS
 
 The primary use case is a community health worker at a rural or peri-urban
 African clinic in Kenya, Tanzania, Uganda, or a similar setting where a
 reliable internet connection and an on-site clinician may not be available.
-The worker can use an ordinary CPU laptop in English or Kiswahili to reason
+The worker can use an ordinary CPU laptop in English to reason
 through childhood danger signs, pregnancy red flags, injuries, and referral
 decisions while keeping the patient's information on the device. This is
 decision support, not a diagnosis or a replacement for local clinical
@@ -33,8 +32,8 @@ protocols; the intended benefit is useful offline access at the point of care.
 
 ## DESIGN
 
-**Why Qwen3.6-35B-A3B.** The strongest Apache-2.0 model family with official
-Swahili support. 35B total parameters with only ~3B active per token (256
+**Why Qwen3.6-35B-A3B.** A strong Apache-2.0 general-purpose model family.
+It has 35B total parameters with only ~3B active per token (256
 experts, 8 native per token) — the sparse structure is what makes a
 frontier-class model even thinkable on a laptop.
 
@@ -124,7 +123,7 @@ absent/invalid keeps AUTO).
 - Bounded arm: ~2.9 tok/s at **2301.2 MiB** RSS (the <3 GB deployment point).
 - MMLU-200 (deterministic loglik): native 42.0 ±3.5, K4/16 41.0 ±3.5,
   frozen Q2K+K4/16 38.5 ±3.4.
-- Generation-based v5 tracks (AfriMed/Swahili/safety-bank) are INVALID as
+- Generation-based v5 tracks (AfriMed/multilingual/safety-bank) are INVALID as
   accuracy numbers (thinking-budget method failure — see EVALUATION.md) and
   are not reported here.
 
@@ -147,7 +146,7 @@ default is the low-memory validated production configuration
   (historical profiler snapshot; see FINAL_RELEASE_REPORT.md).
 - **Weight-level fine-tuning: NONE.** The shipping weights were NOT
   LoRA/QLoRA/full-fine-tuned. Adaptation performed instead:
-  - short positive system prompting (versioned, `prompts/system.json v7.0.0`)
+  - short positive system prompting (versioned, `prompts/system.json v7.1.0`)
   - K4/16 sparse execution adaptation
   - routed-expert-only Q2_K transformation
   - bounded sparse runtime (<3 GB working set)
@@ -211,8 +210,8 @@ before the video.**
 
 Low RAM is the enabler, not the purpose. The system keeps a genuinely useful
 35B-A3B assistant with health-information expertise: short positive system
-prompt, optional offline RAG,
-Kiswahili handling, and direct model generation. Nothing was dumbed down to
+prompt, optional offline RAG, response-language matching, and direct model
+generation. Nothing was dumbed down to
 win throughput; the bounded arm is bit-exact vs resident.
 
 ## ORIGINALITY / ATTRIBUTION

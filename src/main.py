@@ -1,4 +1,4 @@
-"""Jamii Afya — offline bilingual (English/Kiswahili) clinical advisor CLI.
+"""Jamii Afya — offline clinical advisor CLI.
 
 Usage:
     PYTHONPATH=. python -m src.main                 # interactive chat
@@ -24,7 +24,7 @@ def _print_header(domain: str, model_ready: bool) -> None:
     print("=" * 70)
     print("  Jamii Afya — Offline Clinical Advisor (ADTC 2026, healthcare_medical)")
     print("=" * 70)
-    print(f"  Domain: {domain} | Languages: English + Kiswahili")
+    print(f"  Domain: {domain} | Reference corpus: English")
     print(f"  Model:  {'ready' if model_ready else 'NOT downloaded (RAG preview only)'}")
     print("  Note:   Clinical decision support — not a substitute for a clinician.")
     print("=" * 70)
@@ -160,7 +160,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     # interactive
-    print("\nType a clinical question (English or Kiswahili). Ctrl-C or 'exit' to quit.")
+    print("\nType a clinical question. Ctrl-C or 'exit' to quit.")
     try:
         while True:
             query = input("\n> ").strip()
@@ -170,7 +170,7 @@ def main(argv: list[str] | None = None) -> int:
                 break
             _answer(engine, rag, query, args)
     except (KeyboardInterrupt, EOFError):
-        print("\nKwaheri! (Goodbye)")
+        print("\nGoodbye!")
     return 0
 
 

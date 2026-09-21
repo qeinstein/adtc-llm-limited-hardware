@@ -24,12 +24,13 @@ def test_prompt_twins_in_sync():
 def test_backend_loads_versioned_prompt():
     doc = json.loads((ROOT / "prompts" / "system.json").read_text())
     assert C.SYSTEM_PROMPT == doc["text"]
-    assert C.SYSTEM_PROMPT_VERSION == "prompts/system.json v7.0.0"
-    assert doc["version"] == "7.0.0"
+    assert C.SYSTEM_PROMPT_VERSION == "prompts/system.json v7.1.0"
+    assert doc["version"] == "7.1.0"
     assert "general-purpose offline assistant" in C.SYSTEM_PROMPT
     assert "health-information expertise" in C.SYSTEM_PROMPT
     assert "African communities and health workers" in C.SYSTEM_PROMPT
     assert "naturally, clearly, and compassionately" in C.SYSTEM_PROMPT
+    assert "language of the user's message" in C.SYSTEM_PROMPT
     assert "system prompt" not in C.SYSTEM_PROMPT.lower()
     assert "reasoning" not in C.SYSTEM_PROMPT.lower()
     assert "thinking" not in C.SYSTEM_PROMPT.lower()

@@ -1,11 +1,10 @@
-"""Offline sparse retrieval (BM25) over the bilingual clinical corpus.
+"""Offline sparse retrieval (BM25) over the English clinical corpus.
 
 Pure standard library — no numpy, no network, no model. Chosen deliberately:
 BM25 over a curated corpus is fast, transparent, and RAM-negligible on the
-target hardware, and it works for both English and Kiswahili because both are
-Latin-script (a shared ``\\w+`` tokenizer covers both). This keeps the retrieval
-layer dependency-free so it runs anywhere and is trivially unit-testable without
-model weights.
+target hardware and works without external language or embedding services. This
+keeps the retrieval layer dependency-free so it runs anywhere and is trivially
+unit-testable without model weights.
 """
 
 from __future__ import annotations
@@ -19,17 +18,15 @@ from typing import Any, Iterable
 
 _TOKEN_RE = re.compile(r"\w+", re.UNICODE)
 
-# Bilingual function words. Kiswahili is agglutinative and its connectors (na, wa,
-# ya, za, kwa...) appear in almost every sentence — without removing them, a query
-# like "...na... wa... za..." matches on grammar instead of clinical content
-# (this genuinely mis-ranked our flagship pediatric prompt before it was added).
+# Function words are removed because treating common connectors as content
+# destroys BM25 precision.
 STOPWORDS: frozenset[str] = frozenset(
     # English
     "a an the and or of to in is are am was were be been for on with as at by it its "
     "this that these those i you he she they we do does did what which how when where "
     "who whom should could would can may might will my me your his her their our if "
     "then than so but also not no yes into from about over under out up down".split()
-    # Kiswahili (function/grammatical words, question words, common connectors)
+    # Legacy multilingual connector coverage retained for robust token filtering.
     + (
         "na wa ya za la kwa ni katika kama ana au ili tu pia kila huu hii huyu huyo "
         "hilo haya hizo hizi huo hivi hivyo wako wangu yake zake wake gani nini je "
@@ -41,12 +38,12 @@ STOPWORDS: frozenset[str] = frozenset(
 
 
 def tokenize(text: str) -> list[str]:
-    """Lowercase word tokenizer (handles English + Kiswahili, both Latin script)."""
+    """Lowercase Latin-script word tokenizer."""
     return _TOKEN_RE.findall(text.lower())
 
 
 def content_tokens(text: str) -> list[str]:
-    """Tokenize and drop bilingual stopwords / 1-char tokens (keeps numbers like '39')."""
+    """Tokenize and drop stopwords / 1-char tokens (keeps numbers like '39')."""
     return [t for t in tokenize(text) if len(t) > 1 and t not in STOPWORDS]
 
 
@@ -55,7 +52,7 @@ class BM25Retriever:
 
     Documents are dicts; ``text`` is required, ``title`` is optional and boosted
     (its terms count ``title_weight`` times) because titles are dense with the
-    condition name in both languages.
+    condition name.
     """
 
     def __init__(self, k1: float = 1.5, b: float = 0.75, title_weight: int = 2):

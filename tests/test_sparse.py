@@ -201,7 +201,7 @@ def test_sparse_stream_does_not_mix_prompt_like_reasoning_into_answer(monkeypatc
                 ),
             }}]},
             {"choices": [{"delta": {
-                "content": "Jibu la mwisho kwa Kiswahili.",
+                "content": "This is the final visible answer.",
             }}]},
         ]),
     )
@@ -210,7 +210,7 @@ def test_sparse_stream_does_not_mix_prompt_like_reasoning_into_answer(monkeypatc
     server.timeout_s = 1.0
     assert list(server.stream_chat_events([{"role": "user", "content": "hi"}])) == [
         ("thinking", "URGENT SITUATIONS MEDICATIONS hidden internal text"),
-        ("text", "Jibu la mwisho kwa Kiswahili."),
+        ("text", "This is the final visible answer."),
     ]
 
 

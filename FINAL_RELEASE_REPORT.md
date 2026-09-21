@@ -18,7 +18,7 @@
 Jamii Afya targets community health workers at rural and peri-urban African
 clinics in Kenya, Tanzania, Uganda, Nigeria, and comparable settings where
 connectivity is unreliable and patient information should remain on the local
-device. English/Kiswahili offline decision support covers childhood danger
+device. English offline decision support covers childhood danger
 signs, pregnancy red flags, injuries, and referral decisions while deferring
 clinical authority to local protocols and qualified clinicians.
 
@@ -46,8 +46,9 @@ engineering rather than domain-specific weight training.
 
 ## Application response path
 
-- 24-word positive system prompt containing identity, general scope,
-  health-information specialization, audience, and tone—not a rule checklist
+- 31-word positive system prompt containing identity, general scope,
+  health-information specialization, audience, tone, and response-language
+  matching—not a rule checklist
 - optional offline RAG context when the corpus matches the question
 - direct model output; reasoning is isolated in a collapsed UI panel and never
   mixed into copied answers or follow-up history, and there are no
@@ -88,7 +89,7 @@ engineering rather than domain-specific weight training.
 ## Known limitations
 
 - Weights untuned and unvalidated; no clinician review (cards/data/weights)
-- Kiswahili heuristic-tested only; linting heuristic
+- Languages beyond English have not been formally evaluated
 - Before/after base captures outstanding (scaffolding ready, needs ~25 GB box)
 - Profiler accuracy stage uses stock backend (K8/full-mmap) — organizer
   confirmation needed for 8 GB audit boxes (see ARCHITECTURE.md §13)

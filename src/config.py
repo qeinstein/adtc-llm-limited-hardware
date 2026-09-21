@@ -163,11 +163,12 @@ def _load_system_prompt() -> str:
     return (
         "You are Jamii Afya, a helpful general-purpose offline assistant with "
         "strong health-information expertise for African communities and health "
-        "workers. Respond naturally, clearly, and compassionately.")
+        "workers. Respond naturally, clearly, and compassionately. Use the "
+        "language of the user's message.")
 
 
 SYSTEM_PROMPT = _load_system_prompt()
-SYSTEM_PROMPT_VERSION = "prompts/system.json v7.0.0"
+SYSTEM_PROMPT_VERSION = "prompts/system.json v7.1.0"
 
 
 def get_runtime_config() -> RuntimeConfig:

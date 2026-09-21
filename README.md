@@ -126,7 +126,7 @@ A sparse MoE only runs a few experts per token — so a 35B model can answer on
 a laptop if the runtime stages exactly the experts each token needs:
 
 ```
-Question (EN/SW)
+Question
    │
    ▼
 system prompt ──▶ optional offline RAG context ──▶ model output
@@ -149,9 +149,10 @@ system prompt ──▶ optional offline RAG context ──▶ model output
   reasoning protocol in prose. If llama-server ends a turn with hidden
   reasoning but no content, the adapter continues that same assistant turn in
   its content channel instead of discarding the answer.
-- **Prompt scope:** the production prompt is 24 words: identity, general scope,
-  health-information specialization, audience, and desired tone. It contains no
-  emergency, death, medication, output-format, or hidden-reasoning checklist.
+- **Prompt scope:** the production prompt is 31 words: identity, general scope,
+  health-information specialization, audience, desired tone, and
+  response-language matching. It contains no emergency, death, medication,
+  output-format, or hidden-reasoning checklist.
 - **ADTC profiler measurement:** **2502 MB peak RSS**, **16.0 tok/s headline**
   (16.46 and 15.5 tok/s observed, rounded), arc_easy 0.72, CPU-only
   bounded_3gb arm. The checked-in profiler evidence snapshot was run

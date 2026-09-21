@@ -41,8 +41,8 @@ def _common_prefix_len(a: str, b: str) -> int:
 def _match_weight(q: str, sent_terms: set[str]) -> float:
     """1.0 for an exact hit, 0.7 for a morphological (shared-prefix) hit, else 0.
 
-    Language-agnostic: connects diagnose/diagnosed/diagnosis, treat/treatment,
-    dehydrate/dehydration, and Swahili inflections, without an English-only stemmer.
+    Connects diagnose/diagnosed/diagnosis, treat/treatment, and
+    dehydrate/dehydration without a separate stemmer.
     """
     if q in sent_terms:
         return 1.0

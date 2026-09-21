@@ -13,8 +13,8 @@ as official target-hardware results (see §13).
 - Demonstrated base RSS: **2301.2 MB** (bounded exact-IQP executor,
   `research/native_sparse_experiments/results/phase6g_bounded_executor_v5`,
   peak_rss_mib 2301.23 on Qwen3.5/K8/IQ2_XXS, 826 slots — provenance §7).
-- Use case: offline bilingual (English/Kiswahili) clinical decision support
-  for community health workers.
+- Use case: offline English clinical decision support for community health
+  workers.
 
 ## 2. Core Insight
 
@@ -260,10 +260,10 @@ Full ablation path (matched-likelihood MMLU; absolute scores differ from
 | joint Q2K + K4/16 | 38.5 (n=200) | −3.5pp (in noise) | PHASE3_5 r-v2 |
 
 External corroboration: Chen & Yao report (4,16) −0.35pp (p=0.66,
-indistinguishable) on MMLU-2000 5-shot. Functional sanity: 23-prompt
-EN/SW/instruction mix runs bit-exact across all arms and cache sizes
-(JOIN4 sha-gate); dedicated English/medical/Kiswahili/safety generation
-checks are part of the final reproduction test (§14).
+indistinguishable) on MMLU-2000 5-shot. The 23-prompt instruction suite runs
+bit-exact across all arms and cache sizes (JOIN4 sha-gate); dedicated
+English/medical/safety generation checks are part of the final reproduction
+test (§14).
 
 Rejected ideas (documented so the survivors are credible):
 
@@ -392,8 +392,9 @@ pinned Qwen3.6 runtime
 final model response streamed to the UI
 ```
 
-The 24-word positive system prompt supplies only identity, general scope,
-health-information specialization, audience, and tone. It contains no
+The 31-word positive system prompt supplies only identity, general scope,
+health-information specialization, audience, tone, and response-language
+matching. It contains no
 emergency, death, medication, output-format, or hidden-reasoning rules. The
 runtime supplies
 the model-native private reasoning configuration; the application does not ask

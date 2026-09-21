@@ -63,11 +63,10 @@ def _has_sufficient_lexical_support(query: str, document: dict[str, Any]) -> boo
     coverage = matched / len(terms)
     if coverage > 0.5:
         return True
-    # A short, bilingual query can legitimately contain two exact clinical
-    # terms plus an inflected synonym absent from the source (for example,
-    # ``mtoto ana homa kali na kikohozi``). Permit an exactly-half match only
-    # when BM25's absolute evidence is strong; weak half-matches are the shape
-    # seen for fabricated-drug prompts such as "dose of Zaptomycin".
+    # A short query can legitimately contain two exact clinical terms plus an
+    # inflected synonym absent from the source. Permit an exactly-half match
+    # only when BM25's absolute evidence is strong; weak half-matches are the
+    # shape seen for fabricated-drug prompts such as "dose of Zaptomycin".
     return coverage == 0.5 and float(document.get("score", 0.0)) >= 4.0
 
 
