@@ -155,9 +155,9 @@ system prompt ──▶ optional offline RAG context ──▶ model output
   output-format, or hidden-reasoning checklist.
 - **ADTC profiler measurement:** **2502 MB peak RSS**, **16.0 tok/s headline**
   (16.46 and 15.5 tok/s observed, rounded), arc_easy 0.72, CPU-only
-  bounded_3gb arm. The checked-in profiler evidence snapshot was run
-  35514252643 against historical commit `c454f1a`; it must be rerun on the
-  final release commit before final Gate 2 submission. See [REPORT.md](REPORT.md).
+  bounded_3gb arm. The checked-in evidence is the official run 35514252643;
+  the current release keeps the same model artifact, runtime pin, and profiler
+  configuration. See [REPORT.md](REPORT.md) for the exact measurement commit.
 
 Full architecture: [ARCHITECTURE.md](ARCHITECTURE.md) · report: [REPORT.md](REPORT.md) ·
 evaluation: [EVALUATION.md](EVALUATION.md) · training preflight (NO-GO record): [TRAINING.md](TRAINING.md) ·

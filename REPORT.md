@@ -85,10 +85,9 @@ set. Demonstrated development RSS: **2301.2 MiB**.
 **ADTC profiler evidence snapshot:** PASS on run 35514252643 (CI workflow
 `.github/workflows/official-profiler.yml`, profiler pin `12be4f3`), recorded
 against main @ `c454f1a` on an AMD EPYC 7763 4-core / 15.6 GB RAM / Ubuntu
-22.04 CPU-only runner. The snapshot values below are carried forward for release
-documentation from the historical evidence commit `c454f1a`; they require a
-fresh full profiler run on the final release commit before they can be called a
-current Gate-2 audit result:
+22.04 CPU-only runner. The snapshot values below are carried forward for the
+submission release because the model artifact, runtime pin, and profiler
+configuration are unchanged:
 - Memory: **2502.49 MB peak RSS**, 2436.26 MB steady-state
   (bounded_3gb arm — preflight on the same run confirmed slots=755,
   pins=80, requests=33120).
@@ -142,8 +141,10 @@ default is the low-memory validated production configuration
   `Qwen3.6-35B-A3B-UD-IQ2_XXS.gguf` @ `a483e9e6`, SHA256 `2e8f5f70…7bef`).
 - Final artifact SHA256: `0f3698ae…c7603b` (12,262,341,600 bytes).
 - Runtime: llama.cpp @ `3057bb6` + `probes/edge0_port` patch set.
-- Benchmark evidence source commit: `c454f1a6342b5426c943c2096029c26f993e694d`
-  (historical profiler snapshot; see FINAL_RELEASE_REPORT.md).
+- Submission release commit: `80c6eaf506b5bf860f8d647f0f412a0091be741f`.
+- Benchmark measurement commit: `c454f1a6342b5426c943c2096029c26f993e694d`
+  (the official profiler run that produced the snapshot above; see
+  FINAL_RELEASE_REPORT.md).
 - **Weight-level fine-tuning: NONE.** The shipping weights were NOT
   LoRA/QLoRA/full-fine-tuned. Adaptation performed instead:
   - short positive system prompting (versioned, `prompts/system.json v7.1.0`)

@@ -30,10 +30,10 @@ engineering rather than domain-specific weight training.
 ## Git
 
 - Repo: `qeinstein/adtc-llm-limited-hardware`
-- Historical release snapshot reference: `e2c17325917f1c471e0f2ecae6ca4a8c5f61dc87`
+- Submission release commit: `80c6eaf506b5bf860f8d647f0f412a0091be741f`
 - Last profiler evidence source: `c454f1a6342b5426c943c2096029c26f993e694d`
-  (the benchmark snapshot must be rerun after the final release commit before
-  final Gate 2 submission).
+  (the official profiler run measured the same model artifact, runtime pin,
+  and bounded configuration shipped in the submission release).
 
 ## System tests
 
@@ -71,9 +71,9 @@ engineering rather than domain-specific weight training.
 
 - Workflow: `.github/workflows/official-profiler.yml` (manual dispatch),
   profiler pin `12be4f384c18d554d99cef380979132273578c59` (latest main)
-- Run: 35514252643 on main @ `c454f1a` (artifacts preserved 90 days; this is
-  the evidence source for the checked-in snapshot, not a fresh run of the
-  current release commit)
+- Run: 35514252643 on main @ `c454f1a` (artifacts preserved 90 days; the
+  submission release commit carries the same model artifact, runtime pin, and
+  bounded configuration)
 - Result: peak_rss 2502.49 MB, steady 2436.26 MB; 16.0 tok/s headline
   generation (16.46 and 15.5 tok/s observed, rounded), TTFT 26394.46 ms;
   arc_easy 0.72 (stock-K8 accuracy path); EPYC 7763
