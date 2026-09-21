@@ -384,8 +384,9 @@ pinned Qwen3.6 runtime
 final model response streamed to the UI
 ```
 
-The short system prompt asks for clear explanations, calibrated uncertainty,
-and medication information only when explicitly requested. The runtime supplies
+The concise system prompt asks for direct, careful answers, urgent action when
+danger may be immediate, and medication information only when explicitly
+requested. The runtime supplies
 the model-native private reasoning configuration; the application does not ask
 the model to print a reasoning protocol. The application does not attach
 urgency labels, inject structured cards, lint or rewrite output, regenerate an

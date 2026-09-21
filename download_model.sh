@@ -10,7 +10,7 @@ set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MODEL_DIR="$HERE/model"
 MODEL_FILE="$MODEL_DIR/Qwen3.6-35B-A3B-UD-Q2K-experts.gguf"
-MODEL_URL="https://huggingface.co/Fluxx08/jamii-afya-qwen36-35b-q2k/resolve/main/Qwen3.6-35B-A3B-UD-Q2K-experts.gguf"
+MODEL_URL="https://huggingface.co/Fluxx08/jamii-afya-qwen36-35b-q2k/resolve/e938cd2af04dd5f30731922bc4780ef2f264f032/Qwen3.6-35B-A3B-UD-Q2K-experts.gguf"
 MODEL_SHA256="${MODEL_SHA256:-}"
 MIN_SIZE=12000000000
 

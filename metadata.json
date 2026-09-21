@@ -17,6 +17,12 @@
     "load_bearing": true,
     "description": "Jamii Afya is an offline clinical decision-support advisor for community health workers in rural and peri-urban African clinics, including English/Kiswahili settings in East Africa. It supports childhood danger-sign, pregnancy-red-flag, injury, and referral conversations when connectivity is unreliable and patient data should remain local. Its design is driven by primary-care clinical workflows and bilingual patient communication, so the medical discipline is load-bearing on both the knowledge base and the safety behaviour. No weight-level fine-tuning was performed; the submission focuses on adaptable systems engineering, sparse execution, bounded staging, and offline runtime delivery."
   },
+  "provenance": {
+    "base_model_source": "huggingface:unsloth/Qwen3.6-35B-A3B-GGUF",
+    "base_model_commit_sha": "a483e9e6cbd595906af30beda3187c2663a1118c",
+    "fine_tuning_method": "prompt_engineering",
+    "training_datasets": []
+  },
   "test_prompts": [
     {
       "prompt_id": "tp_001",
@@ -32,8 +38,7 @@
     "runtime": "llama.cpp",
     "quantization": "GGUF (routed experts Q2_K; K4/16 sparse execution)",
     "parameters_estimate": "35B-A3B",
-    "packaging": "binary_bundle",
-    "base_model_commit_sha": "a483e9e6cbd595906af30beda3187c2663a1118c"
+    "packaging": "binary_bundle"
   },
   "_runtime": {
     "model_path": "model/Qwen3.6-35B-A3B-UD-Q2K-experts.gguf"

@@ -138,7 +138,7 @@ system prompt ──▶ optional offline RAG context ──▶ model output
   keeps base types. **No weight-level fine-tuning was performed; the shipped
   weights are the base model with runtime quantization only.** See
   [MODEL_CARD.md](MODEL_CARD.md).
-- **Response path:** the application supplies one short system prompt,
+- **Response path:** the application supplies one concise behavioral system prompt,
   attaches relevant offline RAG context when available, and returns the model
   response without classification, labels, rewriting, regeneration, fixed
   fallback, or exposed reasoning steps. The pinned server uses Qwen3.6's native
@@ -164,10 +164,11 @@ novelty & prior art: [NOVELTY.md](NOVELTY.md)
 ```
 ├── metadata.json            # profiler manifest (strict schema; `make validate`)
 ├── download_model.sh        # fetch + SHA256-verify the Q2K GGUF (static URL)
+├── scripts/download_model.py # cross-platform fetch + SHA256 verification
 ├── model/manifest.json      # machine-readable artifact manifest
-├── MODEL_CARD.md            # artifact card (provenance, honesty)
+├── MODEL_CARD.md            # artifact card (model provenance and details)
 ├── REPORT.md                # technical report (Gate-2)
-├── provenance/              # truthful provenance package (no fake training logs)
+├── provenance/              # model provenance package
 ├── src/                     # RAG (stdlib) · sparse backend · web UI · CLI
 │   ├── sparse.py            # managed llama-server (frozen K4/16 runtime)
 │   ├── webapp.py            # FastAPI backend + SSE streaming

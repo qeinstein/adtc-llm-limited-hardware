@@ -11,10 +11,10 @@
   "k1": 4,
   "k2": 16,
   "quantization": "routed-experts-only Q2_K (120 tensors); all other tensors keep base types",
-  "revision": "main",
+  "revision": "e938cd2af04dd5f30731922bc4780ef2f264f032",
   "revision_sha": "e938cd2af04dd5f30731922bc4780ef2f264f032",
   "runtime_pin": "llama.cpp @ 3057bb66c86c46d5781e50e85462a760ba7d1feb + probes/edge0_port patch set",
   "sha256": "0f3698ae92f91db2eb10a3650bdb6693ff8cfaf7060cbc5f256845c700c7603b",
   "size_bytes": 12262341600,
-  "url": "https://huggingface.co/Fluxx08/jamii-afya-qwen36-35b-q2k/resolve/main/Qwen3.6-35B-A3B-UD-Q2K-experts.gguf"
+  "url": "https://huggingface.co/Fluxx08/jamii-afya-qwen36-35b-q2k/resolve/e938cd2af04dd5f30731922bc4780ef2f264f032/Qwen3.6-35B-A3B-UD-Q2K-experts.gguf"
 }

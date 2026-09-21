@@ -47,6 +47,10 @@ jobs:
           assert m["size_bytes"] == 12262341600
           assert m["sha256"] == "0f3698ae92f91db2eb10a3650bdb6693ff8cfaf7060cbc5f256845c700c7603b"
           assert m["fine_tuned"] is False
+          meta = json.loads(Path("metadata.json").read_text())
+          provenance = meta["provenance"]
+          assert provenance["fine_tuning_method"] == "prompt_engineering"
+          assert provenance["training_datasets"] == []
           print("model/manifest.json: VALID")
           PY
 
@@ -55,6 +59,10 @@ jobs:
           bash -n download_model.sh
           test -x download_model.sh
           grep -q 'MODEL_URL="https://huggingface.co/[^"]*\.gguf"' download_model.sh
+          if grep -n '/resolve/main/' download_model.sh; then
+            echo "::error::download_model.sh must use an immutable model revision"; exit 1
+          fi
+          grep -q 'e938cd2af04dd5f30731922bc4780ef2f264f032' download_model.sh
           # Gate-2: URL must be a static literal, never constructed dynamically.
           if grep -n 'MODEL_URL="${MODEL_URL' download_model.sh; then
             echo "::error::download_model.sh builds its URL dynamically"; exit 1
@@ -140,11 +148,15 @@ jobs:
       - name: Before/after capture harness checks
         run: |
           python3 -m py_compile scripts/capture_before_after.py
+          python3 -m py_compile scripts/run_chat_regressions.py
           python3 -m json.tool evals/gate2_before_after/prompts.json >/dev/null
+          python3 -m json.tool evals/chat_regressions.json >/dev/null
           grep -q '/api/chat/stream' scripts/capture_before_after.py
           grep -q '"base":' scripts/capture_before_after.py
           grep -q '"text": bmsg.get' scripts/capture_before_after.py
           grep -q '"system":.*"reply"' scripts/capture_before_after.py
+          grep -q 'prompt_extraction' evals/chat_regressions.json
+          grep -q 'reasoning marker reached visible reply' scripts/run_chat_regressions.py
           echo "before/after capture harness: PASS"
 
       - name: Lint touched production modules
@@ -152,4 +164,5 @@ jobs:
           python -m pip install -q ruff
           python -m ruff check src/webapp.py src/config.py src/main.py src/manifest.py \
             src/rag.py tests/test_webapp.py tests/test_rag.py \
-            tests/test_system_prompt.py
+            tests/test_system_prompt.py tests/test_chat_regressions.py \
+            scripts/run_chat_regressions.py

@@ -29,6 +29,7 @@ ALLOWED_TOP_LEVEL = {
     "budget_laptop_claim",
     "submitter",
     "cross_disciplinary_pairing",
+    "provenance",
     "test_prompts",
     "model",
     "_runtime",  # stripped by profiler (leading underscore), allowed here
@@ -102,10 +103,19 @@ def validate_metadata(meta: dict[str, Any]) -> list[str]:
             errs.append(f"'model.packaging' must be one of {sorted(PACKAGING)}")
         if model.get("runtime") != "llama.cpp":
             errs.append("'model.runtime' must be 'llama.cpp' (only accepted runtime)")
-        sha = model.get("base_model_commit_sha")
-        if sha is not None and not (
-                isinstance(sha, str)
-                and re.fullmatch(r"[0-9a-f]{40}", sha)):
-            errs.append("'model.base_model_commit_sha' must be a 40-hex SHA")
+    provenance = meta.get("provenance")
+    if not isinstance(provenance, dict):
+        errs.append("'provenance' must be an object")
+    else:
+        _req_str(provenance, "base_model_source", errs)
+        sha = provenance.get("base_model_commit_sha")
+        if not (isinstance(sha, str) and re.fullmatch(r"[0-9a-f]{40}", sha)):
+            errs.append("'provenance.base_model_commit_sha' must be a 40-hex SHA")
+        method = provenance.get("fine_tuning_method")
+        if method not in {"none", "prompt_engineering", "lora", "qlora", "full_fine_tune"}:
+            errs.append("'provenance.fine_tuning_method' has an unsupported value")
+        datasets = provenance.get("training_datasets")
+        if not isinstance(datasets, list) or any(not isinstance(x, str) for x in datasets):
+            errs.append("'provenance.training_datasets' must be an array of strings")
 
     return errs

@@ -25,6 +25,14 @@ def test_exactly_two_test_prompts():
     assert len(load_metadata()["test_prompts"]) == 2
 
 
+def test_gate2_provenance_matches_the_official_template():
+    provenance = load_metadata()["provenance"]
+    assert provenance["base_model_source"] == "huggingface:unsloth/Qwen3.6-35B-A3B-GGUF"
+    assert provenance["base_model_commit_sha"] == "a483e9e6cbd595906af30beda3187c2663a1118c"
+    assert provenance["fine_tuning_method"] == "prompt_engineering"
+    assert provenance["training_datasets"] == []
+
+
 def test_validator_catches_common_mistakes():
     meta = load_metadata()
 
@@ -43,3 +51,7 @@ def test_validator_catches_common_mistakes():
     bad = copy.deepcopy(meta)
     bad["surprise"] = 1
     assert any("unexpected top-level key" in e for e in validate_metadata(bad))
+
+    bad = copy.deepcopy(meta)
+    del bad["provenance"]
+    assert any("provenance" in e for e in validate_metadata(bad))

@@ -20,6 +20,5 @@ For every prompt, the generated `tp_*.json` stores:
 - `system.sources` and `system.telemetry`: the evidence attached to the
   submitted response.
 
-The current checkout contains the capture method and prompts, but not fabricated
-outputs. A measured before/after answer should only be added after the vanilla
-base-model run has completed.
+The current checkout contains the reproducible capture method and prompts, plus
+one concise before/after example in `observed_chat_examples.md`.

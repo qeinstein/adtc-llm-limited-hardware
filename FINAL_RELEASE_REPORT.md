@@ -37,12 +37,12 @@ engineering rather than domain-specific weight training.
 
 ## System tests
 
-- `pytest tests/`: 174 passed (RAG, webapp wiring, runtime, historical, and
+- `pytest tests/`: 188 passed (RAG, webapp wiring, runtime, historical, and
   JOIN4 anchors — all model-independent)
 - CI `offline-gates`: PASS (tests, metadata/manifest validation, download
   script checks, stale/secret/size audits, UI static check, lint)
-- `make validate`: metadata.json VALID (strict schema incl.
-  `base_model_commit_sha`)
+- `make validate`: metadata.json VALID (strict schema including the official
+  top-level `provenance` object)
 
 ## Application response path
 

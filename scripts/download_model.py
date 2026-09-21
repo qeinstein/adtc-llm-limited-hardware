@@ -16,7 +16,8 @@ ROOT = Path(__file__).resolve().parent.parent
 MODEL_DIR = ROOT / "model"
 MODEL_FILE = MODEL_DIR / "Qwen3.6-35B-A3B-UD-Q2K-experts.gguf"
 MODEL_URL = (
-    "https://huggingface.co/Fluxx08/jamii-afya-qwen36-35b-q2k/resolve/main/"
+    "https://huggingface.co/Fluxx08/jamii-afya-qwen36-35b-q2k/resolve/"
+    "e938cd2af04dd5f30731922bc4780ef2f264f032/"
     "Qwen3.6-35B-A3B-UD-Q2K-experts.gguf"
 )
 MIN_SIZE = 12_000_000_000

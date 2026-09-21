@@ -134,6 +134,11 @@ default is the low-memory validated production configuration
 
 ## Model Provenance
 
+- **Official Gate 2 provenance:** `metadata.json` now follows the current ADTC
+  template's top-level `provenance` object: base source
+  `huggingface:unsloth/Qwen3.6-35B-A3B-GGUF`, base commit
+  `a483e9e6cbd595906af30beda3187c2663a1118c`, `prompt_engineering`, and no
+  training datasets.
 - Base model: `Qwen/Qwen3.6-35B-A3B` (via `unsloth/Qwen3.6-35B-A3B-GGUF`
   `Qwen3.6-35B-A3B-UD-IQ2_XXS.gguf` @ `a483e9e6`, SHA256 `2e8f5f70…7bef`).
 - Final artifact SHA256: `0f3698ae…c7603b` (12,262,341,600 bytes).
@@ -142,7 +147,7 @@ default is the low-memory validated production configuration
   (historical profiler snapshot; see FINAL_RELEASE_REPORT.md).
 - **Weight-level fine-tuning: NONE.** The shipping weights were NOT
   LoRA/QLoRA/full-fine-tuned. Adaptation performed instead:
-  - medical system prompting (versioned, `prompts/system.json v5.0.0`)
+  - medical system prompting (versioned, `prompts/system.json v6.0.0`)
   - K4/16 sparse execution adaptation
   - routed-expert-only Q2_K transformation
   - bounded sparse runtime (<3 GB working set)
@@ -170,10 +175,24 @@ submitted response from the live `/api/chat/stream` path (system prompt plus
 optional offline RAG). It also records the submitted system's sources and
 telemetry.
 
-The repository does not invent a measured before/after pair. The base weights
-and a vanilla build still need to be run on a machine with roughly 25 GB free;
-until that capture is completed, no raw base answer is presented as an official
-comparison.
+The concise observed before/after example is preserved in
+`evals/gate2_before_after/observed_chat_examples.md`.
+
+### Prompt: What do you do?
+
+**Before**
+
+> The user's question is "what do you do?". The prompt requires me to answer
+> ordinary non-health questions directly and clearly. The prompt specifies that
+> I should not force a medical framing...
+
+**After**
+
+> I am Jamii Afya, an offline general-purpose assistant. I provide health
+> information for people and health workers, with particular attention to
+> African healthcare settings. I can also answer non-health questions, including
+> general knowledge, explanations, writing, translation, mathematics, coding,
+> planning, and casual conversation.
 
 - Prompt A (triage): metadata `tp_001` — a two-year-old child with watery
   diarrhoea six times today and sunken eyes (English).
