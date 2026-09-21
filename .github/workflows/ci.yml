@@ -125,7 +125,10 @@ jobs:
                          'streamedText', 'finalReply',
                          'answer = answer || finalReply || \'\'',
                          'body.innerHTML = renderMD(answer)',
-                         'thinking-status', 'Thinking…'):
+                         'thinking-status', 'Thinking…',
+                         'id="startupNotice"', 'setTimeout(hide, 10000)',
+                         'jamiiAfyaStartupNoticeSeen',
+                         'dismissStartupNotice'):
               assert needle in text, needle
           for removed in ('data-mode=', 'currentMode', 'safety_override',
                           'guard_failures', 'kind === \'meta\'',
@@ -133,6 +136,16 @@ jobs:
               assert removed not in text, removed
           print("chat.html: PARSES + direct model stream present")
           PY
+
+      - name: Before/after capture harness checks
+        run: |
+          python3 -m py_compile scripts/capture_before_after.py
+          python3 -m json.tool evals/gate2_before_after/prompts.json >/dev/null
+          grep -q '/api/chat/stream' scripts/capture_before_after.py
+          grep -q '"base":' scripts/capture_before_after.py
+          grep -q '"text": bmsg.get' scripts/capture_before_after.py
+          grep -q '"system":.*"reply"' scripts/capture_before_after.py
+          echo "before/after capture harness: PASS"
 
       - name: Lint touched production modules
         run: |

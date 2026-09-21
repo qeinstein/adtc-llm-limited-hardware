@@ -126,6 +126,35 @@
   .msg.assistant .body th, .msg.assistant .body td { border: 1px solid var(--rule);
     padding: 0.3rem 0.6rem; text-align: left; }
   .anshead { display: flex; align-items: center; gap: 0.6rem; }
+
+  .startup-notice[hidden] { display: none; }
+  .startup-notice {
+    position: fixed; inset: 0; z-index: 20; display: grid; place-items: center;
+    padding: 1.25rem; background: rgba(20, 20, 19, 0.28);
+    animation: notice-in 180ms ease-out;
+  }
+  .startup-card {
+    width: min(31rem, 100%); background: var(--bg); border: 1px solid var(--rule);
+    border-radius: 10px; box-shadow: 0 18px 50px rgba(20, 20, 19, 0.16);
+    padding: 1.35rem 1.4rem 1.15rem;
+  }
+  .startup-kicker { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--muted); }
+  .startup-card h2 { font-family: var(--serif); font-weight: 400; font-size: 1.55rem;
+    line-height: 1.2; margin: 0.5rem 0 0.65rem; }
+  .startup-card p { color: var(--ink-soft); margin: 0; font-size: 0.94rem; line-height: 1.55; }
+  .startup-actions { display: flex; justify-content: flex-end; margin-top: 1.1rem; }
+  #dismissStartupNotice { border: 1px solid var(--ink); background: var(--ink); color: #fff;
+    border-radius: 5px; padding: 0.48rem 0.85rem; font: inherit; font-size: 0.82rem;
+    cursor: pointer; }
+  #dismissStartupNotice:hover { background: #000; }
+  .startup-progress { height: 2px; background: var(--rule-soft); margin-top: 1rem; overflow: hidden; }
+  .startup-progress span { display: block; height: 100%; background: var(--muted);
+    transform-origin: left; animation: notice-countdown 10s linear forwards; }
+  @keyframes notice-in { from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); } }
+  @keyframes notice-countdown { from { transform: scaleX(1); }
+    to { transform: scaleX(0); } }
   @media (max-width: 640px) {
     .wrap { padding: 0 1rem; }
     #chat { padding: 1.5rem 0; }
@@ -144,6 +173,17 @@
     </div>
   </div>
 </header>
+
+<div id="startupNotice" class="startup-notice" role="dialog" aria-modal="true"
+     aria-labelledby="startupNoticeTitle" aria-describedby="startupNoticeText" hidden>
+  <div class="startup-card">
+    <div class="startup-kicker">Local model note</div>
+    <h2 id="startupNoticeTitle">The first message may take longer.</h2>
+    <p id="startupNoticeText">Jamii Afya warms the local model and may think before showing an answer. Expect the first message to be the slowest; later messages are usually faster. Longer messages also take more time to process.</p>
+    <div class="startup-actions"><button id="dismissStartupNotice" type="button">Got it</button></div>
+    <div class="startup-progress" aria-hidden="true"><span></span></div>
+  </div>
+</div>
 
 <div id="chat">
   <div class="wrap">
@@ -185,6 +225,27 @@ const clearBtn = document.getElementById('clearBtn');
 let emptyState = document.getElementById('emptyState');
 const emptyHTML = emptyState.outerHTML;
 let aborter = null;
+
+function showStartupNotice() {
+  const notice = document.getElementById('startupNotice');
+  const dismiss = document.getElementById('dismissStartupNotice');
+  if (!notice || !dismiss) return;
+  let seen = false;
+  try { seen = sessionStorage.getItem('jamiiAfyaStartupNoticeSeen') === '1'; }
+  catch (e) { /* storage can be unavailable in private/restricted browsers */ }
+  if (seen) return;
+  try { sessionStorage.setItem('jamiiAfyaStartupNoticeSeen', '1'); }
+  catch (e) { /* the notice still works without persistence */ }
+  notice.hidden = false;
+  let timer = setTimeout(hide, 10000);
+  function hide() {
+    clearTimeout(timer);
+    notice.hidden = true;
+  }
+  dismiss.addEventListener('click', hide, { once: true });
+  dismiss.focus();
+}
+showStartupNotice();
 
 let history = [];  // [{role, content}] — full conversation memory sent with every request
 

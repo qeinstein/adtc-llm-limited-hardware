@@ -163,10 +163,17 @@ completed fine-tune and are never described as one.
 
 ## BEFORE / AFTER examples
 
-Gate 2 requires submitted-vs-base comparisons on identical prompts.
-Paired base-model outputs do not exist yet (capturing them needs the base
-weights + a vanilla build on a machine with ~25 GB free); the exact prompts
-and capture scaffolding are ready and ONLY the capture run is outstanding.
+Gate 2 requires submitted-vs-base comparisons on identical prompts. The capture
+path now records both answers from the same prompt: `base.text` is the vanilla
+base-model response with no system message or RAG, while `system.reply` is the
+submitted response from the live `/api/chat/stream` path (system prompt plus
+optional offline RAG). It also records the submitted system's sources and
+telemetry.
+
+The repository does not invent a measured before/after pair. The base weights
+and a vanilla build still need to be run on a machine with roughly 25 GB free;
+until that capture is completed, no raw base answer is presented as an official
+comparison.
 
 - Prompt A (triage): metadata `tp_001` — a two-year-old child with watery
   diarrhoea six times today and sunken eyes (English).
@@ -174,11 +181,12 @@ and capture scaffolding are ready and ONLY the capture run is outstanding.
   He is coughing and his mouth burns. What now?" (additional safety
   capture prompt, not metadata tp_002 — tp_002 is the pregnancy case).
 
-Capture: `python3 scripts/capture_before_after.py --prompts evals/gate2_before_after/prompts.json --base-model <base.gguf> --sys-model model/<q2k.gguf> --out evals/gate2_before_after/`
+Capture: `python3 scripts/capture_before_after.py --prompts evals/gate2_before_after/prompts.json --base-model <base.gguf> --out evals/gate2_before_after/`
 compares raw-base replies vs the system prompt + optional RAG + model path.
 Expected deltas: explanation quality, reference use, and medication behavior.
-**Owner: final capture on
-the release laptop; results appended here before the video.**
+Each generated `tp_*.json` contains the answer before and after the harness.
+**Owner: final capture on the release laptop; results should be attached here
+before the video.**
 
 ## USEFULNESS (anti-gaming)
 

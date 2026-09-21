@@ -21,6 +21,7 @@ import json
 import subprocess
 import sys
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -34,13 +35,43 @@ def post_json(url, payload, timeout=900):
         return json.load(r)
 
 
+def post_stream_json(url, payload, timeout=900):
+    """Collect the final reply and telemetry from the web UI's SSE endpoint."""
+    req = urllib.request.Request(
+        url, data=json.dumps(payload).encode(),
+        headers={"Content-Type": "application/json",
+                 "Accept": "text/event-stream"})
+    pieces = []
+    done = None
+    with urllib.request.urlopen(req, timeout=timeout) as response:
+        for raw in response:
+            line = raw.decode("utf-8", errors="replace").strip()
+            if not line.startswith("data:"):
+                continue
+            try:
+                event = json.loads(line[5:].strip())
+            except json.JSONDecodeError:
+                continue
+            if event.get("kind") == "text":
+                pieces.append(event.get("piece", ""))
+            elif event.get("kind") == "done":
+                done = event
+            elif event.get("kind") == "error":
+                raise RuntimeError(event.get("error", "system capture failed"))
+    if done is None:
+        raise RuntimeError("system stream ended without a done event")
+    done = dict(done)
+    done["reply"] = done.get("reply") or "".join(pieces)
+    return done
+
+
 def wait_ready(base, wait_s=600):
     t0 = time.time()
     while time.time() - t0 < wait_s:
         try:
             urllib.request.urlopen(base + "/health", timeout=5)
             return
-        except Exception:
+        except (OSError, TimeoutError, urllib.error.URLError):
             time.sleep(2)
     raise TimeoutError(f"{base} never ready")
 
@@ -78,23 +109,22 @@ def main() -> int:
                            "stream": False})
             bmsg = b["choices"][0]["message"]
             print(f"[capture] {pid} system...", flush=True)
-            s = post_json(args.webui + "/api/chat",
-                          {"message": prompt, "history": [],
-                           })
+            s = post_stream_json(args.webui + "/api/chat/stream",
+                                 {"message": prompt, "history": []})
             (outdir / f"{pid}.json").write_text(json.dumps({
                 "prompt_id": pid, "prompt": prompt,
                 "base": {"thinking": bmsg.get("reasoning_content", "") or "",
                          "text": bmsg.get("content", "") or ""},
-                "system": {"reply": s["reply"],
-                           "thinking": s.get("thinking", ""),
-                           "sources": s.get("sources")},
+                "system": {"reply": s.get("reply", ""),
+                           "sources": s.get("sources"),
+                           "telemetry": s.get("telemetry")},
             }, indent=1, ensure_ascii=False))
             print(f"[capture] wrote {pid}.json", flush=True)
     finally:
         base.terminate()
         try:
             base.wait(timeout=20)
-        except Exception:
+        except subprocess.TimeoutExpired:
             base.kill()
     print("[capture] done. Paste the paired outputs into REPORT.md.")
     return 0
