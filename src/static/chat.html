@@ -447,10 +447,25 @@ function compactThinkingStatus(raw) {
   const clean = String(raw || '').replace(/[\n\r]+/g, ' ')
     .replace(/[`*_#]/g, '').replace(/\s+/g, ' ').trim();
   if (!clean) return 'Analyzing your question…';
-  const sentence = clean.split(/(?<=[.!?])\s+/)[0].trim();
-  if (sentence.length < 12) return 'Considering the relevant details…';
-  const clipped = sentence.length > 76 ? sentence.slice(0, 73).trimEnd() + '…' : sentence;
-  return clipped;
+  const fragments = clean.split(/[.!?]\s+/).map(s => s.trim()).filter(Boolean);
+  const forbidden = /\b(?:system prompt|hidden instruction|do not reveal|prompt requires|reference block|internal rules?)\b/i;
+  const meaningful = fragments.filter(fragment => !forbidden.test(fragment));
+  let phrase = (meaningful[meaningful.length - 1] ||
+    fragments[fragments.length - 1] || '').trim();
+  phrase = phrase
+    .replace(/^the user(?:'s)?\s+(?:message|question|input)\s+(?:is|asks?|describes?)\s*/i, '')
+    .replace(/^the user\s+(?:asks?|is asking about|describes?)\s*/i, '')
+    .replace(/^(?:the question|the issue)\s+(?:is|concerns?)\s*/i, '')
+    .replace(/^(?:we|i)\s+need to\s+/i, '')
+    .trim();
+  if (phrase.length < 12 || forbidden.test(phrase)) {
+    return 'Considering the relevant details…';
+  }
+  const clipped = phrase.length > 70 ? phrase.slice(0, 67).trimEnd() + '…' : phrase;
+  if (/^(?:analyz|assess|check|consider|review|determin|identif|evaluat|understand)/i.test(clipped)) {
+    return clipped.charAt(0).toUpperCase() + clipped.slice(1) + (clipped.endsWith('…') ? '' : '…');
+  }
+  return `Analyzing ${clipped}${clipped.endsWith('…') ? '' : '…'}`;
 }
 
 // Streaming assistant message: collapsed reasoning + markdown answer body.
