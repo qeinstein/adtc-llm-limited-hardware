@@ -301,9 +301,9 @@ def chat(req: ChatRequest) -> ChatResponse:
 def chat_stream(req: ChatRequest):
     """Stream only the final model answer and finish with usage metadata.
 
-    The runtime may reason internally, but its reasoning channel never crosses
-    this API boundary. The browser receives a quiet activity indicator and the
-    model's final answer only.
+    The runtime may reason internally through Qwen3.6's native reasoning
+    channel, but that channel never crosses this API boundary. The browser
+    receives a quiet activity indicator and the model's final answer only.
     """
     import json
 

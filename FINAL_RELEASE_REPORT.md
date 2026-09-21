@@ -30,9 +30,9 @@ engineering rather than domain-specific weight training.
 ## Git
 
 - Repo: `qeinstein/adtc-llm-limited-hardware`
-- Current release submission: `e2c17325917f1c471e0f2ecae6ca4a8c5f61dc87`
+- Historical release snapshot reference: `e2c17325917f1c471e0f2ecae6ca4a8c5f61dc87`
 - Last profiler evidence source: `c454f1a6342b5426c943c2096029c26f993e694d`
-  (the benchmark snapshot must be rerun after this release commit before
+  (the benchmark snapshot must be rerun after the final release commit before
   final Gate 2 submission).
 
 ## System tests

@@ -102,10 +102,11 @@ The Windows build requires Git, CMake, and a C/C++ toolchain visible to CMake
 all three platforms; set `ADTC_SPARSE_ARM=resident` only when the machine has
 enough memory for the full model.
 
-The shipped sparse runtime can reason internally, but reasoning is never sent to
-the browser or shown as a step-by-step trace. It transitions to the final answer
-channel after the internal budget; set `ADTC_REASONING_BUDGET=-1` for unrestricted
-internal reasoning. `ADTC_MAX_TOKENS` still controls the total completion.
+The shipped sparse runtime uses Qwen3.6's native private reasoning channel. The
+server explicitly enables the model's thinking template and the `deepseek`
+reasoning parser, so reasoning is returned as `reasoning_content`, discarded by
+the backend, and never sent to the browser. `ADTC_REASONING_BUDGET` controls the
+runtime's internal budget; `ADTC_MAX_TOKENS` controls the total completion.
 
 Other entry points:
 
@@ -140,16 +141,17 @@ system prompt ──▶ optional offline RAG context ──▶ model output
 - **Response path:** the application supplies one short system prompt,
   attaches relevant offline RAG context when available, and returns the model
   response without classification, labels, rewriting, regeneration, fixed
-  fallback, or exposed reasoning steps.
+  fallback, or exposed reasoning steps. The pinned server uses Qwen3.6's native
+  chat-template controls rather than asking the model to simulate a private
+  reasoning protocol in prose.
 - **Medication behavior:** the system prompt tells the model not to volunteer
   medication names, doses, or prescriptions unless the user explicitly asks
   about medication or treatment.
 - **ADTC profiler measurement:** **2502 MB peak RSS**, **16.0 tok/s headline**
   (16.46 and 15.5 tok/s observed, rounded), arc_easy 0.72, CPU-only
-  bounded_3gb arm. The checked-in release snapshot is aligned to commit
-  `e2c1732`; the last full profiler evidence was run 35514252643 at
-  `c454f1a` and must be rerun on the release commit before final Gate 2
-  submission. See [REPORT.md](REPORT.md).
+  bounded_3gb arm. The checked-in profiler evidence snapshot was run
+  35514252643 against historical commit `c454f1a`; it must be rerun on the
+  final release commit before final Gate 2 submission. See [REPORT.md](REPORT.md).
 
 Full architecture: [ARCHITECTURE.md](ARCHITECTURE.md) · report: [REPORT.md](REPORT.md) ·
 evaluation: [EVALUATION.md](EVALUATION.md) · training preflight (NO-GO record): [TRAINING.md](TRAINING.md) ·

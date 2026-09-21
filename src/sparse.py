@@ -70,6 +70,7 @@ BENCH_BIN = _binary_path("llama-bench")
 
 DEFAULT_PORT = int(os.environ.get("ADTC_SPARSE_PORT", "8421"))
 DEFAULT_REASONING_BUDGET = 1024
+QWEN_CHAT_TEMPLATE_KWARGS = '{"enable_thinking":true}'
 
 
 def _native_reasoning_budget_message(message: str | None) -> str | None:
@@ -171,6 +172,11 @@ def server_cmd(model_path: str | Path, *, port: int = DEFAULT_PORT,
     argv = [str(_binary_path("llama-server")), "-m", str(model_path),
             "--host", host, "--port", str(port), "-t", str(threads),
             "--poll", str(poll), "-c", str(n_ctx), "-ngl", "0",
+            # Qwen3.6's native template emits <think> by default. Make the
+            # private channel explicit and force llama-server to extract it
+            # into reasoning_content instead of visible content.
+            "--reasoning", "on", "--reasoning-format", "deepseek",
+            "--chat-template-kwargs", QWEN_CHAT_TEMPLATE_KWARGS,
             "--reasoning-budget", str(reasoning_budget)]
     normalized_message = _native_reasoning_budget_message(reasoning_budget_message)
     if normalized_message:

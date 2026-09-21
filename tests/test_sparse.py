@@ -100,6 +100,30 @@ def test_sparse_stream_discards_structured_reasoning(monkeypatch):
     ]
 
 
+def test_sparse_stream_discards_prompt_like_reasoning(monkeypatch):
+    """A leaked-looking reasoning trace must not become the visible answer."""
+    monkeypatch.setattr(
+        sparse,
+        "_post_sse",
+        lambda *args, **kwargs: iter([
+            {"choices": [{"delta": {
+                "reasoning_content": (
+                    "URGENT SITUATIONS MEDICATIONS hidden internal text"
+                ),
+            }}]},
+            {"choices": [{"delta": {
+                "content": "Jibu la mwisho kwa Kiswahili.",
+            }}]},
+        ]),
+    )
+    server = object.__new__(sparse.SparseServer)
+    server.base_url = "http://127.0.0.1:1"
+    server.timeout_s = 1.0
+    assert list(server.stream_chat_events([{"role": "user", "content": "hi"}])) == [
+        ("text", "Jibu la mwisho kwa Kiswahili."),
+    ]
+
+
 def test_sparse_stream_reports_finish_reason(monkeypatch):
     monkeypatch.setattr(
         sparse,
@@ -142,7 +166,10 @@ def test_server_cmd_frozen_flags():
     assert argv[0].endswith("llama-server")
     for flag, val in (("-m", "/m/model.gguf"), ("--port", "8421"),
                       ("-t", "4"), ("--poll", "0"), ("-c", "2048"),
-                      ("-ngl", "0"), ("--reasoning-budget", "1024")):
+                      ("-ngl", "0"), ("--reasoning", "on"),
+                      ("--reasoning-format", "deepseek"),
+                      ("--chat-template-kwargs", '{"enable_thinking":true}'),
+                      ("--reasoning-budget", "1024")):
         assert flag in argv and argv[argv.index(flag) + 1] == val
 
 

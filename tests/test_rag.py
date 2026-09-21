@@ -65,6 +65,7 @@ def test_rag_markers_inside_reference_or_question_are_escaped():
 def test_system_prompt_is_the_only_instruction_layer():
     rag = _pipeline()
     sp = rag.system_prompt
-    assert "MEDICATIONS" in sp
-    assert "explicitly asked" in sp
+    normalized = " ".join(sp.lower().split())
+    assert "medication" in normalized
+    assert "explicitly asks" in normalized
     assert rag.system_prompt_for(_pipeline().build("hello")) == sp

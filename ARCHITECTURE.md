@@ -355,12 +355,13 @@ Authoritative values live in `configs/final_runtime.json`:
 - Long context grows KV memory outside the expert budget (ctx 512
   validated; 2k+ needs re-measurement).
 - K4/16 is approximate (−1.0pp MMLU-200; paper: indistinguishable).
-- The model may reason internally, but reasoning output is discarded at the
-  backend boundary and never displayed or returned by the web API. The UI shows
-  only a quiet activity state while the final answer is generated. The pinned
-  runtime caps the internal block by default (1024 tokens); set
+- The model may reason internally, but the pinned runtime explicitly enables
+  Qwen3.6's native thinking template and extracts the private stream as
+  `reasoning_content` with `--reasoning-format deepseek`. The backend discards
+  that channel and the UI shows only a quiet activity state plus the final
+  answer. The internal block is capped at 1024 tokens by default; set
   `ADTC_REASONING_BUDGET=-1` for unrestricted internal reasoning. There is no
-  second answer request.
+  second answer request or application-side answer rewrite.
 - No clinician review anywhere in the model or reference corpus; clinical
   answers remain decision support and require qualified review.
 - Throughput varies with host CPU/disk; Kaggle ≠ Core i5 (see §13).
@@ -384,10 +385,12 @@ final model response streamed to the UI
 ```
 
 The short system prompt asks for clear explanations, calibrated uncertainty,
-and medication information only when explicitly requested. The application does
-not attach urgency labels, inject structured cards, lint or rewrite output,
-regenerate an answer, or substitute a fixed fallback. The UI shows the model
-response, optional RAG sources, and runtime telemetry.
+and medication information only when explicitly requested. The runtime supplies
+the model-native private reasoning configuration; the application does not ask
+the model to print a reasoning protocol. The application does not attach
+urgency labels, inject structured cards, lint or rewrite output, regenerate an
+answer, or substitute a fixed fallback. The UI shows the model response,
+optional RAG sources, and runtime telemetry.
 
 ## 18. Rejected Product Directions & Historical Map
 
