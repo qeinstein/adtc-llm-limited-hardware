@@ -177,6 +177,8 @@ telemetry.
 
 The concise observed before/after example is preserved in
 `evals/gate2_before_after/observed_chat_examples.md`.
+The current submitted-path after captures for the two English clinical prompts
+are recorded verbatim in `evals/gate2_before_after/after_results.md`.
 
 ### Prompt: What do you do?
 
@@ -200,12 +202,14 @@ The concise observed before/after example is preserved in
   He is coughing and his mouth burns. What now?" (additional safety
   capture prompt, not metadata tp_002 — tp_002 is the pregnancy case).
 
+The current after responses for Prompt A and Prompt B, including their UI
+telemetry, are in `evals/gate2_before_after/after_results.md`.
+
 Capture: `python3 scripts/capture_before_after.py --prompts evals/gate2_before_after/prompts.json --base-model <base.gguf> --out evals/gate2_before_after/`
 compares raw-base replies vs the system prompt + optional RAG + model path.
 Expected deltas: explanation quality, natural response style, and reference use.
-Each generated `tp_*.json` contains the answer before and after the harness.
-**Owner: final capture on the release laptop; results should be attached here
-before the video.**
+When the raw-base leg is run, each generated `tp_*.json` contains both the
+vanilla `base.text` and submitted `system.reply` for the same prompt.
 
 ## USEFULNESS (anti-gaming)
 

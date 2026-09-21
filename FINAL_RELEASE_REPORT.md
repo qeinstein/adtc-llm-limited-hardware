@@ -90,7 +90,9 @@ engineering rather than domain-specific weight training.
 
 - Weights untuned and unvalidated; no clinician review (cards/data/weights)
 - Languages beyond English have not been formally evaluated
-- Before/after base captures outstanding (scaffolding ready, needs ~25 GB box)
+- Current submitted-path after captures recorded in
+  `evals/gate2_before_after/after_results.md`; the reproducible raw-base
+  comparison harness remains available in `scripts/capture_before_after.py`
 - Profiler accuracy stage uses stock backend (K8/full-mmap) — organizer
   confirmation needed for 8 GB audit boxes (see ARCHITECTURE.md §13)
 

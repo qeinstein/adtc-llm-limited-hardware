@@ -21,4 +21,5 @@ For every prompt, the generated `tp_*.json` stores:
   submitted response.
 
 The current checkout contains the reproducible capture method and prompts, plus
-one concise before/after example in `observed_chat_examples.md`.
+one concise before/after example in `observed_chat_examples.md` and the latest
+submitted-path after captures in `after_results.md`.
