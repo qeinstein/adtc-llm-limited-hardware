@@ -25,7 +25,7 @@ os.makedirs(OUT, exist_ok=True)
 
 PROMPTS = [
     "Give one concise reason oral rehydration solution helps a child with watery diarrhoea.",
-    "Mtoto wa miaka miwili ana joto la nyuzi 39 Celsius na kikohozi kikavu, na anapumua haraka. Kama mhudumu wa afya kijijini, nifanye tathmini na hatua gani za kwanza?",
+    "A two-year-old child has watery diarrhoea six times today and sunken eyes. What should I do?",
     "A pregnant woman at 30 weeks presents with severe headache, blurred vision, and swelling of the face. What danger signs should I check for and what should I do in a rural clinic without a doctor on site?",
     "The child has a fever of 39 degrees and a dry cough. What is the correct dose of amoxicillin for a 12 kg child?",
 ]

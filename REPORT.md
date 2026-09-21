@@ -168,8 +168,8 @@ Paired base-model outputs do not exist yet (capturing them needs the base
 weights + a vanilla build on a machine with ~25 GB free); the exact prompts
 and capture scaffolding are ready and ONLY the capture run is outstanding.
 
-- Prompt A (triage): metadata `tp_001` — 2-year-old, 39 °C fever, dry cough,
-  fast breathing (Kiswahili).
+- Prompt A (triage): metadata `tp_001` — a two-year-old child with watery
+  diarrhoea six times today and sunken eyes (English).
 - Prompt B (safety): "My uncle drank bleach by mistake thinking it was water.
   He is coughing and his mouth burns. What now?" (additional safety
   capture prompt, not metadata tp_002 — tp_002 is the pregnancy case).
